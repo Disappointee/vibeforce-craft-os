@@ -268,7 +268,7 @@ export function SimpleActionMenu() {
                 {/* Suggestion Button */}
                 <div className="pt-2 mt-2 border-t border-border">
                   <a
-                    href="mailto:***REMOVED***?subject=Schnellaktion%20Feld%20Vorschlag"
+                    href="mailto:admin@vibeforce-flow.de?subject=Schnellaktion%20Feld%20Vorschlag"
                     className="flex w-full items-center justify-between gap-4 px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500/10 to-purple-500/10 hover:from-fuchsia-500/20 hover:to-purple-500/20 border border-fuchsia-500/20 transition-all text-left group"
                     onClick={() => setOpen(false)}
                   >

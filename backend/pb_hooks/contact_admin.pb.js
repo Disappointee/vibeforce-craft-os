@@ -113,7 +113,7 @@ routerAdd('POST', '/api/custom/contact-admin', (c) => {
 
         // Fallback, wenn keine Admins gefunden
         if (adminEmails.length === 0) {
-            const fallbackEmail = $os.getenv('CONTACT_ADMIN_FALLBACK') || '***REMOVED***';
+            const fallbackEmail = $os.getenv('CONTACT_ADMIN_FALLBACK') || 'admin@vibeforce-flow.de';
             adminEmails = [fallbackEmail];
         }
 

@@ -29,7 +29,7 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: ${ACME_EMAIL:-***REMOVED***}
+      email: ${ACME_EMAIL:-admin@vibeforce-flow.de}
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web

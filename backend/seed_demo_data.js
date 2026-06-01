@@ -33,6 +33,13 @@ async function api(method, path, body, token) {
     return await res.json();
 }
 
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function pick(...items) {
+    return items[Math.floor(Math.random() * items.length)];
+}
+
 async function main() {
     console.log("=== Vibeforce Flow OS — Demo Seed ===");
     console.log(`  Base URL: ${baseUrl}\n`);
@@ -49,10 +56,10 @@ async function main() {
     // ── 2. Create demo users ──
     console.log("[2] Creating demo users...");
     const userDefs = [
-        { email: "demo001@vibeforce.de", password: genPassword(), name: "Alex Meier", role: "employee" },
-        { email: "demo002@vibeforce.de", password: genPassword(), name: "Sarah Schmidt", role: "employee" },
-        { email: "demo003@vibeforce.de", password: genPassword(), name: "Tom Weber", role: "manager" },
-        { email: "demo004@vibeforce.de", password: genPassword(), name: "Lisa Fischer", role: "employee" },
+        { email: "demo001@vibeforce.de", password: genPassword(), name: "Monika Mustermann", role: "manager" },
+        { email: "demo002@vibeforce.de", password: genPassword(), name: "Ben Beispiel", role: "employee" },
+        { email: "demo003@vibeforce.de", password: genPassword(), name: "Laura Design", role: "employee" },
+        { email: "demo004@vibeforce.de", password: genPassword(), name: "Tom Entwickler", role: "employee" },
     ];
     
     const createdUsers = [];
@@ -72,7 +79,7 @@ async function main() {
     }
     console.log();
 
-    // ── 3. Create clients ──
+    // ── 3. Create clients (12 — verdoppelt) ──
     console.log("[3] Creating demo clients...");
     const clientDefs = [
         { name: "TechNova GmbH", company: "TechNova GmbH", email: "kontakt@technova.de", branch: "IT", stundenhonorar: 150, status: "aktiv", is_billable_default: true },
@@ -81,6 +88,12 @@ async function main() {
         { name: "MediaFlow GmbH", company: "MediaFlow GmbH", email: "hallo@mediaflow.de", branch: "Marketing", stundenhonorar: 165, status: "aktiv", is_billable_default: true },
         { name: "SmartData AG", company: "SmartData AG", email: "info@smartdata.de", branch: "Datenanalyse", stundenhonorar: 190, status: "aktiv", is_billable_default: true },
         { name: "BuildCorp GmbH", company: "BuildCorp GmbH", email: "kontakt@buildcorp.de", branch: "Bauwirtschaft", stundenhonorar: 180, status: "aktiv", is_billable_default: true },
+        { name: "FinTech Solutions", company: "FinTech Solutions GmbH", email: "info@fintech-solutions.de", branch: "FinTech", stundenhonorar: 210, status: "aktiv", is_billable_default: true },
+        { name: "HealthPlus AG", company: "HealthPlus AG", email: "hallo@healthplus.de", branch: "Gesundheit", stundenhonorar: 185, status: "aktiv", is_billable_default: true },
+        { name: "EduVision GmbH", company: "EduVision GmbH", email: "kontakt@eduvision.de", branch: "Bildung", stundenhonorar: 160, status: "aktiv", is_billable_default: true },
+        { name: "RetailNow GmbH", company: "RetailNow GmbH", email: "info@retailnow.de", branch: "Einzelhandel", stundenhonorar: 170, status: "aktiv", is_billable_default: true },
+        { name: "LogiTrans AG", company: "LogiTrans AG", email: "office@logitrans.de", branch: "Logistik", stundenhonorar: 195, status: "aktiv", is_billable_default: true },
+        { name: "CreativeLab GmbH", company: "CreativeLab GmbH", email: "hallo@creativelab.de", branch: "Kreativagentur", stundenhonorar: 155, status: "aktiv", is_billable_default: true },
     ];
 
     const clientIds = {};
@@ -95,7 +108,7 @@ async function main() {
     }
     console.log();
 
-    // ── 4. Create projects ──
+    // ── 4. Create projects (12 — verdoppelt) ──
     console.log("[4] Creating demo projects...");
     const allUserIds = Object.values(userIds);
     const projectDefs = [
@@ -105,6 +118,12 @@ async function main() {
         { name: "Content Marketing 2026", key: "CM", client: clientIds["MediaFlow GmbH"], status: "active", description: "Content-Marketing-Kampagne mit Blog, Social Media und Newsletter.", budget_hours: 60 },
         { name: "Datenanalyse Dashboard", key: "DD", client: clientIds["SmartData AG"], status: "active", description: "Entwicklung eines interaktiven Datenanalyse-Dashboards.", budget_hours: 150 },
         { name: "Neubau Marketing", key: "NM", client: clientIds["BuildCorp GmbH"], status: "active", description: "Marketingkampagne für Neubau-Projekte.", budget_hours: 90 },
+        { name: "Crypto Payment Gateway", key: "CPG", client: clientIds["FinTech Solutions"], status: "active", description: "Integration eines Krypto-Payment-Gateways für E-Commerce.", budget_hours: 180 },
+        { name: "Patientenportal App", key: "PPA", client: clientIds["HealthPlus AG"], status: "active", description: "Entwicklung einer Patientenportal-App mit Terminbuchung.", budget_hours: 140 },
+        { name: "E-Learning Plattform", key: "ELP", client: clientIds["EduVision GmbH"], status: "active", description: "Aufbau einer E-Learning-Plattform mit Kursverwaltung.", budget_hours: 160 },
+        { name: "Retail Analytics Suite", key: "RAS", client: clientIds["RetailNow GmbH"], status: "active", description: "Analytics-Tool für Bestands- und Verkaufsoptimierung.", budget_hours: 110 },
+        { name: "Fleet Tracking System", key: "FTS", client: clientIds["LogiTrans AG"], status: "active", description: "Echtzeit-Flotten-Tracking und Routenoptimierung.", budget_hours: 170 },
+        { name: "Brand Identity 2026", key: "BIG", client: clientIds["CreativeLab GmbH"], status: "active", description: "Kompletter Brand-Relaunch für Premium-Marke.", budget_hours: 100 },
     ];
 
     const projectIds = {};
@@ -122,7 +141,7 @@ async function main() {
     }
     console.log();
 
-    // ── 5. Create tasks (30) ──
+    // ── 5. Create tasks (60 — verdoppelt) ──
     console.log("[5] Creating demo tasks...");
     const today = new Date();
     function d(n) { const d = new Date(today); d.setDate(d.getDate() + n); return d.toISOString(); }
@@ -164,6 +183,42 @@ async function main() {
         { project: "NM", title: "Virtuelle 360°-Tour", status: "todo", priority: "high", estimated_hours: 20 },
         { project: "NM", title: "Pressearbeit & PR", status: "todo", priority: "medium", estimated_hours: 6 },
         { project: "NM", title: "Verkaufsstart-Kampagne", status: "review", priority: "high", estimated_hours: 10 },
+        // Crypto Payment Gateway (CPG)
+        { project: "CPG", title: "API-Architektur entwerfen", status: "done", priority: "high", estimated_hours: 20 },
+        { project: "CPG", title: "Wallet-Integration", status: "in_progress", priority: "acute", estimated_hours: 24 },
+        { project: "CPG", title: "KYC-Verifikation", status: "in_progress", priority: "high", estimated_hours: 16 },
+        { project: "CPG", title: "Security Audit", status: "todo", priority: "acute", estimated_hours: 20 },
+        { project: "CPG", title: "Merchant Dashboard", status: "todo", priority: "medium", estimated_hours: 12 },
+        // Patientenportal App (PPA)
+        { project: "PPA", title: "UX-Forschung", status: "done", priority: "high", estimated_hours: 16 },
+        { project: "PPA", title: "Terminbuchungssystem", status: "in_progress", priority: "high", estimated_hours: 20 },
+        { project: "PPA", title: "Patientenakte-Digitalisierung", status: "todo", priority: "acute", estimated_hours: 18 },
+        { project: "PPA", title: "Push-Benachrichtigungen", status: "todo", priority: "medium", estimated_hours: 10 },
+        { project: "PPA", title: "HIPA-DSGVO-Compliance", status: "review", priority: "high", estimated_hours: 8 },
+        // E-Learning Plattform (ELP)
+        { project: "ELP", title: "Kurs-Struktur entwerfen", status: "done", priority: "high", estimated_hours: 14 },
+        { project: "ELP", title: "Video-Streaming-Integration", status: "in_progress", priority: "high", estimated_hours: 18 },
+        { project: "ELP", title: "Quiz-Engine entwickeln", status: "in_progress", priority: "medium", estimated_hours: 12 },
+        { project: "ELP", title: "Zertifikatsgenerierung", status: "todo", priority: "medium", estimated_hours: 8 },
+        { project: "ELP", title: "SCORM-Kompatibilität", status: "todo", priority: "low", estimated_hours: 14 },
+        // Retail Analytics Suite (RAS)
+        { project: "RAS", title: "Verkaufsdaten-Modellierung", status: "done", priority: "high", estimated_hours: 12 },
+        { project: "RAS", title: "Bestandsprognose-Algorithmus", status: "in_progress", priority: "acute", estimated_hours: 20 },
+        { project: "RAS", title: "Dashboard-Visualisierung", status: "todo", priority: "high", estimated_hours: 16 },
+        { project: "RAS", title: "POS-Integration", status: "todo", priority: "medium", estimated_hours: 10 },
+        { project: "RAS", title: "Excel-Export-Modul", status: "in_progress", priority: "low", estimated_hours: 6 },
+        // Fleet Tracking System (FTS)
+        { project: "FTS", title: "GPS-Tracking-Modul", status: "done", priority: "acute", estimated_hours: 22 },
+        { project: "FTS", title: "Routenoptimierung KI-basiert", status: "in_progress", priority: "high", estimated_hours: 18 },
+        { project: "FTS", title: "Fahrer-App Entwicklung", status: "in_progress", priority: "high", estimated_hours: 20 },
+        { project: "FTS", title: "Wartungsplanung", status: "todo", priority: "medium", estimated_hours: 8 },
+        { project: "FTS", title: "Geofencing-Alerts", status: "todo", priority: "medium", estimated_hours: 6 },
+        // Brand Identity 2026 (BIG)
+        { project: "BIG", title: "Markenanalyse", status: "done", priority: "high", estimated_hours: 10 },
+        { project: "BIG", title: "Logo-Redesign", status: "in_progress", priority: "high", estimated_hours: 16 },
+        { project: "BIG", title: "CI/CD-Handbuch", status: "todo", priority: "medium", estimated_hours: 12 },
+        { project: "BIG", title: "Social Media Templates", status: "todo", priority: "low", estimated_hours: 8 },
+        { project: "BIG", title: "Präsentationsvorlagen", status: "review", priority: "medium", estimated_hours: 6 },
     ];
 
     const taskIds = [];
@@ -189,10 +244,93 @@ async function main() {
     }
     console.log();
 
-    // ── 6. Create time entries (60) ──
+    // ── 5b. Create task links ──
+    console.log("[5b] Creating task links...");
+    let linkCount = 0;
+    const linkDefs = [
+        ["PA", 0, 1, "depends_on"], ["PA", 1, 2, "depends_on"], ["PA", 2, 3, "depends_on"],
+        ["DC", 0, 1, "depends_on"], ["DC", 1, 2, "relates_to"],
+        ["WR", 0, 1, "depends_on"], ["WR", 1, 2, "depends_on"], ["WR", 2, 3, "depends_on"],
+        ["CM", 0, 1, "depends_on"], ["DD", 0, 1, "depends_on"], ["DD", 1, 2, "depends_on"],
+        ["CPG", 0, 1, "depends_on"], ["CPG", 1, 2, "depends_on"], ["CPG", 2, 3, "depends_on"],
+        ["PPA", 0, 1, "depends_on"], ["PPA", 1, 2, "depends_on"],
+        ["ELP", 0, 1, "depends_on"], ["ELP", 1, 2, "depends_on"],
+        ["RAS", 0, 1, "depends_on"], ["RAS", 1, 2, "depends_on"],
+        ["FTS", 0, 1, "depends_on"], ["FTS", 1, 2, "depends_on"],
+        ["BIG", 0, 1, "depends_on"], ["BIG", 1, 2, "depends_on"],
+    ];
+    for (const [projKey, srcIdx, tgtIdx, linkType] of linkDefs) {
+        const projTasks = tasks.filter(t => t.project === projKey);
+        if (projTasks.length > Math.max(srcIdx, tgtIdx)) {
+            try {
+                await api("POST", "/api/collections/task_links/records", {
+                    source_task: taskIds[tasks.indexOf(projTasks[srcIdx])],
+                    target_task: taskIds[tasks.indexOf(projTasks[tgtIdx])],
+                    link_type: linkType,
+                }, adminToken);
+                linkCount++;
+            } catch {}
+        }
+    }
+    console.log(`  Created ${linkCount} task links\n`);
+
+    // ── 5c. Create checklists ──
+    console.log("[5c] Creating checklist items...");
+    let checklistCount = 0;
+    const checklistDefs = [
+        { projIdx: 2, items: ["Responsive Design für Mobile", "Ladezeiten optimieren", "Barrierefreiheit (WCAG) prüfen", "Cross-Browser-Tests"] },
+        { projIdx: 11, items: ["API-Dokumentation schreiben", "Rate Limiting definieren", "Fehlerbehandlung einbauen"] },
+        { projIdx: 21, items: ["Test-Cases definieren", "Testumgebung aufsetzen", "CI/CD-Pipeline integrieren"] },
+        { projIdx: 31, items: ["Mockups reviewen", "Responsive Design prüfen", "Barrierefreiheit testen"] },
+        { projIdx: 41, items: ["Dashboard-Konzept", "KPIs definieren", "Widgets entwickeln"] },
+        { projIdx: 51, items: ["Prototyp erstellen", "User-Testing durchführen", "Iterieren & verbessern"] },
+    ];
+    for (const cd of checklistDefs) {
+        if (taskIds[cd.projIdx]) {
+            for (let i = 0; i < cd.items.length; i++) {
+                try {
+                    await api("POST", "/api/collections/checklist_items/records", {
+                        task: taskIds[cd.projIdx],
+                        title: cd.items[i],
+                        completed: i < 2,
+                        sort_order: i,
+                    }, adminToken);
+                    checklistCount++;
+                } catch {}
+            }
+        }
+    }
+    console.log(`  Created ${checklistCount} checklist items\n`);
+
+    // ── 5d. Create task comments ──
+    console.log("[5d] Creating task comments...");
+    let commentCount = 0;
+    const commentDefs = [
+        { projIdx: 2, content: "<p>Mobile ist fertig. Desktop folgt morgen.</p>" },
+        { projIdx: 2, content: "<p>Super, bitte um Review.</p>" },
+        { projIdx: 11, content: "<p>API-Doku im Swagger verfügbar.</p>" },
+        { projIdx: 11, content: "<p>Bitte Error-Handling-Middleware ergänzen.</p>" },
+        { projIdx: 31, content: "<p>Quiz-Engine ist fertig. Tests nächste Woche.</p>" },
+        { projIdx: 41, content: "<p>Algorithmus zeigt 94% Genauigkeit in Tests.</p>" },
+    ];
+    for (const cm of commentDefs) {
+        if (taskIds[cm.projIdx] && allUserIds.length > 0) {
+            try {
+                await api("POST", "/api/collections/task_comments/records", {
+                    task: taskIds[cm.projIdx],
+                    author: allUserIds[Math.floor(Math.random() * allUserIds.length)],
+                    content: cm.content,
+                }, adminToken);
+                commentCount++;
+            } catch {}
+        }
+    }
+    console.log(`  Created ${commentCount} task comments\n`);
+
+    // ── 6. Create time entries (120 — verdoppelt) ──
     console.log("[6] Creating demo time entries...");
     let entryCount = 0;
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 120; i++) {
         const taskId = taskIds[Math.floor(Math.random() * taskIds.length)];
         const userId = allUserIds[Math.floor(Math.random() * allUserIds.length)];
         const dayOffset = -Math.floor(Math.random() * 14);
@@ -219,7 +357,48 @@ async function main() {
     }
     console.log(`  Created ${entryCount} time entries\n`);
 
-    // ── 7. Output credentials ──
+    // ── 7. Create notifications ──
+    console.log("[7] Creating notifications...");
+    let notifCount = 0;
+    const notifTypes = ["task_assigned", "task_due", "task_comment", "task_mention", "status_change", "project_update"];
+    for (const uid of allUserIds) {
+        for (let i = 0; i < 4; i++) {
+            try {
+                await api("POST", "/api/collections/notifications/records", {
+                    user: uid,
+                    type: pick(...notifTypes),
+                    title: "Neue Benachrichtigung",
+                    message: `Demo-Nachricht ${i + 1}`,
+                    read: Math.random() > 0.5,
+                    link: "/tasks",
+                }, adminToken);
+                notifCount++;
+            } catch {}
+        }
+    }
+    console.log(`  Created ${notifCount} notifications\n`);
+
+    // ── 8. Create external expenses ──
+    console.log("[8] Creating external expenses...");
+    let expenseCount = 0;
+    const keys = Object.keys(projectIds);
+    for (const key of keys) {
+        const count = randomInt(2, 3);
+        for (let i = 0; i < count; i++) {
+            try {
+                await api("POST", "/api/collections/external_expenses/records", {
+                    project: projectIds[key],
+                    amount: randomInt(50, 2000),
+                    description: pick("Monatliche Hosting-Gebühr", "Software-Lizenz", "Tool-Abonnement", "Drittanbieter-Service", "Server-Kosten", "Domain-Gebühr"),
+                    category: pick("Hosting", "Lizenzen", "Tools", "Drittanbieter", "Werbekosten"),
+                }, adminToken);
+                expenseCount++;
+            } catch {}
+        }
+    }
+    console.log(`  Created ${expenseCount} external expenses\n`);
+
+    // ── 9. Output credentials ──
     console.log("=== Seed Complete ===\n");
     console.log("── Admin ──");
     console.log(`  ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}\n`);

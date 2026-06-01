@@ -1,5 +1,5 @@
 async function test() {
-  const email = '***REMOVED***';
+  const email = 'admin@vibeforce-flow.de';
   const pw = '***REMOVED***';
   
   // Auth as USER (not superuser)

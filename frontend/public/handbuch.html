@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibeforce Flow OS — Handbuch</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --fg: #1a1a1a;
+    --primary: #2563EB;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --muted: #6b7280;
+    --accent-bg: #eff6ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f0f;
+      --fg: #f0f0f0;
+      --card-bg: #1c1c1c;
+      --border: rgba(255,255,255,0.08);
+      --muted: #9ca3af;
+      --accent-bg: rgba(37,99,235,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+		padding: 2rem;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  .header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .header img { height: 64px; margin-bottom: 1rem; }
+  .header h1 { font-size: 2.25rem; font-weight: 800; color: var(--primary); letter-spacing: -0.01em; }
+  .header p { color: var(--muted); font-size: 1.1rem; margin-top: 0.5rem; }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+  p { margin-bottom: 1rem; }
+  ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+  li { margin-bottom: 0.4rem; }
+  code {
+    background: var(--accent-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'Geist Mono', 'Fira Code', monospace;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+  .card h3 { margin-top: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-size: 0.95em;
+  }
+  th { background: var(--accent-bg); font-weight: 600; }
+  .cta {
+    text-align: center;
+    margin: 3rem 0 2rem;
+    padding: 2rem;
+    background: var(--accent-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .cta a {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: opacity 0.15s;
+  }
+  .cta a:hover { opacity: 0.9; }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+    margin-top: 3rem;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Vibeforce Flow OS</h1>
+      <p>Das Handbuch — Agentursteuerung, Projektmanagement & Team-Kollaboration</p>
+    </div>
+
+    <h2>1. Erste Schritte</h2>
+
+    <h3>Anmeldung</h3>
+    <p>Melde dich unter <a href="https://vibeforce-flow-os.vercel.app">vibeforce-flow-os.vercel.app</a> mit deiner E-Mail und deinem Passwort an. Nach der ersten Anmeldung empfehlen wir, dein Passwort zu ändern.</p>
+
+    <h3>Das Dashboard</h3>
+    <p>Das Dashboard ist deine Startseite. Es zeigt dir:</p>
+    <ul>
+      <li><strong>KPIs</strong> — Umsatz, Auslastung und Projektfortschritt in Echtzeit</li>
+      <li><strong>Aktive Projekte</strong> — Deine laufenden Projekte mit Status und Fortschritt</li>
+      <li><strong>Offene Aufgaben</strong> — Deine nächsten Tasks mit Fälligkeitsdatum</li>
+      <li><strong>Letzte Zeiteinträge</strong> — Deine kürzlich gebuchten Stunden</li>
+    </ul>
+
+    <h3>Navigation</h3>
+    <p>Die linke Sidebar enthält alle Hauptbereiche:</p>
+    <ul>
+      <li><strong>Dashboard</strong> — Übersicht</li>
+      <li><strong>Projekte</strong> — Alle Projekte verwalten</li>
+      <li><strong>Meine Aufgaben</strong> — Persönliche Task-Liste</li>
+      <li><strong>Planer</strong> — Gantt-Chart und Ressourcenplanung</li>
+      <li><strong>Zeiterfassung</strong> — Stunden buchen</li>
+      <li><strong>Kunden</strong> — Kundenverwaltung (CRM)</li>
+      <li><strong>Team</strong> — Team-Übersicht und Auslastung</li>
+      <li><strong>Zeitauswertungen</strong> — Reports und Export</li>
+    </ul>
+    <p>Oben rechts findest du die globale Suche (<kbd>/</kbd> oder <kbd>Ctrl+K</kbd>), den Dark-Mode-Toggle und das Benutzer-Menü.</p>
+
+    <h2>2. Projekte</h2>
+
+    <h3>Projekt erstellen</h3>
+    <p>Über <strong>Projekte → Neues Projekt</strong> oder die Tastenkombination <kbd>Alt+P</kbd> öffnest du den Projekt-Dialog. Pflichtfelder:</p>
+    <ul>
+      <li><strong>Name</strong> — Der Projektname</li>
+      <li><strong>Kürzel</strong> — 2–5 Zeichen, z. B. „KLOS" (eindeutig)</li>
+      <li><strong>Kunde</strong> — Optional, für Kundenprojekte</li>
+      <li><strong>Status</strong> — Aktiv, Pausiert, Abgeschlossen</li>
+    </ul>
+    <p>Optional: Budget (Stunden & Geld), Deadline, Team-Mitglieder, Projekttyp.</p>
+
+    <h3>Projekt-Detailseite</h3>
+    <p>Klicke auf ein Projekt, um die Detailansicht zu öffnen:</p>
+    <ul>
+      <li><strong>Übersicht</strong> — Status, Fortschritt, Team, Budget-Soll/Ist</li>
+      <li><strong>Gantt</strong> — Visuelle Zeitplanung aller Tasks</li>
+      <li><strong>Tasks</strong> — Alle Aufgaben des Projekts</li>
+      <li><strong>Zeiteinträge</strong> — Gebuchte Stunden</li>
+    </ul>
+
+    <h2>3. Aufgaben (Tasks)</h2>
+
+    <h3>Task erstellen</h3>
+    <p>Über <kbd>Alt+T</kbd> oder den „+ Task"-Button im Projekt:</p>
+    <ul>
+      <li><strong>Titel</strong> — Beschreibender Task-Name</li>
+      <li><strong>Projekt</strong> — Zugehörigkeit</li>
+      <li><strong>Priorität</strong> — Acute (rot), High (orange), Medium (blau), Low (grau)</li>
+      <li><strong>Status</strong> — To-Do, In Bearbeitung, Review, Erledigt</li>
+      <li><strong>Zuständig</strong> — Task an Teammitglied zuweisen</li>
+      <li><strong>Fälligkeitsdatum</strong> — Deadline</li>
+    </ul>
+
+    <h3>Task-Typen</h3>
+    <ul>
+      <li><strong>Development</strong> — Entwicklung & Programmierung</li>
+      <li><strong>Design</strong> — UI/UX, Grafikdesign</li>
+      <li><strong>SEO</strong> — Suchmaschinenoptimierung</li>
+      <li><strong>SEA</strong> — Search Engine Advertising</li>
+      <li><strong>Social Ads</strong> — Social Media Werbung</li>
+      <li><strong>Content</strong> — Content-Erstellung</li>
+      <li><strong>Tracking</strong> — Analytics & Tracking</li>
+      <li><strong>Consulting</strong> — Beratung</li>
+    </ul>
+
+    <h3>Checklisten</h3>
+    <p>Innerhalb eines Tasks kannst du Checklisten mit Teilaufgaben anlegen. Hake sie ab, um deinen Fortschritt zu tracken.</p>
+
+    <h3>Task-Abhängigkeiten</h3>
+    <p>Verknüpfe Tasks über Abhängigkeiten:</p>
+    <ul>
+      <li><strong>depends_on</strong> — Task B kann erst starten, wenn Task A erledigt ist</li>
+      <li><strong>blocks</strong> — Task A blockiert Task B</li>
+      <li><strong>relates_to</strong> — Tasks sind thematisch verbunden</li>
+    </ul>
+
+    <h2>4. Zeiterfassung</h2>
+
+    <h3>Stunden buchen</h3>
+    <p>Über <kbd>Alt+Z</kbd> oder den Timer in der unteren Leiste:</p>
+    <ol>
+      <li>Task auswählen</li>
+      <li>Start- und Endzeit eingeben (oder Dauer in Minuten)</li>
+      <li>Beschreibung hinzufügen (was wurde gemacht?)</li>
+      <li><strong>Abrechenbar</strong> an-/abwählen (für Kundenabrechnung)</li>
+      <li>Speichern</li>
+    </ol>
+
+    <h3>Zeitübersicht</h3>
+    <p>Unter <strong>Zeiterfassung</strong> siehst du alle deine Buchungen:</p>
+    <ul>
+      <li>Filterbar nach Datum, Projekt, Kunde, Abrechenbarkeit</li>
+      <li>Summe pro Tag/Woche/Monat</li>
+      <li>Export als CSV</li>
+    </ul>
+
+    <h2>5. Kunden (CRM)</h2>
+
+    <h3>Kunde anlegen</h3>
+    <p>Über <kbd>Alt+C</kbd> oder <strong>Kunden → Neuer Kunde</strong>:</p>
+    <ul>
+      <li><strong>Name & Firma</strong> — Stammdaten</li>
+      <li><strong>Stundensatz</strong> — Basis für automatische Abrechnung</li>
+      <li><strong>Rahmenvertrag</strong> — Laufzeit, Budget, monatliches Stundenkontingent</li>
+      <li><strong>Betreuer</strong> — Hauptansprechpartner im Team</li>
+      <li><strong>Beobachter</strong> — Weitere Team-Mitglieder mit Lesezugriff</li>
+    </ul>
+
+    <h3>Kunden-Übersicht</h3>
+    <div class="card">
+      <h3>Schnellzugriff</h3>
+      <p>Klicke auf einen Kunden, um alle Projekte, Tasks, gebuchte Stunden und den Umsatz zu sehen.</p>
+    </div>
+
+    <h2>6. Planer & Gantt-Chart</h2>
+    <p>Der <strong>Planer</strong> zeigt den Gantt-Chart aller Projekte:</p>
+    <ul>
+      <li><strong>Linke Spalte</strong> — Task-Liste mit Titel, Status, Priorität</li>
+      <li><strong>Rechte Seite</strong> — Zeitbalken mit Start- und Enddatum</li>
+      <li><strong>Abhängigkeiten</strong> — Pfeile zwischen abhängigen Tasks</li>
+      <li><strong>Drag & Drop</strong> — Balken verschieben zum Umplanen</li>
+    </ul>
+
+    <h2>7. Team & Auslastung</h2>
+    <p>Unter <strong>Team</strong> siehst du:</p>
+    <ul>
+      <li><strong>Team-Mitglieder</strong> — Alle Benutzer mit Rolle und Expertise</li>
+      <li><strong>Auslastung</strong> — Wer hat Kapazitäten? Wer ist überbucht?</li>
+      <li><strong>Aktuelle Tasks</strong> — Woran arbeitet jeder gerade?</li>
+    </ul>
+
+    <h2>8. Reporting & Export</h2>
+
+    <h3>Stundenreport</h3>
+    <p>Unter <strong>Zeitauswertungen</strong> generierst du Reports:</p>
+    <ul>
+      <li>Filter nach Zeitraum, Projekt, Kunde, Mitarbeiter</li>
+      <li>Gruppierung nach Projekt, Kunde, Mitarbeiter</li>
+      <li>Summenzeile mit Gesamtstunden</li>
+      <li><strong>PDF-Export</strong> — Professioneller Leistungsnachweis</li>
+      <li><strong>CSV-Export</strong> — Für externe Tools und Buchhaltung</li>
+    </ul>
+
+    <h3>Report-Templates</h3>
+    <p>Speichere häufige Report-Konfigurationen als Template (z. B. „Wochenbericht Standard", „Monatsabrechnung Kunden").</p>
+
+    <h2>9. Tastatur-Shortcuts</h2>
+
+    <div class="card">
+      <h3>Globale Shortcuts</h3>
+      <table>
+        <tr><th>Tastenkombination</th><th>Aktion</th></tr>
+        <tr><td><kbd>Alt+T</kbd></td><td>Neue Aufgabe erstellen</td></tr>
+        <tr><td><kbd>Alt+P</kbd></td><td>Neues Projekt anlegen</td></tr>
+        <tr><td><kbd>Alt+Z</kbd></td><td>Zeiterfassung öffnen</td></tr>
+        <tr><td><kbd>Alt+C</kbd></td><td>Neuen Kunden anlegen</td></tr>
+        <tr><td><kbd>Ctrl+K</kbd></td><td>Command-Palette öffnen</td></tr>
+        <tr><td><kbd>/</kbd></td><td>Header-Suche fokussieren</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Command-Palette</h3>
+      <table>
+        <tr><th>Taste</th><th>Aktion</th></tr>
+        <tr><td><kbd>Tab</kbd></td><td>Filter-Tabs wechseln</td></tr>
+        <tr><td><kbd>↑ ↓</kbd></td><td>Navigieren</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Auswählen</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Schließen</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Slash-Befehle (im Task-Input)</h3>
+      <table>
+        <tr><th>Befehl</th><th>Wirkung</th></tr>
+        <tr><td><kbd>/8h</kbd> oder <kbd>/30m</kbd></td><td>Dauer festlegen</td></tr>
+        <tr><td><kbd>/23.05.26</kbd></td><td>Datum festlegen</td></tr>
+        <tr><td><kbd>/abrechenbar</kbd></td><td>Als abrechenbar markieren</td></tr>
+        <tr><td><kbd>/prio</kbd></td><td>Hohe Priorität setzen</td></tr>
+        <tr><td><kbd>//beschreibung</kbd></td><td>Beschreibung hinzufügen</td></tr>
+        <tr><td><kbd>/#tagname</kbd></td><td>Tag zuweisen</td></tr>
+      </table>
+    </div>
+
+    <h2>10. Dark Mode & Night Shift</h2>
+    <ul>
+      <li><strong>Dark Mode</strong> — Umschalten über den Sonne/Mond-Button oben rechts. Wird in deinem Browser gespeichert.</li>
+      <li><strong>Night Shift</strong> — Automatischer Blaulichtfilter für angenehmes Arbeiten am späten Abend. Aktivierung über das Menü in der unteren Leiste.</li>
+    </ul>
+
+    <h2>11. Benachrichtigungen</h2>
+    <p>Die Glocke oben rechts zeigt alle Benachrichtigungen:</p>
+    <ul>
+      <li><strong>Aufgabe zugewiesen</strong> — Jemand hat dir einen Task gegeben</li>
+      <li><strong>Fällig bald</strong> — Ein Task erreicht seine Deadline</li>
+      <li><strong>Neuer Kommentar</strong> — Jemand hat auf deinen Task kommentiert</li>
+      <li><strong>@Erwähnung</strong> — Jemand hat dich in einem Kommentar erwähnt</li>
+      <li><strong>Status-Änderung</strong> — Ein Task-Status wurde aktualisiert</li>
+    </ul>
+
+    <div class="cta">
+      <h3>Bereit zum Durchstarten?</h3>
+      <p style="margin-bottom: 1.5rem;">Melde dich jetzt an und entdecke Vibeforce Flow OS.</p>
+      <a href="https://vibeforce-flow-os.vercel.app">Zur Plattform</a>
+    </div>
+
+    <footer>
+      <p>Vibeforce Flow OS &copy; 2026 Vibeforce One | <a href="mailto:support@vibeforce-flow.de">support@vibeforce-flow.de</a></p>
+      <p>Made with Vibeforce in Berlin</p>
+    </footer>
+  </div>
+</body>
+</html>

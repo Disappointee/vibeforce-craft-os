@@ -36,6 +36,13 @@ async function apiGetAll(headers, collection, filter = "") {
     return data.items || [];
 }
 
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function pick(...items) {
+    return items[Math.floor(Math.random() * items.length)];
+}
+
 async function populateData() {
     console.log("=== COMPREHENSIVE DEMO DATA POPULATION ===\n");
 
@@ -67,7 +74,6 @@ async function populateData() {
     const existingUsers = await apiGetAll(headers, "users");
 
     async function createUser(name, emailAddr, role, expertise) {
-        // PocketBase may hide emails in list responses; try to find by name as fallback
         const existing = existingUsers.find(u => u.email === emailAddr || u.name === name);
         if (existing) {
             console.log(`  User ${name} (${emailAddr}) already exists (${existing.id})`);
@@ -103,8 +109,7 @@ async function populateData() {
     if (!existingAwork) {
         console.log("\n  >>> Creating 'Awork Remastered' self-tracking project...");
 
-        // Projekt anlegen
-        const digitalPulseClient = existingClients.find(c => c.name === "DigitalPulse GmbH") || c1;
+        const digitalPulseClient = existingClients.find(c => c.name === "DigitalPulse GmbH");
         const awrProject = await apiPost(headers, "projects", {
             name: "Awork Remastered",
             key: "AWR",
@@ -123,7 +128,6 @@ async function populateData() {
         if (awrProject) {
             console.log(`    Project created: ${awrProject.id}`);
 
-            // Abgeschlossene Tasks (Robin, letzte 2 Wochen)
             const doneTasks = [
                 { title: "Darkmode & Theme-System Refactoring", status: "done", priority: "high", type: "development", assignee: mainUserId, description: "CSS-Variablen-Restrukturierung, .dark-Klassen-Audit, Frappe-Gantt Dark Mode Integration" },
                 { title: "Night Shift System (Blaulichtfilter) implementieren", status: "done", priority: "high", type: "development", assignee: mainUserId, description: "mix-blend-mode Implementierung, Blaulichtfilter-UI, LocalStorage-Persistenz" },
@@ -161,9 +165,6 @@ async function populateData() {
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // Time Entries für abgeschlossene Tasks (~15-20h total)
-            // ═══════════════════════════════════════════════════════════
             console.log("    Creating time entries for completed tasks...");
             const timeEntries = [
                 { task: "Darkmode & Theme-System Refactoring", daysBack: 12, hours: 3.5, desc: "CSS-Variablen Audit & .dark-Klassen-Mapping" },
@@ -182,7 +183,7 @@ async function populateData() {
                 const taskId = createdTaskIds[te.task];
                 if (!taskId) continue;
                 const date = daysAgo(te.daysBack);
-                date.setHours(9, 0, 0, 0); // 09:00
+                date.setHours(9, 0, 0, 0);
                 const endDate = new Date(date.getTime() + te.hours * 3600000);
                 await apiPost(headers, "time_entries", {
                     user: mainUserId,
@@ -202,11 +203,9 @@ async function populateData() {
         console.log("\n  >>> 'Awork Remastered' project already exists. Skipping.");
     }
 
-    // If sufficient data already exists, skip remaining creation
     if (dataExists) {
         console.log("\n  Sufficient demo data already exists. Skipping remaining creation.\n");
         console.log("  To force re-creation, delete existing records first via PocketBase Admin UI.\n");
-        // Still show summary with existing data counts
         const validUserIds = userIds.filter(Boolean);
         console.log("\n============================================");
         console.log("  DEMO DATA CHECK COMPLETE!");
@@ -223,7 +222,7 @@ async function populateData() {
         return;
     }
 
-    // CLIENTS
+    // CLIENTS (8 — verdoppelt + neu)
     console.log("\n[3/8] Creating clients...");
     let c1 = existingClients.find(c => c.name === "DigitalPulse GmbH");
     if (!c1) {
@@ -300,11 +299,56 @@ async function populateData() {
         console.log(`  Created client: NordBau GmbH (${c5?.id})`);
     } else console.log(`  Client exists: NordBau GmbH (${c5.id})`);
 
-    const clients = [c1, c2, c3, c4, c5].filter(Boolean);
+    // NEUE CLIENTS
+    let c6 = existingClients.find(c => c.name === "Quantum Dynamics GmbH");
+    if (!c6) {
+        c6 = await apiPost(headers, "clients", {
+            name: "Quantum Dynamics GmbH", company: "Quantum Dynamics GmbH", email: "info@quantumdynamics.de",
+            phone: "+49 89 33221144", address: "Leopoldstraße 25, 80802 München",
+            status: "active", auftragsvolumen: 110000, stundenhonorar: 175,
+            stundenzahl_monatlich: 70, stundenzahl_gesamt: 630,
+            laufzeit_start: toISO(daysAgo(120)), laufzeit_ende: toISO(daysFromNow(245)),
+            abrechenbar: true, kundenstatus: "aktiv",
+            betreuer: [mainUserId, lukasId].filter(Boolean), beobachter: [sarahId].filter(Boolean),
+            notes: "<p>M&uuml;nchner Deep-Tech-Startup. Fokus auf KI-gest&uuml;tzte Analysetools.</p>"
+        });
+        console.log(`  Created client: Quantum Dynamics GmbH (${c6?.id})`);
+    } else console.log(`  Client exists: Quantum Dynamics GmbH (${c6.id})`);
 
-    // PROJECTS
+    let c7 = existingClients.find(c => c.name === "VitaCare GmbH");
+    if (!c7) {
+        c7 = await apiPost(headers, "clients", {
+            name: "VitaCare GmbH", company: "VitaCare GmbH", email: "kontakt@vitacare.de",
+            phone: "+49 711 55667788", address: "Königstraße 70, 70173 Stuttgart",
+            status: "active", auftragsvolumen: 68000, stundenhonorar: 145,
+            stundenzahl_monatlich: 55, stundenzahl_gesamt: 470,
+            laufzeit_start: toISO(daysAgo(75)), laufzeit_ende: toISO(daysFromNow(290)),
+            abrechenbar: true, kundenstatus: "aktiv",
+            betreuer: [annaId].filter(Boolean), beobachter: [mainUserId].filter(Boolean),
+            notes: "<p>Health-Tech-Unternehmen. Fokus auf Patientenportal und Terminbuchung.</p>"
+        });
+        console.log(`  Created client: VitaCare GmbH (${c7?.id})`);
+    } else console.log(`  Client exists: VitaCare GmbH (${c7.id})`);
+
+    let c8 = existingClients.find(c => c.name === "LogiFlex AG");
+    if (!c8) {
+        c8 = await apiPost(headers, "clients", {
+            name: "LogiFlex AG", company: "LogiFlex AG", email: "info@logiflex.ch",
+            phone: "+41 31 2223344", address: "Wankdorfallee 5, 3014 Bern",
+            status: "active", auftragsvolumen: 94000, stundenhonorar: 160,
+            stundenzahl_monatlich: 65, stundenzahl_gesamt: 590,
+            laufzeit_start: toISO(daysAgo(40)), laufzeit_ende: toISO(daysFromNow(325)),
+            abrechenbar: true, kundenstatus: "aktiv",
+            betreuer: [lukasId].filter(Boolean), beobachter: [mainUserId, carlId].filter(Boolean),
+            notes: "<p>Schweizer Logistik-Pionier. Fokus auf Echtzeit-Tracking und Routenoptimierung.</p>"
+        });
+        console.log(`  Created client: LogiFlex AG (${c8?.id})`);
+    } else console.log(`  Client exists: LogiFlex AG (${c8.id})`);
+
+    const clients = [c1, c2, c3, c4, c5, c6, c7, c8].filter(Boolean);
+
+    // PROJECTS (12 — verdoppelt + neu)
     console.log("\n[4/8] Creating projects...");
-    // Check existing project keys to avoid unique constraint violations
     const existingProjectKeys = existingProjects.map(p => p.key);
     function uniqueKey(base) {
         if (!existingProjectKeys.includes(base)) return base;
@@ -424,7 +468,64 @@ async function populateData() {
         console.log(`  Created project: NordBau Digitalisierung (${p8?.id})`);
     } else console.log(`  Project exists: NordBau Digitalisierung (${p8.id})`);
 
-    const projects = [p1, p2, p3, p4, p5, p6, p7, p8].filter(Boolean);
+    // NEUE PROJEKTE
+    let p9 = existingProjects.find(p => p.name === "Quantum KI-Analyse-Tool");
+    if (!p9) {
+        p9 = await apiPost(headers, "projects", {
+            name: "Quantum KI-Analyse-Tool", key: "QAI", status: "active",
+            client: c6?.id, members: [mainUserId, lukasId, carlId].filter(Boolean),
+            start_date: toISO(daysAgo(10)), end_date: toISO(daysFromNow(60)),
+            description: "Entwicklung eines KI-gestützten Analyse-Tools für Marktdaten.",
+            budget_hours: 240, budget_money: 42000, budget_type: "hourly",
+            external_costs_total: 5600,
+            cycle_start_date: toISO(daysAgo(10)), cycle_end_date: toISO(daysFromNow(20)), cycle_number: 1
+        });
+        console.log(`  Created project: Quantum KI-Analyse-Tool (${p9?.id})`);
+    } else console.log(`  Project exists: Quantum KI-Analyse-Tool (${p9.id})`);
+
+    let p10 = existingProjects.find(p => p.name === "VitaCare Patientenportal");
+    if (!p10) {
+        p10 = await apiPost(headers, "projects", {
+            name: "VitaCare Patientenportal", key: "VCPT", status: "active",
+            client: c7?.id, members: [annaId, mainUserId].filter(Boolean),
+            start_date: toISO(daysAgo(7)), end_date: toISO(daysFromNow(80)),
+            description: "Entwicklung eines Patientenportals mit Online-Terminbuchung.",
+            budget_hours: 180, budget_money: 27000, budget_fixed: 27000, budget_type: "fixed",
+            external_costs_total: 1800,
+            cycle_start_date: toISO(daysAgo(7)), cycle_end_date: toISO(daysFromNow(23)), cycle_number: 1
+        });
+        console.log(`  Created project: VitaCare Patientenportal (${p10?.id})`);
+    } else console.log(`  Project exists: VitaCare Patientenportal (${p10.id})`);
+
+    let p11 = existingProjects.find(p => p.name === "LogiFlex Tracking Suite");
+    if (!p11) {
+        p11 = await apiPost(headers, "projects", {
+            name: "LogiFlex Tracking Suite", key: "LFTS", status: "active",
+            client: c8?.id, members: [lukasId, mainUserId, carlId].filter(Boolean),
+            start_date: toISO(daysAgo(5)), end_date: toISO(daysFromNow(95)),
+            description: "Echtzeit-Flotten-Tracking-System mit KI-Routenoptimierung.",
+            budget_hours: 200, budget_money: 32000, budget_type: "hourly",
+            external_costs_total: 4200,
+            cycle_start_date: toISO(daysAgo(5)), cycle_end_date: toISO(daysFromNow(25)), cycle_number: 1
+        });
+        console.log(`  Created project: LogiFlex Tracking Suite (${p11?.id})`);
+    } else console.log(`  Project exists: LogiFlex Tracking Suite (${p11.id})`);
+
+    let p12 = existingProjects.find(p => p.name === "MediaWorks Video Studio");
+    if (!p12) {
+        p12 = await apiPost(headers, "projects", {
+            name: "MediaWorks Video Studio", key: "MWVS", status: "active",
+            client: c4?.id, members: [annaId, sarahId].filter(Boolean),
+            start_date: toISO(daysAgo(3)), end_date: toISO(daysFromNow(45)),
+            description: "Aufbau eines professionellen Video-Studios für Content-Marketing.",
+            budget_hours: 90, budget_money: 15000, budget_fixed: 15000, budget_type: "fixed",
+            external_costs_total: 6500,
+            cycle_start_date: toISO(daysAgo(3)), cycle_end_date: toISO(daysFromNow(27)), cycle_number: 1
+        });
+        console.log(`  Created project: MediaWorks Video Studio (${p12?.id})`);
+    } else console.log(`  Project exists: MediaWorks Video Studio (${p12.id})`);
+
+    const projects = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12].filter(Boolean);
 
     // TASKS
     console.log("\n[5/8] Creating tasks...");
@@ -450,6 +551,7 @@ async function populateData() {
         const t5 = await createTask("Deployment & Launch", p1, "todo", "acute", [mainUserId, lukasId], daysFromNow(12), daysFromNow(18), "development");
         const t6 = await createTask("Dokumentation", p1, "review", "medium", [lukasId], daysAgo(2), daysFromNow(3), "other");
         const t7 = await createTask("Wöchentliches Reporting", p1, "in_progress", "medium", [mainUserId, sarahId], daysAgo(7), daysFromNow(7), "consulting", null, true, "weekly");
+        const t8 = await createTask("Load-Testing vor Launch", p1, "todo", "high", [lukasId], daysFromNow(8), daysFromNow(15), "development");
 
         if (t1 && t2) await apiPost(headers, "task_links", { source_task: t2.id, target_task: t1.id, link_type: "depends_on" });
         if (t2 && t3) await apiPost(headers, "task_links", { source_task: t3.id, target_task: t2.id, link_type: "depends_on" });
@@ -474,7 +576,7 @@ async function populateData() {
         if (t6 && lukasId) {
             await apiPost(headers, "task_comments", { task: t6.id, author: lukasId, content: "<p>Doku fertig zum Review. Bitte @Sarah Meier gegenlesen.</p>", mentions: [sarahId].filter(Boolean) });
         }
-        console.log(`  Created 7 tasks for Flow OS Platform Launch`);
+        console.log(`  Created 8 tasks for Flow OS Platform Launch`);
     }
 
     // Project 2: GreenLeaf SEO Campaign
@@ -484,6 +586,7 @@ async function populateData() {
         const t3 = await createTask("Content-Strategie", p2, "in_progress", "high", [sarahId, mainUserId], daysAgo(15), daysFromNow(10), "content");
         const t4 = await createTask("Technical SEO Audit", p2, "todo", "medium", [lukasId], daysFromNow(3), daysFromNow(17), "tracking");
         const t5 = await createTask("Monatlicher SEO-Report", p2, "in_progress", "medium", [lukasId, sarahId], daysAgo(7), daysFromNow(23), "seo", null, true, "monthly");
+        const t6 = await createTask("Backlink-Analyse und Aufbau", p2, "todo", "medium", [lukasId], daysFromNow(10), daysFromNow(30), "seo");
 
         if (t1 && t2) await apiPost(headers, "task_links", { source_task: t2.id, target_task: t1.id, link_type: "depends_on" });
         if (t2 && t4) await apiPost(headers, "task_links", { source_task: t4.id, target_task: t2.id, link_type: "depends_on" });
@@ -499,7 +602,7 @@ async function populateData() {
             await apiPost(headers, "task_comments", { task: t3.id, author: sarahId, content: "<p>Content-Strategie fertig. Fokus auf 'Green Tech' und Nachhaltigkeit.</p>" });
             if (mainUserId) await apiPost(headers, "task_comments", { task: t3.id, author: mainUserId, content: "<p>Super! K&ouml;nnen wir n&auml;chste Woche die ersten 3 Artikel produzieren?</p>" });
         }
-        console.log(`  Created 5 tasks for GreenLeaf SEO Campaign`);
+        console.log(`  Created 6 tasks for GreenLeaf SEO Campaign`);
     }
 
     // Project 3: TechVentures App Development
@@ -510,6 +613,7 @@ async function populateData() {
         const t4 = await createTask("Tracking-Integration", p3, "todo", "high", [lukasId], daysFromNow(5), daysFromNow(21), "tracking");
         const t5 = await createTask("Testing & QA", p3, "todo", "medium", [mainUserId, lukasId], daysFromNow(14), daysFromNow(28), "consulting");
         const t6 = await createTask("App Store Deployment", p3, "todo", "medium", [mainUserId], daysFromNow(28), daysFromNow(42), "development");
+        const t7 = await createTask("Push-Notification-Service", p3, "todo", "medium", [lukasId], daysFromNow(7), daysFromNow(21), "development");
 
         if (t1 && t2) await apiPost(headers, "task_links", { source_task: t2.id, target_task: t1.id, link_type: "depends_on" });
         if (t2 && t3) await apiPost(headers, "task_links", { source_task: t3.id, target_task: t2.id, link_type: "depends_on" });
@@ -526,7 +630,7 @@ async function populateData() {
             await apiPost(headers, "task_comments", { task: t2.id, author: lukasId, content: "<p>API ist soweit fertig. Doku im Swagger verf&uuml;gbar.</p>" });
             if (mainUserId) await apiPost(headers, "task_comments", { task: t2.id, author: mainUserId, content: "<p>Bitte noch Error-Handling-Middleware erg&auml;nzen?</p>", mentions: [lukasId].filter(Boolean) });
         }
-        console.log(`  Created 6 tasks for TechVentures App Development`);
+        console.log(`  Created 7 tasks for TechVentures App Development`);
     }
 
     // Project 4: Social Ads Q2
@@ -535,6 +639,7 @@ async function populateData() {
         const t2 = await createTask("Ad Creatives erstellen", p4, "in_progress", "acute", [sarahId, annaId], daysAgo(3), daysFromNow(4), "social_ads");
         const t3 = await createTask("Targeting & Audience Setup", p4, "todo", "high", [sarahId], daysFromNow(2), daysFromNow(9), "sea");
         const t4 = await createTask("Launch & Monitoring", p4, "todo", "medium", [sarahId, mainUserId], daysFromNow(7), daysFromNow(21), "social_ads");
+        const t5 = await createTask("A/B-Testing der Creatives", p4, "todo", "medium", [sarahId, annaId], daysFromNow(5), daysFromNow(14), "social_ads");
 
         if (t1 && t2) await apiPost(headers, "task_links", { source_task: t2.id, target_task: t1.id, link_type: "depends_on" });
         if (t2 && t3) await apiPost(headers, "task_links", { source_task: t3.id, target_task: t2.id, link_type: "depends_on" });
@@ -545,7 +650,7 @@ async function populateData() {
             await apiPost(headers, "checklist_items", { task: t2.id, title: "LinkedIn Ads Creatives", completed: false, sort_order: 1 });
             await apiPost(headers, "checklist_items", { task: t2.id, title: "TikTok Creatives", completed: false, sort_order: 2 });
         }
-        console.log(`  Created 4 tasks for Social Ads Q2`);
+        console.log(`  Created 5 tasks for Social Ads Q2`);
     }
 
     // Project 5: Internal Website Redesign
@@ -573,7 +678,8 @@ async function populateData() {
         await createTask("Briefpapier & Vorlagen", p6, "done", "medium", [annaId], daysAgo(85), daysAgo(60), "design");
         await createTask("Markenauftritt Web", p6, "done", "high", [annaId, mainUserId], daysAgo(65), daysAgo(35), "design");
         await createTask("Präsentationsvorlagen", p6, "done", "low", [annaId], daysAgo(40), daysAgo(30), "design");
-        console.log(`  Created 5 tasks for GreenLeaf Brand Refresh`);
+        await createTask("Brand-Review-Meeting", p6, "done", "medium", [annaId, sarahId], daysAgo(90), daysAgo(85), "consulting");
+        console.log(`  Created 6 tasks for GreenLeaf Brand Refresh`);
     }
 
     // Project 7: MediaWorks Content Hub
@@ -595,6 +701,43 @@ async function populateData() {
         console.log(`  Created 5 tasks for NordBau Digitalisierung`);
     }
 
+    // Project 9: Quantum KI-Analyse-Tool (NEU)
+    if (p9) {
+        await createTask("Datenquellen-Integration", p9, "done", "high", [lukasId, mainUserId], daysAgo(10), daysAgo(4), "development");
+        await createTask("ML-Modell-Training", p9, "in_progress", "acute", [mainUserId, carlId], daysAgo(3), daysFromNow(14), "development");
+        await createTask("Dashboard-Entwicklung", p9, "in_progress", "high", [annaId, lukasId], daysAgo(1), daysFromNow(10), "development");
+        await createTask("API-Dokumentation", p9, "todo", "medium", [lukasId], daysFromNow(5), daysFromNow(15), "other");
+        await createTask("Beta-Testing mit Kunden", p9, "todo", "high", [mainUserId, sarahId], daysFromNow(10), daysFromNow(30), "consulting");
+        console.log(`  Created 5 tasks for Quantum KI-Analyse-Tool`);
+    }
+
+    // Project 10: VitaCare Patientenportal (NEU)
+    if (p10) {
+        await createTask("UX-Research & Personas", p10, "done", "high", [annaId], daysAgo(7), daysAgo(2), "design");
+        await createTask("Terminbuchungssystem", p10, "in_progress", "acute", [mainUserId, annaId], daysAgo(1), daysFromNow(14), "development");
+        await createTask("Patientenakte-Digitalisierung", p10, "todo", "high", [lukasId], daysFromNow(5), daysFromNow(25), "development");
+        await createTask("DSGVO-Compliance-Check", p10, "todo", "high", [mainUserId], daysFromNow(3), daysFromNow(10), "consulting");
+        console.log(`  Created 4 tasks for VitaCare Patientenportal`);
+    }
+
+    // Project 11: LogiFlex Tracking Suite (NEU)
+    if (p11) {
+        await createTask("GPS-Tracking-Modul", p11, "done", "acute", [lukasId, carlId], daysAgo(5), daysAgo(1), "development");
+        await createTask("Routenoptimierung KI", p11, "in_progress", "high", [mainUserId, lukasId], daysAgo(1), daysFromNow(14), "development");
+        await createTask("Fahrer-App Backend", p11, "todo", "high", [carlId], daysFromNow(3), daysFromNow(21), "development");
+        await createTask("Geofencing-Alerts", p11, "todo", "medium", [lukasId], daysFromNow(10), daysFromNow(28), "development");
+        console.log(`  Created 4 tasks for LogiFlex Tracking Suite`);
+    }
+
+    // Project 12: MediaWorks Video Studio (NEU)
+    if (p12) {
+        await createTask("Studio-Equipment-Beschaffung", p12, "done", "high", [annaId], daysAgo(3), daysAgo(1), "other");
+        await createTask("Set-Design & Beleuchtung", p12, "in_progress", "high", [annaId, sarahId], daysFromNow(0), daysFromNow(7), "design");
+        await createTask("Schnittplatz einrichten", p12, "todo", "medium", [annaId], daysFromNow(5), daysFromNow(12), "development");
+        await createTask("Green-Screen-Installation", p12, "todo", "low", [annaId], daysFromNow(10), daysFromNow(20), "other");
+        console.log(`  Created 4 tasks for MediaWorks Video Studio`);
+    }
+
     console.log(`  Total tasks created: ${allTaskIds.length}`);
 
     // TIME ENTRIES
@@ -602,14 +745,13 @@ async function populateData() {
     const allTasks = await apiGetAll(headers, "tasks");
     const taskPool = allTasks.filter(t => t.status !== "todo" || Math.random() > 0.5);
 
-    // Get valid user IDs from the server
     const allUsers = await apiGetAll(headers, "users");
     const validUserIds = allUsers.map(u => u.id);
     console.log(`  Valid users available: ${validUserIds.length}`);
 
     let entryCount = 0;
-    for (const task of taskPool.slice(0, 45)) {
-        const numEntries = Math.random() > 0.6 ? 2 : 1;
+    for (const task of taskPool.slice(0, 90)) {
+        const numEntries = Math.random() > 0.5 ? 2 : 1;
         for (let e = 0; e < numEntries; e++) {
             const daysBack = randomInt(0, 25);
             const day = daysAgo(daysBack);
@@ -618,7 +760,6 @@ async function populateData() {
             const startTime = new Date(day);
             startTime.setHours(startHour, randomInt(0, 59), 0, 0);
             const endTime = new Date(startTime.getTime() + duration * 60000);
-            // Only use valid user IDs
             const assignee = validUserIds[randomInt(0, validUserIds.length - 1)];
 
             await apiPost(headers, "time_entries", {
@@ -664,8 +805,8 @@ async function populateData() {
         project_update: "Es gibt ein Update zu einem Projekt."
     };
 
-    for (const userId of [mainUserId, sarahId, lukasId, annaId].filter(Boolean)) {
-        const numNotifs = randomInt(2, 4);
+    for (const userId of [mainUserId, sarahId, lukasId, annaId, carlId].filter(Boolean)) {
+        const numNotifs = randomInt(3, 5);
         for (let i = 0; i < numNotifs; i++) {
             const type = pick(...notifTypes);
             await apiPost(headers, "notifications", {
@@ -684,7 +825,7 @@ async function populateData() {
     console.log("\n[8/8] Creating external expenses...");
     const expenseCategories = ["Hosting", "Lizenzen", "Tools", "Drittanbieter", "Werbekosten", "Server"];
     for (const proj of projects) {
-        const numExpenses = randomInt(1, 3);
+        const numExpenses = randomInt(2, 4);
         for (let i = 0; i < numExpenses; i++) {
             await apiPost(headers, "external_expenses", {
                 project: proj.id,
@@ -721,7 +862,19 @@ async function populateData() {
             billingReady: true
         })
     });
-    console.log(`  Created 2 report templates`);
+    await apiPost(headers, "report_templates", {
+        name: "Quartalsübersicht Management",
+        user: mainUserId,
+        config: JSON.stringify({
+            dateRange: "last_quarter",
+            groupBy: "project",
+            showCharts: true,
+            showBillable: true,
+            includeSummary: true,
+            profitabilityAnalysis: true
+        })
+    });
+    console.log(`  Created 3 report templates`);
 
     // SUMMARY
     console.log("\n============================================");
@@ -734,7 +887,7 @@ async function populateData() {
     console.log(`  Time entries: ${entryCount}`);
     console.log(`  External expenses: created`);
     console.log(`  Notifications: created`);
-    console.log(`  Report templates: 2`);
+    console.log(`  Report templates: 3`);
     console.log(`  Task links: created`);
     console.log(`  Checklist items: created`);
     console.log(`  Task comments: created`);
@@ -743,14 +896,6 @@ async function populateData() {
     console.log(`  Additional users: sarah.meier@agentur.de, lukas.wagner@agentur.de, anna.schneider@agentur.de`);
     console.log(`  Password for all: ***REMOVED***`);
     console.log("============================================\n");
-}
-
-// Need randomInt and pick helpers
-function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-function pick(...items) {
-    return items[Math.floor(Math.random() * items.length)];
 }
 
 populateData().catch(console.error);

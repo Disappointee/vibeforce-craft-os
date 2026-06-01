@@ -8,11 +8,11 @@ async function main() {
   }).then(r => r.json());
   const headers = { Authorization: auth.token, 'Content-Type': 'application/json' };
 
-  // Find and update Klicklaut client
-  const clients = await fetch(base + '/api/collections/clients/records?filter=(name~"Klicklaut")', { headers })
+  // Find and update Vibeforce client
+  const clients = await fetch(base + '/api/collections/clients/records?filter=(name~"DigitalPulse")', { headers })
     .then(r => r.json());
   const client = clients.items[0];
-  if (!client) { console.log('No Klicklaut client found'); return; }
+  if (!client) { console.log('No DigitalPulse client found'); return; }
   console.log(`Client: ${client.id} | ${client.name} | stundenhonorar=${client.stundenhonorar}`);
 
   await fetch(base + '/api/collections/clients/records/' + client.id, {
@@ -33,9 +33,9 @@ async function main() {
       method: 'PATCH', headers,
       body: JSON.stringify({ client: client.id }),
     });
-    console.log('AWR assigned to Klicklaut');
+    console.log('AWR assigned to DigitalPulse');
   } else {
-    console.log('AWR already assigned to Klicklaut');
+    console.log('AWR already assigned to DigitalPulse');
   }
 }
 main();

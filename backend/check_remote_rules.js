@@ -1,4 +1,4 @@
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 
 async function checkPB(url) {

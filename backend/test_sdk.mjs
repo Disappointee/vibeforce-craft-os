@@ -5,7 +5,7 @@ pb.autoCancellation(false);
 
 async function test() {
   try {
-    await pb.collection('users').authWithPassword('***REMOVED***', '***REMOVED***');
+    await pb.collection('users').authWithPassword('admin@vibeforce-flow.de', '***REMOVED***');
     console.log('Auth OK, model:', pb.authStore.record?.email);
   } catch(e) {
     console.error('Auth FAILED:', e.status, e.message);

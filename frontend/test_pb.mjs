@@ -5,7 +5,7 @@ async function test(url, name) {
     const pb = new PocketBase(url);
     try {
         console.log("Authenticating...");
-        await pb.collection('users').authWithPassword('klicklaut@agentur.de', '***REMOVED***');
+        await pb.collection('users').authWithPassword('demo@vibeforce-flow.de', '***REMOVED***');
         console.log("Auth success. Token:", pb.authStore.token ? "Exists" : "Empty");
         
         console.log("Fetching projects...");

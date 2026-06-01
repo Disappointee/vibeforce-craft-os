@@ -1,4 +1,4 @@
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 

@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 const HOURLY_RATE = 20;
@@ -143,7 +143,7 @@ const SESSIONS = [
         daysAgo: 1, hours: 0.75
     },
     {
-        title: "Session #19 — Billability & Kupona-Timesheet", description: "DB-Migration: time_entries um is_billed + billing_reference. generateTimesheetHtml() (+165 lines). TypeScript-Typen\n\nDateien: pb_migrations, pdf-generator.ts",
+        title: "Session #19 — Billability & Stundenreport-Timesheet", description: "DB-Migration: time_entries um is_billed + billing_reference. generateTimesheetHtml() (+165 lines). TypeScript-Typen\n\nDateien: pb_migrations, pdf-generator.ts",
         daysAgo: 0, hours: 0.5
     },
     {

@@ -689,7 +689,7 @@ export default function ReportsPage() {
         const taxAmount = subtotal * taxRate;
 
         printInvoice({
-            companyName: process.env.NEXT_PUBLIC_COMPANY_NAME || 'Klicklaut GmbH',
+            companyName: process.env.NEXT_PUBLIC_COMPANY_NAME || 'Vibeforce Flow OS',
             companyAddress: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '',
             clientName: client?.company || client?.name || 'Kunde',
             clientAddress: '', // Can be extended with client address fields

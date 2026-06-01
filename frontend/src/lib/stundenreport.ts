@@ -141,7 +141,7 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
   ${projectsHtml}
 
   <div class="report-footer">
-    Erstellt mit Klicklaut OS — ${esc(meta.generatedAt)}
+    Erstellt mit Vibeforce Flow OS — ${esc(meta.generatedAt)}
   </div>`;
 }
 

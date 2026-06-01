@@ -2,11 +2,11 @@
  * Awork Migration Test Runner (v2)
  * 
  * Diese Datei bereitet den Testlauf der Import-Middleware vor.
- * Sie nutzt die CSV-Exporte aus dem 'Klicklaut' Ordner und simuliert den Import.
+ * Sie nutzt die CSV-Exporte aus dem 'Vibeforce' Ordner und simuliert den Import.
  * 
  * VORBEREITUNG:
  * 1. PocketBase muss laufen (http://127.0.0.1:8090)
- * 2. Die CSV-Dateien müssen in ../../Klicklaut/ vorhanden sein.
+ * 2. Die CSV-Dateien müssen in ../../Vibeforce/ vorhanden sein.
  */
 
 const { Transformer } = require('./transformer');
@@ -16,8 +16,8 @@ const path = require('path');
 async function prepareTest() {
     console.log('🧪 Vorbereitung des Migrations-Tests...');
     
-    const taskCsv = path.join(__dirname, '../../Klicklaut/awork_tasks_export.csv');
-    const timeCsv = path.join(__dirname, '../../Klicklaut/awork_time_export.csv');
+    const taskCsv = path.join(__dirname, '../../Vibeforce/awork_tasks_export.csv');
+    const timeCsv = path.join(__dirname, '../../Vibeforce/awork_time_export.csv');
 
     console.log(`📂 Lade Tasks aus: ${taskCsv}`);
     const rawTasks = CsvBridge.parse(taskCsv);

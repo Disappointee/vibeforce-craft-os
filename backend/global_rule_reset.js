@@ -1,4 +1,4 @@
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 const baseUrl = "http://127.0.0.1:8090";
 

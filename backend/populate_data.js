@@ -1,4 +1,4 @@
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 const baseUrl = "http://127.0.0.1:8090";
 
@@ -18,7 +18,7 @@ async function populateData() {
     method: "POST", headers,
     body: JSON.stringify({
       key: "KL",
-      name: "Website Relaunch Klicklaut",
+      name: "Website Relaunch",
       status: "active",
       budget_hours: 100,
       members: [userId]
