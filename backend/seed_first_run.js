@@ -8,7 +8,7 @@
  */
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8080";
-const ADMIN_EMAIL = "admin@vibeforce-flow.de";
+const ADMIN_EMAIL = "***REMOVED***";
 const ADMIN_PASSWORD = "***REMOVED***";
 
 function randomInt(min, max) {

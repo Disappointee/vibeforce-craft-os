@@ -127,11 +127,9 @@ export const useTimerStore = create<TimerState>()(
           if (state.runningTimeEntryId) {
             await pb.collection('time_entries').update(state.runningTimeEntryId, {
               end_time: endTime,
-              duration_seconds: Math.max(0, durationSeconds),
               duration_minutes: durationMinutes,
               description: state.description || undefined,
               is_billable: state.isBillable,
-              date: state.startTime.split('T')[0],
             });
           } else {
             await pb.collection('time_entries').create({
@@ -139,11 +137,9 @@ export const useTimerStore = create<TimerState>()(
               user: pb.authStore.record?.id,
               start_time: state.startTime,
               end_time: endTime,
-              duration_seconds: Math.max(0, durationSeconds),
               duration_minutes: durationMinutes,
               description: state.description || undefined,
               is_billable: state.isBillable,
-              date: state.startTime.split('T')[0],
             });
           }
 

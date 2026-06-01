@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== Awork Remastered Backend ==="
+echo "=== Vibeforce Flow OS Backend ==="
 
 PB_BINARY="/pb/pocketbase"
 PORT="${PORT:-8080}"

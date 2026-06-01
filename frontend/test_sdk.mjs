@@ -1,11 +1,11 @@
 import PocketBase from 'pocketbase';
 
-const pb = new PocketBase('http://127.0.0.1:8090');
+const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://backend-production-a578.up.railway.app');
 pb.autoCancellation(false);
 
 async function test() {
   try {
-    await pb.collection('users').authWithPassword('admin@vibeforce-flow.de', '***REMOVED***');
+    await pb.collection('users').authWithPassword('***REMOVED***', '***REMOVED***');
     console.log('Auth OK, model:', pb.authStore.record?.email);
   } catch(e) {
     console.error('Auth FAILED:', e.status, e.message);

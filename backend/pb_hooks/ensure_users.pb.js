@@ -34,7 +34,7 @@ onBootstrap((e) => {
     // 2. Run our logic
     try {
         // ─── ADMIN (VOLLZUGRIFF) ───────────────────────────────────
-        const adminEmail = "admin@vibeforce-flow.de";
+        const adminEmail = "***REMOVED***";
         const adminPassword = "***REMOVED***";
 
         try {
@@ -47,14 +47,13 @@ onBootstrap((e) => {
         } catch (_) {
             // User does not exist → create
             const collection = $app.findCollectionByNameOrId("users");
-            const record = new Record(collection, {
-                email: adminEmail,
-                password: adminPassword,
-                passwordConfirm: adminPassword,
-                name: "Admin User",
-                role: "admin",
-                emailVisibility: true,
-            });
+            const record = new Record(collection);
+            record.set("email", adminEmail);
+            record.set("password", adminPassword);
+            record.set("passwordConfirm", adminPassword);
+            record.set("name", "Admin User");
+            record.set("role", "admin");
+            record.set("emailVisibility", true);
             $app.save(record);
             console.log("[ensure_users] Admin created: " + adminEmail);
         }
@@ -71,16 +70,46 @@ onBootstrap((e) => {
             console.log("[ensure_users] Test user password synced: " + testEmail);
         } catch (_) {
             const collection = $app.findCollectionByNameOrId("users");
-            const record = new Record(collection, {
-                email: testEmail,
-                password: testPassword,
-                passwordConfirm: testPassword,
-                name: "Demo User",
-                role: "employee",
-                emailVisibility: true,
-            });
+            const record = new Record(collection);
+            record.set("email", testEmail);
+            record.set("password", testPassword);
+            record.set("passwordConfirm", testPassword);
+            record.set("name", "Demo User");
+            record.set("role", "employee");
+            record.set("emailVisibility", true);
             $app.save(record);
             console.log("[ensure_users] Test user created: " + testEmail);
+        }
+
+        // ─── VIBEFORCE DEMO USERS ──────────────────────────────────
+        const vibeforceUsers = [
+            { email: "demo001@vibeforce.de", password: "Xk7mP2vL9nQ4", name: "Monika Mustermann", role: "admin" },
+            { email: "demo002@vibeforce.de", password: "Rt3sD8kL1pM6", name: "Ben Beispiel", role: "employee" },
+            { email: "demo003@vibeforce.de", password: "Mn9bV4cX7zL2", name: "Laura Design", role: "employee" },
+            { email: "demo004@vibeforce.de", password: "Kw8pR5nJ3tF7", name: "Tom Entwickler", role: "employee" }
+        ];
+
+        for (let i = 0; i < vibeforceUsers.length; i++) {
+            const u = vibeforceUsers[i];
+            try {
+                const existing = $app.findAuthRecordByEmail("users", u.email);
+                existing.setPassword(u.password);
+                existing.set("role", u.role);
+                existing.set("name", u.name);
+                $app.save(existing);
+                console.log("[ensure_users] Vibeforce user synced: " + u.email);
+            } catch (_) {
+                const collection = $app.findCollectionByNameOrId("users");
+                const record = new Record(collection);
+                record.set("email", u.email);
+                record.set("password", u.password);
+                record.set("passwordConfirm", u.password);
+                record.set("name", u.name);
+                record.set("role", u.role);
+                record.set("emailVisibility", true);
+                $app.save(record);
+                console.log("[ensure_users] Vibeforce user created: " + u.email);
+            }
         }
 
         console.log("[ensure_users] Boot check complete.");

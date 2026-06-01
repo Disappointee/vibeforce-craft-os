@@ -32,24 +32,22 @@ function parseMentions(text) {
     return mentions;
 }
 
-// ─── Notification Helper ──────────────────────────────────────────────
-
-function createNotification(userId, type, title, message, link) {
-    const collection = $app.findCollectionByNameOrId('notifications');
-    const record = new Record(collection, {
-        user: userId,
-        type: type,
-        title: title,
-        message: message,
-        link: link || '',
-        read: false,
-    });
-    $app.save(record);
-}
-
 // ─── onRecordAfterCreateSuccess (task_comments) ──────────────────────────────
 
 onRecordAfterCreateSuccess(function (e) {
+    // Helper inside handler scope
+    function createNotification(userId, type, title, message, link) {
+        const collection = $app.findCollectionByNameOrId('notifications');
+        const record = new Record(collection);
+        record.set('user', userId);
+        record.set('type', type);
+        record.set('title', title);
+        record.set('message', message);
+        record.set('link', link || '');
+        record.set('read', false);
+        $app.save(record);
+    }
+
     const comment = e.record;
     const commentText = comment.get('text') || '';
     const taskId = comment.get('task') || '';

@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
     try {
-        const email = "admin@vibeforce-flow.de";
+        const email = "***REMOVED***";
         const password = "***REMOVED***";
 
         // Check if user already exists
@@ -33,7 +33,7 @@ migrate((app) => {
 }, (app) => {
     // Optional: remove the user on rollback
     try {
-        const record = app.findAuthRecordByEmail("users", "admin@vibeforce-flow.de");
+        const record = app.findAuthRecordByEmail("users", "***REMOVED***");
         app.delete(record);
     } catch (e) {}
 })

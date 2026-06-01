@@ -7,24 +7,6 @@
  * - task_due: wenn das Fälligkeitsdatum innerhalb von 3 Tagen liegt
  */
 
-// ─── Helpers ──────────────────────────────────────────────────────────
-
-/**
- * Notification-Record erstellen
- */
-function createNotification(userId, type, title, message, link) {
-    const collection = $app.findCollectionByNameOrId('notifications');
-    const record = new Record(collection, {
-        user: userId,
-        type: type,
-        title: title,
-        message: message,
-        link: link || '',
-        read: false,
-    });
-    $app.save(record);
-}
-
 // Module-level cache for tracking pre-update state (cleared per-request)
 var preUpdateCache = {};
 
@@ -42,8 +24,21 @@ onRecordUpdate(function (e) {
 // ─── onRecordAfterCreateSuccess (tasks) ──────────────────────────────────────
 
 onRecordAfterCreateSuccess(function (e) {
+    // Helper inside handler scope
+    function createNotification(userId, type, title, message, link) {
+        const collection = $app.findCollectionByNameOrId('notifications');
+        const record = new Record(collection);
+        record.set('user', userId);
+        record.set('type', type);
+        record.set('title', title);
+        record.set('message', message);
+        record.set('link', link || '');
+        record.set('read', false);
+        $app.save(record);
+    }
+
     var task = e.record;
-    var assignees = task.get('assignees') || [];
+    var assignees = task.getStringSlice('assignees') || [];
 
     for (var i = 0; i < assignees.length; i++) {
         var userId = assignees[i];
@@ -60,8 +55,21 @@ onRecordAfterCreateSuccess(function (e) {
 // ─── onRecordAfterUpdateSuccess (tasks) ──────────────────────────────────────
 
 onRecordAfterUpdateSuccess(function (e) {
+    // Helper inside handler scope
+    function createNotification(userId, type, title, message, link) {
+        const collection = $app.findCollectionByNameOrId('notifications');
+        const record = new Record(collection);
+        record.set('user', userId);
+        record.set('type', type);
+        record.set('title', title);
+        record.set('message', message);
+        record.set('link', link || '');
+        record.set('read', false);
+        $app.save(record);
+    }
+
     var task = e.record;
-    var assignees = task.get('assignees') || [];
+    var assignees = task.getStringSlice('assignees') || [];
     var title = task.get('title') || 'Unbenannt';
     var taskId = task.get('id');
 

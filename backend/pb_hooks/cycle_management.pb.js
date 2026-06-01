@@ -105,10 +105,11 @@ onRecordAfterUpdateSuccess((e) => {
         }
 
         // Benachrichtigungen für alle Projekt-Mitglieder erstellen
-        const members = project.get("members");
+        const members = project.getStringSlice("members") || [];
         if (members && members.length > 0) {
             const projectName = project.get("name") || "Unbekanntes Projekt";
             const newCycleNumber = project.get("cycle_number");
+            const collection = $app.findCollectionByNameOrId("notifications");
 
             for (const userId of members) {
                 try {
@@ -125,15 +126,13 @@ onRecordAfterUpdateSuccess((e) => {
 
                     // Nur erstellen, wenn nicht bereits eine für diesen User in den letzten 60s existiert
                     if (!notification) {
-                        const collection = $app.findCollectionByNameOrId("notifications");
-                        const newNotif = new Record(collection, {
-                            user: userId,
-                            type: "cycle_rollover",
-                            title: `Cycle-Rollover: ${projectName}`,
-                            message: `Der Cycle für ${projectName} wurde automatisch verlängert. ${openTasks.length} offene Tasks wurden in Cycle #${newCycleNumber} übernommen.`,
-                            link: `/projects/${projectId}`,
-                            is_read: false,
-                        });
+                        const newNotif = new Record(collection);
+                        newNotif.set("user", userId);
+                        newNotif.set("type", "project_update");
+                        newNotif.set("title", `Cycle-Rollover: ${projectName}`);
+                        newNotif.set("message", `Der Cycle für ${projectName} wurde automatisch verlängert. ${openTasks.length} offene Tasks wurden in Cycle #${newCycleNumber} übernommen.`);
+                        newNotif.set("link", `/projects/${projectId}`);
+                        newNotif.set("read", false);
                         $app.save(newNotif);
                     }
                 } catch (err) {

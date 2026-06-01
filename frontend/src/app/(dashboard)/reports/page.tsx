@@ -678,12 +678,12 @@ export default function ReportsPage() {
     };
 
     const handlePrintInvoice = (project: ProjectRecord, billableHours: number) => {
-        const projectTaskIds = tasks
-            .filter(t => t.project === project.id)
-            .map(t => t.id);
+        const projectTaskSet = new Set(
+            tasks.filter(t => t.project === project.id).map(t => t.id)
+        );
 
         const projectEntries = timeEntries.filter(e => {
-            if (!projectTaskIds.includes(e.task)) return false;
+            if (!projectTaskSet.has(e.task)) return false;
             if (e.is_billable === false) return false;
             if (e.is_billed === true) return false;
 
@@ -714,8 +714,9 @@ export default function ReportsPage() {
         const defaultRate = Number(process.env.NEXT_PUBLIC_DEFAULT_HOURLY_RATE) || 150;
         const invoiceNumber = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${project.key}`;
 
+        const taskMap = new Map(tasks.map(t => [t.id, t]));
         const lineItems: BillingLineItem[] = projectEntries.map(entry => {
-            const task = tasks.find(t => t.id === entry.task);
+            const task = taskMap.get(entry.task);
             const hours = (entry.duration_minutes || 0) / 60;
             const hourlyRate = client?.stundenhonorar || defaultRate;
             return {
@@ -761,12 +762,12 @@ export default function ReportsPage() {
     };
 
     const handlePrintServiceRecord = (project: ProjectRecord, billableHours: number) => {
-        const projectTaskIds = tasks
-            .filter(t => t.project === project.id)
-            .map(t => t.id);
+        const projectTaskSet = new Set(
+            tasks.filter(t => t.project === project.id).map(t => t.id)
+        );
 
         const projectEntries = timeEntries.filter(e => {
-            if (!projectTaskIds.includes(e.task)) return false;
+            if (!projectTaskSet.has(e.task)) return false;
             if (e.is_billable === false) return false;
             if (e.is_billed === true) return false;
 
@@ -795,8 +796,9 @@ export default function ReportsPage() {
 
         const client = project.client ? clients.find(c => c.id === project.client) : undefined;
 
+        const taskMap = new Map(tasks.map(t => [t.id, t]));
         const lineItems: BillingLineItem[] = projectEntries.map(entry => {
-            const task = tasks.find(t => t.id === entry.task);
+            const task = taskMap.get(entry.task);
             const hours = (entry.duration_minutes || 0) / 60;
             const hourlyRate = client?.stundenhonorar || Number(process.env.NEXT_PUBLIC_DEFAULT_HOURLY_RATE) || 150;
             return {
