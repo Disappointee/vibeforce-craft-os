@@ -315,9 +315,9 @@ export default function ReportsPage() {
 
     const presets = [
         { icon: BarChart3, title: 'Monatliche Erfassungsübersicht', description: 'Gruppiert nach Monat / Mitarbeiter', filter: { billableFilter: 'all' as const, groupBy: 'user' as const } },
-        { icon: TrendingUp, title: 'Erfasst vs. geplant', description: 'Budget-Prüfung der Projekte', filter: { billableFilter: 'all' as const } },
+        { icon: TrendingUp, title: 'Erfasst vs. geplant', description: 'Budget-Prüfung der Projekte', filter: { billableFilter: 'all' as const, groupBy: 'project' as const } },
         { icon: DollarSign, title: 'Abrechenbarkeit pro Mitarbeiter', description: 'Nur abrechenbare Zeiten', filter: { billableFilter: 'billable' as const, groupBy: 'user' as const } },
-        { icon: Receipt, title: 'Bereit zur Rechnungsstellung', description: 'Abrechenbar und noch offen', filter: { billableFilter: 'ready_to_invoice' as const } },
+        { icon: Receipt, title: 'Bereit zur Rechnungsstellung', description: 'Abrechenbar und noch offen', filter: { billableFilter: 'ready_to_invoice' as const, groupBy: 'project' as const } },
         { icon: FileText, title: 'Stundenreport', description: 'Gruppiert nach Projekt & Person', filter: { billableFilter: 'all' as const, groupBy: 'both' as const } },
     ];
 
@@ -566,29 +566,55 @@ export default function ReportsPage() {
         }>();
 
         for (const entry of timeEntries) {
+            // Filter out already billed or non-billable entries for the billing dashboard
+            if (entry.is_billed === true) continue;
+            if (entry.is_billable === false) continue;
+
             const taskProjectId = taskProjectMap.get(entry.task);
             if (!taskProjectId) continue;
 
+            // Apply project filter
+            if (filters.projectIds.length > 0 && !filters.projectIds.includes(taskProjectId)) {
+                continue;
+            }
+
+            // Apply client filter
             if (filters.clientIds.length > 0) {
                 const entryClientId = projectClientMap.get(taskProjectId);
                 if (!entryClientId || !filters.clientIds.includes(entryClientId)) continue;
             }
 
+            // Apply user filter
+            if (filters.userIds.length > 0 && !filters.userIds.includes(entry.user)) {
+                continue;
+            }
+
+            // Apply date filters
+            if (filters.dateFrom) {
+                const entryDate = entry.start_time || entry.created;
+                if (entryDate < filters.dateFrom) continue;
+            }
+            if (filters.dateTo) {
+                const entryDate = entry.start_time || entry.created;
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59, 999);
+                if (new Date(entryDate).getTime() > endDate.getTime()) continue;
+            }
+
             const project = projMap.get(taskProjectId);
             const durationMinutes = entry.duration_minutes || (entry.duration ? entry.duration / 60 : 0);
             const hours = durationMinutes / 60;
-            const isBillable = entry.is_billable !== false;
 
             if (project) {
                 project.totalHours += hours;
-                if (isBillable) project.billableHours += hours;
+                project.billableHours += hours;
                 project.entryCount++;
             } else {
                 const proj = projectMapLocal.get(taskProjectId);
                 if (proj) {
                     projMap.set(taskProjectId, {
                         project: proj,
-                        billableHours: isBillable ? hours : 0,
+                        billableHours: hours,
                         totalHours: hours,
                         unbilledAmount: 0,
                         taskCount: 1,
@@ -618,7 +644,7 @@ export default function ReportsPage() {
         return Array.from(projMap.values())
             .filter(d => d.billableHours > 0)
             .sort((a, b) => b.billableHours - a.billableHours);
-    }, [timeEntries, taskProjectMap, projectMapLocal, clients, filters.clientIds, projectClientMap]);
+    }, [timeEntries, taskProjectMap, projectMapLocal, clients, filters, projectClientMap]);
 
     const totalUnbilledAmount = useMemo(() => {
         return billingReadyProjects.reduce((sum, p) => sum + p.unbilledAmount, 0);
@@ -656,9 +682,28 @@ export default function ReportsPage() {
             .filter(t => t.project === project.id)
             .map(t => t.id);
 
-        const projectEntries = timeEntries.filter(e =>
-            projectTaskIds.includes(e.task) && e.is_billable !== false
-        );
+        const projectEntries = timeEntries.filter(e => {
+            if (!projectTaskIds.includes(e.task)) return false;
+            if (e.is_billable === false) return false;
+            if (e.is_billed === true) return false;
+
+            // Apply user filter if active
+            if (filters.userIds.length > 0 && !filters.userIds.includes(e.user)) return false;
+
+            // Apply date filters if active
+            if (filters.dateFrom) {
+                const entryDate = e.start_time || e.created;
+                if (entryDate < filters.dateFrom) return false;
+            }
+            if (filters.dateTo) {
+                const entryDate = e.start_time || e.created;
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59, 999);
+                if (new Date(entryDate).getTime() > endDate.getTime()) return false;
+            }
+
+            return true;
+        });
 
         if (projectEntries.length === 0) {
             toast.error('Keine abrechenbaren Einträge für dieses Projekt');
@@ -720,9 +765,28 @@ export default function ReportsPage() {
             .filter(t => t.project === project.id)
             .map(t => t.id);
 
-        const projectEntries = timeEntries.filter(e =>
-            projectTaskIds.includes(e.task) && e.is_billable !== false
-        );
+        const projectEntries = timeEntries.filter(e => {
+            if (!projectTaskIds.includes(e.task)) return false;
+            if (e.is_billable === false) return false;
+            if (e.is_billed === true) return false;
+
+            // Apply user filter if active
+            if (filters.userIds.length > 0 && !filters.userIds.includes(e.user)) return false;
+
+            // Apply date filters if active
+            if (filters.dateFrom) {
+                const entryDate = e.start_time || e.created;
+                if (entryDate < filters.dateFrom) return false;
+            }
+            if (filters.dateTo) {
+                const entryDate = e.start_time || e.created;
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59, 999);
+                if (new Date(entryDate).getTime() > endDate.getTime()) return false;
+            }
+
+            return true;
+        });
 
         if (projectEntries.length === 0) {
             toast.error('Keine abrechenbaren Einträge für dieses Projekt');
