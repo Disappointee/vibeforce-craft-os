@@ -3,8 +3,8 @@
  *
  * Garantiert, dass die beiden Master-Logins bei jedem Serverstart
  * existieren und die korrekten Passwörter haben:
- *   - ***REMOVED***  (Admin, VOLLZUGRIFF)
- *   - demo@vibeforce.de       (Mitarbeiter, TEST)
+ *   - admin@vibeforce-flow.de  (Admin, VOLLZUGRIFF)
+ *   - demo@vibeforce-flow.de   (Mitarbeiter, TEST)
  *
  * PocketBase v0.37+ pb_hooks API:
  *   - onBootstrap()                    → Wird bei Serverstart ausgeführt
@@ -34,7 +34,7 @@ onBootstrap((e) => {
     // 2. Run our logic
     try {
         // ─── ADMIN (VOLLZUGRIFF) ───────────────────────────────────
-        const adminEmail = "***REMOVED***";
+        const adminEmail = "admin@vibeforce-flow.de";
         const adminPassword = "***REMOVED***";
 
         try {
@@ -51,7 +51,7 @@ onBootstrap((e) => {
                 email: adminEmail,
                 password: adminPassword,
                 passwordConfirm: adminPassword,
-                name: "Robin Lehnebach",
+                name: "Admin User",
                 role: "admin",
                 emailVisibility: true,
             });
@@ -75,7 +75,7 @@ onBootstrap((e) => {
                 email: testEmail,
                 password: testPassword,
                 passwordConfirm: testPassword,
-                name: "Vibeforce Test",
+                name: "Demo User",
                 role: "employee",
                 emailVisibility: true,
             });

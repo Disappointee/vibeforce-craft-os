@@ -1,5 +1,5 @@
 import type { TimeEntryRecord } from '@/lib/pocketbase-types';
-import type { KuponaReportInput, KuponaProjectGroup, KuponaTimeEntry } from '@/lib/kupona-report';
+import type { StundenreportInput, StundenreportProjectGroup, StundenreportEntry } from '@/lib/stundenreport';
 
 export const formatHoursHM = (hours: number): string => {
     const h = Math.floor(hours);
@@ -28,8 +28,8 @@ export const hasHourlyRates = (entries: TimeEntryRecord[]): boolean => {
     );
 };
 
-export const buildKuponaInput = (entries: TimeEntryRecord[], showHourlyRate: boolean): KuponaReportInput => {
-    const projectMap: Record<string, { name: string; clientName: string; entries: KuponaTimeEntry[]; totalMinutes: number }> = {};
+export const buildStundenreportInput = (entries: TimeEntryRecord[], showHourlyRate: boolean): StundenreportInput => {
+    const projectMap: Record<string, { name: string; clientName: string; entries: StundenreportEntry[]; totalMinutes: number }> = {};
 
     entries.forEach((entry) => {
         const task = (entry as any).expand?.task;
@@ -50,7 +50,7 @@ export const buildKuponaInput = (entries: TimeEntryRecord[], showHourlyRate: boo
 
         projectMap[key].totalMinutes += minutes;
 
-        const entryData: KuponaTimeEntry = {
+        const entryData: StundenreportEntry = {
             date: formattedDate,
             task: task?.title || 'Keine Aufgabe',
             note: entry.description || '',
@@ -68,11 +68,11 @@ export const buildKuponaInput = (entries: TimeEntryRecord[], showHourlyRate: boo
     let totalMinutes = 0;
     let totalCostCents = 0;
 
-    const projects: KuponaProjectGroup[] = Object.entries(projectMap).map(([key, group]) => {
+    const projects: StundenreportProjectGroup[] = Object.entries(projectMap).map(([key, group]) => {
         totalMinutes += group.totalMinutes;
         const totalHours = group.totalMinutes / 60;
 
-        const project: KuponaProjectGroup = {
+        const project: StundenreportProjectGroup = {
             projectName: group.name,
             projectKey: key,
             clientName: group.clientName,

@@ -9,7 +9,7 @@ const templateMap: Record<ReportTemplate, string> = {
   swiss: reportTemplateSwiss,
 };
 
-export interface KuponaReportMeta {
+export interface StundenreportMeta {
   clientName: string;
   periodFrom: string;
   periodTo: string;
@@ -20,7 +20,7 @@ export interface KuponaReportMeta {
   totalCost?: string;
 }
 
-export interface KuponaTimeEntry {
+export interface StundenreportEntry {
   date: string;
   task: string;
   note: string;
@@ -29,18 +29,18 @@ export interface KuponaTimeEntry {
   cost?: string;
 }
 
-export interface KuponaProjectGroup {
+export interface StundenreportProjectGroup {
   projectName: string;
   projectKey: string;
   clientName?: string;
   projectTotalDuration: string;
   projectTotalCost?: string;
-  entries: KuponaTimeEntry[];
+  entries: StundenreportEntry[];
 }
 
-export interface KuponaReportInput {
-  meta: KuponaReportMeta;
-  projects: KuponaProjectGroup[];
+export interface StundenreportInput {
+  meta: StundenreportMeta;
+  projects: StundenreportProjectGroup[];
 }
 
 function esc(text: string): string {
@@ -58,7 +58,7 @@ function escAttr(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function buildProjectTable(project: KuponaProjectGroup, showHourlyRate: boolean, showProjectClient: boolean): string {
+function buildProjectTable(project: StundenreportProjectGroup, showHourlyRate: boolean, showProjectClient: boolean): string {
   const rowsHtml = project.entries.map((entry) => {
     const rateCell = showHourlyRate
       ? `<td class="numeric">${entry.hourlyRate ? esc(entry.hourlyRate) : '—'}</td>`
@@ -103,7 +103,7 @@ function buildProjectTable(project: KuponaProjectGroup, showHourlyRate: boolean,
   </div>`;
 }
 
-export function buildKuponaBodyHtml(data: KuponaReportInput): string {
+export function buildStundenreportBodyHtml(data: StundenreportInput): string {
   const { meta, projects } = data;
 
   const uniqueClients = Array.from(new Set(projects.map(p => p.clientName).filter(Boolean)));
@@ -141,12 +141,12 @@ export function buildKuponaBodyHtml(data: KuponaReportInput): string {
   ${projectsHtml}
 
   <div class="report-footer">
-    Erstellt mit Vibeforce Flow OS — ${esc(meta.generatedAt)}
+    Erstellt mit Klicklaut OS — ${esc(meta.generatedAt)}
   </div>`;
 }
 
-export function buildKuponaFullHtml(data: KuponaReportInput, template: ReportTemplate = 'default'): string {
-  const bodyContent = buildKuponaBodyHtml(data);
+export function buildStundenreportFullHtml(data: StundenreportInput, template: ReportTemplate = 'default'): string {
+  const bodyContent = buildStundenreportBodyHtml(data);
   const templateHtml = templateMap[template] || templateMap.default;
   return templateHtml.replace(
     /<div id="report-content">[\s\S]*?<\/div>/,

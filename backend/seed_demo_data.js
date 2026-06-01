@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8090";
-const ADMIN_EMAIL = "***REMOVED***";
+const ADMIN_EMAIL = "admin@vibeforce-flow.de";
 const ADMIN_PASSWORD = "***REMOVED***";
 
 const genPassword = () => crypto.randomBytes(10).toString('hex');
@@ -78,6 +78,9 @@ async function main() {
         { name: "TechNova GmbH", company: "TechNova GmbH", email: "kontakt@technova.de", branch: "IT", stundenhonorar: 150, status: "aktiv", is_billable_default: true },
         { name: "GreenLife AG", company: "GreenLife AG", email: "info@greenlife.de", branch: "Nachhaltigkeit", stundenhonorar: 175, status: "aktiv", is_billable_default: true },
         { name: "Urban Architects", company: "Urban Architects", email: "office@urban-architects.de", branch: "Architektur", stundenhonorar: 200, status: "aktiv", is_billable_default: true },
+        { name: "MediaFlow GmbH", company: "MediaFlow GmbH", email: "hallo@mediaflow.de", branch: "Marketing", stundenhonorar: 165, status: "aktiv", is_billable_default: true },
+        { name: "SmartData AG", company: "SmartData AG", email: "info@smartdata.de", branch: "Datenanalyse", stundenhonorar: 190, status: "aktiv", is_billable_default: true },
+        { name: "BuildCorp GmbH", company: "BuildCorp GmbH", email: "kontakt@buildcorp.de", branch: "Bauwirtschaft", stundenhonorar: 180, status: "aktiv", is_billable_default: true },
     ];
 
     const clientIds = {};
@@ -99,6 +102,9 @@ async function main() {
         { name: "Projekt Alpha", key: "PA", client: clientIds["TechNova GmbH"], status: "active", description: "Full-Service Digitalstrategie mit Schwerpunkt SEO und Content-Marketing.", budget_hours: 120 },
         { name: "Digital Campaign 2026", key: "DC", client: clientIds["GreenLife AG"], status: "active", description: "Ganzjahres-Kampagne für nachhaltige Produkte mit Social-Media-Fokus.", budget_hours: 80 },
         { name: "Website Relaunch", key: "WR", client: clientIds["Urban Architects"], status: "active", description: "Kompletter Relaunch inkl. neuem CMS, Portfolio-Showcase und 3D-Visualisierungen.", budget_hours: 200 },
+        { name: "Content Marketing 2026", key: "CM", client: clientIds["MediaFlow GmbH"], status: "active", description: "Content-Marketing-Kampagne mit Blog, Social Media und Newsletter.", budget_hours: 60 },
+        { name: "Datenanalyse Dashboard", key: "DD", client: clientIds["SmartData AG"], status: "active", description: "Entwicklung eines interaktiven Datenanalyse-Dashboards.", budget_hours: 150 },
+        { name: "Neubau Marketing", key: "NM", client: clientIds["BuildCorp GmbH"], status: "active", description: "Marketingkampagne für Neubau-Projekte.", budget_hours: 90 },
     ];
 
     const projectIds = {};
@@ -116,7 +122,7 @@ async function main() {
     }
     console.log();
 
-    // ── 5. Create tasks (15) ──
+    // ── 5. Create tasks (30) ──
     console.log("[5] Creating demo tasks...");
     const today = new Date();
     function d(n) { const d = new Date(today); d.setDate(d.getDate() + n); return d.toISOString(); }
@@ -140,6 +146,24 @@ async function main() {
         { project: "WR", title: "CMS-Integration", status: "in_progress", priority: "high", estimated_hours: 20 },
         { project: "WR", title: "QA Testing", status: "todo", priority: "high", estimated_hours: 16 },
         { project: "WR", title: "Performance-Optimierung", status: "todo", priority: "medium", estimated_hours: 12 },
+        // Content Marketing (CM)
+        { project: "CM", title: "Blog-Redaktionsplan Q3", status: "done", priority: "high", estimated_hours: 8 },
+        { project: "CM", title: "Social Media Content erstellen", status: "in_progress", priority: "medium", estimated_hours: 12 },
+        { project: "CM", title: "Newsletter-Kampagne aufsetzen", status: "todo", priority: "high", estimated_hours: 6 },
+        { project: "CM", title: "SEO-optimierte Landingpages", status: "todo", priority: "medium", estimated_hours: 10 },
+        { project: "CM", title: "Performance-Analyse Juni", status: "review", priority: "medium", estimated_hours: 4 },
+        // Datenanalyse Dashboard (DD)
+        { project: "DD", title: "Datenbank-Modellierung", status: "done", priority: "high", estimated_hours: 16 },
+        { project: "DD", title: "Chart-Komponenten entwickeln", status: "in_progress", priority: "high", estimated_hours: 24 },
+        { project: "DD", title: "Export-Funktion (CSV/PDF)", status: "in_progress", priority: "medium", estimated_hours: 10 },
+        { project: "DD", title: "Benutzerverwaltung", status: "todo", priority: "high", estimated_hours: 14 },
+        { project: "DD", title: "Systemtest & QA", status: "todo", priority: "medium", estimated_hours: 8 },
+        // Neubau Marketing (NM)
+        { project: "NM", title: "Broschüren-Design", status: "done", priority: "high", estimated_hours: 12 },
+        { project: "NM", title: "Online-Anzeigen schalten", status: "in_progress", priority: "medium", estimated_hours: 8 },
+        { project: "NM", title: "Virtuelle 360°-Tour", status: "todo", priority: "high", estimated_hours: 20 },
+        { project: "NM", title: "Pressearbeit & PR", status: "todo", priority: "medium", estimated_hours: 6 },
+        { project: "NM", title: "Verkaufsstart-Kampagne", status: "review", priority: "high", estimated_hours: 10 },
     ];
 
     const taskIds = [];
@@ -165,10 +189,10 @@ async function main() {
     }
     console.log();
 
-    // ── 6. Create time entries (30) ──
+    // ── 6. Create time entries (60) ──
     console.log("[6] Creating demo time entries...");
     let entryCount = 0;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
         const taskId = taskIds[Math.floor(Math.random() * taskIds.length)];
         const userId = allUserIds[Math.floor(Math.random() * allUserIds.length)];
         const dayOffset = -Math.floor(Math.random() * 14);

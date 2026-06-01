@@ -8,7 +8,7 @@
  */
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8080";
-const ADMIN_EMAIL = "***REMOVED***";
+const ADMIN_EMAIL = "admin@vibeforce-flow.de";
 const ADMIN_PASSWORD = "***REMOVED***";
 
 async function api(method, path, body, token) {
@@ -45,7 +45,7 @@ async function main() {
         { email: "sarah.meier@agentur.de", password: "***REMOVED***", name: "Sarah Meier", role: "employee" },
         { email: "lukas.wagner@agentur.de", password: "***REMOVED***", name: "Lukas Wagner", role: "employee" },
         { email: "anna.schneider@agentur.de", password: "***REMOVED***", name: "Anna Schneider", role: "employee" },
-        { email: "carl@vibeforce.de", password: "***REMOVED***", name: "Carl Klicklaut", role: "employee" },
+        { email: "carl@vibeforce.de", password: "***REMOVED***", name: "Demo User", role: "employee" },
         { email: "max@kunde.de", password: "***REMOVED***", name: "Max Mustermann", role: "client" },
     ];
 
@@ -63,7 +63,7 @@ async function main() {
     // ── 3. Create clients ──
     console.log("\n[3] Creating demo clients...");
     const clientDefs = [
-        { name: "Vibeforce One GmbH", stundenhonorar: 150, status: "active", is_billable_default: true },
+        { name: "DigitalPulse GmbH", stundenhonorar: 150, status: "active", is_billable_default: true },
         { name: "Musterfirma AG", stundenhonorar: 175, status: "active", is_billable_default: true },
         { name: "Technik Solutions", stundenhonorar: 200, status: "active", is_billable_default: true },
         { name: "Beta Group e.K.", stundenhonorar: 130, status: "active", is_billable_default: true },
@@ -83,7 +83,7 @@ async function main() {
         { name: "SEO-Optimierung", key: "SEO", client: clientIds["Technik Solutions"], status: "active", description: "Laufende SEO-Maßnahmen und Content-Optimierung." },
         { name: "Social Media Kampagne", key: "SMC", client: clientIds["Musterfirma AG"], status: "active", description: "Quartalsweise Social-Media-Kampagne für Produkteinführung." },
         { name: "Tracking-Integration", key: "TRK", client: clientIds["Beta Group e.K."], status: "active", description: "Implementierung von Tracking-Pixeln und Analytics." },
-        { name: "Awork Remastered", key: "AWR", client: clientIds["Vibeforce One GmbH"], status: "active", description: "Self-Tracking-Projekt für die Weiterentwicklung.", project_type: "development", is_billable: false },
+        { name: "Awork Remastered", key: "AWR", client: clientIds["DigitalPulse GmbH"], status: "active", description: "Self-Tracking-Projekt für die Weiterentwicklung.", project_type: "development", is_billable: false },
     ];
 
     const projectIds = {};
@@ -126,6 +126,28 @@ async function main() {
         { project: "AWR", title: "Darkmode & Theme-System Refactoring", status: "done", priority: "high", assignee: "sarah.meier@agentur.de", estimated_hours: 12 },
         { project: "AWR", title: "Gantt Timeline UI Upgrade", status: "in_progress", priority: "high", assignee: "lukas.wagner@agentur.de", estimated_hours: 20 },
         { project: "AWR", title: "Utilization-Rate-Report", status: "review", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 8 },
+        // Weitere Tasks für Webseite Relaunch
+        { project: "WEB", title: "Responsive Tests", status: "todo", priority: "medium", assignee: "sarah.meier@agentur.de", estimated_hours: 10 },
+        { project: "WEB", title: "Barrierefreiheit-Check", status: "todo", priority: "low", assignee: "anna.schneider@agentur.de", estimated_hours: 6 },
+        // Weitere Tasks für SEO
+        { project: "SEO", title: "Local SEO Optimierung", status: "todo", priority: "medium", assignee: "lukas.wagner@agentur.de", estimated_hours: 8 },
+        { project: "SEO", title: "Google My Business Setup", status: "done", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 4 },
+        { project: "SEO", title: "Structured Data Integration", status: "in_progress", priority: "high", assignee: "lukas.wagner@agentur.de", estimated_hours: 12 },
+        // Weitere Tasks für Social Media
+        { project: "SMC", title: "Instagram Story Templates", status: "todo", priority: "low", assignee: "anna.schneider@agentur.de", estimated_hours: 6 },
+        { project: "SMC", title: "Facebook Ads Budgetplanung", status: "in_progress", priority: "high", assignee: "sarah.meier@agentur.de", estimated_hours: 8 },
+        { project: "SMC", title: "LinkedIn Thought-Leadership", status: "todo", priority: "medium", assignee: "sarah.meier@agentur.de", estimated_hours: 10 },
+        // Weitere Tasks für Tracking
+        { project: "TRK", title: "Hotjar Heatmap Setup", status: "todo", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 4 },
+        { project: "TRK", title: "UTM-Parameter Standards", status: "done", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 3 },
+        { project: "TRK", title: "Custom Events Tracking", status: "in_progress", priority: "high", assignee: "carl@vibeforce.de", estimated_hours: 10 },
+        { project: "TRK", title: "Monthly Analytics Report", status: "review", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 4 },
+        // Weitere Tasks für Awork Remastered
+        { project: "AWR", title: "Task Quick-Options Kontextmenü", status: "in_progress", priority: "high", assignee: "lukas.wagner@agentur.de", estimated_hours: 12 },
+        { project: "AWR", title: "PDF Reportexport-Stundenreport", status: "done", priority: "high", assignee: "sarah.meier@agentur.de", estimated_hours: 10 },
+        { project: "AWR", title: "Mobile Responsive Optimierung", status: "todo", priority: "medium", assignee: "anna.schneider@agentur.de", estimated_hours: 14 },
+        { project: "AWR", title: "Notification System Upgrade", status: "in_progress", priority: "medium", assignee: "carl@vibeforce.de", estimated_hours: 8 },
+        { project: "AWR", title: "Datenexport-Modul (CSV/PDF)", status: "todo", priority: "high", assignee: "lukas.wagner@agentur.de", estimated_hours: 16 },
     ];
 
     const taskIds = [];
@@ -149,7 +171,7 @@ async function main() {
     const usersList = Object.values(userIds).filter(Boolean);
     const taskSample = taskIds;
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 80; i++) {
         const taskId = taskSample[Math.floor(Math.random() * taskSample.length)];
         const userId = usersList[Math.floor(Math.random() * usersList.length)];
         const dayOffset = -Math.floor(Math.random() * 21);
@@ -173,7 +195,7 @@ async function main() {
             }, adminToken);
         } catch { /* best-effort for time entries */ }
     }
-    console.log(`  Created ~40 time entries`);
+    console.log(`  Created ~80 time entries`);
 
     console.log("\n=== Seed complete! ===");
     console.log(`  Admin: ${ADMIN_EMAIL}`);

@@ -7,7 +7,7 @@
  * Target: Production Railway instance
  */
 
-const email = "***REMOVED***";
+const email = "admin@vibeforce-flow.de";
 const password = "***REMOVED***";
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 
@@ -92,7 +92,7 @@ async function populateData() {
     const sarahId = await createUser("Sarah Meier", "sarah.meier@agentur.de", "employee", ["sea", "social_ads", "content"]);
     const lukasId = await createUser("Lukas Wagner", "lukas.wagner@agentur.de", "employee", ["development", "seo", "tracking"]);
     const annaId = await createUser("Anna Schneider", "anna.schneider@agentur.de", "employee", ["design", "content", "consulting"]);
-    const carlId = await createUser("Carl Klicklaut", "carl@vibeforce.de", "employee", ["development", "consulting"]);
+    const carlId = await createUser("Carl Schmidt", "carl@vibeforce.de", "employee", ["development", "consulting"]);
 
     // ═══════════════════════════════════════════════════════════
     // [2.5/8] "Awork Remastered" — Self-Tracking Project
@@ -104,13 +104,13 @@ async function populateData() {
         console.log("\n  >>> Creating 'Awork Remastered' self-tracking project...");
 
         // Projekt anlegen
-        const klicklautClient = existingClients.find(c => c.name === "Vibeforce One GmbH") || c1;
+        const digitalPulseClient = existingClients.find(c => c.name === "DigitalPulse GmbH") || c1;
         const awrProject = await apiPost(headers, "projects", {
             name: "Awork Remastered",
             key: "AWR",
-            client: klicklautClient?.id || null,
+            client: digitalPulseClient?.id || null,
             status: "active",
-            description: "Self-Tracking-Projekt für die Weiterentwicklung des Vibeforce Flow OS Tools. Enthält alle Tasks rund um Dark Mode, Gantt-Upgrades, Bugfixes und Reporting.",
+            description: "Self-Tracking-Projekt für die Weiterentwicklung des Flow OS Tools. Enthält alle Tasks rund um Dark Mode, Gantt-Upgrades, Bugfixes und Reporting.",
             project_type: "development",
             project_lead: mainUserId,
             members: [mainUserId, carlId].filter(Boolean),
@@ -133,7 +133,7 @@ async function populateData() {
             const inProgressTasks = [
                 { title: "Gantt Timeline UI Upgrade (Original Awork Look)", status: "in_progress", priority: "high", type: "development", assignee: mainUserId, description: "Linke Tabelle + rechter Chart synced, 38px Balken, Drag-Handles, CSS-Variablen" },
                 { title: "Task Quick-Options (3-Punkte Kontextmenü)", status: "in_progress", priority: "high", type: "development", assignee: mainUserId, description: "more_vert Icon an jeder Task-Zeile, Submenü für Statusänderung, Quick-Actions (Zeit erfassen, Zuständigkeit)" },
-                { title: "PDF Reportexport im Kupona-Layout anpassen", status: "in_progress", priority: "high", type: "development", assignee: mainUserId, description: "Leistungsnachweis-Layout: Datum|Mitarbeiter|Tätigkeit|Dauer, Summenzeile, Briefkopf mit Logo/Kundendaten" },
+                { title: "PDF Reportexport im Stundenreport-Layout anpassen", status: "in_progress", priority: "high", type: "development", assignee: mainUserId, description: "Leistungsnachweis-Layout: Datum|Mitarbeiter|Tätigkeit|Dauer, Summenzeile, Briefkopf mit Logo/Kundendaten" },
             ];
 
             const reviewTasks = [
@@ -225,10 +225,10 @@ async function populateData() {
 
     // CLIENTS
     console.log("\n[3/8] Creating clients...");
-    let c1 = existingClients.find(c => c.name === "Vibeforce One GmbH");
+    let c1 = existingClients.find(c => c.name === "DigitalPulse GmbH");
     if (!c1) {
         c1 = await apiPost(headers, "clients", {
-            name: "Vibeforce One GmbH", company: "Vibeforce One GmbH", email: "info@vibeforce.de",
+            name: "DigitalPulse GmbH", company: "DigitalPulse GmbH", email: "info@digitalpulse.de",
             phone: "+49 30 12345678", address: "Musterstraße 42, 10115 Berlin",
             status: "active", auftragsvolumen: 85000, stundenhonorar: 120,
             stundenzahl_monatlich: 80, stundenzahl_gesamt: 700,
@@ -237,8 +237,8 @@ async function populateData() {
             betreuer: [mainUserId], beobachter: [sarahId].filter(Boolean),
             notes: "<p>Stammkunde seit 2023. Regelm&auml;&szlig;ige Projekte im Bereich SEA und Social Ads.</p>"
         });
-        console.log(`  Created client: Vibeforce One GmbH (${c1?.id})`);
-    } else console.log(`  Client exists: Vibeforce One GmbH (${c1.id})`);
+        console.log(`  Created client: DigitalPulse GmbH (${c1?.id})`);
+    } else console.log(`  Client exists: DigitalPulse GmbH (${c1.id})`);
 
     let c2 = existingClients.find(c => c.name === "GreenLeaf Media");
     if (!c2) {
@@ -270,7 +270,37 @@ async function populateData() {
         console.log(`  Created client: TechVentures AG (${c3?.id})`);
     } else console.log(`  Client exists: TechVentures AG (${c3.id})`);
 
-    const clients = [c1, c2, c3].filter(Boolean);
+    let c4 = existingClients.find(c => c.name === "MediaWorks GmbH");
+    if (!c4) {
+        c4 = await apiPost(headers, "clients", {
+            name: "MediaWorks GmbH", company: "MediaWorks GmbH", email: "info@mediaworks.de",
+            phone: "+49 69 1112233", address: "Mainzer Landstraße 50, 60327 Frankfurt",
+            status: "active", auftragsvolumen: 55000, stundenhonorar: 135,
+            stundenzahl_monatlich: 50, stundenzahl_gesamt: 400,
+            laufzeit_start: toISO(daysAgo(45)), laufzeit_ende: toISO(daysFromNow(320)),
+            abrechenbar: true, kundenstatus: "aktiv",
+            betreuer: [annaId].filter(Boolean), beobachter: [mainUserId].filter(Boolean),
+            notes: "<p>Medienagentur aus Frankfurt. Fokus auf Content-Erstellung und Videoproduktion.</p>"
+        });
+        console.log(`  Created client: MediaWorks GmbH (${c4?.id})`);
+    } else console.log(`  Client exists: MediaWorks GmbH (${c4.id})`);
+
+    let c5 = existingClients.find(c => c.name === "NordBau GmbH");
+    if (!c5) {
+        c5 = await apiPost(headers, "clients", {
+            name: "NordBau GmbH", company: "NordBau GmbH", email: "info@nordbau.de",
+            phone: "+49 421 998877", address: "Uberseering 10, 28209 Bremen",
+            status: "active", auftragsvolumen: 72000, stundenhonorar: 110,
+            stundenzahl_monatlich: 70, stundenzahl_gesamt: 650,
+            laufzeit_start: toISO(daysAgo(30)), laufzeit_ende: toISO(daysFromNow(335)),
+            abrechenbar: true, kundenstatus: "aktiv",
+            betreuer: [lukasId].filter(Boolean), beobachter: [mainUserId, annaId].filter(Boolean),
+            notes: "<p>Bauunternehmen aus Bremen. Digitale Transformation und Prozessoptimierung.</p>"
+        });
+        console.log(`  Created client: NordBau GmbH (${c5?.id})`);
+    } else console.log(`  Client exists: NordBau GmbH (${c5.id})`);
+
+    const clients = [c1, c2, c3, c4, c5].filter(Boolean);
 
     // PROJECTS
     console.log("\n[4/8] Creating projects...");
@@ -283,19 +313,19 @@ async function populateData() {
         return base + i;
     }
 
-    let p1 = existingProjects.find(p => p.name === "Vibeforce Flow OS Launch");
+    let p1 = existingProjects.find(p => p.name === "Flow OS Platform Launch");
     if (!p1) {
         p1 = await apiPost(headers, "projects", {
-            name: "Vibeforce Flow OS Launch", key: uniqueKey("KLOS"), status: "active",
+            name: "Flow OS Platform Launch", key: uniqueKey("KLOS"), status: "active",
             client: c1?.id, members: [mainUserId, sarahId, lukasId, annaId].filter(Boolean),
             start_date: toISO(daysAgo(14)), end_date: toISO(daysFromNow(28)),
-            description: "Finalisierung und Rollout des neuen Vibeforce Flow OS",
+            description: "Finalisierung und Rollout des neuen Flow OS Platform",
             budget_hours: 350, budget_money: 45000, budget_fixed: 45000, budget_type: "fixed",
             external_costs_total: 3200,
             cycle_start_date: toISO(daysAgo(14)), cycle_end_date: toISO(daysFromNow(14)), cycle_number: 2
         });
-        console.log(`  Created project: Vibeforce Flow OS Launch (${p1?.id})`);
-    } else console.log(`  Project exists: Vibeforce Flow OS Launch (${p1.id})`);
+        console.log(`  Created project: Flow OS Platform Launch (${p1?.id})`);
+    } else console.log(`  Project exists: Flow OS Platform Launch (${p1.id})`);
 
     let p2 = existingProjects.find(p => p.name === "GreenLeaf SEO Campaign");
     if (!p2) {
@@ -325,10 +355,10 @@ async function populateData() {
         console.log(`  Created project: TechVentures App Development (${p3?.id})`);
     } else console.log(`  Project exists: TechVentures App Development (${p3.id})`);
 
-    let p4 = existingProjects.find(p => p.name === "Vibeforce Social Ads Q2");
+    let p4 = existingProjects.find(p => p.name === "Social Ads Q2");
     if (!p4) {
         p4 = await apiPost(headers, "projects", {
-            name: "Vibeforce Social Ads Q2", key: "KLSAQ2", status: "active",
+            name: "Social Ads Q2", key: "KLSAQ2", status: "active",
             client: c1?.id, members: [sarahId, mainUserId].filter(Boolean),
             start_date: toISO(daysAgo(7)), end_date: toISO(daysFromNow(84)),
             description: "Social Media Advertising Kampagne f&uuml;r Q2 2026",
@@ -336,8 +366,8 @@ async function populateData() {
             external_costs_total: 4500,
             cycle_start_date: toISO(daysAgo(7)), cycle_end_date: toISO(daysFromNow(21)), cycle_number: 1
         });
-        console.log(`  Created project: Vibeforce Social Ads Q2 (${p4?.id})`);
-    } else console.log(`  Project exists: Vibeforce Social Ads Q2 (${p4.id})`);
+        console.log(`  Created project: Social Ads Q2 (${p4?.id})`);
+    } else console.log(`  Project exists: Social Ads Q2 (${p4.id})`);
 
     let p5 = existingProjects.find(p => p.name === "Internal Website Redesign");
     if (!p5) {
@@ -366,7 +396,35 @@ async function populateData() {
         console.log(`  Created project: GreenLeaf Brand Refresh (${p6?.id})`);
     } else console.log(`  Project exists: GreenLeaf Brand Refresh (${p6.id})`);
 
-    const projects = [p1, p2, p3, p4, p5, p6].filter(Boolean);
+    let p7 = existingProjects.find(p => p.name === "MediaWorks Content Hub");
+    if (!p7) {
+        p7 = await apiPost(headers, "projects", {
+            name: "MediaWorks Content Hub", key: "MWCH", status: "active",
+            client: c4?.id, members: [annaId, sarahId].filter(Boolean),
+            start_date: toISO(daysAgo(10)), end_date: toISO(daysFromNow(60)),
+            description: "Aufbau eines zentralen Content-Hubs für Blog, Video und Podcast.",
+            budget_hours: 100, budget_money: 12000, budget_fixed: 12000, budget_type: "fixed",
+            external_costs_total: 2800,
+            cycle_start_date: toISO(daysAgo(10)), cycle_end_date: toISO(daysFromNow(20)), cycle_number: 1
+        });
+        console.log(`  Created project: MediaWorks Content Hub (${p7?.id})`);
+    } else console.log(`  Project exists: MediaWorks Content Hub (${p7.id})`);
+
+    let p8 = existingProjects.find(p => p.name === "NordBau Digitalisierung");
+    if (!p8) {
+        p8 = await apiPost(headers, "projects", {
+            name: "NordBau Digitalisierung", key: "NBDIG", status: "active",
+            client: c5?.id, members: [lukasId, mainUserId].filter(Boolean),
+            start_date: toISO(daysAgo(3)), end_date: toISO(daysFromNow(90)),
+            description: "Digitalisierung der Baustellenprozesse und Reporting-Tools.",
+            budget_hours: 160, budget_money: 24000, budget_type: "hourly",
+            external_costs_total: 1200,
+            cycle_start_date: toISO(daysAgo(3)), cycle_end_date: toISO(daysFromNow(27)), cycle_number: 1
+        });
+        console.log(`  Created project: NordBau Digitalisierung (${p8?.id})`);
+    } else console.log(`  Project exists: NordBau Digitalisierung (${p8.id})`);
+
+    const projects = [p1, p2, p3, p4, p5, p6, p7, p8].filter(Boolean);
 
     // TASKS
     console.log("\n[5/8] Creating tasks...");
@@ -383,7 +441,7 @@ async function populateData() {
         return result;
     }
 
-    // Project 1: Vibeforce Flow OS Launch
+    // Project 1: Flow OS Platform Launch
     if (p1) {
         const t1 = await createTask("Konzept & Branding", p1, "done", "high", [mainUserId, annaId], daysAgo(14), daysAgo(10), "design");
         const t2 = await createTask("Backend Migration", p1, "done", "acute", [lukasId, mainUserId], daysAgo(12), daysAgo(5), "development");
@@ -416,7 +474,7 @@ async function populateData() {
         if (t6 && lukasId) {
             await apiPost(headers, "task_comments", { task: t6.id, author: lukasId, content: "<p>Doku fertig zum Review. Bitte @Sarah Meier gegenlesen.</p>", mentions: [sarahId].filter(Boolean) });
         }
-        console.log(`  Created 7 tasks for Vibeforce Flow OS Launch`);
+        console.log(`  Created 7 tasks for Flow OS Platform Launch`);
     }
 
     // Project 2: GreenLeaf SEO Campaign
@@ -471,7 +529,7 @@ async function populateData() {
         console.log(`  Created 6 tasks for TechVentures App Development`);
     }
 
-    // Project 4: Vibeforce Social Ads Q2
+    // Project 4: Social Ads Q2
     if (p4) {
         const t1 = await createTask("Kampagnen-Strategie", p4, "done", "high", [sarahId, mainUserId], daysAgo(7), daysAgo(3), "social_ads");
         const t2 = await createTask("Ad Creatives erstellen", p4, "in_progress", "acute", [sarahId, annaId], daysAgo(3), daysFromNow(4), "social_ads");
@@ -487,7 +545,7 @@ async function populateData() {
             await apiPost(headers, "checklist_items", { task: t2.id, title: "LinkedIn Ads Creatives", completed: false, sort_order: 1 });
             await apiPost(headers, "checklist_items", { task: t2.id, title: "TikTok Creatives", completed: false, sort_order: 2 });
         }
-        console.log(`  Created 4 tasks for Vibeforce Social Ads Q2`);
+        console.log(`  Created 4 tasks for Social Ads Q2`);
     }
 
     // Project 5: Internal Website Redesign
@@ -518,6 +576,25 @@ async function populateData() {
         console.log(`  Created 5 tasks for GreenLeaf Brand Refresh`);
     }
 
+    // Project 7: MediaWorks Content Hub
+    if (p7) {
+        await createTask("Content-Strategie", p7, "done", "high", [annaId, sarahId], daysAgo(10), daysAgo(5), "content");
+        await createTask("Blog-Redaktionsplan", p7, "in_progress", "high", [sarahId], daysAgo(3), daysFromNow(14), "content");
+        await createTask("Video-Studio Setup", p7, "todo", "medium", [annaId], daysFromNow(3), daysFromNow(21), "development");
+        await createTask("Podcast-Ausrüstung", p7, "todo", "low", [annaId], daysFromNow(7), daysFromNow(14), "other");
+        console.log(`  Created 4 tasks for MediaWorks Content Hub`);
+    }
+
+    // Project 8: NordBau Digitalisierung
+    if (p8) {
+        await createTask("Prozessanalyse", p8, "done", "acute", [lukasId], daysAgo(3), daysAgo(1), "consulting");
+        await createTask("Datenmodellierung", p8, "in_progress", "high", [lukasId, mainUserId], daysAgo(1), daysFromNow(10), "development");
+        await createTask("Reporting-Tool Entwicklung", p8, "todo", "high", [mainUserId], daysFromNow(5), daysFromNow(25), "development");
+        await createTask("Mitarbeiter-Schulung", p8, "todo", "medium", [lukasId], daysFromNow(20), daysFromNow(35), "consulting");
+        await createTask("Mobile App Prototyp", p8, "todo", "medium", [mainUserId], daysFromNow(15), daysFromNow(40), "development");
+        console.log(`  Created 5 tasks for NordBau Digitalisierung`);
+    }
+
     console.log(`  Total tasks created: ${allTaskIds.length}`);
 
     // TIME ENTRIES
@@ -531,7 +608,7 @@ async function populateData() {
     console.log(`  Valid users available: ${validUserIds.length}`);
 
     let entryCount = 0;
-    for (const task of taskPool.slice(0, 30)) {
+    for (const task of taskPool.slice(0, 45)) {
         const numEntries = Math.random() > 0.6 ? 2 : 1;
         for (let e = 0; e < numEntries; e++) {
             const daysBack = randomInt(0, 25);

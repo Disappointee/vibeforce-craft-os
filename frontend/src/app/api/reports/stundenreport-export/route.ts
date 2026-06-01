@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildKuponaFullHtml, type KuponaReportInput, type ReportTemplate } from '@/lib/kupona-report';
+import { buildStundenreportFullHtml, type StundenreportInput, type ReportTemplate } from '@/lib/stundenreport';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { template, ...reportData } = body as KuponaReportInput & { template?: ReportTemplate };
-  const fullHtml = buildKuponaFullHtml(reportData as KuponaReportInput, template || 'default');
+  const { template, ...reportData } = body as StundenreportInput & { template?: ReportTemplate };
+  const fullHtml = buildStundenreportFullHtml(reportData as StundenreportInput, template || 'default');
 
   try {
     const { chromium } = await import('playwright');

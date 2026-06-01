@@ -12,8 +12,8 @@ import {
 import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { pb } from '@/lib/pocketbase';
-import { getClientName, hasHourlyRates, buildKuponaInput, formatHoursHM } from '@/lib/kupona-utils';
-import type { ReportTemplate } from '@/lib/kupona-report';
+import { getClientName, hasHourlyRates, buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import type { ReportTemplate } from '@/lib/stundenreport';
 
 interface TimeExportButtonProps {
     entries: TimeEntryRecord[];
@@ -40,7 +40,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
             return;
         }
 
-        const reportData = buildKuponaInput(entries, showHourlyRate);
+        const reportData = buildStundenreportInput(entries, showHourlyRate);
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -52,7 +52,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
         try {
             setIsExporting(true);
 
-            const res = await fetch('/api/reports/kupona-export', {
+            const res = await fetch('/api/reports/stundenreport-export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...reportData, template }),

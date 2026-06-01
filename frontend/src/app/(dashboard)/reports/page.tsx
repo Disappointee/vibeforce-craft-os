@@ -27,7 +27,7 @@ import { ReportChart, ChartDataPoint } from '@/components/reports/ReportChart';
 import { ReportTable, ReportRow } from '@/components/reports/ReportTable';
 import { SaveTemplateDialog } from '@/components/reports/SaveTemplateDialog';
 import { printServiceRecord, printInvoice, BillingLineItem, downloadReportPDF } from '@/lib/pdf-generator';
-import { buildKuponaInput, formatHoursHM } from '@/lib/kupona-utils';
+import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
 
 type ReportTab = 'hours' | 'billing';
 
@@ -130,7 +130,7 @@ function ReportsExportDropdown({
         }
     };
 
-    const handleKuponaCSV = () => {
+    const handleStundenreportCSV = () => {
         if (projectEntries.length === 0) {
             toast.error('Keine Daten zum Exportieren vorhanden');
             return;
@@ -190,12 +190,12 @@ function ReportsExportDropdown({
         }
     };
 
-    const handleKuponaPDF = async (showHourlyRate: boolean) => {
+    const handleStundenreportPDF = async (showHourlyRate: boolean) => {
         if (projectEntries.length === 0) {
             toast.error('Keine Daten zum Exportieren vorhanden');
             return;
         }
-        const reportData = buildKuponaInput(projectEntries, showHourlyRate);
+        const reportData = buildStundenreportInput(projectEntries, showHourlyRate);
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             toast.error('Bitte Pop-ups für diese Seite erlauben');
@@ -205,7 +205,7 @@ function ReportsExportDropdown({
 
         try {
             setIsExporting(true);
-            const res = await fetch('/api/reports/kupona-export', {
+            const res = await fetch('/api/reports/stundenreport-export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(reportData),
@@ -247,11 +247,11 @@ function ReportsExportDropdown({
                 <DropdownMenuContent align="end" className="bg-background border-border text-foreground min-w-[220px]">
                     <DropdownMenuItem onClick={handleSummaryCSV} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                         <FileText size={16} className="text-emerald-400" />
-                        <span>CSV (Daten)</span>
+                        <span>CSV Stundenauswertung</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleKuponaPDF(false)} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
+                    <DropdownMenuItem onClick={() => handleStundenreportPDF(false)} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                         <FileText size={16} className="text-red-400" />
-                        <span>PDF Leistungsnachweis (Kupona)</span>
+                        <span>PDF Leistungsnachweis</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePdfWithLogo} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                         <FileText size={16} className="text-orange-400" />
@@ -273,13 +273,13 @@ function ReportsExportDropdown({
                 }
             />
             <DropdownMenuContent align="end" className="bg-background border-border text-foreground min-w-[220px]">
-                <DropdownMenuItem onClick={handleKuponaCSV} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
+                <DropdownMenuItem onClick={handleStundenreportCSV} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                     <FileText size={16} className="text-emerald-400" />
-                    <span>CSV (Abrechnung)</span>
+                    <span>CSV Abrechnung</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleKuponaPDF(true)} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
+                <DropdownMenuItem onClick={() => handleStundenreportPDF(true)} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                     <FileText size={16} className="text-orange-400" />
-                    <span>PDF (Kupona mit Kosten)</span>
+                    <span>PDF Stundenreport (mit Kosten)</span>
                 </DropdownMenuItem>
                 {onPrintServiceRecord && (
                     <DropdownMenuItem onClick={onPrintServiceRecord} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
@@ -318,7 +318,7 @@ export default function ReportsPage() {
         { icon: TrendingUp, title: 'Erfasst vs. geplant', description: 'Budget-Prüfung der Projekte', filter: { billableFilter: 'all' as const } },
         { icon: DollarSign, title: 'Abrechenbarkeit pro Mitarbeiter', description: 'Nur abrechenbare Zeiten', filter: { billableFilter: 'billable' as const, groupBy: 'user' as const } },
         { icon: Receipt, title: 'Bereit zur Rechnungsstellung', description: 'Abrechenbar und noch offen', filter: { billableFilter: 'ready_to_invoice' as const } },
-        { icon: FileText, title: 'Kupona-Report', description: 'Gruppiert nach Projekt & Person', filter: { billableFilter: 'all' as const, groupBy: 'both' as const } },
+        { icon: FileText, title: 'Stundenreport', description: 'Gruppiert nach Projekt & Person', filter: { billableFilter: 'all' as const, groupBy: 'both' as const } },
     ];
 
     const applyPreset = (presetFilter: Partial<ReportFilterValues>) => {
@@ -689,7 +689,7 @@ export default function ReportsPage() {
         const taxAmount = subtotal * taxRate;
 
         printInvoice({
-            companyName: process.env.NEXT_PUBLIC_COMPANY_NAME || 'Vibeforce One GmbH',
+            companyName: process.env.NEXT_PUBLIC_COMPANY_NAME || 'Klicklaut GmbH',
             companyAddress: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '',
             clientName: client?.company || client?.name || 'Kunde',
             clientAddress: '', // Can be extended with client address fields
@@ -762,6 +762,105 @@ export default function ReportsPage() {
         setFilters(templateFilters);
     }, []);
 
+    const escapeCSV = (val: string) => {
+        const clean = val.replace(/"/g, '""');
+        return clean.includes(',') || clean.includes('\n') || clean.includes('"') ? `"${clean}"` : clean;
+    };
+
+    const handleActionBarCSV = () => {
+        if (filteredEntries.length === 0) {
+            toast.error('Keine Daten zum Exportieren vorhanden');
+            return;
+        }
+        try {
+            const headerFields = ['Datum', 'Kunde', 'Projekt', 'Mitarbeiter', 'Tätigkeit', 'Beschreibung', 'Dauer'];
+            const headers = headerFields.join(',');
+
+            const lines = filteredEntries.map(entry => {
+                const task = (entry as any).expand?.task;
+                const proj = task?.expand?.project;
+                const client = proj?.expand?.client;
+                const user = (entry as any).expand?.user || pb.authStore.record;
+                const hours = (entry.duration_minutes || 0) / 60;
+
+                const dateObj = entry.date ? new Date(entry.date) : new Date(entry.created);
+                const formattedDate = dateObj.toLocaleDateString('de-DE');
+
+                return [
+                    formattedDate,
+                    escapeCSV(client?.name || 'Kein Kunde'),
+                    escapeCSV(proj ? `${proj.key} - ${proj.name}` : 'Kein Projekt'),
+                    escapeCSV(user?.name || user?.email || 'Mitarbeiter'),
+                    escapeCSV(task?.title || 'Keine Aufgabe'),
+                    escapeCSV(entry.description || ''),
+                    formatHoursHM(hours),
+                ].join(',');
+            });
+
+            const csvContent = [headers, ...lines].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `zeiterfassung_${filters.dateFrom || 'export'}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success('CSV-Export erfolgreich');
+        } catch {
+            toast.error('Fehler beim CSV-Export');
+        }
+    };
+
+    const handleActionBarPDF = async (showHourlyRate: boolean) => {
+        if (filteredEntries.length === 0) {
+            toast.error('Keine Daten zum Exportieren vorhanden');
+            return;
+        }
+        const reportData = buildStundenreportInput(filteredEntries, showHourlyRate);
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.error('Bitte Pop-ups für diese Seite erlauben');
+            return;
+        }
+        printWindow.document.write('<html><body style="font-family:sans-serif;padding:40px;text-align:center;color:#666;"><p>Report wird generiert…</p></body></html>');
+
+        try {
+            const res = await fetch('/api/reports/stundenreport-export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reportData),
+            });
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/pdf')) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                printWindow.location.href = url;
+                toast.success('Stundenzettel (PDF) generiert');
+            } else {
+                const html = await res.text();
+                printWindow.document.open();
+                printWindow.document.write(html);
+                printWindow.document.close();
+            }
+        } catch {
+            printWindow.close();
+            toast.error('Fehler beim PDF-Export');
+        }
+    };
+
+    const handleActionBarPdfWithLogo = async () => {
+        if (!reportRows.length || !filters.groupBy) return;
+        try {
+            await downloadReportPDF(reportRows, filters.groupBy, filters.dateFrom, filters.dateTo);
+            toast.success('PDF-Export erfolgreich gestartet');
+        } catch {
+            toast.error('Fehler beim PDF-Export');
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="p-8">
@@ -796,22 +895,10 @@ export default function ReportsPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        {activeTab === 'hours' && (
-                            <>
-                                <SaveTemplateDialog
-                                    currentFilters={filters}
-                                    onLoadTemplate={handleLoadTemplate}
-                                />
-                                <ReportsExportDropdown
-                                    entries={filteredEntries}
-                                    rows={reportRows}
-                                    groupBy={filters.groupBy}
-                                    dateFrom={filters.dateFrom}
-                                    dateTo={filters.dateTo}
-                                    mode="hours"
-                                />
-                            </>
-                        )}
+                        <SaveTemplateDialog
+                            currentFilters={filters}
+                            onLoadTemplate={handleLoadTemplate}
+                        />
                     </div>
                 </div>
 
@@ -941,6 +1028,21 @@ export default function ReportsPage() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Report Export Actions */}
+                {activeTab === 'hours' && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Button variant="outline" size="sm" onClick={handleActionBarCSV}>
+                            <FileText size={14} className="mr-1.5" /> CSV Stundenauswertung
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleActionBarPDF(false)}>
+                            <FileText size={14} className="mr-1.5" /> PDF Leistungsnachweis
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleActionBarPdfWithLogo}>
+                            <FileText size={14} className="mr-1.5" /> PDF mit Logo
+                        </Button>
+                    </div>
+                )}
 
                 {/* Chart */}
                 <Card className="border-border bg-card/40">
