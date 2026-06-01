@@ -49,13 +49,13 @@ async function generatePDF(inputPath, brand = 'neutral') {
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
   
   @page {
-    margin: 20mm 15mm;
+    margin: 12mm 15mm;
   }
   * { box-sizing: border-box; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.6;
+    font-size: 9.5pt;
+    line-height: 1.45;
     color: #0f172a;
     max-width: 180mm;
     margin: 0 auto;
@@ -64,96 +64,105 @@ async function generatePDF(inputPath, brand = 'neutral') {
     -webkit-print-color-adjust: exact;
   }
   
-  /* Header section */
+  /* Avoid orphans */
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  tr, li {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Header card section */
   .header-container {
-    margin-bottom: 30px;
+    margin-bottom: 18px;
     margin-top: 0;
+    background: linear-gradient(135deg, ${brandCfg.primary}0c, ${brandCfg.primary}02);
+    padding: 18px 22px;
+    border-radius: 12px;
+    border: 1px solid ${brandCfg.primary}15;
   }
   .brand-badge {
     display: inline-block;
-    background-color: ${brandCfg.primary}15; /* 10% opacity */
-    color: ${brandCfg.primary};
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-size: 8.5pt;
-    font-weight: 700;
+    background-color: ${brandCfg.primary};
+    color: #ffffff;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 7.5pt;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .doc-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
-    font-size: 24pt;
+    font-size: 18pt;
     font-weight: 800;
-    margin: 0 0 6px 0;
+    margin: 0 0 3px 0;
     letter-spacing: -0.025em;
-    line-height: 1.25;
+    line-height: 1.2;
   }
   .doc-role {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 11pt;
+    font-size: 9.5pt;
     color: #64748b;
     font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .header-divider {
-    border: none;
-    border-top: 2px solid #f1f5f9;
-    margin: 18px 0 10px 0;
+    margin-bottom: 0;
   }
 
   h1 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
-    font-size: 18pt;
+    font-size: 15pt;
     font-weight: 800;
-    margin-top: 24px;
-    margin-bottom: 14px;
+    margin-top: 18px;
+    margin-bottom: 10px;
     letter-spacing: -0.02em;
   }
   h2 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #1e293b;
-    font-size: 14pt;
+    font-size: 12pt;
     font-weight: 700;
-    margin-top: 28px;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #f8fafc;
-    padding-bottom: 4px;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 3px;
     letter-spacing: -0.015em;
   }
   h3 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #334155;
-    font-size: 11.5pt;
+    font-size: 10.5pt;
     font-weight: 600;
-    margin-top: 18px;
-    margin-bottom: 8px;
+    margin-top: 12px;
+    margin-bottom: 6px;
   }
   table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 18px 0;
-    font-size: 9.5pt;
+    margin: 12px 0;
+    font-size: 9pt;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     overflow: hidden;
   }
   th, td {
-    padding: 10px 14px;
+    padding: 8px 12px;
     text-align: left;
     border-bottom: 1px solid #e2e8f0;
   }
   th {
     background-color: #f8fafc;
     color: #475569;
-    font-weight: 600;
-    font-size: 8.5pt;
+    font-weight: 700;
+    font-size: 8pt;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
   }
   td {
     color: #334155;
@@ -166,41 +175,43 @@ async function generatePDF(inputPath, brand = 'neutral') {
   }
   code {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    background-color: #f1f5f9;
-    color: #0f172a;
-    padding: 2px 5px;
-    border-radius: 4px;
-    font-size: 9pt;
+    background-color: #f8fafc;
+    color: ${brandCfg.primary};
+    border: 1px solid #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 5px;
+    font-size: 8pt;
     font-weight: 600;
   }
   pre code {
     display: block;
-    padding: 12px 16px;
+    padding: 10px 14px;
     overflow-x: auto;
   }
   blockquote {
-    border-left: 4px solid ${brandCfg.primary};
-    margin: 18px 0;
-    padding: 10px 18px;
-    background-color: #eff6ff;
+    border-left: 3px solid ${brandCfg.primary};
+    margin: 12px 0;
+    padding: 8px 14px;
+    background-color: ${brandCfg.primary}06;
     border-radius: 0 8px 8px 0;
-    color: #1e40af;
+    color: #1e293b;
   }
   blockquote p {
     margin: 0;
     font-weight: 500;
+    color: #475569;
   }
   ul, ol { 
-    padding-left: 22px; 
-    margin: 10px 0;
+    padding-left: 20px; 
+    margin: 8px 0;
   }
   li { 
-    margin-bottom: 5px; 
+    margin-bottom: 3px; 
     color: #334155;
   }
   p {
     margin-top: 0;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     color: #334155;
   }
   a {
@@ -208,11 +219,16 @@ async function generatePDF(inputPath, brand = 'neutral') {
     text-decoration: none;
     font-weight: 500;
   }
+  hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 12px 0;
+  }
   .footer-note {
-    margin-top: 36px;
-    padding-top: 14px;
-    border-top: 2px solid #f1f5f9;
-    font-size: 8.5pt;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 8pt;
     color: #94a3b8;
     text-align: center;
     font-weight: 500;
@@ -225,7 +241,6 @@ async function generatePDF(inputPath, brand = 'neutral') {
     <div class="brand-badge">${brandCfg.name}</div>
     <h1 class="doc-title">${docTitle}</h1>
     ${docRole ? `<div class="doc-role">${docRole}</div>` : ''}
-    <hr class="header-divider" />
   </div>
   
   ${bodyHtml}
