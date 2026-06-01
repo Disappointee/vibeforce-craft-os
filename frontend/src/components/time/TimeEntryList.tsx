@@ -195,11 +195,11 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
                 <Table className="table-fixed w-full">
                     <TableHeader className="bg-card/50">
                         <TableRow className="border-border hover:bg-transparent">
-                            <TableHead className="text-muted-foreground font-medium w-[18%]">Datum</TableHead>
-                            <TableHead className="text-muted-foreground font-medium w-[25%]">Aufgabe</TableHead>
-                            <TableHead className="text-muted-foreground font-medium w-[42%]">Beschreibung</TableHead>
-                            <TableHead className="text-muted-foreground font-medium text-right w-[10%]">Dauer</TableHead>
-                            <TableHead className="text-muted-foreground font-medium text-right w-[5%]">Aktionen</TableHead>
+                            <TableHead className="text-muted-foreground font-medium w-[170px]">Datum</TableHead>
+                            <TableHead className="text-muted-foreground font-medium w-[230px]">Aufgabe</TableHead>
+                            <TableHead className="text-muted-foreground font-medium w-auto">Beschreibung</TableHead>
+                            <TableHead className="text-muted-foreground font-medium text-right w-[95px]">Dauer</TableHead>
+                            <TableHead className="text-muted-foreground font-medium text-right w-[80px]">Aktionen</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
