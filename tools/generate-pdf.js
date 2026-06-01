@@ -5,7 +5,11 @@ const fs = require('fs');
 
 // Brand colors
 const BRANDS = {
-  vibeforce: { primary: '#2563EB', name: 'Vibeforce Flow OS' },
+  vibeforce: { 
+    primary: '#2563EB', 
+    name: 'Vibeforce Flow OS',
+    gradient: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 35%, #06b6d4 70%, #6366f1 100%)'
+  },
   oa:        { primary: '#2563EB', name: 'OA' },
   seshforce: { primary: '#7C3AED', name: 'Seshforce' },
   neutral:   { primary: '#1F2937', name: 'AI Research Insights' },
@@ -49,13 +53,13 @@ async function generatePDF(inputPath, brand = 'neutral') {
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
   
   @page {
-    margin: 14mm 15mm;
+    margin: 10mm 15mm;
   }
   * { box-sizing: border-box; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 9.5pt;
-    line-height: 1.5;
+    line-height: 1.45;
     color: #1e293b;
     max-width: 180mm;
     margin: 0 auto;
@@ -74,45 +78,52 @@ async function generatePDF(inputPath, brand = 'neutral') {
     break-inside: avoid;
   }
 
-  /* Minimalist Header section */
+  /* Minimalist Header section with Opaque Holo-Blue Gradient */
   .header-container {
-    margin-bottom: 22px;
+    margin-bottom: 20px;
     margin-top: 0;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e2e8f0;
+    background: ${brandCfg.gradient || `linear-gradient(135deg, ${brandCfg.primary} 0%, ${brandCfg.primary}dd 100%)`};
+    padding: 18px 24px;
+    border-radius: 12px;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
   }
   .brand-badge {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    padding: 3px 8px;
+    border-radius: 4px;
     font-size: 7.5pt;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #64748b;
-    margin-bottom: 4px;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .doc-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #0f172a;
-    font-size: 18pt;
-    font-weight: 700;
+    color: #ffffff;
+    font-size: 16pt;
+    font-weight: 800;
     margin: 0 0 2px 0;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     line-height: 1.15;
   }
   .doc-role {
     font-family: 'Inter', sans-serif;
     font-size: 9pt;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
   }
 
   h1 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
-    font-size: 14pt;
+    font-size: 13pt;
     font-weight: 700;
-    margin-top: 18px;
-    margin-bottom: 8px;
+    margin-top: 16px;
+    margin-bottom: 6px;
     letter-spacing: -0.015em;
   }
   h2 {
@@ -120,10 +131,10 @@ async function generatePDF(inputPath, brand = 'neutral') {
     color: #1e293b;
     font-size: 11pt;
     font-weight: 600;
-    margin-top: 18px;
-    margin-bottom: 6px;
+    margin-top: 14px;
+    margin-bottom: 4px;
     border-bottom: 1px dashed #e2e8f0;
-    padding-bottom: 3px;
+    padding-bottom: 2px;
     letter-spacing: -0.01em;
   }
   h3 {
@@ -131,15 +142,15 @@ async function generatePDF(inputPath, brand = 'neutral') {
     color: #334155;
     font-size: 10pt;
     font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 4px;
+    margin-top: 10px;
+    margin-bottom: 3px;
   }
   
   /* Minimalist Classic Table style */
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
+    margin: 10px 0;
     font-size: 9pt;
     border-top: 1px solid #0f172a;
     border-bottom: 1px solid #0f172a;
@@ -191,15 +202,15 @@ async function generatePDF(inputPath, brand = 'neutral') {
   }
   ul, ol { 
     padding-left: 18px; 
-    margin: 6px 0;
+    margin: 4px 0;
   }
   li { 
-    margin-bottom: 3px; 
+    margin-bottom: 2px; 
     color: #334155;
   }
   p {
     margin-top: 0;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     color: #334155;
   }
   a {
@@ -210,7 +221,7 @@ async function generatePDF(inputPath, brand = 'neutral') {
   hr {
     border: none;
     border-top: 1px solid #e2e8f0;
-    margin: 12px 0;
+    margin: 8px 0;
   }
   .footer-note {
     margin-top: 24px;
@@ -249,7 +260,7 @@ async function generatePDF(inputPath, brand = 'neutral') {
   await page.pdf({
     path: outputPath,
     format: 'A4',
-    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+    margin: { top: '10mm', bottom: '10mm', left: '15mm', right: '15mm' },
     printBackground: true,
   });
 
