@@ -46,17 +46,17 @@ async function generatePDF(inputPath, brand = 'neutral') {
 <head>
 <meta charset="UTF-8">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
   
   @page {
-    margin: 12mm 15mm;
+    margin: 14mm 15mm;
   }
   * { box-sizing: border-box; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 9.5pt;
-    line-height: 1.45;
-    color: #0f172a;
+    line-height: 1.5;
+    color: #1e293b;
     max-width: 180mm;
     margin: 0 auto;
     padding: 0;
@@ -64,7 +64,7 @@ async function generatePDF(inputPath, brand = 'neutral') {
     -webkit-print-color-adjust: exact;
   }
   
-  /* Avoid orphans */
+  /* Prevent orphans and breaks in wrong places */
   h1, h2, h3 {
     page-break-after: avoid;
     break-after: avoid;
@@ -74,136 +74,124 @@ async function generatePDF(inputPath, brand = 'neutral') {
     break-inside: avoid;
   }
 
-  /* Header card section */
+  /* Minimalist Header section */
   .header-container {
-    margin-bottom: 18px;
+    margin-bottom: 22px;
     margin-top: 0;
-    background: linear-gradient(135deg, ${brandCfg.primary}0c, ${brandCfg.primary}02);
-    padding: 18px 22px;
-    border-radius: 12px;
-    border: 1px solid ${brandCfg.primary}15;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
   }
   .brand-badge {
-    display: inline-block;
-    background-color: ${brandCfg.primary};
-    color: #ffffff;
-    padding: 3px 9px;
-    border-radius: 5px;
     font-size: 7.5pt;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    margin-bottom: 4px;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .doc-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
     font-size: 18pt;
-    font-weight: 800;
-    margin: 0 0 3px 0;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
   .doc-role {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 9.5pt;
-    color: #64748b;
-    font-weight: 600;
-    margin-bottom: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    color: #94a3b8;
+    font-weight: 500;
   }
 
   h1 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
-    font-size: 15pt;
-    font-weight: 800;
+    font-size: 14pt;
+    font-weight: 700;
     margin-top: 18px;
-    margin-bottom: 10px;
-    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    letter-spacing: -0.015em;
   }
   h2 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #1e293b;
-    font-size: 12pt;
-    font-weight: 700;
+    font-size: 11pt;
+    font-weight: 600;
     margin-top: 18px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 6px;
+    border-bottom: 1px dashed #e2e8f0;
     padding-bottom: 3px;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
   }
   h3 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #334155;
-    font-size: 10.5pt;
+    font-size: 10pt;
     font-weight: 600;
     margin-top: 12px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
+  
+  /* Minimalist Classic Table style */
   table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     margin: 12px 0;
     font-size: 9pt;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
+    border-top: 1px solid #0f172a;
+    border-bottom: 1px solid #0f172a;
   }
   th, td {
-    padding: 8px 12px;
+    padding: 6px 8px;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0;
   }
   th {
-    background-color: #f8fafc;
-    color: #475569;
-    font-weight: 700;
-    font-size: 8pt;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 8.5pt;
+    border-bottom: 1px solid #e2e8f0;
   }
   td {
     color: #334155;
+    border-bottom: 1px solid #f1f5f9;
   }
   tr:last-child td {
     border-bottom: none;
   }
-  tr:nth-child(even) td { 
-    background-color: #f8fafc; 
-  }
+  
   code {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     background-color: #f8fafc;
-    color: ${brandCfg.primary};
+    color: #0f172a;
     border: 1px solid #e2e8f0;
     padding: 1px 4px;
-    border-radius: 5px;
+    border-radius: 3px;
     font-size: 8pt;
-    font-weight: 600;
+    font-weight: 500;
   }
   pre code {
     display: block;
-    padding: 10px 14px;
+    padding: 8px 12px;
     overflow-x: auto;
   }
+  
+  /* Classic Minimalist Quote */
   blockquote {
-    border-left: 3px solid ${brandCfg.primary};
-    margin: 12px 0;
-    padding: 8px 14px;
-    background-color: ${brandCfg.primary}06;
-    border-radius: 0 8px 8px 0;
-    color: #1e293b;
+    border-left: 2px solid #0f172a;
+    margin: 10px 0;
+    padding: 2px 12px;
+    color: #475569;
   }
   blockquote p {
     margin: 0;
     font-weight: 500;
-    color: #475569;
   }
   ul, ol { 
-    padding-left: 20px; 
-    margin: 8px 0;
+    padding-left: 18px; 
+    margin: 6px 0;
   }
   li { 
     margin-bottom: 3px; 
@@ -211,12 +199,12 @@ async function generatePDF(inputPath, brand = 'neutral') {
   }
   p {
     margin-top: 0;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: #334155;
   }
   a {
-    color: ${brandCfg.primary};
-    text-decoration: none;
+    color: #0f172a;
+    text-decoration: underline;
     font-weight: 500;
   }
   hr {
@@ -225,10 +213,10 @@ async function generatePDF(inputPath, brand = 'neutral') {
     margin: 12px 0;
   }
   .footer-note {
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #f1f5f9;
-    font-size: 8pt;
+    margin-top: 24px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 7.5pt;
     color: #94a3b8;
     text-align: center;
     font-weight: 500;
