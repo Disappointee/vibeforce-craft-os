@@ -17,7 +17,7 @@ import { Save, Loader2, Trash2, FileJson } from 'lucide-react';
 import { pb } from '@/lib/pocketbase';
 import { ReportTemplateRecord, ReportTemplateConfig } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
-import { ReportFilterValues } from './ReportFilters';
+import { ReportFilterValues, DatePreset } from './ReportFilters';
 
 interface SaveTemplateDialogProps {
     currentFilters: ReportFilterValues;
@@ -60,6 +60,7 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
         setIsSaving(true);
         try {
             const config: ReportTemplateConfig = {
+                datePreset: currentFilters.datePreset,
                 dateFrom: currentFilters.dateFrom || undefined,
                 dateTo: currentFilters.dateTo || undefined,
                 projectIds: currentFilters.projectIds.length > 0 ? currentFilters.projectIds : undefined,
@@ -91,6 +92,7 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
         if (!config) return;
 
         onLoadTemplate({
+            datePreset: (config.datePreset as DatePreset) || 'custom',
             dateFrom: config.dateFrom || '',
             dateTo: config.dateTo || '',
             projectIds: config.projectIds || [],

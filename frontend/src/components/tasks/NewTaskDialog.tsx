@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { pb } from '@/lib/pocketbase';
+import { useUiStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
@@ -23,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TaskType } from '@/lib/pocketbase-types';
+import type { TaskType, ClientRecord, ProjectRecord } from '@/lib/pocketbase-types';
 
 const TASK_TYPE_LABELS: Record<TaskType, string> = {
   sea: 'SEA',
@@ -37,22 +38,63 @@ const TASK_TYPE_LABELS: Record<TaskType, string> = {
   other: 'Sonstiges',
 };
 
-export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string, onTaskCreated: () => void }) {
-  const [open, setOpen] = useState(false);
+export function NewTaskDialog({ projectId, onTaskCreated }: { projectId?: string, onTaskCreated: () => void }) {
+  const taskDialogOpen = useUiStore(s => s.taskDialogOpen);
+  const setTaskDialogOpen = useUiStore(s => s.setTaskDialogOpen);
+
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
   const [status, setStatus] = useState('todo');
   const [type, setType] = useState<TaskType>('other');
 
+  const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clientsResult, projectsResult] = await Promise.all([
+          pb.collection('clients').getList(1, 200, { sort: 'name' }),
+          pb.collection('projects').getList(1, 200, { sort: 'name' }),
+        ]);
+        setClients(clientsResult.items as unknown as ClientRecord[]);
+        setProjects(projectsResult.items as unknown as ProjectRecord[]);
+
+        if (projectId) {
+          const project = projectsResult.items.find((p: any) => p.id === projectId);
+          if (project) {
+            setSelectedProjectId(projectId);
+            if ((project as any).client) {
+              setSelectedClientId((project as any).client);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching clients/projects:', error);
+      }
+    };
+    fetchData();
+  }, [projectId]);
+
+  const availableProjects = selectedClientId
+    ? projects.filter(p => (p as any).client === selectedClientId)
+    : projects;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedProjectId) {
+      toast.error('Bitte wähle ein Projekt aus.');
+      return;
+    }
     setIsLoading(true);
 
     try {
       const userId = pb.authStore.record?.id;
       await pb.collection('tasks').create({
-        project: projectId,
+        project: selectedProjectId,
         title,
         status,
         priority,
@@ -61,12 +103,12 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
       });
 
       toast.success('Aufgabe erstellt!');
-      setOpen(false);
+      setTaskDialogOpen(false);
       setTitle('');
       setPriority('medium');
       setStatus('todo');
       setType('other');
-      onTaskCreated(); // Trigger reload
+      onTaskCreated();
     } catch (error: any) {
       console.error(error);
       toast.error('Fehler beim Erstellen der Aufgabe.');
@@ -75,8 +117,18 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setTaskDialogOpen(open);
+    if (!open) {
+      setTitle('');
+      setPriority('medium');
+      setStatus('todo');
+      setType('other');
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={taskDialogOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
           <button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-6 py-2 flex items-center gap-2 shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all font-medium text-sm outline-none">
@@ -90,6 +142,53 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
           <DialogTitle className="text-xl">Neue Aufgabe anlegen</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-foreground text-xs uppercase tracking-wider">Kunde</Label>
+              <Select value={selectedClientId} onValueChange={(val) => {
+                setSelectedClientId(val || '');
+                setSelectedProjectId('');
+              }}>
+                <SelectTrigger className="bg-card border-border">
+                  <SelectValue placeholder="Kunde wählen">
+                    {(value: string) => {
+                      const client = clients.find(c => c.id === value);
+                      return client?.name || 'Kunde wählen';
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground max-h-60">
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-foreground text-xs uppercase tracking-wider">Projekt</Label>
+              <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || '')}>
+                <SelectTrigger className="bg-card border-border">
+                  <SelectValue placeholder="Projekt wählen">
+                    {(value: string) => {
+                      const project = projects.find(p => p.id === value);
+                      return project?.name || 'Projekt wählen';
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground max-h-60">
+                  {availableProjects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="title" className="text-foreground text-xs uppercase tracking-wider">Titel</Label>
@@ -106,7 +205,7 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-wider">Art</Label>
-              <Select value={type} onValueChange={(val) => val && setType(val as TaskType)}>
+              <Select value={type} onValueChange={(val) => { if (val) setType(val as TaskType); }}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Art wählen">
                     {(value: string) => decodeGermanHtmlEntities(TASK_TYPE_LABELS[value as TaskType] || value || 'Art wählen')}
@@ -124,7 +223,7 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
 
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-wider">Status</Label>
-              <Select value={status} onValueChange={(val) => val && setStatus(val)}>
+              <Select value={status} onValueChange={(val) => { if (val) setStatus(val); }}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Status wählen">
                     {(value: string) => (
@@ -143,7 +242,7 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId: string,
 
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-wider">Priorität</Label>
-              <Select value={priority} onValueChange={(val) => val && setPriority(val)}>
+              <Select value={priority} onValueChange={(val) => { if (val) setPriority(val); }}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Priorität wählen">
                     {(value: string) => (

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Filter, X, ChevronDown } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Filter, X, ChevronDown, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,10 @@ import { TranslatedSelect } from '@/components/ui/translated-select';
 import { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { t, TranslationKey } from '@/lib/i18n';
 
+export type DatePreset = 'this_month' | 'last_month' | 'last_7_days' | 'last_30_days' | 'last_quarter' | 'custom';
+
 export interface ReportFilterValues {
+    datePreset: DatePreset;
     dateFrom: string;
     dateTo: string;
     projectIds: string[];
@@ -35,6 +38,51 @@ interface ReportFiltersProps {
     onChange: (filters: ReportFilterValues) => void;
 }
 
+const PRESET_OPTIONS: { value: DatePreset; label: string }[] = [
+    { value: 'this_month', label: 'Dieser Monat' },
+    { value: 'last_month', label: 'Letzter Monat' },
+    { value: 'last_7_days', label: 'Letzte 7 Tage' },
+    { value: 'last_30_days', label: 'Letzte 30 Tage' },
+    { value: 'last_quarter', label: 'Letztes Quartal' },
+    { value: 'custom', label: 'Benutzerdefiniert' },
+];
+
+function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string } {
+    const now = new Date();
+    const toISO = (d: Date) => d.toISOString().split('T')[0];
+
+    switch (preset) {
+        case 'this_month': {
+            const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            return { dateFrom: toISO(firstOfMonth), dateTo: toISO(now) };
+        }
+        case 'last_month': {
+            const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+            return { dateFrom: toISO(firstOfLastMonth), dateTo: toISO(lastOfLastMonth) };
+        }
+        case 'last_7_days': {
+            const sevenDaysAgo = new Date(now);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            return { dateFrom: toISO(sevenDaysAgo), dateTo: toISO(now) };
+        }
+        case 'last_30_days': {
+            const thirtyDaysAgo = new Date(now);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            return { dateFrom: toISO(thirtyDaysAgo), dateTo: toISO(now) };
+        }
+        case 'last_quarter': {
+            const month = now.getMonth();
+            const quarterStartMonth = Math.floor(month / 3) * 3 - 3;
+            const firstOfQuarter = new Date(now.getFullYear(), quarterStartMonth < 0 ? quarterStartMonth + 12 : quarterStartMonth, 1);
+            const lastOfQuarter = new Date(now.getFullYear(), Math.floor(month / 3) * 3, 0);
+            return { dateFrom: toISO(firstOfQuarter), dateTo: toISO(lastOfQuarter) };
+        }
+        default:
+            return { dateFrom: '', dateTo: '' };
+    }
+}
+
 export function ReportFilters({ projects, users, clients, filters, onChange }: ReportFiltersProps) {
     const [showFilters, setShowFilters] = useState(true);
 
@@ -44,6 +92,15 @@ export function ReportFilters({ projects, users, clients, filters, onChange }: R
     ) => {
         onChange({ ...filters, [key]: value });
     };
+
+    const applyPreset = useCallback((preset: DatePreset) => {
+        const { dateFrom, dateTo } = getPresetDates(preset);
+        onChange({ ...filters, datePreset: preset, dateFrom, dateTo });
+    }, [filters, onChange]);
+
+    const handleDateChange = useCallback((field: 'dateFrom' | 'dateTo', value: string) => {
+        onChange({ ...filters, [field]: value, datePreset: 'custom' });
+    }, [filters, onChange]);
 
     const toggleProject = (projectId: string) => {
         const current = filters.projectIds;
@@ -70,8 +127,10 @@ export function ReportFilters({ projects, users, clients, filters, onChange }: R
     };
 
     const clearAll = () => {
+        const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
         onChange({
-            dateFrom: '',
+            datePreset: 'this_month',
+            dateFrom: firstOfMonth,
             dateTo: '',
             projectIds: [],
             userIds: [],
@@ -82,7 +141,7 @@ export function ReportFilters({ projects, users, clients, filters, onChange }: R
     };
 
     const activeFilterCount = [
-        filters.dateFrom || filters.dateTo,
+        filters.datePreset !== 'this_month' || filters.dateFrom || filters.dateTo,
         filters.projectIds.length > 0,
         filters.userIds.length > 0,
         filters.clientIds.length > 0,
@@ -119,27 +178,51 @@ export function ReportFilters({ projects, users, clients, filters, onChange }: R
 
             {showFilters && (
                 <div className="p-4 rounded-xl border border-border bg-card/40 space-y-4">
-                    {/* Date Range */}
+                    {/* Date Presets */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block">
+                            Zeitraum
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {PRESET_OPTIONS.map((preset) => (
+                                <Badge
+                                    key={preset.value}
+                                    variant="outline"
+                                    onClick={() => applyPreset(preset.value)}
+                                    className={`cursor-pointer transition-colors ${
+                                        filters.datePreset === preset.value
+                                            ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                            : 'bg-background border-border text-muted-foreground hover:border-zinc-700'
+                                    }`}
+                                >
+                                    <Calendar size={12} className="mr-1" />
+                                    {preset.label}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Date Range Inputs */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block truncate">
-                            {t('report.filter.date_from')}
-                        </label>
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block truncate">
+                                {t('report.filter.date_from')}
+                            </label>
                             <Input
                                 type="date"
                                 value={filters.dateFrom}
-                                onChange={(e) => updateFilter('dateFrom', e.target.value)}
+                                onChange={(e) => handleDateChange('dateFrom', e.target.value)}
                                 className="bg-background border-border h-9"
                             />
                         </div>
                         <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block truncate">
-                            {t('report.filter.date_to')}
-                        </label>
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block truncate">
+                                {t('report.filter.date_to')}
+                            </label>
                             <Input
                                 type="date"
                                 value={filters.dateTo}
-                                onChange={(e) => updateFilter('dateTo', e.target.value)}
+                                onChange={(e) => handleDateChange('dateTo', e.target.value)}
                                 className="bg-background border-border h-9"
                             />
                         </div>

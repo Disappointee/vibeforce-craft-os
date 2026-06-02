@@ -19,10 +19,7 @@ export interface ReportRow {
     userName?: string;
     userEmail?: string;
     hours: number;
-    billableHours: number;
-    percentage: number;
     taskCount: number;
-    budgetHours?: number;
 }
 
 interface ReportTableProps {
@@ -32,7 +29,6 @@ interface ReportTableProps {
 
 export function ReportTable({ rows, groupBy }: ReportTableProps) {
     const totalHours = rows.reduce((sum, r) => sum + r.hours, 0);
-    const totalBillable = rows.reduce((sum, r) => sum + r.billableHours, 0);
 
     if (rows.length === 0) {
         return (
@@ -44,15 +40,10 @@ export function ReportTable({ rows, groupBy }: ReportTableProps) {
 
     return (
         <div className="space-y-4">
-            {/* Summary */}
             <div className="flex items-center gap-6 text-sm">
                 <div>
                     <span className="text-muted-foreground">Gesamtstunden: </span>
                     <span className="text-foreground font-semibold tabular-nums">{totalHours.toFixed(1)}h</span>
-                </div>
-                <div>
-                    <span className="text-muted-foreground">Abrechenbar: </span>
-                    <span className="text-emerald-400 font-semibold tabular-nums">{totalBillable.toFixed(1)}h</span>
                 </div>
                 <div>
                     <span className="text-muted-foreground">Einträge: </span>
@@ -60,7 +51,6 @@ export function ReportTable({ rows, groupBy }: ReportTableProps) {
                 </div>
             </div>
 
-            {/* Table */}
             <div className="rounded-2xl border border-border bg-card/30 overflow-hidden">
                 <Table>
                     <TableHeader className="bg-card/50">
@@ -72,9 +62,7 @@ export function ReportTable({ rows, groupBy }: ReportTableProps) {
                                 <TableHead className="text-muted-foreground font-medium">Mitarbeiter</TableHead>
                             )}
                             <TableHead className="text-muted-foreground font-medium text-right">Stunden</TableHead>
-                            <TableHead className="text-muted-foreground font-medium text-right">Abrechenbar</TableHead>
                             <TableHead className="text-muted-foreground font-medium text-right">Tasks</TableHead>
-                            <TableHead className="text-muted-foreground font-medium text-right">Budget</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -127,35 +115,8 @@ export function ReportTable({ rows, groupBy }: ReportTableProps) {
                                 <TableCell className="py-3 text-right tabular-nums text-foreground font-medium">
                                     {row.hours.toFixed(1)}h
                                 </TableCell>
-                                <TableCell className="py-3 text-right tabular-nums text-emerald-400">
-                                    {row.billableHours.toFixed(1)}h
-                                </TableCell>
                                 <TableCell className="py-3 text-right tabular-nums text-muted-foreground">
                                     {row.taskCount}
-                                </TableCell>
-                                <TableCell className="py-3 text-right">
-                                    {row.budgetHours ? (
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className="text-muted-foreground tabular-nums text-sm">
-                                                {((row.hours / row.budgetHours) * 100).toFixed(0)}%
-                                            </span>
-                                            <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full transition-all ${(row.hours / row.budgetHours) > 1
-                                                            ? 'bg-red-500'
-                                                            : (row.hours / row.budgetHours) > 0.8
-                                                                ? 'bg-amber-500'
-                                                                : 'bg-emerald-500'
-                                                        }`}
-                                                    style={{
-                                                        width: `${Math.min((row.hours / row.budgetHours) * 100, 100)}%`,
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <span className="text-muted-foreground text-sm">—</span>
-                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}

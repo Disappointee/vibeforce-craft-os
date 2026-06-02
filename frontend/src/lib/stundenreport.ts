@@ -15,9 +15,7 @@ export interface StundenreportMeta {
   periodTo: string;
   generatedAt: string;
   logoUrl?: string;
-  showHourlyRate: boolean;
   totalDuration: string;
-  totalCost?: string;
 }
 
 export interface StundenreportEntry {
@@ -25,8 +23,6 @@ export interface StundenreportEntry {
   task: string;
   note: string;
   duration: string;
-  hourlyRate?: string;
-  cost?: string;
 }
 
 export interface StundenreportProjectGroup {
@@ -34,7 +30,6 @@ export interface StundenreportProjectGroup {
   projectKey: string;
   clientName?: string;
   projectTotalDuration: string;
-  projectTotalCost?: string;
   entries: StundenreportEntry[];
 }
 
@@ -58,33 +53,20 @@ function escAttr(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function buildProjectTable(project: StundenreportProjectGroup, showHourlyRate: boolean, showProjectClient: boolean): string {
+function buildProjectTable(project: StundenreportProjectGroup, showProjectClient: boolean): string {
   const rowsHtml = project.entries.map((entry) => {
-    const rateCell = showHourlyRate
-      ? `<td class="numeric">${entry.hourlyRate ? esc(entry.hourlyRate) : '—'}</td>`
-      : '';
-    const costCellEntry = showHourlyRate
-      ? `<td class="numeric">${entry.cost ? esc(entry.cost) : '—'}</td>`
-      : '';
     return `
     <tr>
       <td class="col-date">${esc(entry.date)}</td>
       <td class="col-task">${esc(entry.task)}</td>
       <td class="col-note">${esc(entry.note)}</td>
-      <td class="col-duration numeric">${esc(entry.duration)}</td>${rateCell}${costCellEntry}
+      <td class="col-duration numeric">${esc(entry.duration)}</td>
     </tr>`;
   }).join('');
 
-  const headerCells = showHourlyRate
-    ? `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th><th class="col-rate numeric">Stundensatz</th><th class="col-cost numeric">Kosten</th>`
-    : `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th>`;
+  const headerCells = `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th>`;
 
-  const footerCells = showHourlyRate
-    ? `<td colspan="3">Summe ${esc(project.projectKey)}</td>
-       <td class="numeric">${esc(project.projectTotalDuration)}</td>
-       <td></td>
-       <td class="numeric">${project.projectTotalCost ? esc(project.projectTotalCost) : '—'}</td>`
-    : `<td colspan="3">Summe ${esc(project.projectKey)}</td>
+  const footerCells = `<td colspan="3">Summe ${esc(project.projectKey)}</td>
        <td class="numeric">${esc(project.projectTotalDuration)}</td>`;
 
   return `
@@ -113,14 +95,11 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
     ? `<div class="header-logo"><img src="${escAttr(meta.logoUrl)}" alt="Logo" /></div>`
     : '';
 
-  let totalBlock = `
+  const totalBlock = `
         <span class="total-label">Gesamtsumme</span>
         <span class="total-duration">${esc(meta.totalDuration)}</span>`;
-  if (meta.showHourlyRate && meta.totalCost) {
-    totalBlock += `\n        <span class="total-cost">${esc(meta.totalCost)}</span>`;
-  }
 
-  const projectsHtml = projects.map((p) => buildProjectTable(p, meta.showHourlyRate, showProjectClient)).join('\n');
+  const projectsHtml = projects.map((p) => buildProjectTable(p, showProjectClient)).join('\n');
 
   return `
   <div class="report-header">

@@ -7,7 +7,6 @@ interface TimerState {
   startTime: string | null; // ISO string
   taskTitle: string | null;
   description: string;
-  isCollapsed: boolean;
   isPaused: boolean;
   pauseStartTime: string | null;
   totalPausedSeconds: number;
@@ -19,7 +18,6 @@ interface TimerState {
   stopAndSaveTimer: () => Promise<void>;
   saveRunningNote: () => Promise<void>;
   setDescription: (description: string) => void;
-  setIsCollapsed: (collapsed: boolean) => void;
   setPaused: (isPaused: boolean, pauseStartTime?: string | null) => void;
   setSelectedTaskId: (taskId: string) => void;
   setTotalPausedSeconds: (seconds: number) => void;
@@ -38,7 +36,6 @@ export const useTimerStore = create<TimerState>()(
       startTime: null,
       taskTitle: null,
       description: '',
-      isCollapsed: false,
       isPaused: false,
       pauseStartTime: null,
       totalPausedSeconds: 0,
@@ -176,7 +173,6 @@ export const useTimerStore = create<TimerState>()(
         }
       },
       setDescription: (description) => set({ description }),
-      setIsCollapsed: (collapsed) => set({ isCollapsed: collapsed }),
       setPaused: (isPaused, pauseStartTime = null) => set({ isPaused, pauseStartTime }),
       setSelectedTaskId: (taskId) => set({ selectedTaskId: taskId }),
       setTotalPausedSeconds: (seconds) => set({ totalPausedSeconds: seconds }),

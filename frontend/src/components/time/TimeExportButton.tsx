@@ -12,7 +12,7 @@ import {
 import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { pb } from '@/lib/pocketbase';
-import { getClientName, hasHourlyRates, buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
 import type { ReportTemplate } from '@/lib/stundenreport';
 
 interface TimeExportButtonProps {
@@ -34,13 +34,13 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
         return first === last ? first : `${first}_bis_${last}`;
     };
 
-    const handlePDFExport = async (showHourlyRate: boolean) => {
+    const handlePDFExport = async () => {
         if (entries.length === 0) {
             toast.error('Keine Daten zum Exportieren vorhanden');
             return;
         }
 
-        const reportData = buildStundenreportInput(entries, showHourlyRate);
+        const reportData = buildStundenreportInput(entries);
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -156,21 +156,12 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
                 className="bg-background border-border text-foreground min-w-[240px]"
             >
                 <DropdownMenuItem
-                    onClick={() => handlePDFExport(false)}
+                    onClick={() => handlePDFExport()}
                     className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"
                 >
                     <FileText size={16} className="text-red-400" />
-                    <span>PDF (Stunden)</span>
+                    <span>PDF (Leistungsnachweis)</span>
                 </DropdownMenuItem>
-                {hasHourlyRates(entries) && (
-                    <DropdownMenuItem
-                        onClick={() => handlePDFExport(true)}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"
-                    >
-                        <FileText size={16} className="text-orange-400" />
-                        <span>PDF (Stunden + Kosten)</span>
-                    </DropdownMenuItem>
-                )}
                 <DropdownMenuItem
                     onClick={handleCSVExport}
                     className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"

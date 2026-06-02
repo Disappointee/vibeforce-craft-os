@@ -14,7 +14,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
+    import {
     ArrowLeft,
     Building2,
     Mail,
@@ -26,8 +26,6 @@ import {
     Users,
     Eye,
     FileText,
-    ChevronDown,
-    ChevronRight,
     FolderKanban,
     CheckCircle2,
     AlertCircle,
@@ -41,6 +39,7 @@ import {
     Pencil,
     Plus,
 } from 'lucide-react';
+import { useUiStore } from '@/lib/store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
@@ -155,7 +154,6 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     const [users, setUsers] = useState<UserRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
     const [projectHours, setProjectHours] = useState<Record<string, ProjectHours>>({});
     const [files, setFiles] = useState<ClientFile[]>([]);
     const [isSaving, setIsSaving] = useState(false);
@@ -440,18 +438,6 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         }
     };
 
-    const toggleProjectExpand = (projectId: string) => {
-        setExpandedProjects(prev => {
-            const next = new Set(prev);
-            if (next.has(projectId)) {
-                next.delete(projectId);
-            } else {
-                next.add(projectId);
-            }
-            return next;
-        });
-    };
-
     // ============================================
     // Loading State
     // ============================================
@@ -678,20 +664,30 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                     </div>
 
                     {/* ============================================ */}
-                    {/* B3: Zugeordnete Projekte/Aufgaben */}
-                    {/* B4: Gebuchte Stunden pro Projekt */}
+                    {/* B3: Projekte */}
                     {/* ============================================ */}
                     <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
                         <div className="p-6 border-b border-border">
-                            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                <FolderKanban size={18} className="text-primary" />
-                                Projekte & Aufgaben
-                                {projects.length > 0 && (
-                                    <Badge variant="outline" className="ml-2 text-muted-foreground border-border bg-card">
-                                        {projects.length}
-                                    </Badge>
-                                )}
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                    <FolderKanban size={18} className="text-primary" />
+                                    Projekte
+                                    {projects.length > 0 && (
+                                        <Badge variant="outline" className="ml-2 text-muted-foreground border-border bg-card">
+                                            {projects.length}
+                                        </Badge>
+                                    )}
+                                </h2>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => useUiStore.getState().setProjectDialogOpen(true)}
+                                    className="border-border text-foreground hover:bg-muted"
+                                >
+                                    <Plus size={14} className="mr-1" />
+                                    Neues Projekt
+                                </Button>
+                            </div>
                         </div>
 
                         {projects.length === 0 ? (
@@ -707,117 +703,49 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                 {projects.map((project) => {
                                     const hours = projectHours[project.id] || { estimated: 0, booked: 0 };
                                     const percent = hours.estimated > 0 ? Math.round((hours.booked / hours.estimated) * 100) : 0;
-                                    const isExpanded = expandedProjects.has(project.id);
 
                                     return (
-                                        <div key={project.id}>
-                                            {/* Project Header */}
-                                            <button
-                                                onClick={() => toggleProjectExpand(project.id)}
-                                                className="w-full flex items-center gap-4 p-4 hover:bg-accent/5 transition-colors text-left group"
-                                            >
-                                                <div className="text-muted-foreground group-hover:text-muted-foreground transition-colors">
-                                                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-foreground text-sm">{project.name}</span>
-                                                        <Badge variant="outline" className="text-[10px] text-muted-foreground border-border bg-card/50 font-mono shadow-none">
-                                                            {project.key}
-                                                        </Badge>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            ({project.tasks.length} Aufgaben)
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* B4: Hours Progress */}
-                                                <div className="flex items-center gap-4 shrink-0">
-                                                    <div className="text-right">
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {Math.round(hours.booked)}h / {hours.estimated}h
-                                                        </p>
-                                                    </div>
-                                                    <div className="w-24">
-                                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                            <div
-                                                                className={`h-full rounded-full transition-all duration-500 ${percent >= 100
-                                                                    ? 'bg-success'
-                                                                    : percent >= 75
-                                                                        ? 'bg-warning'
-                                                                        : 'bg-primary'
-                                                                    }`}
-                                                                style={{ width: `${Math.min(percent, 100)}%` }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <span className={`text-xs font-medium w-10 text-right ${percent >= 100 ? 'text-emerald-400' : 'text-muted-foreground'
-                                                        }`}>
-                                                        {percent}%
+                                        <div
+                                            key={project.id}
+                                            className="flex items-center gap-4 p-4 hover:bg-accent/5 transition-colors text-left cursor-pointer"
+                                            onClick={() => router.push(`/projects/${project.id}`)}
+                                        >
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-foreground text-sm">{project.name}</span>
+                                                    <Badge variant="outline" className="text-[10px] text-muted-foreground border-border bg-card/50 font-mono shadow-none">
+                                                        {project.key}
+                                                    </Badge>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        ({project.tasks.length} Aufgaben)
                                                     </span>
                                                 </div>
-                                            </button>
+                                            </div>
 
-                                            {/* Task List (expandable) */}
-                                            {isExpanded && (
-                                                <div className="border-t border-border/30 bg-black/20">
-                                                    <div className="px-4 py-2 flex justify-end">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={(e) => { e.stopPropagation(); setNewTaskProjectId(project.id); }}
-                                                            className="border-border text-foreground hover:bg-muted text-xs h-8"
-                                                        >
-                                                            <Plus size={14} className="mr-1" />
-                                                            Neue Aufgabe
-                                                        </Button>
-                                                    </div>
-                                                    {project.tasks.length === 0 ? (
-                                                        <div className="p-4 text-center text-sm text-muted-foreground">
-                                                            Keine Aufgaben in diesem Projekt.
-                                                        </div>
-                                                    ) : (
-                                                        <div className="divide-y divide-border">
-                                                            {project.tasks.map((task) => (
-                                                                <div
-                                                                    key={task.id}
-                                                                    className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-white/[0.02] transition-colors cursor-pointer"
-                                                                    onClick={() => router.push(`/projects/${project.id}`)}
-                                                                >
-                                                                    <div className={`p-1 rounded ${task.status === 'done'
-                                                                        ? 'text-emerald-400 bg-emerald-500/10'
-                                                                        : task.status === 'in_progress'
-                                                                            ? 'text-indigo-400 bg-indigo-500/10'
-                                                                            : 'text-muted-foreground bg-muted/50'
-                                                                        }`}>
-                                                                        {task.status === 'done'
-                                                                            ? <CheckCircle2 size={12} />
-                                                                            : <Clock size={12} />
-                                                                        }
-                                                                    </div>
-                                                                    <span className="text-sm text-foreground flex-1 truncate">
-                                                                        {task.title}
-                                                                    </span>
-                                                                    {task.estimated_hours && (
-                                                                        <span className="text-xs text-muted-foreground shrink-0">
-                                                                            {task.estimated_hours}h
-                                                                        </span>
-                                                                    )}
-                                                                    <Badge variant="outline" className={`text-[10px] ${task.priority === 'acute' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
-                                                                        task.priority === 'high' ? 'text-orange-400 border-orange-500/20 bg-orange-500/10' :
-                                                                            task.priority === 'medium' ? 'text-blue-400 border-blue-500/20 bg-blue-500/10' :
-                                                                                'text-muted-foreground border-border bg-card'
-                                                                        }`}>
-                                                                        {task.priority === 'acute' ? 'Akut' :
-                                                                            task.priority === 'high' ? 'Hoch' :
-                                                                                task.priority === 'medium' ? 'Mittel' : 'Niedrig'}
-                                                                    </Badge>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                            <div className="flex items-center gap-4 shrink-0">
+                                                <div className="text-right">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {Math.round(hours.booked)}h / {hours.estimated}h
+                                                    </p>
                                                 </div>
-                                            )}
+                                                <div className="w-24">
+                                                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${percent >= 100
+                                                                ? 'bg-success'
+                                                                : percent >= 75
+                                                                    ? 'bg-warning'
+                                                                    : 'bg-primary'
+                                                                }`}
+                                                            style={{ width: `${Math.min(percent, 100)}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <span className={`text-xs font-medium w-10 text-right ${percent >= 100 ? 'text-emerald-400' : 'text-muted-foreground'
+                                                    }`}>
+                                                    {percent}%
+                                                </span>
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -847,6 +775,97 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ============================================ */}
+                    {/* B4: Alle Aufgaben */}
+                    {/* ============================================ */}
+                    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+                        <div className="p-6 border-b border-border">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                    <CheckCircle2 size={18} className="text-primary" />
+                                    Alle Aufgaben
+                                    {projects.length > 0 && (
+                                        <Badge variant="outline" className="ml-2 text-muted-foreground border-border bg-card">
+                                            {projects.reduce((sum, p) => sum + p.tasks.length, 0)}
+                                        </Badge>
+                                    )}
+                                </h2>
+                                {projects.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            if (projects.length === 1) {
+                                                setNewTaskProjectId(projects[0].id);
+                                            } else {
+                                                setNewTaskProjectId('');
+                                            }
+                                            useUiStore.getState().setTaskDialogOpen(true);
+                                        }}
+                                        className="border-border text-foreground hover:bg-muted"
+                                    >
+                                        <Plus size={14} className="mr-1" />
+                                        Neue Aufgabe
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {projects.reduce((sum, p) => sum + p.tasks.length, 0) === 0 ? (
+                            <div className="p-12 flex flex-col items-center justify-center text-center">
+                                <CheckCircle2 size={40} className="text-muted-foreground/30 mb-3" />
+                                <h3 className="text-base font-semibold text-muted-foreground">Keine Aufgaben vorhanden</h3>
+                                <p className="text-muted-foreground text-sm mt-1">
+                                    In den Projekten dieses Kunden sind noch keine Aufgaben angelegt.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-border">
+                                {projects.flatMap((project) =>
+                                    project.tasks.map((task) => ({ task, project }))
+                                ).map(({ task, project }) => (
+                                    <div
+                                        key={task.id}
+                                        className="flex items-center gap-3 px-6 py-2.5 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                                        onClick={() => router.push(`/projects/${project.id}`)}
+                                    >
+                                        <div className={`p-1 rounded ${task.status === 'done'
+                                            ? 'text-emerald-400 bg-emerald-500/10'
+                                            : task.status === 'in_progress'
+                                                ? 'text-indigo-400 bg-indigo-500/10'
+                                                : 'text-muted-foreground bg-muted/50'
+                                            }`}>
+                                            {task.status === 'done'
+                                                ? <CheckCircle2 size={12} />
+                                                : <Clock size={12} />
+                                            }
+                                        </div>
+                                        <span className="text-sm text-foreground flex-1 truncate">
+                                            {task.title}
+                                        </span>
+                                        <Badge variant="outline" className="text-[10px] text-muted-foreground border-border bg-card/50 font-mono shadow-none shrink-0">
+                                            {project.name}
+                                        </Badge>
+                                        {task.estimated_hours && (
+                                            <span className="text-xs text-muted-foreground shrink-0">
+                                                {task.estimated_hours}h
+                                            </span>
+                                        )}
+                                        <Badge variant="outline" className={`text-[10px] shrink-0 ${task.priority === 'acute' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                                            task.priority === 'high' ? 'text-orange-400 border-orange-500/20 bg-orange-500/10' :
+                                                task.priority === 'medium' ? 'text-blue-400 border-blue-500/20 bg-blue-500/10' :
+                                                    'text-muted-foreground border-border bg-card'
+                                            }`}>
+                                            {task.priority === 'acute' ? 'Akut' :
+                                                task.priority === 'high' ? 'Hoch' :
+                                                    task.priority === 'medium' ? 'Mittel' : 'Niedrig'}
+                                        </Badge>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -1095,9 +1114,9 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 onClientUpdated={handleClientUpdated}
             />
 
-            {newTaskProjectId && (
+            {newTaskProjectId !== null && (
                 <NewTaskDialog
-                    projectId={newTaskProjectId}
+                    projectId={newTaskProjectId || undefined}
                     onTaskCreated={() => {
                         setNewTaskProjectId(null);
                         setRefreshTrigger(prev => prev + 1);

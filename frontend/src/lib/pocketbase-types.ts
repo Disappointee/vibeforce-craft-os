@@ -247,6 +247,7 @@ export interface ExternalExpenseRecord extends BaseRecord {
 }
 
 export interface ReportTemplateConfig {
+    datePreset?: string;
     dateFrom?: string;
     dateTo?: string;
     projectIds?: string[];

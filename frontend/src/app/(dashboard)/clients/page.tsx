@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ClientList } from '@/components/clients/ClientList';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
 import { useUiStore } from '@/lib/store';
@@ -43,6 +44,10 @@ export default function ClientsPage() {
                             Verwalte deine Kundenkontakte und ordne sie Projekten zu.
                         </p>
                     </div>
+                    <Button onClick={() => setClientDialogOpen(true)}>
+                        <Plus size={16} className="mr-2" />
+                        Neuer Kunde
+                    </Button>
                     <NewClientDialog
                         open={clientDialogOpen}
                         onOpenChange={setClientDialogOpen}
