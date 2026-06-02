@@ -1004,8 +1004,8 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                 )}
               </div>
 
-              {/* Recurring Task Section */}
-              <div className="space-y-3 p-4 rounded-xl border border-border bg-card/30">
+{/* MVP: Wiederkehrende Aufgaben ausgeblendet */}
+              {/* <div className="space-y-3 p-4 rounded-xl border border-border bg-card/30">
                 <div className="flex items-center justify-between">
                   <Label className="text-muted-foreground font-semibold text-lg flex items-center gap-2">
                     <RefreshCw size={16} className="text-muted-foreground" />
@@ -1025,7 +1025,6 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
 
                 {isRecurring && (
                   <div className="space-y-4 pt-2">
-                    {/* Interval Selector */}
                     <div className="space-y-2">
                       <Label className="text-muted-foreground text-xs uppercase tracking-wider">Intervall</Label>
                       <Select
@@ -1047,7 +1046,6 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                       </Select>
                     </div>
 
-                    {/* Custom Days Input */}
                     {recurringInterval === 'custom' && (
                       <div className="space-y-2">
                         <Label className="text-muted-foreground text-xs uppercase tracking-wider">Alle X Tage</Label>
@@ -1061,7 +1059,6 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                       </div>
                     )}
 
-                    {/* End Date */}
                     <div className="space-y-2">
                       <Label className="text-muted-foreground text-xs uppercase tracking-wider">Enddatum (optional)</Label>
                       <Input
@@ -1072,7 +1069,6 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                       />
                     </div>
 
-                    {/* Next Scheduled Date */}
                     <div className="space-y-2">
                       <Label className="text-muted-foreground text-xs uppercase tracking-wider">Nächstes Datum</Label>
                       <Input
@@ -1083,13 +1079,12 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                       />
                     </div>
 
-                    {/* Info Text */}
                     <p className="text-xs text-muted-foreground">
                       Die Aufgabe wird automatisch am nächsten Datum neu erstellt.
                     </p>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* File Attachments Section */}
               <div id="section-dateien" className="space-y-3 p-4 rounded-xl border border-border bg-card/30">

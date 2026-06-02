@@ -488,7 +488,7 @@ export function TimerBar() {
 
   const TaskSelectorDropdown = (
     <div ref={taskDropdownRef} className="relative">
-      <button
+{/* <button
         onClick={() => setShowTaskDropdown(!showTaskDropdown)}
         className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py-2 text-sm text-left hover:border-border transition-colors min-w-[180px]"
       >
@@ -503,7 +503,7 @@ export function TimerBar() {
           ) : t('timerbar.task_placeholder')}
         </span>
         <ChevronUp size={16} className="text-muted-foreground ml-auto shrink-0" />
-      </button>
+      </button> */}
 
       {showTaskDropdown && (
         <div className="absolute bottom-full mb-3 left-0 w-[340px] rounded-2xl border border-border bg-background shadow-2xl shadow-black/50 overflow-hidden z-50">
@@ -581,7 +581,7 @@ export function TimerBar() {
         </>
       ) : (
         <>
-          <button
+{/* <button
             onClick={() => setBottomSheetOpen(true)}
             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py-2 text-sm text-left hover:border-border transition-colors min-w-0 flex-1"
           >
@@ -594,7 +594,7 @@ export function TimerBar() {
                 </span>
               ) : t('timerbar.task_placeholder')}
             </span>
-          </button>
+          </button> */}
           <Button
             onClick={(e) => { e.stopPropagation(); handleStart(); }}
             disabled={!selectedTaskId}

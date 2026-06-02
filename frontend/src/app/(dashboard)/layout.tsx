@@ -388,7 +388,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} collapsed={sidebarCollapsed} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
-            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} />
+            {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
             <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} collapsed={sidebarCollapsed} />
@@ -396,7 +396,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
             )}
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} collapsed={sidebarCollapsed} />
-            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
+            {/* <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} /> */}
           </nav>
 
           <div className={`border-t border-border mt-auto pb-16 transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
@@ -441,7 +441,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} />
+            {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
@@ -449,7 +449,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
             )}
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
+            {/* <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} /> */}
           </nav>
 
           <div className="p-4 border-t border-border mt-auto pb-16">
@@ -571,7 +571,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <Zap size={18} />
               </button>
-              <NotificationBell />
+              {/* <NotificationBell /> */}
               {/* User Dropdown */}
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -647,7 +647,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
         <TimerBar />
         <MobileTabBar />
-        <NightShift />
+        {/* <NightShift /> */}
         <CommandPalette />
         <SimpleActionMenu />
       </div>
