@@ -19,25 +19,21 @@ import {
   X,
   Menu,
   Building2,
-  Shield,
   UserCircle,
   Timer,
   AlertTriangle,
   Sun,
   Moon,
-  Eye,
-  EyeOff,
   ChevronLeft,
   ChevronRight,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TimerBar } from '@/components/layout/TimerBar';
-import { NightShift } from '@/components/layout/NightShift';
-import { useThemeStore, useUiStore } from '@/lib/store';
+import { useUiStore } from '@/lib/store';
 import { useOffline } from '@/hooks/use-offline';
 import { toast } from 'sonner';
-import { CommandPalette } from '@/components/layout/CommandPalette';
 import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
 import { LiveClock } from '@/components/layout/LiveClock';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
@@ -52,7 +48,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Zap } from 'lucide-react';
+
 
 interface SearchResult {
   type: 'project' | 'task' | 'client' | 'user';
@@ -78,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return false;
   });
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const { nightShiftEnabled, nightShiftBypass, setNightShiftEnabled, setNightShiftBypass } = useThemeStore();
+
   const isOffline = useOffline();
 
   const handleOpenTaskDialog = useCallback(() => {
@@ -104,14 +100,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     onOpenProjectDialog: handleOpenProjectDialog,
   });
 
-  // Auto-reset NightShift bypass after 5 minutes
-  useEffect(() => {
-    if (!nightShiftBypass) return;
-    const timer = setTimeout(() => {
-      setNightShiftBypass(false);
-    }, 5 * 60 * 1000);
-    return () => clearTimeout(timer);
-  }, [nightShiftBypass, setNightShiftBypass]);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -391,12 +379,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} collapsed={sidebarCollapsed} />
-            {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
-            )}
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} collapsed={sidebarCollapsed} />
-            {/* <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} /> */}
+            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
           </nav>
 
           <div className={`border-t border-border mt-auto pb-16 transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
@@ -444,12 +428,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
-            {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
-            )}
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} onClick={() => setMobileSidebarOpen(false)} />
-            {/* <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} /> */}
+            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
           </nav>
 
           <div className="p-4 border-t border-border mt-auto pb-16">
@@ -641,14 +621,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Dynamic Page Content */}
-          <div className="flex-1 overflow-auto pb-20 md:pb-0">
+          <div className="flex-1 overflow-auto pb-20">
             {children}
           </div>
         </main>
         <TimerBar />
         <MobileTabBar />
-        {/* <NightShift /> */}
-        <CommandPalette />
         <SimpleActionMenu />
       </div>
 
