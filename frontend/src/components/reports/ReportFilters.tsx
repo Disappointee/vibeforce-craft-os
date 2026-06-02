@@ -17,7 +17,7 @@ import { TranslatedSelect } from '@/components/ui/translated-select';
 import { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { t, TranslationKey } from '@/lib/i18n';
 
-export type DatePreset = 'this_month' | 'last_month' | 'last_7_days' | 'last_30_days' | 'last_quarter' | 'custom';
+export type DatePreset = 'last_month' | 'this_month' | 'this_quarter' | 'last_quarter' | 'this_year' | 'last_year' | 'custom';
 
 export interface ReportFilterValues {
     datePreset: DatePreset;
@@ -39,11 +39,12 @@ interface ReportFiltersProps {
 }
 
 const PRESET_OPTIONS: { value: DatePreset; label: string }[] = [
-    { value: 'this_month', label: 'Dieser Monat' },
     { value: 'last_month', label: 'Letzter Monat' },
-    { value: 'last_7_days', label: 'Letzte 7 Tage' },
-    { value: 'last_30_days', label: 'Letzte 30 Tage' },
+    { value: 'this_month', label: 'Dieser Monat' },
+    { value: 'this_quarter', label: 'Dieses Quartal' },
     { value: 'last_quarter', label: 'Letztes Quartal' },
+    { value: 'this_year', label: 'Dieses Jahr' },
+    { value: 'last_year', label: 'Letztes Jahr' },
     { value: 'custom', label: 'Benutzerdefiniert' },
 ];
 
@@ -61,15 +62,11 @@ function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string 
             const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
             return { dateFrom: toISO(firstOfLastMonth), dateTo: toISO(lastOfLastMonth) };
         }
-        case 'last_7_days': {
-            const sevenDaysAgo = new Date(now);
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            return { dateFrom: toISO(sevenDaysAgo), dateTo: toISO(now) };
-        }
-        case 'last_30_days': {
-            const thirtyDaysAgo = new Date(now);
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            return { dateFrom: toISO(thirtyDaysAgo), dateTo: toISO(now) };
+        case 'this_quarter': {
+            const month = now.getMonth();
+            const quarterStartMonth = Math.floor(month / 3) * 3;
+            const firstOfQuarter = new Date(now.getFullYear(), quarterStartMonth, 1);
+            return { dateFrom: toISO(firstOfQuarter), dateTo: toISO(now) };
         }
         case 'last_quarter': {
             const month = now.getMonth();
@@ -77,6 +74,15 @@ function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string 
             const firstOfQuarter = new Date(now.getFullYear(), quarterStartMonth < 0 ? quarterStartMonth + 12 : quarterStartMonth, 1);
             const lastOfQuarter = new Date(now.getFullYear(), Math.floor(month / 3) * 3, 0);
             return { dateFrom: toISO(firstOfQuarter), dateTo: toISO(lastOfQuarter) };
+        }
+        case 'this_year': {
+            const firstOfYear = new Date(now.getFullYear(), 0, 1);
+            return { dateFrom: toISO(firstOfYear), dateTo: toISO(now) };
+        }
+        case 'last_year': {
+            const firstOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+            const lastOfLastYear = new Date(now.getFullYear(), 0, 0);
+            return { dateFrom: toISO(firstOfLastYear), dateTo: toISO(lastOfLastYear) };
         }
         default:
             return { dateFrom: '', dateTo: '' };

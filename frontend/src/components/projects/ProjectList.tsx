@@ -166,26 +166,7 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
   };
 
   const renderBudgetBar = (project: any) => {
-    const workedHours = project._workedHours || 0;
-    const budgetHours = project.budget_hours || 0;
-    const percent = budgetHours > 0 ? Math.min(100, Math.round((workedHours / budgetHours) * 100)) : 0;
-    const isOverBudget = budgetHours > 0 && workedHours > budgetHours;
-    return (
-      <div className="space-y-1.5">
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <Clock size={12} /> {workedHours.toFixed(1)} / {budgetHours || '?'} h
-          </span>
-          <span className={isOverBudget ? 'text-red-400' : 'text-muted-foreground'}>{percent}%</span>
-        </div>
-        <div className="h-1 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-500' : percent > 80 ? 'bg-amber-500' : 'bg-primary'}`}
-            style={{ width: `${Math.max(2, percent)}%` }}
-          ></div>
-        </div>
-      </div>
-    );
+    return null; {/* MVP: Hide budget bars */}
   };
 
   const renderActions = (project: any) => (

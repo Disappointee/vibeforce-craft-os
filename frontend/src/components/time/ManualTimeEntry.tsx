@@ -169,11 +169,8 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
         try {
             const datePart = dateStr;
             const startDateTime = parseLocalDateTime(datePart, startTime);
-            const endDateTime = parseLocalDateTime(datePart, endTime);
-            // If end time is before start time, it crosses midnight
-            if (endDateTime <= startDateTime) {
-                endDateTime.setDate(endDateTime.getDate() + 1);
-            }
+            
+            const endDateTime = new Date(startDateTime.getTime() + totalMinutes * 60000);
 
             const payload = {
                 task: selectedTaskId,

@@ -233,7 +233,8 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                 )}
                             </div>
 
-                            {/* B7: New fields display */}
+                            {/* B7: New fields display — HIDDEN for MVP */}
+                            {/*
                             {(client.auftragsvolumen != null || client.stundenzahl_gesamt != null) && (
                                 <div className="mt-4 pt-4 border-t border-border/50 flex items-center gap-4">
                                     {client.auftragsvolumen != null && (
@@ -250,6 +251,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                     )}
                                 </div>
                             )}
+                            */}
                         </CardContent>
                     </Card>
                 ))}

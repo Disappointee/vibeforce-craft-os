@@ -1,0 +1,95 @@
+metadata:
+  source_video_id: 8TzZwF9kYQ8
+  analysis_focus: Kernkonzepte, KI-Trends, Software-Entwicklung, Produktivitäts-Workflows,
+    Geschäftsstrategien, technische Innovationen, praxisrelevante Handlungsanweisungen
+  purpose: Universelle LLM-Workflow- und Konzept-Referenz
+core_philosophies_or_insights:
+- concept: 'CSS Subgrid: Nested Grid Alignment'
+  relevance: 0.95
+  description: 'CSS Subgrid ermöglicht es einem verschachtelten Grid, die Spuren seines
+    übergeordneten Grids zu übernehmen, anstatt eigene zu definieren. Dies löst das
+    Problem der inkonsistenten Ausrichtung in verschachtelten Layouts wie Karten,
+    Formularen und Artikeln. Subgrid wird durch die Schlüsselwörter ''grid-template-columns:
+    subgrid'' oder ''grid-template-rows: subgrid'' auf dem Kind-Element aktiviert.
+    Es ist seit 2023 in allen großen Browsern verfügbar und ersetzt Workarounds wie
+    feste Höhen, Zeilenbegrenzung und JavaScript-Messungen.'
+- concept: Praktische Anwendungsfälle für Subgrid
+  relevance: 0.85
+  description: Subgrid eignet sich besonders für Kartenlayouts, Formulare und Artikel-Layouts
+    mit konsistenter vertikaler Rhythmik. Bei Karten sorgt es dafür, dass Titel, Bilder
+    und Buttons über mehrere Karten hinweg auf gleicher Höhe sind. Bei Formularen
+    gleicht es Label- und Eingabebreiten aus. Bei Artikeln ermöglicht es eine durchgehende
+    vertikale Ausrichtung von Überschriften, Abbildungen und Zitaten.
+- concept: Häufige Fallstricke und Best Practices
+  relevance: 0.75
+  description: 'Wichtige Fallstricke bei Subgrid: Es gilt nur für die deklarierte
+    Achse; tiefe Verschachtelung wird unübersichtlich; benannte Grid-Linien können
+    verwirren; ältere Browser ignorieren Subgrid. Best Practices: Subgrid nur bei
+    Bedarf einsetzen, Fallbacks mit @supports bereitstellen, und bei Problemen die
+    Grid-Overlay-Ansicht nutzen.'
+workflows_and_procedures:
+- title: Subgrid implementieren
+  steps:
+  - 'Übergeordnetes Grid mit display: grid und gewünschten Spalten/Zeilen definieren.'
+  - 'Kind-Element mit display: grid versehen (erforderlich, damit Subgrid funktioniert).'
+  - 'Auf dem Kind-Element grid-template-rows: subgrid oder grid-template-columns:
+    subgrid setzen, je nach gewünschter Achse.'
+  - Für beide Achsen beide Eigenschaften explizit deklarieren.
+  - 'Mit @supports (grid-template-rows: subgrid) eine Fallback-Regel für ältere Browser
+    hinzufügen.'
+  guardrails_or_rules:
+  - Subgrid nur auf der Achse anwenden, die tatsächlich ausgerichtet werden muss;
+    die andere Achse bleibt unabhängig.
+  - Verschachtelung von Subgrids auf maximal zwei Ebenen beschränken, um die Nachvollziehbarkeit
+    zu wahren.
+  - Bei benannten Grid-Linien in Subgrids Vorsicht walten lassen; bevorzugt numerische
+    Liniennummern verwenden.
+  - 'Fallback für ältere Browser mit @supports-Regel implementieren: zuerst normales
+    Grid, dann mit Subgrid verbessern.'
+  - Bei Ausrichtungsproblemen die Grid-Overlay-Ansicht in den Entwicklertools verwenden,
+    um die tatsächlichen Spuren zu visualisieren.
+- title: Subgrid für Kartenlayouts
+  steps:
+  - Übergeordnetes Grid mit Spalten für die Karten definieren.
+  - Jede Karte als Subgrid auf den Zeilen definieren.
+  guardrails_or_rules:
+  - Subgrid nur verwenden, wenn eine echte Ausrichtung über separate Container hinweg
+    erforderlich ist; einfache Stapel ohne innere Ausrichtung benötigen es nicht.
+- title: Subgrid für Formulare
+  steps:
+  - Übergeordnetes Grid mit Spalten für Label, Input und Hilfetext definieren.
+  - Jede Formularzeile als Subgrid auf den Spalten definieren.
+  guardrails_or_rules:
+  - 'In Formularen: Jede Zeile als Subgrid auf den Spalten definieren, damit Labels
+    und Eingaben einheitliche Breiten haben.'
+- title: Subgrid für Artikel-Layouts
+  steps:
+  - Übergeordnetes Grid mit Zeilen-Tracks für konsistente Rhythmik definieren.
+  - Jede Sektion als Subgrid auf den Zeilen definieren.
+  guardrails_or_rules:
+  - 'In Artikeln: Den gesamten Artikel-Container als Grid mit Zeilen-Tracks definieren
+    und jeden Abschnitt als Subgrid auf den Zeilen.'
+reusable_skills_or_actions:
+- name: Subgrid implementieren
+  trigger: Wenn ein verschachteltes Layout inkonsistente Ausrichtung aufweist und
+    Subgrid in allen modernen Browsern unterstützt wird.
+  instructions:
+  - 'Übergeordnetes Grid mit display: grid und gewünschten Spalten/Zeilen definieren.'
+  - 'Kind-Element mit display: grid versehen.'
+  - 'Auf dem Kind-Element grid-template-rows: subgrid oder grid-template-columns:
+    subgrid setzen.'
+  - Für beide Achsen beide Eigenschaften explizit deklarieren.
+  - 'Mit @supports (grid-template-rows: subgrid) eine Fallback-Regel für ältere Browser
+    hinzufügen.'
+- name: Subgrid-Fallback bereitstellen
+  trigger: Wenn Browser ohne Subgrid-Unterstützung unterstützt werden müssen.
+  instructions:
+  - Zuerst normales Grid ohne Subgrid definieren.
+  - 'Dann mit @supports (grid-template-rows: subgrid) die Subgrid-Regel überschreiben.'
+- name: Subgrid debuggen
+  trigger: Wenn die Ausrichtung nicht wie erwartet funktioniert.
+  instructions:
+  - Grid-Overlay-Ansicht in den Entwicklertools aktivieren.
+  - Prüfen, ob Subgrid auf der richtigen Achse deklariert ist.
+  - Verschachtelungstiefe überprüfen (maximal zwei Ebenen).
+  - Numerische Liniennummern statt benannter Linien verwenden.

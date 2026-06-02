@@ -1,0 +1,92 @@
+metadata:
+  source_video_id: qw0xdTtzK1w
+  analysis_focus: Kernkonzepte, KI-Trends, Software-Entwicklung, Produktivitäts-Workflows,
+    Geschäftsstrategien, technische Innovationen, praxisrelevante Handlungsanweisungen
+  purpose: Universelle LLM-Workflow- und Konzept-Referenz
+core_philosophies_or_insights:
+- concept: Kontinuierliche, datengetriebene Optimierung durch automatisierte Experimente
+  relevance: 1.0
+  description: 'Das Kernprinzip ist die iterative Verbesserung von Prozessen (hier:
+    E-Mail-Kampagnen) durch KI-gesteuerte Experimente, die auf historischen Daten
+    basieren. Statt einmaliger Optimierung wird ein sich selbst verbesserndes System
+    aufgebaut, das regelmäßig neue Varianten testet und erfolgreiche Muster verstärkt.'
+- concept: 'Kontext vor Daten: Umfassende Informationssammlung als Grundlage'
+  relevance: 0.95
+  description: 'Bevor KI-Modelle Entscheidungen treffen, muss ein vollständiger Kontext
+    erfasst werden: Unternehmensdetails, Zielkundenprofil, Wertversprechen, Fallstudien.
+    Dieser Kontext wird in strukturierten Dokumenten (z.B. Markdown) festgehalten
+    und dient als Basis für alle weiteren Schritte.'
+- concept: Total Addressable Market (TAM) vollständig vorab aufbauen
+  relevance: 0.9
+  description: Alle relevanten Datenpunkte potenzieller Zielunternehmen (z.B. Sales-Motion,
+    Pricing, Teamstruktur) werden einmalig gesammelt und angereichert. Dies vermeidet
+    Echtzeit-Entscheidungen des KI-Modells und ermöglicht hochrelevante Personalisierung.
+- concept: Menschliche Kontrolle über KI-Vorschläge
+  relevance: 0.85
+  description: KI generiert Kampagnenvorschläge und Experimente, aber die finale Freigabe
+    und Anpassung erfolgt durch Menschen. Dies stellt sicher, dass die Markenstimme
+    erhalten bleibt und unerwünschte Aktionen (z.B. falsche CTAs) vermieden werden.
+workflows_and_procedures:
+- title: KI-gestützte Lead-Generierung mit Auto-Optimierung
+  steps:
+  - 'Unternehmenskontext erfassen: Website scannen, Voice Memo mit Zielkunden-Beschreibung
+    aufnehmen und an KI übergeben.'
+  - 'Automatische Onboarding-Dokumente generieren: ICP, Case Studies, Value Proposition,
+    Problem Statement als Markdown-Dateien.'
+  - 'TAM vollständig aufbauen: Alle potenziellen Zielunternehmen mit relevanten Datenpunkten
+    (z.B. Demo-CTA, Pricing, Teamgröße) anreichern.'
+  - 'Experimente vorschlagen lassen: KI analysiert TAM und Kontext, erstellt Kampagnen-Vorschläge
+    mit spezifischen Datenpunkten.'
+  - 'Kampagnen genehmigen und anpassen: Mensch prüft Vorschläge, schreibt ggf. eigene
+    E-Mails basierend auf Kontaktdaten.'
+  - 'Automatischer Versand und Monitoring: Reply-Raten tracken, erfolgreiche Muster
+    verstärken, erfolglose einstellen.'
+  guardrails_or_rules:
+  - CTA muss gesperrt sein, um unerwünschte Aktionen zu verhindern.
+  - E-Mails müssen vor dem Versand durch Million Verifier verifiziert werden.
+  - Benutzerfreigabe ist erforderlich; Kampagnen laufen nicht automatisch ohne Genehmigung.
+  - Kontaktdaten werden lokal in CSV-Dateien gespeichert, nicht in der Cloud.
+- title: Wöchentlicher Automatisierungszyklus mit Codex
+  steps:
+  - Erstellen Sie eine Unternehmensliste, Kontaktliste und Kontext zum Verkaufsangebot.
+  - Definieren Sie Experimente und erstellen Sie Copywriting.
+  - Laden Sie alles in SmartLead und Instantly für die erste Kampagnencharge.
+  - Richten Sie eine wöchentliche Automatisierung (z.B. freitags) mit Codex ein, um
+    vergangene Leistungen zu überprüfen und neue Kampagnen vorzuschlagen.
+  - Genehmigen Sie die vorgeschlagenen Kampagnen und das Copywriting.
+  - Laden Sie die genehmigten Kampagnen mit aktualisierten Kontakten in SmartLead
+    hoch.
+  - Wiederholen Sie den Zyklus wöchentlich, wobei die KI aus den Ergebnissen lernt.
+  guardrails_or_rules:
+  - Verwenden Sie Codex oder Cloud Code für die wöchentliche Automatisierung.
+  - CTA muss auf eine bestimmte Aktion (z.B. Meeting buchen) gesperrt sein.
+  - E-Mails müssen vor dem Versand verifiziert werden.
+  - Kontaktdaten lokal in CSV speichern, nicht in der Cloud.
+reusable_skills_or_actions:
+- name: 'Kontext erfassen: Website und Voice Memo'
+  trigger: Zu Beginn eines neuen Lead-Gen-Projekts
+  instructions:
+  - Scannen Sie die Website des Unternehmens mit HTML-to-Text.
+  - Nehmen Sie ein Voice Memo auf, das den idealen Kunden beschreibt (z.B. Rolle,
+    Probleme, Ziele).
+  - Übergeben Sie beide an die KI zur Generierung von Onboarding-Dokumenten.
+- name: TAM-Daten sammeln und anreichern
+  trigger: Nachdem der Kontext erfasst wurde
+  instructions:
+  - Identifizieren Sie relevante Datenpunkte (z.B. Sales-Motion, Pricing, Teamstruktur).
+  - Nutzen Sie APIs wie Rapid API, Apify, Prospeo, Blitz API, Clay.
+  - Crawlen Sie Websites mit HTML-to-Text.
+  - Speichern Sie die Daten in strukturiertem Format (CSV/JSON).
+- name: KI-Experimente vorschlagen lassen
+  trigger: Wöchentlich nach der Leistungsanalyse
+  instructions:
+  - Übergeben Sie TAM und Kontext an die KI.
+  - Lassen Sie die KI neue Kampagnenvarianten vorschlagen (z.B. Betreffzeilen, Zielsegmente).
+  - Prüfen Sie die Vorschläge auf Relevanz und Markenkonformität.
+- name: Kampagnen genehmigen und anpassen
+  trigger: Nach Erhalt der KI-Vorschläge
+  instructions:
+  - Überprüfen Sie jeden Vorschlag auf Korrektheit und Angemessenheit.
+  - Passen Sie ggf. das Copywriting an.
+  - Stellen Sie sicher, dass der CTA gesperrt ist.
+  - Geben Sie die Kampagne frei.

@@ -1,0 +1,49 @@
+[     356ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     424ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    1080ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[    1084ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272

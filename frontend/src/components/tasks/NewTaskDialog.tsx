@@ -81,7 +81,7 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId?: string
 
   const availableProjects = selectedClientId
     ? projects.filter(p => (p as any).client === selectedClientId)
-    : projects;
+    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +170,7 @@ export function NewTaskDialog({ projectId, onTaskCreated }: { projectId?: string
 
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-wider">Projekt</Label>
-              <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || '')}>
+              <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || '')} disabled={!selectedClientId}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Projekt wählen">
                     {(value: string) => {

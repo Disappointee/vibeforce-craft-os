@@ -1,0 +1,117 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - button "Sidebar einklappen" [ref=e4] [cursor=pointer]:
+        - img [ref=e5]
+      - link "Vibeforce Flow OS Logo Vibeforce Flow OS" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img "Vibeforce Flow OS Logo" [ref=e10]
+        - generic [ref=e11]: Vibeforce Flow OS
+      - navigation [ref=e12]:
+        - link "Dashboard" [ref=e13] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - generic [ref=e20]: Dashboard
+        - link "Projekte" [ref=e21] [cursor=pointer]:
+          - /url: /projects
+          - img [ref=e23]
+          - generic [ref=e28]: Projekte
+        - link "Meine Aufgaben" [ref=e29] [cursor=pointer]:
+          - /url: /tasks
+          - img [ref=e31]
+          - generic [ref=e34]: Meine Aufgaben
+        - link "Planer" [ref=e35] [cursor=pointer]:
+          - /url: /planner
+          - img [ref=e37]
+          - generic [ref=e39]: Planer
+        - link "Zeiterfassung" [ref=e40] [cursor=pointer]:
+          - /url: /time
+          - img [ref=e42]
+          - generic [ref=e45]: Zeiterfassung
+        - link "Kunden" [ref=e46] [cursor=pointer]:
+          - /url: /clients
+          - img [ref=e48]
+          - generic [ref=e52]: Kunden
+        - link "Team" [ref=e53] [cursor=pointer]:
+          - /url: /team
+          - img [ref=e55]
+          - generic [ref=e60]: Team
+        - link "Zeitauswertungen" [ref=e61] [cursor=pointer]:
+          - /url: /reports
+          - img [ref=e63]
+          - generic [ref=e65]: Zeitauswertungen
+        - link "Benachrichtigungen" [ref=e66] [cursor=pointer]:
+          - /url: /notifications
+          - img [ref=e68]
+          - generic [ref=e71]: Benachrichtigungen
+      - button "Abmelden" [ref=e73]:
+        - img [ref=e74]
+        - generic [ref=e77]: Abmelden
+    - main [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e82]:
+          - img [ref=e83]
+          - textbox "Suchen nach Projekten, Aufgaben…" [ref=e86]
+          - generic [ref=e87]: /
+        - generic [ref=e88]:
+          - button "Helles Design aktivieren" [ref=e89]:
+            - img [ref=e90]
+          - generic [ref=e96]:
+            - img [ref=e97]
+            - generic [ref=e100]: 05:35
+          - button "Schnellaktionen öffnen" [ref=e101]:
+            - img [ref=e102]
+          - button [ref=e104]:
+            - img [ref=e105]
+          - button "Mitglied K" [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]:
+              - paragraph
+              - paragraph [ref=e111]: Mitglied
+            - generic [ref=e112]: K
+      - generic [ref=e116]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - img [ref=e120]
+            - generic [ref=e123]: Meine Aufgaben
+          - link "Alle anzeigen" [ref=e124] [cursor=pointer]:
+            - /url: /tasks
+            - text: Alle anzeigen
+            - img [ref=e125]
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - img [ref=e135]
+            - generic [ref=e138]: Heutige Zeiterfassung
+          - link "Details" [ref=e139] [cursor=pointer]:
+            - /url: /time
+            - text: Details
+            - img [ref=e140]
+    - generic [ref=e146]:
+      - button "Woran arbeitest du gerade?" [ref=e148]:
+        - img [ref=e149]
+        - generic [ref=e152]: Woran arbeitest du gerade?
+        - img [ref=e153]
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - switch "Abrechenbar" [checked] [ref=e157] [cursor=pointer]
+          - checkbox [checked] [ref=e158]
+          - generic [ref=e159] [cursor=pointer]: Abrechenbar
+        - button "Startzeit manuell setzen" [ref=e160]:
+          - img [ref=e161]
+        - textbox "Notiz hinzufügen..." [ref=e167]
+        - button [disabled]:
+          - img
+  - region "Notifications alt+T"
+  - generic [ref=e172] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e173]:
+      - img [ref=e174]
+    - generic [ref=e177]:
+      - button "Open issues overlay" [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e180]: "1"
+          - generic [ref=e181]: "2"
+        - generic [ref=e182]:
+          - text: Issue
+          - generic [ref=e183]: s
+      - button "Collapse issues badge" [ref=e184]:
+        - img [ref=e185]
+  - alert [ref=e187]

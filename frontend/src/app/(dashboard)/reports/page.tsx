@@ -41,19 +41,26 @@ function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string 
                 dateTo: toISO(new Date(now.getFullYear(), now.getMonth(), 0)),
             };
         }
-        case 'last_7_days': {
-            const d = new Date(now); d.setDate(d.getDate() - 7);
-            return { dateFrom: toISO(d), dateTo: toISO(now) };
-        }
-        case 'last_30_days': {
-            const d = new Date(now); d.setDate(d.getDate() - 30);
-            return { dateFrom: toISO(d), dateTo: toISO(now) };
-        }
         case 'last_quarter': {
             const month = now.getMonth();
             const qStart = Math.floor(month / 3) * 3 - 3;
             const first = new Date(now.getFullYear(), qStart < 0 ? qStart + 12 : qStart, 1);
             const last = new Date(now.getFullYear(), Math.floor(month / 3) * 3, 0);
+            return { dateFrom: toISO(first), dateTo: toISO(last) };
+        }
+        case 'this_quarter': {
+            const month = now.getMonth();
+            const qStart = Math.floor(month / 3) * 3;
+            const first = new Date(now.getFullYear(), qStart, 1);
+            return { dateFrom: toISO(first), dateTo: toISO(now) };
+        }
+        case 'this_year': {
+            const first = new Date(now.getFullYear(), 0, 1);
+            return { dateFrom: toISO(first), dateTo: toISO(now) };
+        }
+        case 'last_year': {
+            const first = new Date(now.getFullYear() - 1, 0, 1);
+            const last = new Date(now.getFullYear(), 0, 0);
             return { dateFrom: toISO(first), dateTo: toISO(last) };
         }
         default:

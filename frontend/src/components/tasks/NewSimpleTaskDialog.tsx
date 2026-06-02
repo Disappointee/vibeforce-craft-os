@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ProjectRecord, UserRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { DatePicker } from '@/components/ui/date-picker';
 
 export function NewSimpleTaskDialog({
@@ -48,7 +48,13 @@ export function NewSimpleTaskDialog({
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([]);
+  const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+
+  const availableProjects = selectedClientId 
+    ? projects.filter(p => (p as any).client === selectedClientId) 
+    : [];
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
@@ -56,12 +62,14 @@ export function NewSimpleTaskDialog({
     const fetchData = async () => {
       setProjectsLoading(true);
       try {
-        const [projectsResult, usersResult] = await Promise.all([
-          pb.collection('projects').getList(1, 50, { sort: 'name' }),
+        const [projectsResult, usersResult, clientsResult] = await Promise.all([
+          pb.collection('projects').getList(1, 500, { sort: 'name' }),
           pb.collection('users').getList(1, 50, { sort: 'name' }),
+          pb.collection('clients').getList(1, 500, { sort: 'name' }),
         ]);
         setProjects(projectsResult.items as ProjectRecord[]);
         setUsers(usersResult.items as UserRecord[]);
+        setClients(clientsResult.items as ClientRecord[]);
       } catch {
         toast.error('Fehler beim Laden der Daten');
       } finally {
@@ -195,17 +203,40 @@ export function NewSimpleTaskDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="st-project" className="text-foreground text-xs uppercase tracking-[0.06em]">Projekt</Label>
-              <Select value={projectId} onValueChange={(val) => val && setProjectId(val)}>
-                <SelectTrigger id="st-project" className="bg-card border-border">
-                  <SelectValue placeholder={projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen'}>
-                    {projectId ? decodeGermanHtmlEntities(projects.find(p => p.id === projectId)?.name || '') : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen')}
+              <Label className="text-foreground text-xs uppercase tracking-[0.06em]">Kunde</Label>
+              <Select value={selectedClientId} onValueChange={(val) => {
+                if (val) {
+                  setSelectedClientId(val);
+                  setProjectId(''); 
+                }
+              }}>
+                <SelectTrigger className="bg-card border-border">
+                  <SelectValue placeholder="Kunde wählen">
+                    {selectedClientId ? decodeGermanHtmlEntities(clients.find(c => c.id === selectedClientId)?.name || '') : 'Kunde wählen'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">
-                  {projects.map((p) => (
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {decodeGermanHtmlEntities(c.name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="st-project" className="text-foreground text-xs uppercase tracking-[0.06em]">Projekt</Label>
+              <Select value={projectId} onValueChange={(val) => val && setProjectId(val)} disabled={!selectedClientId}>
+                <SelectTrigger id="st-project" className="bg-card border-border">
+                  <SelectValue placeholder={!selectedClientId ? 'Erst Kunde wählen' : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen')}>
+                    {projectId ? decodeGermanHtmlEntities(availableProjects.find(p => p.id === projectId)?.name || '') : (!selectedClientId ? 'Erst Kunde wählen' : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen'))}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground">
+                  {availableProjects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {decodeGermanHtmlEntities(p.name)}
                     </SelectItem>

@@ -1,0 +1,1114 @@
+[     122ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   10398ms] [LOG] [Fast Refresh] done in 10376ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   10938ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   11021ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   11317ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   11669ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   11669ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   11877ms] [LOG] [Fast Refresh] done in 682ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   12036ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   12037ms] [LOG] [Fast Refresh] done in 101ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   24014ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27083ms] [LOG] [Fast Refresh] done in 3169ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27420ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27470ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   27847ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   27848ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   28121ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   28417ms] [LOG] [Fast Refresh] done in 398ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   30100ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   33477ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   33557ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   33832ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   33832ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   33959ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34379ms] [LOG] [Fast Refresh] done in 666ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   36364ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   38958ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   39027ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   39247ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   39247ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   39335ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   39473ms] [LOG] [Fast Refresh] done in 361ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   41805ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   45647ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   45667ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   46474ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   46474ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   46606ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   46630ms] [LOG] [Fast Refresh] done in 293ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   48885ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   50422ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   50449ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   50826ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   50827ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   53295ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   54515ms] [LOG] [Fast Refresh] done in 1328ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   54615ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   54638ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   55090ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   55090ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   55208ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   55304ms] [LOG] [Fast Refresh] done in 345ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   57239ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   58840ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   58866ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   59235ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   59236ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   59263ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   59372ms] [LOG] [Fast Refresh] done in 230ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   59511ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/profile:0
+[   59511ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/profile:0
+[   59511ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/profile:0
+[   73141ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73174ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73631ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   73632ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  102119ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  102455ms] [LOG] [Fast Refresh] done in 449ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  102617ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  102650ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  103007ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  103008ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  106259ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  106283ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  106855ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  106855ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  110318ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  110343ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  110689ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  110690ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  114205ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  114238ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  114940ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  114941ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  118421ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  118496ms] [LOG] [Fast Refresh] done in 193ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  118679ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  118713ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119649ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  119649ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  123138ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  123348ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  123647ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  123648ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  126981ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  127010ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  127213ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  127213ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  130661ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  130695ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  131338ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  131339ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  143961ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  143992ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  144768ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  144768ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 3405344ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 3423987ms] [LOG] [Fast Refresh] done in 18878ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 4921475ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5115741ms] [LOG] [Fast Refresh] done in 194335ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5123269ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5160165ms] [LOG] [Fast Refresh] done in 37006ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5168316ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5170062ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5170568ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5171049ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 5171050ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 5174954ms] [LOG] [Fast Refresh] done in 4565ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5578601ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5578745ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5580460ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5580539ms] [LOG] [Fast Refresh] done in 186ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5582178ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5582620ms] [LOG] [Fast Refresh] done in 544ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5590587ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5591167ms] [LOG] [Fast Refresh] done in 683ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5591279ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5591707ms] [LOG] [Fast Refresh] done in 534ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5599882ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5600302ms] [LOG] [Fast Refresh] done in 515ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5600416ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5600781ms] [LOG] [Fast Refresh] done in 478ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5615781ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5617331ms] [LOG] [Fast Refresh] done in 1642ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5617486ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 5618016ms] [LOG] [Fast Refresh] done in 639ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6123225ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6131819ms] [LOG] [Fast Refresh] done in 8574ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6131961ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6132520ms] [LOG] [Fast Refresh] done in 661ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6132622ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6133687ms] [LOG] [Fast Refresh] done in 1167ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6134464ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6134547ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6135047ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 6135048ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 6135188ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6135188ms] [LOG] [Fast Refresh] done in 222ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6135638ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6135789ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6162289ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6167204ms] [LOG] [Fast Refresh] done in 5020ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6167311ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6167601ms] [LOG] [Fast Refresh] done in 394ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6167799ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6168130ms] [LOG] [Fast Refresh] done in 434ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6168302ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6168346ms] [LOG] [Fast Refresh] done in 149ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6168485ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6168579ms] [LOG] [Fast Refresh] done in 200ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6175798ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6183517ms] [LOG] [Fast Refresh] done in 7782ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6183630ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6184204ms] [LOG] [Fast Refresh] done in 685ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6184488ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6185663ms] [LOG] [Fast Refresh] done in 1276ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6185967ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6186005ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6186762ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <SegmentViewNode type="layout" pagePath="(dashboard...">
+      <SegmentTrieNode>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <script>
+      <ClientSegmentRoot Component={function DashboardLayout} slots={{children:{...}}} ...>
+        <DashboardLayout params={Promise}>
+          <SidebarProvider>
+            <div className="flex h-scr...">
+              <aside>
+              <aside>
+              <main>
+              <TimerBar>
+                <Sheet open={false} onOpenChange={function bound dispatchSetState}>
+                  <DialogRoot data-slot="sheet" open={false} onOpenChange={function bound dispatchSetState}>
+                    <div className="fixed bott...">
+                      <div className="flex items...">
+                        <div>
+>                       <button className="sm:hidden flex-1 cursor-pointer" onClick={function onClick}>
+                          <div className="sm:hidden ...">
+>                           <button
+>                             onClick={function onClick}
+>                             className="flex items-center gap-2 rounded-xl bg-background border border-border px-3 py..."
+>                           >
+                            ...
+                    ...
+                ...
+              ...
+            ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 6186762ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[ 6197396ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6197665ms] [LOG] [Fast Refresh] done in 381ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6841131ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6841370ms] [LOG] [Fast Refresh] done in 346ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6841489ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 6841796ms] [LOG] [Fast Refresh] done in 412ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7295657ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7302581ms] [LOG] [Fast Refresh] done in 6998ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7302700ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7303213ms] [LOG] [Fast Refresh] done in 623ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7304024ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7304160ms] [LOG] [Fast Refresh] done in 241ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7545564ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7550473ms] [LOG] [Fast Refresh] done in 4984ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7553215ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7553804ms] [LOG] [Fast Refresh] done in 692ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7554232ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[ 7554545ms] [LOG] [Fast Refresh] done in 424ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
