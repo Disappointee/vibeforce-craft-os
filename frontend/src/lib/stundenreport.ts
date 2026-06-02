@@ -1,13 +1,4 @@
-import { reportTemplateHtml, reportTemplateEditorial, reportTemplateDark, reportTemplateSwiss } from '@/lib/report-template';
-
-export type ReportTemplate = 'default' | 'editorial' | 'dark' | 'swiss';
-
-const templateMap: Record<ReportTemplate, string> = {
-  default: reportTemplateHtml,
-  editorial: reportTemplateEditorial,
-  dark: reportTemplateDark,
-  swiss: reportTemplateSwiss,
-};
+import { reportTemplateHtml } from '@/lib/report-template';
 
 export interface StundenreportMeta {
   clientName: string;
@@ -33,9 +24,16 @@ export interface StundenreportProjectGroup {
   entries: StundenreportEntry[];
 }
 
+export interface StundenreportClientGroup {
+  clientName: string;
+  clientId?: string;
+  projects: StundenreportProjectGroup[];
+  clientTotalDuration: string;
+}
+
 export interface StundenreportInput {
   meta: StundenreportMeta;
-  projects: StundenreportProjectGroup[];
+  clients: StundenreportClientGroup[];
 }
 
 function esc(text: string): string {
@@ -53,26 +51,25 @@ function escAttr(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function buildProjectTable(project: StundenreportProjectGroup, showProjectClient: boolean): string {
-  const rowsHtml = project.entries.map((entry) => {
-    return `
+function buildClientSection(client: StundenreportClientGroup): string {
+  const projectsHtml = client.projects.map((project) => {
+    const rowsHtml = project.entries.map((entry) => {
+      return `
     <tr>
-      <td class="col-date">${esc(entry.date)}</td>
       <td class="col-task">${esc(entry.task)}</td>
-      <td class="col-note">${esc(entry.note)}</td>
       <td class="col-duration numeric">${esc(entry.duration)}</td>
+      <td class="col-note">${esc(entry.note)}</td>
     </tr>`;
-  }).join('');
+    }).join('');
 
-  const headerCells = `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th>`;
+    const headerCells = `<th class="col-task">Aufgabe</th><th class="col-duration numeric">Dauer</th><th class="col-note">Beschreibung</th>`;
 
-  const footerCells = `<td colspan="3">Summe ${esc(project.projectKey)}</td>
-       <td class="numeric">${esc(project.projectTotalDuration)}</td>`;
+    const footerCells = `<td>Summe ${esc(project.projectKey)}</td>
+       <td class="numeric" colspan="2">${esc(project.projectTotalDuration)}</td>`;
 
-  return `
+    return `
   <div class="project-group">
     <h2 class="project-title">${esc(project.projectKey)} — ${esc(project.projectName)}</h2>
-    ${showProjectClient && project.clientName && project.clientName !== 'Kein Kunde' ? `<div class="project-client-sub">Kunde: ${esc(project.clientName)}</div>` : ''}
     <table class="timesheet-table">
       <thead><tr>${headerCells}</tr></thead>
       <tbody>${rowsHtml}</tbody>
@@ -83,13 +80,18 @@ function buildProjectTable(project: StundenreportProjectGroup, showProjectClient
       </tfoot>
     </table>
   </div>`;
+  }).join('\n');
+
+  return `
+  <div class="client-group">
+    <h1 class="client-title">${esc(client.clientName)}</h1>
+    <div class="client-total">Gesamt: ${esc(client.clientTotalDuration)}</div>
+    ${projectsHtml}
+  </div>`;
 }
 
 export function buildStundenreportBodyHtml(data: StundenreportInput): string {
-  const { meta, projects } = data;
-
-  const uniqueClients = Array.from(new Set(projects.map(p => p.clientName).filter(Boolean)));
-  const showProjectClient = uniqueClients.length > 1;
+  const { meta, clients } = data;
 
   const logoHtml = meta.logoUrl
     ? `<div class="header-logo"><img src="${escAttr(meta.logoUrl)}" alt="Logo" /></div>`
@@ -99,7 +101,7 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
         <span class="total-label">Gesamtsumme</span>
         <span class="total-duration">${esc(meta.totalDuration)}</span>`;
 
-  const projectsHtml = projects.map((p) => buildProjectTable(p, showProjectClient)).join('\n');
+  const clientsHtml = clients.map((c) => buildClientSection(c)).join('\n');
 
   return `
   <div class="report-header">
@@ -117,17 +119,16 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
     </div>
   </div>
 
-  ${projectsHtml}
+  ${clientsHtml}
 
   <div class="report-footer">
     Erstellt mit Vibeforce Flow OS — ${esc(meta.generatedAt)}
   </div>`;
 }
 
-export function buildStundenreportFullHtml(data: StundenreportInput, template: ReportTemplate = 'default'): string {
+export function buildStundenreportFullHtml(data: StundenreportInput): string {
   const bodyContent = buildStundenreportBodyHtml(data);
-  const templateHtml = templateMap[template] || templateMap.default;
-  return templateHtml.replace(
+  return reportTemplateHtml.replace(
     /<div id="report-content">[\s\S]*?<\/div>/,
     `<div id="report-content">${bodyContent}</div>`
   );

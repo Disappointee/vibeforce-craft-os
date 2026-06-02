@@ -11,7 +11,6 @@ import {
 } from '@react-pdf/renderer';
 
 export interface TaskDetailEntry {
-    date: string;
     taskName: string;
     note: string;
     durationHours: number;
@@ -27,13 +26,19 @@ export interface ProjectDetailGroup {
     entries: TaskDetailEntry[];
 }
 
+export interface ClientDetailGroup {
+    clientName: string;
+    projects: ProjectDetailGroup[];
+    clientTotalDuration: string;
+}
+
 export interface TaskDetailReportData {
     clientName: string;
     periodFrom: string;
     periodTo: string;
     generatedAt: string;
     logoUrl?: string;
-    projects: ProjectDetailGroup[];
+    clients: ClientDetailGroup[];
     grandTotalHours: number;
     grandTotalDuration: string;
 }
@@ -99,7 +104,24 @@ const styles = StyleSheet.create({
     },
 
     projectSection: {
-        marginBottom: 20,
+        marginBottom: 16,
+    },
+    clientSection: {
+        marginBottom: 24,
+    },
+    clientTitle: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#2563EB',
+        marginBottom: 4,
+        paddingBottom: 6,
+        borderBottomWidth: 2,
+        borderBottomColor: '#2563EB',
+    },
+    clientTotal: {
+        fontSize: 8,
+        color: '#6b7280',
+        marginBottom: 12,
     },
     projectHeader: {
         flexDirection: 'row',
@@ -115,11 +137,6 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: 'bold',
         color: '#111827',
-    },
-    projectClient: {
-        fontSize: 8,
-        color: '#6b7280',
-        marginTop: 1,
     },
 
     table: {
@@ -159,10 +176,9 @@ const styles = StyleSheet.create({
         fontSize: 7,
         color: '#9ca3af',
     },
-    colDate: { width: '14%' },
-    colTask: { width: '28%' },
-    colNote: { width: '42%' },
-    colDuration: { width: '16%', textAlign: 'right' },
+    colTask: { width: '34%' },
+    colDuration: { width: '20%', textAlign: 'right' },
+    colNote: { width: '46%' },
 
     projectFooter: {
         flexDirection: 'row',
@@ -231,12 +247,13 @@ const styles = StyleSheet.create({
 });
 
 export const ReportDocument = ({ data }: { data: TaskDetailReportData }) => {
-    const { clientName, periodFrom, periodTo, generatedAt, logoUrl, projects, grandTotalHours, grandTotalDuration } = data;
+    const { clientName, periodFrom, periodTo, generatedAt, logoUrl, clients, grandTotalHours, grandTotalDuration } = data;
+
+    const hasEntries = clients.some(c => c.projects.some(p => p.entries.length > 0));
 
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <View style={styles.headerLeft}>
@@ -263,52 +280,53 @@ export const ReportDocument = ({ data }: { data: TaskDetailReportData }) => {
                     </View>
                 </View>
 
-                {projects.length === 0 ? (
+                {!hasEntries ? (
                     <View style={styles.emptyState}>
                         <Text>Keine Daten für den ausgewählten Zeitraum.</Text>
                     </View>
                 ) : (
-                    projects.map((project, pidx) => (
-                        <View key={`${project.projectKey}-${pidx}`} style={styles.projectSection}>
-                            <View style={styles.projectHeader}>
-                                <View>
-                                    <Text style={styles.projectTitle}>{project.projectKey} — {project.projectName}</Text>
-                                    {project.clientName && project.clientName !== 'Kein Kunde' && projects.length > 1 ? (
-                                        <Text style={styles.projectClient}>Kunde: {project.clientName}</Text>
-                                    ) : null}
-                                </View>
-                            </View>
+                    clients.map((client, cidx) => (
+                        <View key={`${client.clientName}-${cidx}`} style={styles.clientSection}>
+                            <Text style={styles.clientTitle}>{client.clientName}</Text>
+                            <Text style={styles.clientTotal}>Gesamt: {client.clientTotalDuration}</Text>
 
-                            <View style={styles.table}>
-                                <View style={styles.tableHeaderRow}>
-                                    <Text style={[styles.tableHeaderCell, styles.colDate]}>Datum</Text>
-                                    <Text style={[styles.tableHeaderCell, styles.colTask]}>Aufgabe</Text>
-                                    <Text style={[styles.tableHeaderCell, styles.colNote]}>Notiz</Text>
-                                    <Text style={[styles.tableHeaderCell, styles.colDuration]}>Dauer</Text>
-                                </View>
-
-                                {project.entries.map((entry, eidx) => (
-                                    <View key={`${project.projectKey}-e-${eidx}`} style={styles.tableRow}>
-                                        <Text style={[styles.tableCell, styles.colDate]}>{entry.date}</Text>
-                                        <Text style={[styles.tableCellBold, styles.colTask]}>{entry.taskName}</Text>
-                                        <Text style={[styles.tableCellMuted, styles.colNote]}>
-                                            {entry.note || '—'}
-                                        </Text>
-                                        <Text style={[styles.tableCell, styles.colDuration]}>{entry.duration}</Text>
+                            {client.projects.map((project, pidx) => (
+                                <View key={`${project.projectKey}-${pidx}`} style={styles.projectSection}>
+                                    <View style={styles.projectHeader}>
+                                        <View>
+                                            <Text style={styles.projectTitle}>{project.projectKey} — {project.projectName}</Text>
+                                        </View>
                                     </View>
-                                ))}
-                            </View>
 
-                            <View style={styles.projectFooter}>
-                                <Text style={styles.projectFooterLabel}>Summe {project.projectKey}</Text>
-                                <Text style={styles.projectFooterValue}>{project.projectTotalDuration}</Text>
-                            </View>
+                                    <View style={styles.table}>
+                                        <View style={styles.tableHeaderRow}>
+                                            <Text style={[styles.tableHeaderCell, styles.colTask]}>Aufgabe</Text>
+                                            <Text style={[styles.tableHeaderCell, styles.colDuration]}>Dauer</Text>
+                                            <Text style={[styles.tableHeaderCell, styles.colNote]}>Beschreibung</Text>
+                                        </View>
+
+                                        {project.entries.map((entry, eidx) => (
+                                            <View key={`${project.projectKey}-e-${eidx}`} style={styles.tableRow}>
+                                                <Text style={[styles.tableCellBold, styles.colTask]}>{entry.taskName}</Text>
+                                                <Text style={[styles.tableCell, styles.colDuration]}>{entry.duration}</Text>
+                                                <Text style={[styles.tableCellMuted, styles.colNote]}>
+                                                    {entry.note || '—'}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    <View style={styles.projectFooter}>
+                                        <Text style={styles.projectFooterLabel}>Summe {project.projectKey}</Text>
+                                        <Text style={styles.projectFooterValue}>{project.projectTotalDuration}</Text>
+                                    </View>
+                                </View>
+                            ))}
                         </View>
                     ))
                 )}
 
-                {/* Grand Total Footer */}
-                {projects.length > 0 && (
+                {hasEntries && (
                     <View style={styles.grandTotalSection}>
                         <Text style={styles.grandTotalLabel}>Gesamtsumme</Text>
                         <Text style={styles.grandTotalValue}>{grandTotalDuration}</Text>

@@ -260,7 +260,6 @@ export default function ProjectDetailsPage({ params }: { params: Promise<{ id: s
               <span>Fremdkosten</span>
             </Button>
             <NewTaskDialog
-              projectId={id}
               onTaskCreated={() => setRefreshTrigger(prev => prev + 1)}
             />
           </div>

@@ -1116,7 +1116,6 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
             {newTaskProjectId !== null && (
                 <NewTaskDialog
-                    projectId={newTaskProjectId || undefined}
                     onTaskCreated={() => {
                         setNewTaskProjectId(null);
                         setRefreshTrigger(prev => prev + 1);

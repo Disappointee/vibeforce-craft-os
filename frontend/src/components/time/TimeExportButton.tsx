@@ -13,7 +13,6 @@ import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { pb } from '@/lib/pocketbase';
 import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
-import type { ReportTemplate } from '@/lib/stundenreport';
 
 interface TimeExportButtonProps {
     entries: TimeEntryRecord[];
@@ -21,7 +20,6 @@ interface TimeExportButtonProps {
 
 export function TimeExportButton({ entries }: TimeExportButtonProps) {
     const [isExporting, setIsExporting] = useState(false);
-    const template: ReportTemplate = 'default';
 
     const getDateRange = () => {
         const dates = entries
@@ -55,7 +53,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
             const res = await fetch('/api/reports/stundenreport-export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...reportData, template }),
+                body: JSON.stringify(reportData),
             });
 
             if (!res.ok) {

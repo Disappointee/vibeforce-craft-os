@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildStundenreportFullHtml, type StundenreportInput, type ReportTemplate } from '@/lib/stundenreport';
+import { buildStundenreportFullHtml, type StundenreportInput } from '@/lib/stundenreport';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { template, ...reportData } = body as StundenreportInput & { template?: ReportTemplate };
-  const fullHtml = buildStundenreportFullHtml(reportData as StundenreportInput, template || 'default');
+  const reportData = body as StundenreportInput;
+  const fullHtml = buildStundenreportFullHtml(reportData);
 
   try {
     const { chromium } = await import('playwright');

@@ -1,10 +1,15 @@
 import type { TimeEntryRecord } from '@/lib/pocketbase-types';
-import type { StundenreportInput, StundenreportProjectGroup, StundenreportEntry } from '@/lib/stundenreport';
+import type { StundenreportInput, StundenreportProjectGroup, StundenreportEntry, StundenreportClientGroup } from '@/lib/stundenreport';
 
 export const formatHoursHM = (hours: number): string => {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}:${String(m).padStart(2, '0')}h`;
+};
+
+export const parseDurationHM = (d: string): number => {
+    const parts = d.replace('h', '').split(':');
+    return parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
 };
 
 export const getClientName = (entries: TimeEntryRecord[]): string => {
@@ -19,17 +24,32 @@ export const getClientName = (entries: TimeEntryRecord[]): string => {
 };
 
 export const buildStundenreportInput = (entries: TimeEntryRecord[]): StundenreportInput => {
-    const projectMap: Record<string, { name: string; clientName: string; entries: StundenreportEntry[]; totalMinutes: number }> = {};
+    const clientMap: Record<string, {
+        clientName: string;
+        clientId?: string;
+        projects: Record<string, {
+            name: string;
+            clientName: string;
+            entries: StundenreportEntry[];
+            totalMinutes: number;
+        }>;
+    }> = {};
 
     entries.forEach((entry) => {
         const task = (entry as any).expand?.task;
         const project = task?.expand?.project;
         const client = project?.expand?.client;
-        const key = project?.key || 'OHNE';
-        const name = project?.name || 'Kein Projekt';
+        const clientKey = client?.id || '__no_client__';
+        const clientName = client?.name || 'Kein Kunde';
+        const projectKey = project?.key || 'OHNE';
+        const projectName = project?.name || 'Kein Projekt';
 
-        if (!projectMap[key]) {
-            projectMap[key] = { name, clientName: client?.name || 'Kein Kunde', entries: [], totalMinutes: 0 };
+        if (!clientMap[clientKey]) {
+            clientMap[clientKey] = { clientName, clientId: client?.id, projects: {} };
+        }
+
+        if (!clientMap[clientKey].projects[projectKey]) {
+            clientMap[clientKey].projects[projectKey] = { name: projectName, clientName, entries: [], totalMinutes: 0 };
         }
 
         const minutes = entry.duration_minutes || 0;
@@ -37,7 +57,7 @@ export const buildStundenreportInput = (entries: TimeEntryRecord[]): Stundenrepo
         const dateObj = entry.date ? new Date(entry.date) : new Date(entry.created);
         const formattedDate = dateObj.toLocaleDateString('de-DE');
 
-        projectMap[key].totalMinutes += minutes;
+        clientMap[clientKey].projects[projectKey].totalMinutes += minutes;
 
         const entryData: StundenreportEntry = {
             date: formattedDate,
@@ -46,21 +66,35 @@ export const buildStundenreportInput = (entries: TimeEntryRecord[]): Stundenrepo
             duration: formatHoursHM(hours),
         };
 
-        projectMap[key].entries.push(entryData);
+        clientMap[clientKey].projects[projectKey].entries.push(entryData);
     });
 
-    let totalMinutes = 0;
+    let grandTotalMinutes = 0;
 
-    const projects: StundenreportProjectGroup[] = Object.entries(projectMap).map(([key, group]) => {
-        totalMinutes += group.totalMinutes;
-        const totalHours = group.totalMinutes / 60;
+    const clients: StundenreportClientGroup[] = Object.entries(clientMap).map(([_clientKey, clientGroup]) => {
+        let clientTotalMinutes = 0;
+
+        const projects: StundenreportProjectGroup[] = Object.entries(clientGroup.projects).map(([key, group]) => {
+            clientTotalMinutes += group.totalMinutes;
+            const totalHours = group.totalMinutes / 60;
+
+            return {
+                projectName: group.name,
+                projectKey: key,
+                clientName: group.clientName,
+                projectTotalDuration: formatHoursHM(totalHours),
+                entries: group.entries,
+            };
+        });
+
+        grandTotalMinutes += clientTotalMinutes;
+        const clientTotalHours = clientTotalMinutes / 60;
 
         return {
-            projectName: group.name,
-            projectKey: key,
-            clientName: group.clientName,
-            projectTotalDuration: formatHoursHM(totalHours),
-            entries: group.entries,
+            clientName: clientGroup.clientName,
+            clientId: clientGroup.clientId,
+            projects,
+            clientTotalDuration: formatHoursHM(clientTotalHours),
         };
     });
 
@@ -79,8 +113,8 @@ export const buildStundenreportInput = (entries: TimeEntryRecord[]): Stundenrepo
             periodFrom: dates.length ? formatDate(dates[0]) : new Date().toLocaleDateString('de-DE'),
             periodTo: dates.length ? formatDate(dates[dates.length - 1]) : new Date().toLocaleDateString('de-DE'),
             generatedAt: new Date().toLocaleDateString('de-DE'),
-            totalDuration: formatHoursHM(totalMinutes / 60),
+            totalDuration: formatHoursHM(grandTotalMinutes / 60),
         },
-        projects,
+        clients,
     };
 };

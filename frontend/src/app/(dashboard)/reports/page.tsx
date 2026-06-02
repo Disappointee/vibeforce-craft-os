@@ -26,7 +26,8 @@ import { ReportChart, ChartDataPoint } from '@/components/reports/ReportChart';
 import { ReportTable, ReportRow } from '@/components/reports/ReportTable';
 import { SaveTemplateDialog } from '@/components/reports/SaveTemplateDialog';
 import { downloadReportPDF, type TaskDetailReportData } from '@/lib/pdf-generator';
-import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import { buildStundenreportInput, formatHoursHM, parseDurationHM } from '@/lib/stundenreport-utils';
+import type { StundenreportInput } from '@/lib/stundenreport';
 
 function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string } {
     const now = new Date();
@@ -66,6 +67,36 @@ function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string 
         default:
             return { dateFrom: '', dateTo: '' };
     }
+}
+
+function mapStundenreportToPdfData(data: StundenreportInput): TaskDetailReportData {
+    return {
+        clientName: data.meta.clientName,
+        periodFrom: data.meta.periodFrom,
+        periodTo: data.meta.periodTo,
+        generatedAt: data.meta.generatedAt,
+        clients: data.clients.map(c => ({
+            clientName: c.clientName,
+            clientTotalDuration: c.clientTotalDuration,
+            projects: c.projects.map(p => ({
+                projectName: p.projectName,
+                projectKey: p.projectKey,
+                clientName: p.clientName || '',
+                projectTotalHours: p.entries.reduce((sum, e) => sum + parseDurationHM(e.duration), 0),
+                projectTotalDuration: p.projectTotalDuration,
+                entries: p.entries.map(e => ({
+                    taskName: e.task,
+                    note: e.note,
+                    durationHours: parseDurationHM(e.duration),
+                    duration: e.duration,
+                })),
+            })),
+        })),
+        grandTotalHours: data.clients.reduce((sum, c) =>
+            sum + c.projects.reduce((ps, p) =>
+                ps + p.entries.reduce((es, e) => es + parseDurationHM(e.duration), 0), 0), 0),
+        grandTotalDuration: data.meta.totalDuration,
+    };
 }
 
 function ReportsExportDropdown({
@@ -174,39 +205,7 @@ function ReportsExportDropdown({
         }
         try {
             setIsExporting(true);
-            const stundenreportData = buildStundenreportInput(entries);
-            const pdfData: TaskDetailReportData = {
-                clientName: stundenreportData.meta.clientName,
-                periodFrom: stundenreportData.meta.periodFrom,
-                periodTo: stundenreportData.meta.periodTo,
-                generatedAt: stundenreportData.meta.generatedAt,
-                projects: stundenreportData.projects.map(p => ({
-                    projectName: p.projectName,
-                    projectKey: p.projectKey,
-                    clientName: p.clientName || '',
-                    projectTotalHours: p.entries.reduce((sum, e) => {
-                        const parts = e.duration.replace('h', '').split(':');
-                        return sum + parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                    }, 0),
-                    projectTotalDuration: p.projectTotalDuration,
-                    entries: p.entries.map(e => ({
-                        date: e.date,
-                        taskName: e.task,
-                        note: e.note,
-                        durationHours: (() => {
-                            const parts = e.duration.replace('h', '').split(':');
-                            return parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                        })(),
-                        duration: e.duration,
-                    })),
-                })),
-                grandTotalHours: stundenreportData.projects.reduce((sum, p) =>
-                    sum + p.entries.reduce((es, e) => {
-                        const parts = e.duration.replace('h', '').split(':');
-                        return es + parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                    }, 0), 0),
-                grandTotalDuration: stundenreportData.meta.totalDuration,
-            };
+            const pdfData = mapStundenreportToPdfData(buildStundenreportInput(entries));
             await downloadReportPDF(pdfData);
             toast.success('PDF-Export erfolgreich gestartet');
         } catch {
@@ -559,39 +558,7 @@ export default function ReportsPage() {
             return;
         }
         try {
-            const stundenreportData = buildStundenreportInput(filteredEntries);
-            const pdfData: TaskDetailReportData = {
-                clientName: stundenreportData.meta.clientName,
-                periodFrom: stundenreportData.meta.periodFrom,
-                periodTo: stundenreportData.meta.periodTo,
-                generatedAt: stundenreportData.meta.generatedAt,
-                projects: stundenreportData.projects.map(p => ({
-                    projectName: p.projectName,
-                    projectKey: p.projectKey,
-                    clientName: p.clientName || '',
-                    projectTotalHours: p.entries.reduce((sum, e) => {
-                        const parts = e.duration.replace('h', '').split(':');
-                        return sum + parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                    }, 0),
-                    projectTotalDuration: p.projectTotalDuration,
-                    entries: p.entries.map(e => ({
-                        date: e.date,
-                        taskName: e.task,
-                        note: e.note,
-                        durationHours: (() => {
-                            const parts = e.duration.replace('h', '').split(':');
-                            return parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                        })(),
-                        duration: e.duration,
-                    })),
-                })),
-                grandTotalHours: stundenreportData.projects.reduce((sum, p) =>
-                    sum + p.entries.reduce((es, e) => {
-                        const parts = e.duration.replace('h', '').split(':');
-                        return es + parseInt(parts[0] || '0') + parseInt(parts[1] || '0') / 60;
-                    }, 0), 0),
-                grandTotalDuration: stundenreportData.meta.totalDuration,
-            };
+            const pdfData = mapStundenreportToPdfData(buildStundenreportInput(filteredEntries));
             await downloadReportPDF(pdfData);
             toast.success('PDF-Export erfolgreich gestartet');
         } catch {
