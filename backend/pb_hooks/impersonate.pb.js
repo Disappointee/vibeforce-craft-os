@@ -5,7 +5,7 @@
  *   POST /api/custom/impersonate
  *
  * PocketBase v0.37+ pb_hooks API:
- *   - $app.newAuthToken()    → JWT generieren
+ *   - $app.newRecordAuthToken()    → JWT generieren
  *   - routerAdd()            → Custom Route
  */
 
@@ -56,8 +56,9 @@ routerAdd('POST', '/api/custom/impersonate', (c) => {
 
     try {
         const targetUser = $app.findRecordById('users', targetUserId);
+        const collection = $app.findCollectionByNameOrId('users');
 
-        const token = $app.newAuthToken('users', targetUserId, {});
+        const token = $app.newRecordAuthToken(collection, targetUserId, {});
 
         return c.json(200, {
             success: true,
