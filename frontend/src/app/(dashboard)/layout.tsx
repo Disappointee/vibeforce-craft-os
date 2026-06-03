@@ -36,6 +36,7 @@ import { useOffline } from '@/hooks/use-offline';
 import { toast } from 'sonner';
 import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
 import { LiveClock } from '@/components/layout/LiveClock';
+import { QuickAddMenu } from '@/components/layout/QuickAddMenu';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
@@ -81,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useUiStore.getState().setTaskDialogOpen(true);
   }, []);
 
-  const handleOpenTimerBar = useCallback(() => {
+  const handleOpenActionMenu = useCallback(() => {
     useUiStore.getState().setActionMenuOpen(true);
   }, []);
 
@@ -95,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useGlobalShortcuts({
     onOpenTaskDialog: handleOpenTaskDialog,
-    onOpenTimerBar: handleOpenTimerBar,
+    onOpenActionMenu: handleOpenActionMenu,
     onOpenClientDialog: handleOpenClientDialog,
     onOpenProjectDialog: handleOpenProjectDialog,
   });
@@ -545,6 +546,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
               <LiveClock />
               <HeaderTimer />
+              <QuickAddMenu />
               <button
                 onClick={() => useUiStore.getState().toggleActionMenu()}
                 className="relative p-3 min-h-[44px] min-w-[44px] rounded-lg transition-all text-amber-500 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-400"

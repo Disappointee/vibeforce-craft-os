@@ -4,14 +4,14 @@ import { useEffect } from 'react';
 
 interface ShortcutHandlers {
   onOpenTaskDialog: () => void;
-  onOpenTimerBar: () => void;
+  onOpenActionMenu: () => void;
   onOpenClientDialog: () => void;
   onOpenProjectDialog: () => void;
 }
 
 export function useGlobalShortcuts({
   onOpenTaskDialog,
-  onOpenTimerBar,
+  onOpenActionMenu,
   onOpenClientDialog,
   onOpenProjectDialog,
 }: ShortcutHandlers) {
@@ -46,7 +46,7 @@ export function useGlobalShortcuts({
 
       if (key === 'z' && e.altKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
-        onOpenTimerBar();
+        onOpenActionMenu();
         return;
       }
 
@@ -59,5 +59,5 @@ export function useGlobalShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpenTaskDialog, onOpenTimerBar, onOpenClientDialog, onOpenProjectDialog]);
+  }, [onOpenTaskDialog, onOpenActionMenu, onOpenClientDialog, onOpenProjectDialog]);
 }

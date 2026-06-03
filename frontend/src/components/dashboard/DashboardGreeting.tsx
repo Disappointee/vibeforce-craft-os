@@ -44,18 +44,22 @@ export function DashboardGreeting() {
 
   if (isLoading) {
     return (
-      <div className="w-full rounded-xl bg-gradient-to-r from-indigo-500/5 via-primary/5 to-emerald-500/5 p-6 animate-pulse">
-        <div className="h-10 w-3/4 bg-muted rounded-lg" />
+      <div className="w-full rounded-3xl bg-gradient-to-r from-primary/50 via-blue-500/30 to-emerald-500/50 p-[1px] shadow-2xl">
+        <div className="rounded-[23px] bg-background/60 backdrop-blur-xl p-8 h-full w-full animate-pulse">
+          <div className="h-12 w-3/4 bg-muted rounded-xl" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full rounded-xl bg-gradient-to-r from-indigo-500/10 via-primary/5 to-emerald-500/10 border border-border/50 p-6">
-      <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
-        {greeting}, du hast heute <span className="text-primary">{totalOpenTasks}</span> offene Aufgaben,{' '}
-        <span className="text-red-500">{acuteTasks}</span> davon akut.
-      </h1>
+    <div className="w-full rounded-3xl bg-gradient-to-r from-primary/50 via-blue-500/30 to-emerald-500/50 p-[1px] shadow-2xl">
+      <div className="rounded-[23px] bg-background/60 backdrop-blur-xl p-8 h-full w-full">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
+          {greeting}, du hast heute <span className="text-primary">{totalOpenTasks}</span> offene Aufgaben,{' '}
+          <span className="text-red-500">{acuteTasks}</span> davon akut.
+        </h1>
+      </div>
     </div>
   );
 }
