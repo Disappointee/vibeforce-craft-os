@@ -10,6 +10,7 @@ import {
   Hourglass,
 } from 'lucide-react';
 import { TaskDetailsDialog } from '@/components/tasks/TaskDetailsDialog';
+import { DashboardGreeting } from '@/components/dashboard/DashboardGreeting';
 import { pb } from '@/lib/pocketbase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -203,6 +204,7 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="max-w-6xl mx-auto space-y-12">
+        <DashboardGreeting />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="border-border bg-card/40 lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between pb-3">

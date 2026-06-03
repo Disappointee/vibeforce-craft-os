@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { TimerBar } from '@/components/layout/TimerBar';
+import { HeaderTimer } from '@/components/layout/HeaderTimer';
 import { useUiStore } from '@/lib/store';
 import { useOffline } from '@/hooks/use-offline';
 import { toast } from 'sonner';
@@ -544,6 +544,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
               <LiveClock />
+              <HeaderTimer />
               <button
                 onClick={() => useUiStore.getState().toggleActionMenu()}
                 className="relative p-3 min-h-[44px] min-w-[44px] rounded-lg transition-all text-amber-500 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-400"
@@ -625,7 +626,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
           </div>
         </main>
-        <TimerBar />
         <MobileTabBar />
         <SimpleActionMenu />
       </div>
