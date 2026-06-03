@@ -157,7 +157,7 @@ export function HeaderTimer() {
             </button>
 
             {showTaskDropdown && (
-              <div className="absolute bottom-full mb-2 left-0 w-[320px] rounded-xl border border-border bg-background shadow-2xl shadow-black/50 overflow-hidden z-50">
+              <div className="absolute top-full mt-2 left-0 w-[320px] rounded-xl border border-border bg-background shadow-2xl shadow-black/50 overflow-hidden z-50">
                 <div className="p-2 border-b border-border">
                   <Input
                     placeholder="Aufgabe suchen..."
@@ -227,7 +227,7 @@ export function HeaderTimer() {
             </button>
 
             {showNotePopover && (
-              <div className="absolute bottom-full mb-2 right-0 bg-background border border-border rounded-xl p-3 shadow-2xl shadow-black/50 z-50 w-64">
+              <div className="absolute top-full mt-2 right-0 bg-background border border-border rounded-xl p-3 shadow-2xl shadow-black/50 z-50 w-64">
                 <div className="flex items-center gap-1.5">
                   <Input
                     placeholder="Notiz hinzufügen..."

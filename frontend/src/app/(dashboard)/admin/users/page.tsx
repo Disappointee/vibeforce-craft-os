@@ -31,7 +31,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle } from 'lucide-react';
+import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { USER_ROLES, USER_ROLE_LABEL_MAP, labelFor } from '@/lib/constants';
 
@@ -71,6 +71,14 @@ export default function AdminUsersPage() {
     const [resetPassword, setResetPassword] = useState('');
     const [resetPasswordConfirm, setResetPasswordConfirm] = useState('');
     const [resetting, setResetting] = useState(false);
+
+    // Edit user dialog
+    const [editOpen, setEditOpen] = useState(false);
+    const [editUserId, setEditUserId] = useState('');
+    const [editName, setEditName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editRole, setEditRole] = useState('employee');
+    const [editing, setEditing] = useState(false);
 
     useEffect(() => {
         checkAuth();
@@ -246,6 +254,31 @@ export default function AdminUsersPage() {
         }
     };
 
+    const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!editName.trim()) {
+            toast.error('Name darf nicht leer sein');
+            return;
+        }
+
+        setEditing(true);
+        try {
+            await pb.collection('users').update(editUserId, {
+                name: editName.trim(),
+                role: editRole,
+            });
+            toast.success('Benutzer aktualisiert');
+            setEditOpen(false);
+            await loadUsers();
+        } catch (error: any) {
+            console.error('Edit user error:', error);
+            toast.error(error?.message || 'Fehler beim Aktualisieren des Benutzers');
+        } finally {
+            setEditing(false);
+        }
+    };
+
     const ROLE_LABELS_FALLBACK: Record<string, string> = {
         freelancer: 'Freelancer',
     };
@@ -399,6 +432,21 @@ export default function AdminUsersPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="xs"
+                                                        onClick={() => {
+                                                            setEditUserId(user.id);
+                                                            setEditName(user.name || '');
+                                                            setEditEmail(user.email);
+                                                            setEditRole(user.role || 'employee');
+                                                            setEditOpen(true);
+                                                        }}
+                                                        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                                                        title="Benutzer bearbeiten"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="xs"
@@ -611,6 +659,60 @@ export default function AdminUsersPage() {
                             <Button type="submit" disabled={resetting}>
                                 {resetting && <Loader2 size={14} className="animate-spin mr-2" />}
                                 {resetting ? 'Wird gespeichert...' : 'Passwort speichern'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit User Dialog */}
+            <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) { setEditName(''); setEditEmail(''); setEditRole('employee'); } }}>
+                <DialogContent className="sm:max-w-md border-border bg-background">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Pencil size={18} className="text-indigo-400" />
+                            Benutzer bearbeiten
+                        </DialogTitle>
+                        <DialogDescription>
+                            Name und Rolle von <strong>{editEmail}</strong> ändern.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleEdit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-name">Name *</Label>
+                            <Input
+                                id="edit-name"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                placeholder="Max Mustermann"
+                                className="bg-card border-border"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-role">Rolle</Label>
+                            <Select value={editRole} onValueChange={(val) => val && setEditRole(val)}>
+                                <SelectTrigger className="bg-card border-border">
+                                    <span>{ROLE_LABELS_FALLBACK[editRole || 'employee'] || labelFor(USER_ROLE_LABEL_MAP, (editRole || 'employee') as any)}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(USER_ROLES as readonly string[]).map(r => (
+                                        <SelectItem key={r} value={r}>{labelFor(USER_ROLE_LABEL_MAP, r as (typeof USER_ROLES)[number])}</SelectItem>
+                                    ))}
+                                    <SelectItem value="freelancer">Freelancer</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <DialogFooter className="pt-2">
+                            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                                Abbrechen
+                            </Button>
+                            <Button type="submit" disabled={editing}>
+                                {editing && <Loader2 size={14} className="animate-spin" />}
+                                {editing ? 'Wird gespeichert...' : 'Speichern'}
                             </Button>
                         </DialogFooter>
                     </form>
