@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Users, TrendingUp, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { UserRecord, TimeEntryRecord, TaskRecord } from '@/lib/pocketbase-types';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 interface UtilizationRow {
   userId: string;
@@ -66,7 +67,7 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
 
         return {
           userId: u.id,
-          userName: u.name || u.email?.split('@')[0] || 'Unbekannt',
+          userName: getUserDisplayName(u) || 'Unbekannt',
           userEmail: u.email || '',
           totalHours: Math.round(logged.total * 100) / 100,
           billableHours: Math.round(logged.billable * 100) / 100,

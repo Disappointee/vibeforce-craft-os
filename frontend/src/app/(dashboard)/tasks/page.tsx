@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getUserDisplayName } from '@/lib/user-utils';
 
 export default function TasksPage() {
   const searchParams = useSearchParams();
@@ -396,7 +397,7 @@ export default function TasksPage() {
                       if (value === 'all') return 'Alle';
                       if (value === 'unassigned') return 'Nicht zugewiesen';
                       const user = users.find(u => u.id === value);
-                      return user?.name || user?.email || value;
+                      return getUserDisplayName(user) || value;
                     }}
                   </SelectValue>
                 </SelectTrigger>
@@ -405,7 +406,7 @@ export default function TasksPage() {
                   <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
-                      {u.name || u.email}
+                      {getUserDisplayName(u)}
                     </SelectItem>
                   ))}
                 </SelectContent>

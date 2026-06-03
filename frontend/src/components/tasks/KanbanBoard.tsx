@@ -8,6 +8,7 @@ import { Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskRecord, TaskStatus } from '@/lib/pocketbase-types';
 import { TASK_TYPE_LABELS } from '@/lib/constants';
+import { getUserInitials } from '@/lib/user-utils';
 
 const priorityLabels: Record<string, string> = {
   acute: 'Akut',
@@ -187,15 +188,7 @@ export function KanbanBoard({
                                 <span>{taskHours[task.id] ? `${taskHours[task.id].toFixed(1)}h` : '0h'} erfasst</span>
                               </div>
                               <div className="h-6 w-6 rounded-full border border-indigo-500/30 flex items-center justify-center bg-indigo-500/10 text-indigo-400 font-bold text-[10px]">
-                                {Array.isArray(task.expand?.assignees) ? (
-                                  task.expand.assignees[0]?.name?.charAt(0).toUpperCase() ||
-                                  task.expand.assignees[0]?.email?.charAt(0).toUpperCase() ||
-                                  '?'
-                                ) : (task.expand?.assignees ? (
-                                  (task.expand.assignees as any).name?.charAt(0).toUpperCase() ||
-                                  (task.expand.assignees as any).email?.charAt(0).toUpperCase() ||
-                                  '?'
-                                ) : '?')}
+                                {getUserInitials(task.expand?.assignees?.[0] || (task.expand?.assignees as any)) || '?'}
                               </div>
                             </div>
                           </div>

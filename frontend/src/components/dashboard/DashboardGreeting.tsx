@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 function getGreeting(hour: number, name: string): string {
   if (hour < 12) return `Guten Morgen, ${name}`;
@@ -18,7 +19,7 @@ export function DashboardGreeting() {
     const user = pb.authStore.record;
     if (!user?.id) return;
 
-    setUserName(user.name || user.email || '');
+    setUserName(getUserDisplayName(user as any));
 
     try {
       const items = await pb.collection('tasks').getFullList({

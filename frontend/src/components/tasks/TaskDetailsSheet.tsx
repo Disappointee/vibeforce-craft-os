@@ -7,6 +7,7 @@ import { Loader2, Play, Square, Plus, CheckCircle2, Circle, Trash2, Link2, Unlin
 import { useTimerStore } from '@/lib/store';
 import { TaskRecord, UserRecord, TaskLinkRecord, TaskLinkType, ChecklistItemRecord, RecurringInterval, TaskCommentRecord, TaskType, TaskFileRecord } from '@/lib/pocketbase-types';
 import { TaskComments } from '@/components/tasks/TaskComments';
+import { getUserDisplayName } from '@/lib/user-utils';
 import {
   Sheet,
   SheetContent,
@@ -777,7 +778,7 @@ export function TaskDetailsSheet({ taskId, projectKey, onClose, onTaskUpdated, o
                       {(value: string | null) => {
                         if (!value || value === 'unassigned') return 'Niemand zugewiesen';
                         const user = allUsers.find(u => u.id === value);
-                        return user?.name || user?.email || value;
+                        return getUserDisplayName(user) || value;
                       }}
                     </SelectValue>
                   </SelectTrigger>
@@ -785,7 +786,7 @@ export function TaskDetailsSheet({ taskId, projectKey, onClose, onTaskUpdated, o
                     <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
                     {allUsers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
-                        {u.name || u.email}
+                        {getUserDisplayName(u)}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -45,6 +45,7 @@ import { toast } from 'sonner';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
 import { NewTaskDialog } from '@/components/tasks/NewTaskDialog';
 import type { ClientRecord, ProjectRecord, TaskRecord, TimeEntryRecord, UserRecord } from '@/lib/pocketbase-types';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 // ============================================
 // Types
@@ -990,7 +991,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                                 variant="outline"
                                                 className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 flex items-center gap-1"
                                             >
-                                                {user.name || user.email}
+                                                {getUserDisplayName(user)}
                                                 <button
                                                     onClick={() => setSelectedBetreuer(prev => prev.filter(id => id !== uid))}
                                                     className="ml-1 hover:text-red-400 transition-colors"
@@ -1017,7 +1018,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                             .filter(u => !selectedBetreuer.includes(u.id))
                                             .map(user => (
                                                 <SelectItem key={user.id} value={user.id}>
-                                                    {user.name || user.email}
+                                                    {getUserDisplayName(user)}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>
@@ -1039,7 +1040,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                                 variant="outline"
                                                 className="bg-purple-500/10 text-purple-400 border-purple-500/20 flex items-center gap-1"
                                             >
-                                                {user.name || user.email}
+                                                {getUserDisplayName(user)}
                                                 <button
                                                     onClick={() => setSelectedBeobachter(prev => prev.filter(id => id !== uid))}
                                                     className="ml-1 hover:text-red-400 transition-colors"
@@ -1066,7 +1067,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                             .filter(u => !selectedBeobachter.includes(u.id))
                                             .map(user => (
                                                 <SelectItem key={user.id} value={user.id}>
-                                                    {user.name || user.email}
+                                                    {getUserDisplayName(user)}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>

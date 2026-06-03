@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { use } from 'react';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 export default function ProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -341,10 +342,10 @@ export default function ProjectDetailsPage({ params }: { params: Promise<{ id: s
                           {Array.isArray(task.expand?.assignees) ? task.expand.assignees.map((a: any, i: number) => (
                             <span key={a.id}>
                               {i > 0 && ', '}
-                              {a.name || a.email}
+                              {getUserDisplayName(a)}
                             </span>
                           )) : (task.expand?.assignees ? (
-                            <span>{(task.expand.assignees as any).name || (task.expand.assignees as any).email}</span>
+                            <span>{getUserDisplayName((task.expand.assignees as any))}</span>
                           ) : 'Unzugewiesen')}
                         </span>
                       </TableCell>

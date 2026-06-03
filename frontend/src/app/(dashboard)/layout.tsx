@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { HeaderTimer } from '@/components/layout/HeaderTimer';
 import { useUiStore } from '@/lib/store';
+import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
 import { useOffline } from '@/hooks/use-offline';
 import { toast } from 'sonner';
 import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
@@ -564,11 +565,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   aria-haspopup="menu"
                 >
                   <div className="text-right hidden sm:block">
-                    <p className="text-sm font-semibold text-foreground">{user?.name || user?.email}</p>
+                    <p className="text-sm font-semibold text-foreground">{getUserDisplayName(user)}</p>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider">{user?.role || 'Mitglied'}</p>
                   </div>
                   <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center font-bold shadow-lg text-black">
-                    {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'K'}
+                    {getUserInitials(user) || 'K'}
                   </div>
                 </button>
 

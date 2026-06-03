@@ -32,6 +32,8 @@ export interface UserRecord extends BaseRecord {
     emailVisibility: boolean;
     verified: boolean;
     name?: string;
+    first_name?: string;
+    last_name?: string;
     avatar?: string;
     role?: UserRole;
     hourly_rate?: number;
@@ -42,6 +44,7 @@ export interface UserRecord extends BaseRecord {
     notify_on_mention?: boolean;
     notify_on_due?: boolean;
     weekly_report?: boolean;
+    deactivated?: boolean;
     favorites?: string[];
 }
 

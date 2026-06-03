@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { parseSlashCommands } from '@/lib/slashParser';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
+import { getUserDisplayName } from '@/lib/user-utils';
 import {
   Dialog,
   DialogContent,
@@ -116,7 +117,7 @@ export function NewSimpleTaskDialog({
               user: assigneeId,
               type: 'task_assigned',
               title: `Neue Aufgabe: ${title}`,
-              message: `${pb.authStore.record?.name || 'Jemand'} hat dir eine Aufgabe zugewiesen.`,
+              message: `${getUserDisplayName(pb.authStore.record as any) || 'Jemand'} hat dir eine Aufgabe zugewiesen.`,
               link: `/tasks`,
             });
           }
@@ -284,7 +285,7 @@ export function NewSimpleTaskDialog({
               <Select value={assigneeId} onValueChange={(val) => val && setAssigneeId(val)}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Nicht zugewiesen">
-                    {assigneeId ? (users.find(u => u.id === assigneeId)?.name || users.find(u => u.id === assigneeId)?.email || '') : 'Nicht zugewiesen'}
+                    {assigneeId ? (getUserDisplayName(users.find(u => u.id === assigneeId)) || '') : 'Nicht zugewiesen'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">

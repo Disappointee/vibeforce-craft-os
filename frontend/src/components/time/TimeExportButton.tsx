@@ -13,6 +13,7 @@ import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { pb } from '@/lib/pocketbase';
 import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 interface TimeExportButtonProps {
     entries: TimeEntryRecord[];
@@ -112,7 +113,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
                     formattedDate,
                     escapeCSV(client?.name || 'Kein Kunde'),
                     escapeCSV(project ? `${project.key} - ${project.name}` : 'Kein Projekt'),
-                    escapeCSV(user?.name || user?.email || 'Mitarbeiter'),
+                    escapeCSV(getUserDisplayName(user) || 'Mitarbeiter'),
                     escapeCSV(task?.title || 'Keine Aufgabe'),
                     escapeCSV(entry.description || ''),
                     formatHoursHM(hours)

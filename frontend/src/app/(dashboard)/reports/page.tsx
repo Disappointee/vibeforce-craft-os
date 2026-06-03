@@ -28,6 +28,7 @@ import { SaveTemplateDialog } from '@/components/reports/SaveTemplateDialog';
 import { downloadReportPDF, type TaskDetailReportData } from '@/lib/pdf-generator';
 import { buildStundenreportInput, formatHoursHM, parseDurationHM } from '@/lib/stundenreport-utils';
 import type { StundenreportInput } from '@/lib/stundenreport';
+import { getUserDisplayName } from '@/lib/user-utils';
 
 function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string } {
     const now = new Date();
@@ -437,7 +438,7 @@ export default function ReportsPage() {
                 projectId: data.projectId,
                 projectName: project?.name,
                 projectKey: project?.key,
-                userName: user?.name || user?.email || 'Unbekannt',
+                userName: getUserDisplayName(user) || 'Unbekannt',
                 userEmail: user?.email || user?.id || '',
                 hours: Math.round(data.hours * 100) / 100,
                 taskCount: data.taskCount.size,
@@ -491,7 +492,7 @@ export default function ReportsPage() {
                     formattedDate,
                     escapeCSV(client?.name || 'Kein Kunde'),
                     escapeCSV(proj ? `${proj.key} - ${proj.name}` : 'Kein Projekt'),
-                    escapeCSV(user?.name || user?.email || 'Mitarbeiter'),
+                    escapeCSV(getUserDisplayName(user) || 'Mitarbeiter'),
                     escapeCSV(task?.title || 'Keine Aufgabe'),
                     escapeCSV(entry.description || ''),
                     formatHoursHM(hours),

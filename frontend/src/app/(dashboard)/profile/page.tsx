@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Globe, Loader2, Save, Briefcase, Building2, FolderKanban, ListChecks, Clock, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { getUserDisplayName } from '@/lib/user-utils';
 import type { ProjectRecord, TaskRecord, TimeEntryRecord, ClientRecord } from '@/lib/pocketbase-types';
 
 const EXPERTISE_OPTIONS = [
@@ -57,7 +58,8 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(pb.authStore.record);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [name, setName] = useState(pb.authStore.record?.name || '');
+    const [firstName, setFirstName] = useState(pb.authStore.record?.first_name || '');
+    const [lastName, setLastName] = useState(pb.authStore.record?.last_name || '');
     const [language, setLanguage] = useState('de');
     const [expertise, setExpertise] = useState<string[]>([]);
     const [avatarUrl, setAvatarUrl] = useState('');
@@ -83,7 +85,8 @@ export default function ProfilePage() {
             try {
                 const record = await pb.collection('users').authRefresh();
                 setUser(record.record);
-                setName(record.record?.name || '');
+                setFirstName(record.record?.first_name || '');
+                setLastName(record.record?.last_name || '');
                 setLanguage(record.record?.language || 'de');
                 setExpertise(record.record?.expertise || []);
             } catch {
@@ -207,7 +210,8 @@ export default function ProfilePage() {
         setSaving(true);
         try {
             const updated = await pb.collection('users').update(user.id, {
-                name,
+                first_name: firstName.trim() || null,
+                last_name: lastName.trim() || null,
                 language,
                 expertise,
             });
@@ -278,7 +282,7 @@ export default function ProfilePage() {
                         <AvatarUpload
                             userId={user.id}
                             currentAvatar={user.avatar}
-                            userName={user.name}
+                            userName={user.first_name || getUserDisplayName(user)}
                             onAvatarUpdate={handleAvatarUpdate}
                         />
 
@@ -288,25 +292,37 @@ export default function ProfilePage() {
                         {/* Name & Email */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="first-name">Vorname</Label>
                                 <Input
-                                    id="name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Dein Name"
+                                    id="first-name"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    placeholder="Dein Vorname"
                                     className="bg-background border-border"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="email">E-Mail</Label>
+                                <Label htmlFor="last-name">Nachname</Label>
                                 <Input
-                                    id="email"
-                                    value={user.email || ''}
-                                    disabled
-                                    className="bg-background border-border opacity-60"
+                                    id="last-name"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    placeholder="Dein Nachname"
+                                    className="bg-background border-border"
                                 />
-                                <p className="text-xs text-muted-foreground">Die E-Mail-Adresse kann nicht geändert werden</p>
                             </div>
+                        </div>
+
+                        {/* Email */}
+                        <div className="space-y-2">
+                            <Label htmlFor="email">E-Mail</Label>
+                            <Input
+                                id="email"
+                                value={user.email || ''}
+                                disabled
+                                className="bg-background border-border opacity-60"
+                            />
+                            <p className="text-xs text-muted-foreground">Die E-Mail-Adresse kann nicht geändert werden</p>
                         </div>
 
                         {/* Language Select */}

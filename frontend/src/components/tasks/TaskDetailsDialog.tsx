@@ -8,6 +8,7 @@ import { useTimerStore } from '@/lib/store';
 import { TaskRecord, UserRecord, TaskLinkRecord, TaskLinkType, ChecklistItemRecord, RecurringInterval, TaskCommentRecord, TaskType, TaskFileRecord } from '@/lib/pocketbase-types';
 import { TaskComments } from '@/components/tasks/TaskComments';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
+import { getUserDisplayName } from '@/lib/user-utils';
 import {
   Dialog,
   DialogContent,
@@ -771,14 +772,14 @@ export function TaskDetailsDialog({ taskId, projectKey, onClose, onTaskUpdated, 
                 <Select value={assigneeId || 'unassigned'} onValueChange={(val) => setAssigneeId(val === 'unassigned' ? null : val)}>
                   <SelectTrigger className="bg-background border-border h-9">
                     <SelectValue>
-                      {!assigneeId || assigneeId === 'unassigned' ? 'Niemand zugewiesen' : decodeGermanHtmlEntities(allUsers.find(u => u.id === assigneeId)?.name || allUsers.find(u => u.id === assigneeId)?.email || assigneeId)}
+                      {!assigneeId || assigneeId === 'unassigned' ? 'Niemand zugewiesen' : decodeGermanHtmlEntities(getUserDisplayName(allUsers.find(u => u.id === assigneeId)) || assigneeId)}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border text-foreground">
                     <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
                     {allUsers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
-                        {decodeGermanHtmlEntities(u.name || u.email)}
+                        {decodeGermanHtmlEntities(getUserDisplayName(u))}
                       </SelectItem>
                     ))}
                   </SelectContent>

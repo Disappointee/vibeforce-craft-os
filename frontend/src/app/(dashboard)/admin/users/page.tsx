@@ -31,17 +31,22 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle, Pencil } from 'lucide-react';
+import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle, Pencil, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { USER_ROLES, USER_ROLE_LABEL_MAP, labelFor } from '@/lib/constants';
+import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
+import { impersonateUser } from '@/lib/impersonate';
 
 interface UserItem {
     id: string;
     email: string;
     name?: string;
+    first_name?: string;
+    last_name?: string;
     role?: string;
     avatar?: string;
     verified: boolean;
+    deactivated?: boolean;
     created: string;
     language?: string;
 }
@@ -75,7 +80,8 @@ export default function AdminUsersPage() {
     // Edit user dialog
     const [editOpen, setEditOpen] = useState(false);
     const [editUserId, setEditUserId] = useState('');
-    const [editName, setEditName] = useState('');
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
     const [editEmail, setEditEmail] = useState('');
     const [editRole, setEditRole] = useState('employee');
     const [editing, setEditing] = useState(false);
@@ -176,10 +182,10 @@ export default function AdminUsersPage() {
 
         try {
             await pb.collection('users').update(user.id, {
-                verified: !user.verified,
+                deactivated: !user.deactivated,
             });
 
-            toast.success(`Benutzer ${user.verified ? 'deaktiviert' : 'aktiviert'}`);
+            toast.success(`Benutzer ${user.deactivated ? 'aktiviert' : 'deaktiviert'}`);
             await loadUsers();
         } catch (error: any) {
             console.error('Toggle status error:', error);
@@ -209,11 +215,11 @@ export default function AdminUsersPage() {
             return;
         }
 
-        if (!confirm(`Möchtest du "${user.name || user.email}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+        if (!confirm(`Möchtest du "${getUserDisplayName(user)}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
 
         try {
             await pb.collection('users').delete(user.id);
-            toast.success(`Benutzer "${user.name || user.email}" gelöscht`);
+            toast.success(`Benutzer "${getUserDisplayName(user)}" gelöscht`);
             await loadUsers();
         } catch (error: any) {
             console.error('Delete error:', error);
@@ -257,7 +263,7 @@ export default function AdminUsersPage() {
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!editName.trim()) {
+        if (!editFirstName.trim() && !editLastName.trim()) {
             toast.error('Name darf nicht leer sein');
             return;
         }
@@ -265,7 +271,8 @@ export default function AdminUsersPage() {
         setEditing(true);
         try {
             await pb.collection('users').update(editUserId, {
-                name: editName.trim(),
+                first_name: editFirstName.trim() || null,
+                last_name: editLastName.trim() || null,
                 role: editRole,
             });
             toast.success('Benutzer aktualisiert');
@@ -377,11 +384,11 @@ export default function AdminUsersPage() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                                                        {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                                                        {getUserInitials(user)}
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-medium text-foreground">
-                                                            {user.name || 'Kein Name'}
+                                                            {getUserDisplayName(user) || 'Kein Name'}
                                                             {user.id === pb.authStore.record?.id && (
                                                                 <span className="ml-2 text-xs text-indigo-400">(Du)</span>
                                                             )}
@@ -413,7 +420,7 @@ export default function AdminUsersPage() {
                                                 </Select>
                                             </TableCell>
                                             <TableCell>
-                                                {user.verified || user.id === pb.authStore.record?.id ? (
+                                                {!user.deactivated || user.id === pb.authStore.record?.id ? (
                                                     <Badge variant="default" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                                                         <CheckCircle size={12} className="mr-1" />
                                                         Aktiv
@@ -432,12 +439,33 @@ export default function AdminUsersPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    {pb.authStore.record?.role === 'admin' && user.id !== pb.authStore.record?.id && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="xs"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const { token, record } = await impersonateUser(user.id);
+                                                                    pb.authStore.save(token, record);
+                                                                    toast.success('Eingeloggt als ' + getUserDisplayName(user));
+                                                                    router.push('/');
+                                                                } catch (error: any) {
+                                                                    toast.error(error?.message || 'Fehler bei der Impersonation');
+                                                                }
+                                                            }}
+                                                            className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                                                            title="Als Benutzer einloggen"
+                                                        >
+                                                            <LogIn size={14} />
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         variant="ghost"
                                                         size="xs"
                                                         onClick={() => {
                                                             setEditUserId(user.id);
-                                                            setEditName(user.name || '');
+                                                            setEditFirstName(user.first_name || '');
+                                                            setEditLastName(user.last_name || '');
                                                             setEditEmail(user.email);
                                                             setEditRole(user.role || 'employee');
                                                             setEditOpen(true);
@@ -467,10 +495,10 @@ export default function AdminUsersPage() {
                                                         size="xs"
                                                         onClick={() => handleToggleStatus(user)}
                                                         disabled={user.id === pb.authStore.record?.id}
-                                                        className={user.verified || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
+                                                        className={!user.deactivated || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
                                                     >
-                                                        {user.verified || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
-                                                        {user.verified || user.id === pb.authStore.record?.id ? 'Deaktivieren' : 'Aktivieren'}
+                                                        {!user.deactivated || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
+                                                        {!user.deactivated || user.id === pb.authStore.record?.id ? 'Deaktivieren' : 'Aktivieren'}
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
@@ -666,7 +694,7 @@ export default function AdminUsersPage() {
             </Dialog>
 
             {/* Edit User Dialog */}
-            <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) { setEditName(''); setEditEmail(''); setEditRole('employee'); } }}>
+            <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) { setEditFirstName(''); setEditLastName(''); setEditEmail(''); setEditRole('employee'); } }}>
                 <DialogContent className="sm:max-w-md border-border bg-background">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -679,16 +707,28 @@ export default function AdminUsersPage() {
                     </DialogHeader>
 
                     <form onSubmit={handleEdit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-name">Name *</Label>
-                            <Input
-                                id="edit-name"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                placeholder="Max Mustermann"
-                                className="bg-card border-border"
-                                required
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-first-name">Vorname</Label>
+                                <Input
+                                    id="edit-first-name"
+                                    value={editFirstName}
+                                    onChange={(e) => setEditFirstName(e.target.value)}
+                                    placeholder="Max"
+                                    className="bg-card border-border"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-last-name">Nachname *</Label>
+                                <Input
+                                    id="edit-last-name"
+                                    value={editLastName}
+                                    onChange={(e) => setEditLastName(e.target.value)}
+                                    placeholder="Mustermann"
+                                    className="bg-card border-border"
+                                    required
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
