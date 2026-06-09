@@ -60,6 +60,12 @@ async function main() {
         { email: "demo002@vibeforce.de", password: genPassword(), name: "Ben Beispiel", role: "employee" },
         { email: "demo003@vibeforce.de", password: genPassword(), name: "Laura Design", role: "employee" },
         { email: "demo004@vibeforce.de", password: genPassword(), name: "Tom Entwickler", role: "employee" },
+        { email: "demo005@vibeforce.de", password: genPassword(), name: "Sandra Seidel", role: "manager" },
+        { email: "demo006@vibeforce.de", password: genPassword(), name: "Resofond Demo 6", role: "employee" },
+        { email: "demo007@vibeforce.de", password: genPassword(), name: "Resofond Demo 7", role: "employee" },
+        { email: "demo008@vibeforce.de", password: genPassword(), name: "Resofond Demo 8", role: "employee" },
+        { email: "demo009@vibeforce.de", password: genPassword(), name: "Resofond Demo 9", role: "employee" },
+        { email: "Demo-Resofond@vibeforce.de", password: genPassword(), name: "Sarah Werninger", role: "manager" },
     ];
     
     const createdUsers = [];

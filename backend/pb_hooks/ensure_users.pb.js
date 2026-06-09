@@ -86,7 +86,13 @@ onBootstrap((e) => {
             { email: "demo001@vibeforce.de", password: "Xk7mP2vL9nQ4", name: "Monika Mustermann", role: "admin" },
             { email: "demo002@vibeforce.de", password: "Rt3sD8kL1pM6", name: "Ben Beispiel", role: "employee" },
             { email: "demo003@vibeforce.de", password: "Mn9bV4cX7zL2", name: "Laura Design", role: "employee" },
-            { email: "demo004@vibeforce.de", password: "Kw8pR5nJ3tF7", name: "Tom Entwickler", role: "employee" }
+            { email: "demo004@vibeforce.de", password: "Kw8pR5nJ3tF7", name: "Tom Entwickler", role: "employee" },
+            { email: "demo005@vibeforce.de", password: "Jf4mW9kL2pR8", name: "Sandra Seidel", role: "manager" },
+            { email: "demo006@vibeforce.de", password: "Ht7pK2mR9xL4", name: "Resofond Demo 6", role: "employee" },
+            { email: "demo007@vibeforce.de", password: "Wq3nB8vM5sF1", name: "Resofond Demo 7", role: "employee" },
+            { email: "demo008@vibeforce.de", password: "Pk6tR4jN2wD9", name: "Resofond Demo 8", role: "employee" },
+            { email: "demo009@vibeforce.de", password: "Lm8cV3xQ7zG5", name: "Resofond Demo 9", role: "employee" },
+            { email: "Demo-Resofond@vibeforce.de", password: "Fs5jK1pL8nR2", name: "Sarah Werninger", role: "manager" }
         ];
 
         for (let i = 0; i < vibeforceUsers.length; i++) {
