@@ -1,4 +1,13 @@
 {
+  "name": "vibeforce-flow-os",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "start": "npm --prefix frontend start",
+    "lint": "npm --prefix frontend run lint"
+  },
   "dependencies": {
     "@faker-js/faker": "^10.4.0",
     "marked": "^18.0.4",
