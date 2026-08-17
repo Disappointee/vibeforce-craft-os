@@ -1,15 +1,16 @@
 # =============================================================================
-# Vibeforce Flow OS — Docker Compose (Development)
+# Vibeforce Flow OS — Docker Compose (Standard / Development & Local Testing)
 # =============================================================================
 # Usage:
-#   docker compose up -d          → Start all services
+#   docker compose up -d --build  → Start all services
 #   docker compose logs -f        → Follow logs
+#   docker compose ps             → Check service health
 #   docker compose down           → Stop all services
 # =============================================================================
 
 services:
   # ---------------------------------------------------------------------------
-  # Backend — PocketBase
+  # Backend — PocketBase (SQLite + Auth + Hooks)
   # ---------------------------------------------------------------------------
   backend:
     build:
@@ -19,14 +20,21 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
-      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@vibeforce.de}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
     volumes:
       - pb-data:/pb/pb_data
     ports:
-      - "8090:8080"
+      - "${BACKEND_PORT:-8090}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     networks:
-      - vibeforce
+      - vibeforce-net
     deploy:
       resources:
         limits:
@@ -35,37 +43,49 @@ services:
           memory: 128M
 
   # ---------------------------------------------------------------------------
-  # Frontend — Next.js (development)
+  # Frontend — Next.js 16 Standalone
   # ---------------------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_POCKETBASE_URL: ${NEXT_PUBLIC_POCKETBASE_URL}
+        NEXT_PUBLIC_POCKETBASE_URL: ${NEXT_PUBLIC_POCKETBASE_URL:-http://localhost:8090}
         NEXT_PUBLIC_DEFAULT_HOURLY_RATE: ${NEXT_PUBLIC_DEFAULT_HOURLY_RATE:-150}
     container_name: vibeforce-frontend
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - APP_URL=${APP_URL}
+      - PORT=3000
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - POCKETBASE_URL=http://backend:8080
+      - NEXT_PUBLIC_POCKETBASE_URL=${NEXT_PUBLIC_POCKETBASE_URL:-http://localhost:8090}
+      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@vibeforce.de}
+      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
     ports:
-      - "3000:3000"
-    networks:
-      - vibeforce
+      - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - vibeforce-net
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 2G
         reservations:
-          memory: 512M
+          memory: 256M
 
 volumes:
   pb-data:
     driver: local
 
 networks:
-  vibeforce:
+  vibeforce-net:
     driver: bridge

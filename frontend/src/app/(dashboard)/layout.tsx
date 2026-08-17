@@ -39,6 +39,7 @@ import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
 import { LiveClock } from '@/components/layout/LiveClock';
 import { QuickAddMenu } from '@/components/layout/QuickAddMenu';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import {
@@ -101,6 +102,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     onOpenClientDialog: handleOpenClientDialog,
     onOpenProjectDialog: handleOpenProjectDialog,
   });
+
+  // Activate real-time PocketBase SSE subscriptions
+  useRealtimeSync();
 
 
   // Initialize dark mode from localStorage
@@ -381,6 +385,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+            <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} collapsed={sidebarCollapsed} />
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} collapsed={sidebarCollapsed} />
             <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
           </nav>
@@ -430,6 +435,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} /> */}
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
           </nav>
@@ -555,7 +561,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <Zap size={18} />
               </button>
-              {/* <NotificationBell /> */}
+              <NotificationBell />
               {/* User Dropdown */}
               <div className="relative" ref={userMenuRef}>
                 <button

@@ -7,6 +7,7 @@ import { pb } from '@/lib/pocketbase';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { PasswordChange } from '@/components/profile/PasswordChange';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
+import { UserPreferencesCard } from '@/components/profile/UserPreferencesCard';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -551,6 +552,9 @@ export default function ProfilePage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* User Preferences */}
+                <UserPreferencesCard />
 
                 {/* Password Change */}
                 <PasswordChange />

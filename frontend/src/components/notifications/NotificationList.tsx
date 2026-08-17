@@ -24,15 +24,19 @@ const NOTIFICATION_ICONS: Record<string, string> = {
     task_mention: '@',
     status_change: '🔄',
     project_update: '📋',
+    budget_warning: '⚠️',
+    system: '🔔',
 };
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-    task_assigned: t('notifications.type.task_assigned'),
-    task_due: t('notifications.type.task_due'),
-    task_comment: t('notifications.type.task_comment'),
-    task_mention: t('notifications.type.task_mention'),
-    status_change: t('notifications.type.status_change'),
-    project_update: t('notifications.type.project_update'),
+    task_assigned: t('notifications.type.task_assigned') || 'Aufgabenzuweisung',
+    task_due: t('notifications.type.task_due') || 'Fälligkeit',
+    task_comment: t('notifications.type.task_comment') || 'Kommentar',
+    task_mention: t('notifications.type.task_mention') || 'Erwähnung',
+    status_change: t('notifications.type.status_change') || 'Statusänderung',
+    project_update: t('notifications.type.project_update') || 'Projekt-Update',
+    budget_warning: 'Budget-Warnung',
+    system: 'System-Mitteilung',
 };
 
 export function NotificationList() {
@@ -74,6 +78,15 @@ export function NotificationList() {
 
     useEffect(() => {
         fetchNotifications();
+
+        const handleUpdate = () => fetchNotifications();
+        window.addEventListener('notification-received', handleUpdate);
+        window.addEventListener('vibeforce:notifications-updated', handleUpdate);
+
+        return () => {
+            window.removeEventListener('notification-received', handleUpdate);
+            window.removeEventListener('vibeforce:notifications-updated', handleUpdate);
+        };
     }, [fetchNotifications]);
 
     const handleMarkAllRead = async () => {

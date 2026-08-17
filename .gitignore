@@ -4,6 +4,7 @@ node_modules/
 
 # testing
 /coverage
+.playwright-mcp/
 
 # next.js
 /.next/
@@ -15,6 +16,8 @@ node_modules/
 # misc
 .DS_Store
 *.pem
+.kilo/
+Textdokument*.txt
 
 # debug
 npm-debug.log*
@@ -27,6 +30,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
 # vercel
 .vercel
@@ -35,10 +39,7 @@ yarn-error.log*
 /pb_data
 /backend/pb_data/*.db-shm
 /backend/pb_data/*.db-wal
+tools/auth.json
 
 # python
 __pycache__/
-
-.env*.local
-
-.vercel

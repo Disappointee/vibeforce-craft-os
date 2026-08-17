@@ -56,9 +56,17 @@ export function NotificationBell() {
     useEffect(() => {
         fetchNotifications();
 
-        // Poll every 30 seconds
+        const handleUpdate = () => fetchNotifications();
+        window.addEventListener('notification-received', handleUpdate);
+        window.addEventListener('vibeforce:notifications-updated', handleUpdate);
+
+        // Fallback Poll every 30 seconds
         const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('notification-received', handleUpdate);
+            window.removeEventListener('vibeforce:notifications-updated', handleUpdate);
+        };
     }, [fetchNotifications]);
 
     const handleMarkAllRead = async () => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
-import { BarChart3, Clock, TrendingUp, FileText, Download } from 'lucide-react';
+import { BarChart3, Clock, TrendingUp, FileText, Download, FileCode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { downloadReportPDF, type TaskDetailReportData } from '@/lib/pdf-generato
 import { buildStundenreportInput, formatHoursHM, parseDurationHM } from '@/lib/stundenreport-utils';
 import type { StundenreportInput } from '@/lib/stundenreport';
 import { getUserDisplayName } from '@/lib/user-utils';
+import { generateZugferdXml } from '@/lib/zugferd';
 
 function getPresetDates(preset: DatePreset): { dateFrom: string; dateTo: string } {
     const now = new Date();
@@ -216,6 +217,83 @@ function ReportsExportDropdown({
         }
     };
 
+    const handleZugferdExport = () => {
+        if (entries.length === 0) {
+            toast.error('Keine Daten zum Exportieren vorhanden');
+            return;
+        }
+        try {
+            setIsExporting(true);
+            const reportData = buildStundenreportInput(entries);
+            const firstClient = reportData.clients[0]?.clientName || 'Kunde';
+            
+            const lineItems = entries.map((entry) => {
+                const durationHours = ((entry.duration_minutes || 0) / 60);
+                const task = (entry as any).expand?.task;
+                const project = task?.expand?.project;
+                return {
+                    name: task?.title || 'Dienstleistung',
+                    description: `${project?.name ? `[${project.name}] ` : ''}${entry.description || ''}`,
+                    quantity: durationHours,
+                    unitCode: 'HUR',
+                    netAmount: 120,
+                    taxPercent: 0.19,
+                };
+            });
+
+            const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.netAmount), 0);
+            const taxRate = 0.19;
+            const taxAmount = subtotal * taxRate;
+            const total = subtotal + taxAmount;
+
+            const xmlString = generateZugferdXml({
+                invoiceNumber: `VF-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
+                invoiceDate: new Date().toISOString().split('T')[0],
+                periodFrom: dateFrom || new Date().toISOString().split('T')[0],
+                periodTo: dateTo || new Date().toISOString().split('T')[0],
+                sellerName: 'Vibeforce GmbH',
+                sellerStreet: 'Agenturstraße 1',
+                sellerCity: '10115 Berlin',
+                sellerCountry: 'DE',
+                sellerTaxId: 'DE123456789',
+                buyerName: firstClient,
+                buyerStreet: 'Kundenstraße 10',
+                buyerCity: '10115 Berlin',
+                buyerCountry: 'DE',
+                lineItems: lineItems.length > 0 ? lineItems : [{
+                    name: 'Beratungsleistung',
+                    description: 'Zeiterfassung',
+                    quantity: 1,
+                    unitCode: 'HUR',
+                    netAmount: 120,
+                    taxPercent: 0.19
+                }],
+                subtotal,
+                taxRate,
+                taxAmount,
+                total,
+                currency: 'EUR',
+                paymentTerms: 'Zahlbar innerhalb von 14 Tagen ohne Abzug.',
+            });
+
+            const blob = new Blob([xmlString], { type: 'application/xml;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `zugferd-factur-x-${dateFrom || 'report'}.xml`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success('ZUGFeRD 2.1.1 E-Rechnungs-XML erfolgreich exportiert');
+        } catch (err) {
+            console.error('ZUGFeRD export failed:', err);
+            toast.error('Fehler beim Generieren der ZUGFeRD-XML');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const disabled = isExporting || entries.length === 0;
 
     return (
@@ -240,6 +318,10 @@ function ReportsExportDropdown({
                 <DropdownMenuItem onClick={handlePdfWithLogo} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
                     <FileText size={16} className="text-orange-400" />
                     <span>PDF mit Logo</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleZugferdExport} className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted">
+                    <FileCode size={16} className="text-primary" />
+                    <span>ZUGFeRD 2.1.1 XML (E-Rechnung)</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

@@ -1,0 +1,23 @@
+Führe diesen Befehl aus, um die Basis für das Seeding und die Screenshots zu schaffen:Bash# Projekt-Root sicherstellen
+npm install playwright @faker-js/faker
+npx playwright install chromium
+2. Der Auftrag an den Agenten (Kilo Code / DeepSeek)Kopiere diesen Block komplett und übergib ihn deinem Agenten. Er enthält das Seeding (für Daten-Logik) und den Screenshotter (für visuelle Evidenz).Markdown# AUFTRAG: MVP-Sanierung & Visuelles Audit (Clean State)
+
+## 1. Seeding: "Golden Record" Datenstruktur
+Erstelle `tools/seed_mvp.js`. Dieses Skript MUSS via `pocketbase` SDK folgende Hierarchie anlegen, um die CRM-Logik zu erzwingen:
+- **Kunde**: 'Test-Agency GmbH' (Status: aktiv, abrechenbar: true)
+- **Projekt**: 'Website-Relaunch' (Verknüpft mit 'Test-Agency GmbH')
+- **Aufgabe**: 'Design-Konzept' (Verknüpft mit 'Website-Relaunch')
+
+## 2. Screenshot-Audit (Visueller Status-Check)
+Erstelle `tools/capture_audit.js`. Erfasse mit Playwright folgende Views (speichern in `/screenshots`):
+1. **`crm_hierarchy.png`**: URL `/clients`. Prüfe, ob Kunde und Projekt-Hierarchie logisch und sauber in der Liste erscheinen.
+2. **`task_modal_check.png`**: Öffne das Modal für 'Neue Aufgabe'. Screenshot. Wir müssen prüfen, ob die Kunden-Auswahl (die aktuell fehlt/falsch ist) logisch mit dem Projekt verknüpft ist[cite: 3, 4].
+3. **`timerbar_functional.png`**: Starte einen Timer auf die 'Design-Konzept' Aufgabe. Screenshot der Bar im aktiven Zustand[cite: 4].
+4. **`hell_mode_kontrast.png`**: Dashboard im Light-Mode.
+
+## 3. Umsetzung
+- Nutze das existierende `auth.json` für den Login.
+- Keine Kommentare im Code, nur funktionale Logik.
+- Nach dem Seeding und Screenshotting: Ausgabe einer Datei `audit-status.md`, die bestätigt, dass die IDs der Testdaten korrekt verknüpft wurden (aus dem PocketBase-Response-Objekt).
+Mein Analyse-Vorgehen für dichSobald du die Screenshots (und die audit-status.md) hast, werde ich dir kein "schönes Bild" liefern, sondern ein funktionelles Fehler-Log:Struktur-Check: Ist der 'Neue Kunde' Button da, wo er hingehört?  Hierarchie-Check: Ist die Aufgabe im Modul für den Kunden oder das Projekt verknüpft?  UI-Brüche: Welche CSS-Klassen verhindern die Sichtbarkeit im Light-Mode?[cite: 2]

@@ -2,10 +2,10 @@
 // Union Types (reusable string literals)
 // ============================================
 
-export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
+export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done' | string;
 export type TaskPriority = 'acute' | 'high' | 'medium' | 'low';
 export type RecurringInterval = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
-export type TaskType = 'sea' | 'social_ads' | 'tracking' | 'seo' | 'content' | 'design' | 'development' | 'consulting' | 'other';
+export type TaskType = 'sea' | 'social_ads' | 'tracking' | 'seo' | 'content' | 'design' | 'development' | 'consulting' | 'other' | string;
 
 // ============================================
 // PocketBase Record Base
@@ -23,8 +23,20 @@ export interface BaseRecord {
 // User (PocketBase auth record)
 // ============================================
 
-export type UserRole = 'admin' | 'employee' | 'freelancer' | 'client';
+export type UserRole = 'admin' | 'manager' | 'employee' | 'freelancer' | 'client';
 export type UserLanguage = 'de' | 'en';
+
+export type BillingRoundingInterval = 0 | 5 | 6 | 10 | 15 | 30; // 0 = Exakt / 1 Min
+export type BillingRoundingMode = 'ceil' | 'round'; // Immer aufrunden vs. Kaufmännisch
+
+export interface UserPreferences {
+    defaultTaskView?: 'kanban' | 'list' | 'timeline';
+    timeRoundingMinutes?: number;
+    defaultBillable?: boolean;
+    emailNotificationFrequency?: 'immediate' | 'hourly' | 'daily' | 'never';
+    uiDensity?: 'comfortable' | 'compact';
+    hideArchivedProjectTasks?: boolean;
+}
 
 export interface UserRecord extends BaseRecord {
     collectionName: 'users';
@@ -36,16 +48,22 @@ export interface UserRecord extends BaseRecord {
     last_name?: string;
     avatar?: string;
     role?: UserRole;
+    supervisor?: string; // ID des festen Admins/Teamleads
     hourly_rate?: number;
     language?: UserLanguage;
     expertise?: string[];
     weekly_hours_target?: number;
+    max_continuous_timer_hours?: number;
     notify_on_assignment?: boolean;
     notify_on_mention?: boolean;
     notify_on_due?: boolean;
     weekly_report?: boolean;
     deactivated?: boolean;
     favorites?: string[];
+    preferences?: UserPreferences;
+    expand?: {
+        supervisor?: UserRecord;
+    };
 }
 
 // ============================================
@@ -67,6 +85,8 @@ export interface ProjectRecord extends BaseRecord {
     client?: string;
     start_date?: string;
     due_date?: string;
+    billing_rounding?: BillingRoundingInterval | 'inherit';
+    rounding_mode?: BillingRoundingMode | 'inherit';
     expand?: {
         members?: UserRecord[];
         client?: ClientRecord;
@@ -129,6 +149,7 @@ export interface TimeEntryRecord extends BaseRecord {
     start_time?: string;
     end_time?: string;
     duration_minutes?: number;
+    billable_minutes?: number;
     is_billable?: boolean;
     is_billed?: boolean;
     billing_reference?: string;
@@ -153,7 +174,7 @@ export interface ClientRecord extends BaseRecord {
     address?: string;
     notes?: string;
     status: 'active' | 'inactive';
-    // Extended fields (Phase B)
+    // Extended fields
     auftragsvolumen?: number;
     stundenhonorar?: number;
     stundenzahl_monatlich?: number;
@@ -162,6 +183,8 @@ export interface ClientRecord extends BaseRecord {
     laufzeit_ende?: string;
     abrechenbar?: boolean;
     kundenstatus?: KundenStatus;
+    billing_rounding?: BillingRoundingInterval;
+    rounding_mode?: BillingRoundingMode;
     betreuer?: string[];
     beobachter?: string[];
     expand?: {
@@ -315,4 +338,3 @@ export interface ListResult<T> {
     totalPages: number;
     items: T[];
 }
-

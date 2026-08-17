@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   CheckSquare,
   Timer,
-  BarChart3,
   MoreHorizontal,
 } from 'lucide-react';
 
@@ -19,7 +18,6 @@ interface NavTab {
 const TABS: NavTab[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { id: 'tasks', label: 'Aufgaben', icon: CheckSquare, path: '/tasks' },
-  { id: 'planner', label: 'Planer', icon: BarChart3, path: '/planner' },
   { id: 'timer', label: 'Timer', icon: Timer, path: '/time' },
   { id: 'more', label: 'Mehr', icon: MoreHorizontal, path: '/clients' },
 ];
@@ -35,7 +33,7 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 h-14 border-t border-border bg-card/95 backdrop-blur-xl md:hidden">
-      <div className="grid h-full grid-cols-5 mx-auto max-w-lg">
+      <div className="grid h-full grid-cols-4 mx-auto max-w-lg">
         {TABS.map((tab) => {
           const active = isActive(tab.path);
           const Icon = tab.icon;

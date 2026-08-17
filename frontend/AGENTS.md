@@ -1,5 +1,6 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+<!-- BEGIN: pocketbase-schema-rules -->
+## DATABASE CONTEXT (CRITICAL)
+- Errate NIEMALS das Datenmodell oder die Relationen der Collections.
+- Die exakte Struktur aller Tabellen, Felder und Typen ist in der Datei `backend/schema.md` dokumentiert.
+- Lies bei JEDER Aufgabe, die Datenbank-Queries (PocketBase JS SDK) oder Typisierungen betrifft, ZUERST die Datei `backend/schema.md`.
+<!-- END: pocketbase-schema-rules -->
