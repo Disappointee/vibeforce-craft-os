@@ -47,6 +47,7 @@
       padding: 40px 44px;
       backdrop-filter: blur(20px);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.1);
+      position: relative;
     }
 
     .header {
@@ -150,6 +151,11 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: transform 0.2s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
     }
 
     .section-title {
@@ -159,7 +165,13 @@
       margin-bottom: 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
     }
 
     .credentials-grid {
@@ -174,6 +186,7 @@
       border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 16px 18px;
+      position: relative;
     }
 
     .cred-card.admin {
@@ -211,21 +224,48 @@
     .cred-row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 12.5px;
-      margin-bottom: 5px;
+      margin-bottom: 7px;
+      gap: 8px;
     }
 
     .cred-label {
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
-    .cred-value {
-      font-family: 'JetBrains Mono', monospace;
+    .cred-copy-btn {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #f8fafc;
-      font-weight: 500;
-      background: rgba(0, 0, 0, 0.35);
-      padding: 2px 6px;
-      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-align: right;
+    }
+
+    .cred-copy-btn:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: rgba(59, 130, 246, 0.5);
+      color: #93c5fd;
+    }
+
+    .cred-copy-btn.copied {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    .copy-icon {
+      font-size: 11px;
+      opacity: 0.7;
     }
 
     .features-grid {
@@ -325,6 +365,29 @@
       font-size: 11px;
       color: var(--text-muted);
     }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -348,7 +411,7 @@
         👋 Hallo Janek,
       </div>
       <p class="welcome-text">
-        ich freue mich sehr, dir das frisch fertiggestellte <strong>Vibeforce Flow OS</strong> präsentieren zu dürfen! Das System wurde von Grund auf für reibungslose Agentur-Workflows, intuitive Multi-View Projektsteuerung und automatisierte E-Rechnungsstellung entwickelt. Klick einfach unten auf den Link, melde dich mit den vorbereiteten Test-Zugangsdaten an und probiere alle Funktionen direkt online aus.
+        ich freue mich sehr, dir das frisch fertiggestellte <strong>Vibeforce Flow OS</strong> präsentieren zu dürfen! Das System wurde von Grund auf für reibungslose Agentur-Workflows, intuitive Multi-View Projektsteuerung und automatisierte E-Rechnungsstellung entwickelt. Klick einfach unten auf den Link, nutze die 1-Klick-Kopierbuttons für die Test-Zugänge und probiere alle Funktionen direkt online aus.
       </p>
     </div>
 
@@ -363,9 +426,10 @@
       </a>
     </div>
 
-    <!-- Zugangsdaten zum Ausprobieren -->
+    <!-- Zugangsdaten zum Ausprobieren mit 1-Klick Kopierfunktion -->
     <div class="section-title">
-      🔑 Deine Beispiel-Zugangsdaten zum Selbst-Anschauen
+      <span>🔑 Deine Test-Zugangsdaten</span>
+      <span class="section-subtitle">💡 Einfach auf den Wert klicken zum Kopieren</span>
     </div>
     <div class="credentials-grid">
       <!-- Admin Card -->
@@ -376,11 +440,17 @@
         </div>
         <div class="cred-row">
           <span class="cred-label">E-Mail:</span>
-          <span class="cred-value">admin@vibeforce-flow.de</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('admin@vibeforce-flow.de', this)">
+            <span>admin@vibeforce-flow.de</span>
+            <span class="copy-icon">📋</span>
+          </button>
         </div>
         <div class="cred-row">
           <span class="cred-label">Passwort:</span>
-          <span class="cred-value">***REMOVED***</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('***REMOVED***', this)">
+            <span>***REMOVED***</span>
+            <span class="copy-icon">📋</span>
+          </button>
         </div>
       </div>
 
@@ -392,18 +462,24 @@
         </div>
         <div class="cred-row">
           <span class="cred-label">E-Mail:</span>
-          <span class="cred-value">sarah.meier@agentur.de</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('sarah.meier@agentur.de', this)">
+            <span>sarah.meier@agentur.de</span>
+            <span class="copy-icon">📋</span>
+          </button>
         </div>
         <div class="cred-row">
           <span class="cred-label">Passwort:</span>
-          <span class="cred-value">***REMOVED***</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('***REMOVED***', this)">
+            <span>***REMOVED***</span>
+            <span class="copy-icon">📋</span>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Feature Highlights -->
     <div class="section-title">
-      ✨ Highlight-Funktionen im Überblick
+      <span>✨ Highlight-Funktionen im Überblick</span>
     </div>
     <div class="features-grid">
       <div class="feature-box">
@@ -425,7 +501,7 @@
 
     <!-- Zusatzmodule -->
     <div class="section-title">
-      🔮 Roadmap: Zukünftige Zusatzmodule
+      <span>🔮 Roadmap: Zukünftige Zusatzmodule</span>
     </div>
     <div class="modules-list">
       <div class="module-item">
@@ -457,6 +533,44 @@
     </div>
 
   </div>
+
+  <div id="toast" class="toast-msg">✓ In Zwischenablage kopiert!</div>
+
+  <script>
+    function copyToClipboard(text, element) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (err) {}
+        document.body.removeChild(textArea);
+      }
+
+      // Visual feedback on button
+      const origHtml = element.innerHTML;
+      element.classList.add('copied');
+      element.innerHTML = '<span>' + text + '</span> <span class="copy-icon">✓ Kopiert!</span>';
+
+      // Toast notification
+      const toast = document.getElementById('toast');
+      toast.innerText = '✓ "' + text + '" kopiert!';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        element.classList.remove('copied');
+        element.innerHTML = origHtml;
+        toast.classList.remove('show');
+      }, 2000);
+    }
+  </script>
 
 </body>
 </html>
