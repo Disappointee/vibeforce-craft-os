@@ -8,7 +8,8 @@
 
 > **Projekt:** Vibeforce Flow OS  
 > **Version:** 1.0.0 Production Release  
-> **Status:** Betriebsbereit & Getestet (100 % E2E Validierung)  
+> **Status:** 🟢 Betriebsbereit & Getestet (100 % E2E Validierung)  
+> **Live Online-Vorschau:** [https://vibeforce-flow-os.vercel.app](https://vibeforce-flow-os.vercel.app)  
 > **Technologie:** Next.js 16 Standalone · React 19 · PocketBase v0.37+ · Traefik v3 · Docker  
 
 ---
@@ -18,7 +19,7 @@
 **Vibeforce Flow OS** ist ein maßgeschneidertes, hochperformantes All-in-One Agentur- und Projektmanagement-Betriebssystem. Es vereint agile Aufgabenverwaltung, sekundengenaue Zeiterfassung, Team-Workload-Planung und rechtskonforme Rechnungsstellung in einer nahtlosen, modernen Benutzeroberfläche.
 
 ### Kern-Highlights auf einen Blick:
-- 📊 **Multi-View Aufgabenverwaltung:** Wechsel in Echtzeit zwischen **Kanban-Board**, interaktiver **Gantt-Timeline**, strukturierter **Listenansicht** und Detailansichten.
+- 📊 **Multi-View Aufgabenverwaltung:** Wechsel in Echtzeit zwischen **Kanban-Board**, interaktiver **Gantt-Timeline**, strukturierter **Listenansicht** und Projekt-Detailansichten.
 - ⏱️ **Echtzeit-Zeiterfassung & Stoppuhr:** Globale Stoppuhr im Header, manuelle Buchungen, automatische Stundensatz-Verrechnung und Budget-Überwachung.
 - 👥 **Team- & Workload-Management:** Visuelle Kapazitätsplanung, Urlaubsverwaltung, Überstunden-Tracking und Mitarbeiter-Auslastungsanalyse.
 - 📄 **ZUGFeRD 2.2 / Factur-X Rechnungs-Export:** Automatische Erstellung rechtskonformer E-Rechnungen (PDF/A-3 mit eingebettetem XML) nach europäischem EN16931-Standard.
@@ -41,23 +42,25 @@ Das modulare Fundament von Vibeforce Flow OS ermöglicht die nahtlose Integratio
 
 ---
 
-## 3. 🔑 Zugangsdaten & System-Endpunkte
+## 3. 🌐 Online-Vorschau & System-Endpunkte
 
-### Vorschau- & Produktiv-URLs
-- **Web-Applikation (Frontend):** `http://localhost:3000` *(bzw. deine Produktionsdomain)*
-- **Backend & REST API:** `http://127.0.0.1:8090` *(bzw. `https://pb.deine-domain.de`)*
-- **PocketBase Admin-Dashboard:** `http://127.0.0.1:8090/_/`
+| Dienst | URL | Status |
+| :--- | :--- | :---: |
+| **🌐 Online-Vorschau (Cloud)** | [https://vibeforce-flow-os.vercel.app](https://vibeforce-flow-os.vercel.app) | 🟢 **Live** |
+| **💻 Lokale Web-Applikation** | [http://localhost:3000](http://localhost:3000) | 🟢 **Aktiv** |
+| **⚙️ Backend REST API** | [http://127.0.0.1:8090](http://127.0.0.1:8090) | 🟢 **Aktiv** |
+| **🛡️ PocketBase Admin-UI** | [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/) | 🟢 **Aktiv** |
 
 ---
 
-### Bereitgestellte Benutzerkonten
+## 4. 🔑 Zugangsdaten für die Vorschau
 
-#### 👑 System-Administrator / Superuser
+### 👑 System-Administrator / Superuser
 - **E-Mail:** `admin@vibeforce-flow.de`
 - **Passwort:** `***REMOVED***`
 - **Rolle:** Vollzugriff (Systemeinstellungen, Benutzerverwaltung, Rollen, Datenbank, Audit-Logs)
 
-#### 👥 Demo-Mitarbeiter (Team Accounts)
+### 👥 Demo-Mitarbeiter & Kundenkonten
 | Name | E-Mail | Passwort | Rolle |
 | :--- | :--- | :--- | :--- |
 | **Sarah Meier** | `sarah.meier@agentur.de` | `***REMOVED***` | Mitarbeiter (Employee) |
@@ -67,28 +70,13 @@ Das modulare Fundament von Vibeforce Flow OS ermöglicht die nahtlose Integratio
 
 ---
 
-## 4. 🛠️ Wichtige Befehle
-
-```bash
-# 1. System mit Docker starten
-docker compose up -d --build
-
-# 2. Status & Healthchecks prüfen
-docker compose ps
-
-# 3. Automatisierte End-to-End Tests ausführen
-node tools/e2e-smoke-test.mjs
-```
-
----
-
 <br />
 
 ```
 ========================================================================================
-Mit besten Grüßen und maximalem Erfolg bei der Nutzung,
+Mit lieben Grüßen und maximalem Erfolg bei der Nutzung,
 
-Dein Vibeforce Engineering Team
+Robin & das Vibeforce Engineering Team
 ⚡ VIBEFORCE ONE — NEXT LEVEL AGENCY OPERATIONS
 ========================================================================================
 ```
