@@ -43,3 +43,24 @@ tools/auth.json
 
 # python
 __pycache__/
+
+# Personal & Handover documents (local only)
+*.pdf
+*ANSCHREIBEN*
+*BROSCHUERE*
+*HANDOUT*
+*Anschreiben*
+*Broschuere*
+BROSCHUERE.md
+HANDOUT.md
+VIBEFORCE_FLOW_OS_ANSCHREIBEN_DANIEL.html
+VIBEFORCE_FLOW_OS_BROSCHUERE.html
+tools/render_*.mjs
+tools/generate_*.mjs
+tools/logo_showcase.html
+tools/copy_*.mjs
+tools/export_*.mjs
+tools/create_transparent_logo.mjs
+backend/create_admin_*.mjs
+backend/create_user.js
+backend/demo_credentials.json
