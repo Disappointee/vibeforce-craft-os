@@ -3,7 +3,9 @@ import 'server-only';
 import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
 
-const POCKETBASE_URL = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb-vibeforce.46-225-178-235.sslip.io';
+const DEFAULT_PB_URL = 'https://pb-vibeforce.46-225-178-235.sslip.io';
+const rawUrl = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL;
+const POCKETBASE_URL = (rawUrl && !rawUrl.includes('railway.app') && !rawUrl.includes('127.0.0.1') && !rawUrl.includes('localhost')) ? rawUrl : DEFAULT_PB_URL;
 
 let adminPb: PocketBase | null = null;
 
