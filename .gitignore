@@ -18,6 +18,8 @@ node_modules/
 *.pem
 .kilo/
 Textdokument*.txt
+*HANDOVER*
+PROMPT_AUDIT_HANDOVER.md
 
 # debug
 npm-debug.log*
