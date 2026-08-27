@@ -14,10 +14,17 @@ var preUpdateCache = {};
 // Capture old status before the update for status-change detection
 
 onRecordUpdate(function (e) {
-    var taskId = e.record.get('id');
-    var oldStatus = e.record.get('status');
-    if (taskId && oldStatus) {
-        preUpdateCache[taskId] = oldStatus;
+    try {
+        var taskId = e.record?.get('id');
+        var oldStatus = e.record?.get('status');
+        if (taskId && oldStatus) {
+            preUpdateCache[taskId] = oldStatus;
+        }
+    } catch (err) {
+        console.error('[notifications_task preUpdate] Error:', err);
+    }
+    if (typeof e.next === 'function') {
+        e.next();
     }
 }, 'tasks');
 

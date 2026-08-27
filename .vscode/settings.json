@@ -1,0 +1,22 @@
+{
+  "antigravity.agent.autoApprove": true,
+  "antigravity.agent.terminal.autoApprove": true,
+  "antigravity.agent.fileOperations.autoApprove": true,
+  "antigravity.subagents.autoApprove": true,
+  "kilo-code.autoApprovalEnabled": true,
+  "kilo-code.alwaysAllowReadOnly": true,
+  "kilo-code.alwaysAllowWrite": true,
+  "kilo-code.alwaysAllowExecute": true,
+  "kilo-code.alwaysAllowBrowser": true,
+  "kilo-code.alwaysAllowMcp": true,
+  "kilo-code.allowedCommands": [
+    "*"
+  ],
+  "roo-cline.autoApprovalEnabled": true,
+  "roo-cline.alwaysAllowReadOnly": true,
+  "roo-cline.alwaysAllowWrite": true,
+  "roo-cline.alwaysAllowExecute": true,
+  "roo-cline.allowedCommands": [
+    "*"
+  ]
+}
