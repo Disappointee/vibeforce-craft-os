@@ -3,7 +3,7 @@ import 'server-only';
 import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
 
-const POCKETBASE_URL = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+const POCKETBASE_URL = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-46-225-178-235.sslip.io';
 
 let adminPb: PocketBase | null = null;
 
@@ -21,8 +21,8 @@ export async function getAdminPB(): Promise<PocketBase> {
 
   const pb = new PocketBase(POCKETBASE_URL);
   pb.autoCancellation(false);
-  const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || 'admin@vibeforce.de').trim();
-  const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '').trim();
+  const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || '***REMOVED***').trim();
+  const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '***REMOVED***').trim();
 
   if (!password) {
     console.error('[getAdminPB] POCKETBASE_ADMIN_PASSWORD is not set — admin actions will fail.');
