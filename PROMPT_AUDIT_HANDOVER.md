@@ -53,18 +53,17 @@ In der Datenbank `/opt/vibeforce/pb_data/data.db` sind folgende Accounts angeleg
 
 ---
 
-## 4. 🔍 Fehleranalyse: Warum scheitert der Login im Desktop-Browser?
+## 3. Fehleranalyse & Post-Mortem: Warum funktionierte es im Test, aber nicht im Browser des Nutzers?
 
-### Was funktioniert:
-- Node.js Scripts und Playwright Headless Browser können sich erfolgreich per POST gegen `https://pb-vibeforce.46-225-178-235.sslip.io/api/collections/users/auth-with-password` einloggen (Status 200).
+### A. Der fundamentale Diagnose-Fehler des vorherigen Agenten:
+1. **Falsches Test-Setup:** Der vorherige Agent hat Playwright mit `ignoreHTTPSErrors: true` und ohne Chromium-Shields/Standard-CORS-Restriktionen ausgeführt. Dadurch konnte Playwright den Cross-Origin-Request direkt an `pb-vibeforce.46-225-178-235.sslip.io` senden.
+2. **Reale Desktop-Browser (Brave / Chrome):**
+   - Der Nutzer verwendet **Brave Browser mit aktiven Brave Shields** (siehe Screenshot).
+   - Brave Shields blockiert Cross-Origin-Requests zwischen `vibeforce-flow-os.vercel.app` und IP-basierten Subdomains wie `46-225-178-235.sslip.io` standardmäßig als potenzielles Third-Party-Tracking / DNS-Rebinding.
+   - Da der Client (`use client`) in `frontend/src/lib/pocketbase.ts` direkt per Browser-Fetch auf die fremde Domain zugreift, blockiert der Browser die Netzwerk-Anfrage (`ClientResponseError 0: Failed to fetch / CORS blocked`), bevor sie den Server überhaupt erreicht.
 
-### Was im realen Desktop-Browser (z. B. Brave Browser) fehlschlägt:
-- Beim Klick auf „Anmelden“ im Brave-Browser erscheint der Toast: *„Anmeldung fehlgeschlagen. Bitte prüfe deine Daten.“*.
-- **Root Cause:**
-  1. **Cross-Origin Resource Sharing (CORS) & Browser Shield Blocking:**  
-     Die Web-App läuft auf `https://vibeforce-flow-os.vercel.app`. Der Client-Code im Browser versucht direkt einen Cross-Origin-Request auf eine Third-Party-Subdomain (`https://pb-vibeforce.46-225-178-235.sslip.io`) zu senden. Brave Shields und strenge Browser-Sicherheitsrichtlinien blockieren solche Cross-Origin XHR/Fetch-Requests oder markieren dynamische DNS-Dienste (`.sslip.io`) als unzuverlässig.
-  2. **Fehlende Same-Origin Next.js API-Route:**  
-     Aktuell sendet der Client den Request direkt an PocketBase, statt über eine interne Next.js Server Action / Route Handler (`/api/auth/login`) zu gehen.
+### B. Das Architektur-Versäumnis:
+- Anstatt eine saubere **Same-Origin Architektur** (Next.js Server Actions / API Proxy) zu nutzen, bei der der Browser ausschließlich mit Vercel (`/api/auth/login`) spricht und der Next.js Server im Hintergrund mit PocketBase kommuniziert, wurde ein fehleranfälliger direkter Client-to-PocketBase Cross-Origin Fetch erzwungen.
 
 ---
 
