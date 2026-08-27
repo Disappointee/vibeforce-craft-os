@@ -1,11 +1,19 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useTimerStore } from '@/lib/store';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useTimerStore, useSettingsStore } from '@/lib/store';
 import { pb } from '@/lib/pocketbase';
-import { Square, Play, Clock, Loader2, FileText, ArrowUp, ChevronDown } from 'lucide-react';
+import { Square, Play, Pause, Clock, Loader2, FileText, ArrowUp, ChevronDown, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { t } from '@/lib/i18n';
@@ -27,10 +35,15 @@ export function HeaderTimer() {
     selectedTaskId,
     startTimer,
     stopAndSaveTimer,
+    pauseTimer,
+    resumeTimer,
     saveRunningNote,
     setDescription,
     setSelectedTaskId,
+    syncTimerFromDB,
   } = useTimerStore();
+
+  const { maxTimerHoursContinuous, inactivityHeartbeatHours } = useSettingsStore();
 
   const [elapsed, setElapsed] = useState(0);
   const [isStopping, setIsStopping] = useState(false);
@@ -39,13 +52,23 @@ export function HeaderTimer() {
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showNotePopover, setShowNotePopover] = useState(false);
 
+  // Heartbeat & Auto-Cap states
+  const [heartbeatOpen, setHeartbeatOpen] = useState(false);
+  const [lastHeartbeatPromptElapsed, setLastHeartbeatPromptElapsed] = useState(0);
+  const [heartbeatCountdown, setHeartbeatCountdown] = useState(900); // 15 minutes in seconds
+
   const taskDropdownRef = useRef<HTMLDivElement>(null);
   const notePopoverRef = useRef<HTMLDivElement>(null);
+  const autoCappedRef = useRef(false);
+
+  useEffect(() => {
+    syncTimerFromDB().catch(() => {});
+  }, [syncTimerFromDB]);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const result = await pb.collection('tasks').getList(1, 100, {
+        const result = await pb.collection('tasks').getList(1, 500, {
           sort: '-created',
           expand: 'project',
           filter: pb.filter("status != {:status}", { status: 'done' }),
@@ -65,14 +88,97 @@ export function HeaderTimer() {
     fetchTasks();
   }, []);
 
+  // Reset auto-cap and heartbeat states when active task changes or stops
+  useEffect(() => {
+    if (!runningTaskId) {
+      setHeartbeatOpen(false);
+      setLastHeartbeatPromptElapsed(0);
+      autoCappedRef.current = false;
+    }
+  }, [runningTaskId]);
+
+  const handleStop = useCallback(async (isAutoCap = false, isHeartbeatTimeout = false) => {
+    if (!runningTaskId || !startTime) return;
+    setIsStopping(true);
+    try {
+      const savedTitle = taskTitle;
+      await stopAndSaveTimer();
+      if (isAutoCap) {
+        toast.warning(`Timer automatisch beendet: Maximale Laufzeit von ${maxTimerHoursContinuous}h erreicht.`, {
+          description: `Zeit für "${savedTitle}" wurde erfolgreich gespeichert.`,
+          duration: 8000,
+        });
+      } else if (isHeartbeatTimeout) {
+        toast.info(`Timer wegen Inaktivität nach Countdown automatisch gestoppt.`, {
+          description: `Zeit für "${savedTitle}" wurde gespeichert.`,
+          duration: 8000,
+        });
+      } else {
+        toast.success(`Zeit erfasst für "${savedTitle}"`);
+      }
+    } catch {
+      toast.error('Fehler beim Speichern der Zeit');
+    } finally {
+      setIsStopping(false);
+      setHeartbeatOpen(false);
+    }
+  }, [runningTaskId, startTime, taskTitle, stopAndSaveTimer, maxTimerHoursContinuous]);
+
+  // Elapsed time tracker & Live Auto-Cap & Heartbeat trigger
   useEffect(() => {
     if (!runningTaskId || !startTime || isPaused) return;
     const interval = setInterval(() => {
       const seconds = differenceInSeconds(new Date(), parseISO(startTime)) - totalPausedSeconds;
-      setElapsed(Math.max(0, seconds));
+      const currentElapsed = Math.max(0, seconds);
+      setElapsed(currentElapsed);
+
+      // 1. Live Hard Auto-Cap Check
+      const maxCapSeconds = (maxTimerHoursContinuous || 8) * 3600;
+      if (currentElapsed >= maxCapSeconds && !autoCappedRef.current) {
+        autoCappedRef.current = true;
+        handleStop(true);
+        return;
+      }
+
+      // 2. Inactivity Heartbeat Trigger Check (e.g. after 4h)
+      if (inactivityHeartbeatHours > 0) {
+        const heartbeatIntervalSec = inactivityHeartbeatHours * 3600;
+        if (currentElapsed >= (lastHeartbeatPromptElapsed + heartbeatIntervalSec) && !heartbeatOpen) {
+          setHeartbeatOpen(true);
+          setHeartbeatCountdown(900); // 15 min countdown
+        }
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [runningTaskId, startTime, isPaused, totalPausedSeconds]);
+  }, [
+    runningTaskId,
+    startTime,
+    isPaused,
+    totalPausedSeconds,
+    maxTimerHoursContinuous,
+    inactivityHeartbeatHours,
+    lastHeartbeatPromptElapsed,
+    heartbeatOpen,
+    handleStop
+  ]);
+
+  // Heartbeat 15-Minute Countdown Effect
+  useEffect(() => {
+    if (!heartbeatOpen || isPaused || !runningTaskId) return;
+
+    const countdownInterval = setInterval(() => {
+      setHeartbeatCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          handleStop(false, true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, [heartbeatOpen, isPaused, runningTaskId, handleStop]);
 
   useEffect(() => {
     const state = useTimerStore.getState();
@@ -104,6 +210,12 @@ export function HeaderTimer() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   const handleStart = async () => {
     if (!selectedTaskId) {
       toast.error('Bitte wähle eine Aufgabe aus');
@@ -111,22 +223,20 @@ export function HeaderTimer() {
     }
     const task = tasks.find(t => t.id === selectedTaskId);
     if (!task) return;
-    await startTimer(task.id, task.title, description);
-    setShowTaskDropdown(false);
+    try {
+      await startTimer(task.id, task.title, description);
+      setShowTaskDropdown(false);
+    } catch {
+      toast.error('Fehler beim Starten des Timers');
+    }
   };
 
-  const handleStop = async () => {
-    if (!runningTaskId || !startTime) return;
-    setIsStopping(true);
-    try {
-      const savedTitle = taskTitle;
-      await stopAndSaveTimer();
-      toast.success(`Zeit erfasst für "${savedTitle}"`);
-    } catch {
-      toast.error('Fehler beim Speichern der Zeit');
-    } finally {
-      setIsStopping(false);
-    }
+  const handleContinueHeartbeat = () => {
+    setHeartbeatOpen(false);
+    setLastHeartbeatPromptElapsed(elapsed);
+    toast.success('Timer läuft weiter', {
+      description: 'Inaktivitäts-Prüfung erfolgreich bestätigt.',
+    });
   };
 
   const handleSaveNote = async () => {
@@ -141,7 +251,7 @@ export function HeaderTimer() {
     }
   };
 
-  const selectedTask = tasks.find(t => t.id === selectedTaskId);
+  const selectedTask = tasks.find(t => t.id === (runningTaskId || selectedTaskId));
   const filteredTasks = tasks.filter(t =>
     t.title.toLowerCase().includes(taskSearch.toLowerCase()) ||
     t.projectKey.toLowerCase().includes(taskSearch.toLowerCase())
@@ -184,13 +294,23 @@ export function HeaderTimer() {
               filteredTasks.map((task) => (
                 <button
                   key={task.id}
-                  onClick={() => {
-                    setSelectedTaskId(task.id);
+                  onClick={async () => {
+                    if (hasRunningTimer && runningTaskId !== task.id) {
+                      try {
+                        await stopAndSaveTimer();
+                        await startTimer(task.id, task.title);
+                        toast.success(`Timer gewechselt zu "${task.title}"`);
+                      } catch {
+                        toast.error('Fehler beim Wechseln des Timers');
+                      }
+                    } else {
+                      setSelectedTaskId(task.id);
+                    }
                     setShowTaskDropdown(false);
                     setTaskSearch('');
                   }}
                   className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all hover:bg-accent/50 truncate ${
-                    selectedTaskId === task.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground'
+                    (runningTaskId || selectedTaskId) === task.id ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground'
                   }`}
                 >
                   <span className="text-[10px] font-bold tracking-wider text-primary/70 bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded mr-1.5">
@@ -225,17 +345,38 @@ export function HeaderTimer() {
       {hasRunningTimer && (
         <>
           <TaskDropdown showChevron />
+          {isPaused ? (
+            <Button
+              onClick={resumeTimer}
+              size="icon"
+              className="h-7 w-7 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white"
+              title="Timer fortsetzen"
+            >
+              <Play size={12} fill="currentColor" />
+            </Button>
+          ) : (
+            <Button
+              onClick={pauseTimer}
+              size="icon"
+              className="h-7 w-7 rounded-full bg-amber-600 hover:bg-amber-500 text-white"
+              title="Timer pausieren"
+            >
+              <Pause size={12} fill="currentColor" />
+            </Button>
+          )}
+
           <Button
-            onClick={handleStop}
+            onClick={() => handleStop(false)}
             disabled={isStopping}
             size="icon"
             className="h-7 w-7 rounded-full bg-destructive/80 hover:bg-destructive text-destructive-foreground"
+            title="Timer stoppen und Zeit erfassen"
           >
             {isStopping ? <Loader2 size={14} className="animate-spin" /> : <Square size={12} fill="currentColor" />}
           </Button>
 
-          <span className={`font-mono font-bold tabular-nums text-sm whitespace-nowrap ${isPaused ? 'text-muted-foreground' : 'text-emerald-400'}`}>
-            {formatTime(elapsed)}
+          <span className={`font-mono font-bold tabular-nums text-sm whitespace-nowrap ${isPaused ? 'text-amber-400 opacity-80' : 'text-emerald-400'}`}>
+            {formatTime(elapsed)} {isPaused ? '(Pausiert)' : ''}
           </span>
 
           <div ref={notePopoverRef} className="relative">
@@ -275,6 +416,61 @@ export function HeaderTimer() {
           </div>
         </>
       )}
+
+      {/* Inactivity Heartbeat Dialog */}
+      <Dialog open={heartbeatOpen} onOpenChange={setHeartbeatOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold">Arbeitest du noch an dieser Aufgabe?</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  Inaktivitäts-Heartbeat & Geisterstunden-Schutz
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="p-3 rounded-lg bg-card/60 border border-border space-y-1.5">
+              <div className="text-xs text-muted-foreground">Aktive Aufgabe:</div>
+              <div className="text-sm font-medium text-foreground truncate">
+                {taskTitle || 'Aufgabe'}
+              </div>
+              <div className="text-xs font-mono text-emerald-400">
+                Laufzeit: {formatTime(elapsed)}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <span className="text-xs text-muted-foreground">Automatischer Stopp in:</span>
+              <span className="font-mono text-sm font-bold text-amber-400">
+                {formatCountdown(heartbeatCountdown)} Min.
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-row gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => handleStop(false)}
+              disabled={isStopping}
+              className="flex-1 sm:flex-initial text-xs border-border"
+            >
+              {isStopping ? <Loader2 size={14} className="animate-spin" /> : 'Stoppen & Erfassen'}
+            </Button>
+            <Button
+              onClick={handleContinueHeartbeat}
+              className="flex-1 sm:flex-initial text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
+            >
+              Ja, weiterlaufen lassen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

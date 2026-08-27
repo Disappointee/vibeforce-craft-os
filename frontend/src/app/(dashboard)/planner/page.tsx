@@ -7,6 +7,7 @@ import { ListView } from '@/components/planner/ListView';
 import { useGanttData, type GanttProjectGroup } from '@/hooks/useGanttData';
 import { useGanttSync } from '@/hooks/useGanttSync';
 import { TaskDetailsDialog } from '@/components/tasks/TaskDetailsDialog';
+import type { TaskRecord } from '@/lib/pocketbase-types';
 import {
     BarChart3,
     ChevronDown,
@@ -72,7 +73,7 @@ function TaskTreePanel({
                             className="flex w-full items-center gap-2 rounded-lg px-3 h-[46px] text-sm font-medium text-foreground hover:bg-accent/50 transition-colors"
                         >
                             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            <FolderGit2 size={14} className="text-primary shrink-0" />
+                            <FolderGit2 size={14} className="text-teal-500 shrink-0" />
                             <span className="truncate">{group.projectName}</span>
                             <span className="ml-auto text-xs text-muted-foreground tabular-nums">
                                 {group.tasks.length}
@@ -325,7 +326,7 @@ export default function PlannerPage() {
             <div className="flex items-center justify-between px-8 py-5 border-b border-border">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <BarChart3 size={32} className="text-primary" />
+                        <BarChart3 size={32} className="text-teal-500" />
                         Planer
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
@@ -336,7 +337,7 @@ export default function PlannerPage() {
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     className={`flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${sidebarOpen
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        ? 'bg-primary text-black shadow-lg shadow-teal-500/20'
                         : 'text-muted-foreground hover:text-foreground border border-border'
                     }`}
                 >
@@ -352,7 +353,7 @@ export default function PlannerPage() {
                     {Object.keys(clientMap).length > 0 && (
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                <Building2 size={14} className="text-primary" />
+                                <Building2 size={14} className="text-teal-500" />
                                 Kunden:
                             </span>
                             {Object.values(clientMap).map((client) => {
@@ -363,7 +364,7 @@ export default function PlannerPage() {
                                         onClick={() => toggleClientFilter(client.id)}
                                         className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                                             isActive
-                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                ? 'bg-primary text-black shadow-sm'
                                                 : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
                                         }`}
                                     >
@@ -391,7 +392,7 @@ export default function PlannerPage() {
                         <div className="flex items-center gap-6 flex-wrap">
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                    <Users size={14} className="text-primary" />
+                                    <Users size={14} className="text-teal-500" />
                                     Team:
                                 </span>
                                 <Select
@@ -409,7 +410,7 @@ export default function PlannerPage() {
                                     <SelectContent className="bg-background border-border text-foreground">
                                         <SelectItem value="all">Alle Teams</SelectItem>
                                         {teams.map((t) => (
-                                             <SelectItem key={t.id} value={t.id}>
+                                            <SelectItem key={t.id} value={t.id}>
                                                 {t.name}
                                             </SelectItem>
                                         ))}
@@ -419,7 +420,7 @@ export default function PlannerPage() {
 
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                    <User size={14} className="text-primary" />
+                                    <User size={14} className="text-teal-500" />
                                     Mitglied:
                                 </span>
                                 <Select

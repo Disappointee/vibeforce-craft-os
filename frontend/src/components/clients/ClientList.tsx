@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
 import { toast } from 'sonner';
 import type { ClientRecord } from '@/lib/pocketbase-types';
+import { revalidateClientsPath, updateClientAction, deleteClientAction } from '@/app/actions/clients';
 
 function formatCurrency(value: number): string {
     return new Intl.NumberFormat('de-DE', {
@@ -76,9 +77,10 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
         if (!confirm(`Möchtest du "${client.name}" wirklich löschen?`)) return;
 
         try {
-            await pb.collection('clients').delete(client.id);
+            await deleteClientAction(client.id);
             toast.success(`Kunde "${client.name}" gelöscht!`);
             setClients(prev => prev.filter(c => c.id !== client.id));
+            router.refresh();
         } catch (error) {
             console.error(error);
             toast.error('Fehler beim Löschen des Kunden.');
@@ -233,8 +235,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                 )}
                             </div>
 
-                            {/* B7: New fields display — HIDDEN for MVP */}
-                            {/*
+                            {/* B7: New fields display */}
                             {(client.auftragsvolumen != null || client.stundenzahl_gesamt != null) && (
                                 <div className="mt-4 pt-4 border-t border-border/50 flex items-center gap-4">
                                     {client.auftragsvolumen != null && (
@@ -251,7 +252,6 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                     )}
                                 </div>
                             )}
-                            */}
                         </CardContent>
                     </Card>
                 ))}
@@ -267,8 +267,8 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                 client={editClient}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
-                onClientUpdated={() => {
-                    window.dispatchEvent(new CustomEvent('client-updated'));
+                onClientUpdated={async () => {
+                    await revalidateClientsPath();
                 }}
             />
         </>

@@ -3,18 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, 
   CheckSquare, 
   Timer,
-  Menu 
+  FolderGit2,
 } from 'lucide-react';
 import { useTimerStore } from '@/lib/store';
 
 const tabs = [
-  { id: 'dashboard', href: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { id: 'tasks', href: '/tasks', icon: CheckSquare, label: 'Aufgaben' },
-  { id: 'timer', href: '/time', icon: Timer, label: 'Timer' },
-  { id: 'more', href: '#', icon: Menu, label: 'Mehr' },
+  { id: 'timer', href: '/time', icon: Timer, label: 'Zeiten' },
+  { id: 'projects', href: '/projects', icon: FolderGit2, label: 'Projekte' },
 ];
 
 export function MobileTabBar() {
@@ -23,18 +21,14 @@ export function MobileTabBar() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border safe-area-pb">
-      <ul className="grid grid-cols-4 h-16">
+      <ul className="flex items-center justify-around h-16">
         {tabs.map((tab) => {
-          const isActive = tab.id === 'more' 
-            ? pathname.startsWith('/clients') || pathname.startsWith('/reports') || pathname.startsWith('/admin') || pathname.startsWith('/notifications')
-            : tab.href === '/' 
-              ? pathname === '/' 
-              : pathname.startsWith(tab.href);
+          const isActive = pathname.startsWith(tab.href);
           
           return (
-            <li key={tab.id}>
+            <li key={tab.id} className="flex-1">
               <Link
-                href={tab.id === 'more' ? '/notifications' : tab.href}
+                href={tab.href}
                 className={`min-h-[44px] min-w-[44px] flex flex-col items-center justify-center h-full gap-1 text-[10px] font-medium transition-colors ${
                   isActive 
                     ? 'text-primary' 

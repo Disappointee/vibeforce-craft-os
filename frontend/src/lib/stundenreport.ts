@@ -1,4 +1,13 @@
-import { reportTemplateHtml } from '@/lib/report-template';
+import { reportTemplateHtml, reportTemplateEditorial, reportTemplateDark, reportTemplateSwiss } from '@/lib/report-template';
+
+export type ReportTemplate = 'default' | 'editorial' | 'dark' | 'swiss';
+
+const templateMap: Record<ReportTemplate, string> = {
+  default: reportTemplateHtml,
+  editorial: reportTemplateEditorial,
+  dark: reportTemplateDark,
+  swiss: reportTemplateSwiss,
+};
 
 export interface StundenreportMeta {
   clientName: string;
@@ -6,7 +15,9 @@ export interface StundenreportMeta {
   periodTo: string;
   generatedAt: string;
   logoUrl?: string;
+  showHourlyRate: boolean;
   totalDuration: string;
+  totalCost?: string;
 }
 
 export interface StundenreportEntry {
@@ -14,6 +25,8 @@ export interface StundenreportEntry {
   task: string;
   note: string;
   duration: string;
+  hourlyRate?: string;
+  cost?: string;
 }
 
 export interface StundenreportProjectGroup {
@@ -21,19 +34,13 @@ export interface StundenreportProjectGroup {
   projectKey: string;
   clientName?: string;
   projectTotalDuration: string;
+  projectTotalCost?: string;
   entries: StundenreportEntry[];
-}
-
-export interface StundenreportClientGroup {
-  clientName: string;
-  clientId?: string;
-  projects: StundenreportProjectGroup[];
-  clientTotalDuration: string;
 }
 
 export interface StundenreportInput {
   meta: StundenreportMeta;
-  clients: StundenreportClientGroup[];
+  projects: StundenreportProjectGroup[];
 }
 
 function esc(text: string): string {
@@ -51,25 +58,39 @@ function escAttr(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function buildClientSection(client: StundenreportClientGroup): string {
-  const projectsHtml = client.projects.map((project) => {
-    const rowsHtml = project.entries.map((entry) => {
-      return `
-    <tr>
-      <td class="col-task">${esc(entry.task)}</td>
-      <td class="col-duration numeric">${esc(entry.duration)}</td>
-      <td class="col-note">${esc(entry.note)}</td>
-    </tr>`;
-    }).join('');
-
-    const headerCells = `<th class="col-task">Aufgabe</th><th class="col-duration numeric">Dauer</th><th class="col-note">Beschreibung</th>`;
-
-    const footerCells = `<td>Summe ${esc(project.projectKey)}</td>
-       <td class="numeric" colspan="2">${esc(project.projectTotalDuration)}</td>`;
-
+function buildProjectTable(project: StundenreportProjectGroup, showHourlyRate: boolean, showProjectClient: boolean): string {
+  const rowsHtml = project.entries.map((entry) => {
+    const rateCell = showHourlyRate
+      ? `<td class="numeric">${entry.hourlyRate ? esc(entry.hourlyRate) : '—'}</td>`
+      : '';
+    const costCellEntry = showHourlyRate
+      ? `<td class="numeric">${entry.cost ? esc(entry.cost) : '—'}</td>`
+      : '';
     return `
+    <tr>
+      <td class="col-date">${esc(entry.date)}</td>
+      <td class="col-task">${esc(entry.task)}</td>
+      <td class="col-note">${esc(entry.note)}</td>
+      <td class="col-duration numeric">${esc(entry.duration)}</td>${rateCell}${costCellEntry}
+    </tr>`;
+  }).join('');
+
+  const headerCells = showHourlyRate
+    ? `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th><th class="col-rate numeric">Stundensatz</th><th class="col-cost numeric">Kosten</th>`
+    : `<th class="col-date">Datum</th><th class="col-task">Aufgabe</th><th class="col-note">Notiz</th><th class="col-duration numeric">Dauer</th>`;
+
+  const footerCells = showHourlyRate
+    ? `<td colspan="3">Summe ${esc(project.projectKey)}</td>
+       <td class="numeric">${esc(project.projectTotalDuration)}</td>
+       <td></td>
+       <td class="numeric">${project.projectTotalCost ? esc(project.projectTotalCost) : '—'}</td>`
+    : `<td colspan="3">Summe ${esc(project.projectKey)}</td>
+       <td class="numeric">${esc(project.projectTotalDuration)}</td>`;
+
+  return `
   <div class="project-group">
     <h2 class="project-title">${esc(project.projectKey)} — ${esc(project.projectName)}</h2>
+    ${showProjectClient && project.clientName && project.clientName !== 'Kein Kunde' ? `<div class="project-client-sub">Kunde: ${esc(project.clientName)}</div>` : ''}
     <table class="timesheet-table">
       <thead><tr>${headerCells}</tr></thead>
       <tbody>${rowsHtml}</tbody>
@@ -80,28 +101,26 @@ function buildClientSection(client: StundenreportClientGroup): string {
       </tfoot>
     </table>
   </div>`;
-  }).join('\n');
-
-  return `
-  <div class="client-group">
-    <h1 class="client-title">${esc(client.clientName)}</h1>
-    <div class="client-total">Gesamt: ${esc(client.clientTotalDuration)}</div>
-    ${projectsHtml}
-  </div>`;
 }
 
 export function buildStundenreportBodyHtml(data: StundenreportInput): string {
-  const { meta, clients } = data;
+  const { meta, projects } = data;
+
+  const uniqueClients = Array.from(new Set(projects.map(p => p.clientName).filter(Boolean)));
+  const showProjectClient = uniqueClients.length > 1;
 
   const logoHtml = meta.logoUrl
     ? `<div class="header-logo"><img src="${escAttr(meta.logoUrl)}" alt="Logo" /></div>`
     : '';
 
-  const totalBlock = `
+  let totalBlock = `
         <span class="total-label">Gesamtsumme</span>
         <span class="total-duration">${esc(meta.totalDuration)}</span>`;
+  if (meta.showHourlyRate && meta.totalCost) {
+    totalBlock += `\n        <span class="total-cost">${esc(meta.totalCost)}</span>`;
+  }
 
-  const clientsHtml = clients.map((c) => buildClientSection(c)).join('\n');
+  const projectsHtml = projects.map((p) => buildProjectTable(p, meta.showHourlyRate, showProjectClient)).join('\n');
 
   return `
   <div class="report-header">
@@ -119,16 +138,17 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
     </div>
   </div>
 
-  ${clientsHtml}
+  ${projectsHtml}
 
   <div class="report-footer">
     Erstellt mit Vibeforce Flow OS — ${esc(meta.generatedAt)}
   </div>`;
 }
 
-export function buildStundenreportFullHtml(data: StundenreportInput): string {
+export function buildStundenreportFullHtml(data: StundenreportInput, template: ReportTemplate = 'default'): string {
   const bodyContent = buildStundenreportBodyHtml(data);
-  return reportTemplateHtml.replace(
+  const templateHtml = templateMap[template] || templateMap.default;
+  return templateHtml.replace(
     /<div id="report-content">[\s\S]*?<\/div>/,
     `<div id="report-content">${bodyContent}</div>`
   );

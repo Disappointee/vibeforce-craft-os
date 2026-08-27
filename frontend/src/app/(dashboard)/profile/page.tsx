@@ -4,20 +4,37 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { pb } from '@/lib/pocketbase';
+import { useTimerStore, useSettingsStore } from '@/lib/store';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { PasswordChange } from '@/components/profile/PasswordChange';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
-import { UserPreferencesCard } from '@/components/profile/UserPreferencesCard';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Globe, Loader2, Save, Briefcase, Building2, FolderKanban, ListChecks, Clock, ExternalLink } from 'lucide-react';
+import {
+    User,
+    Globe,
+    Loader2,
+    Save,
+    Briefcase,
+    Building2,
+    FolderKanban,
+    ListChecks,
+    Clock,
+    ExternalLink,
+    Sliders,
+    KanbanSquare,
+    List,
+    BarChart3,
+    Mail,
+    LayoutGrid,
+    CheckSquare
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { getUserDisplayName } from '@/lib/user-utils';
-import type { ProjectRecord, TaskRecord, TimeEntryRecord, ClientRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord, TaskRecord, TimeEntryRecord, ClientRecord, UserPreferences } from '@/lib/pocketbase-types';
 
 const EXPERTISE_OPTIONS = [
     { value: 'sea', label: 'SEA' },
@@ -59,12 +76,11 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(pb.authStore.record);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [firstName, setFirstName] = useState(pb.authStore.record?.first_name || '');
-    const [lastName, setLastName] = useState(pb.authStore.record?.last_name || '');
+    const [name, setName] = useState(pb.authStore.record?.name || '');
     const [language, setLanguage] = useState('de');
     const [expertise, setExpertise] = useState<string[]>([]);
     const [avatarUrl, setAvatarUrl] = useState('');
-
+    const [hourlyRate, setHourlyRate] = useState(pb.authStore.record?.stundenhonorar || pb.authStore.record?.hourly_rate || '');
     // F2: Zugeordnete Daten
     const [assignedClients, setAssignedClients] = useState<ClientRecord[]>([]);
     const [assignedProjects, setAssignedProjects] = useState<ProjectRecord[]>([]);
@@ -75,6 +91,23 @@ export default function ProfilePage() {
     const [totalMinutesThisWeek, setTotalMinutesThisWeek] = useState(0);
     const [totalMinutesToday, setTotalMinutesToday] = useState(0);
     const [hoursLoading, setHoursLoading] = useState(true);
+
+    const { timerMode, setTimerMode } = useTimerStore();
+    const {
+        defaultTaskView,
+        setDefaultTaskView,
+        timeRoundingMinutes,
+        setTimeRoundingMinutes,
+        defaultBillable,
+        setDefaultBillable,
+        emailNotificationFrequency,
+        setEmailNotificationFrequency,
+        uiDensity,
+        setUiDensity,
+        saveUserPreferences,
+        syncFromUserPreferences,
+    } = useSettingsStore();
+
     const [relationsLoading, setRelationsLoading] = useState(true);
 
     useEffect(() => {
@@ -86,10 +119,11 @@ export default function ProfilePage() {
             try {
                 const record = await pb.collection('users').authRefresh();
                 setUser(record.record);
-                setFirstName(record.record?.first_name || '');
-                setLastName(record.record?.last_name || '');
+                setName(record.record?.name || '');
                 setLanguage(record.record?.language || 'de');
                 setExpertise(record.record?.expertise || []);
+                setHourlyRate(record.record?.stundenhonorar || record.record?.hourly_rate || '');
+                syncFromUserPreferences(record.record);
             } catch {
                 pb.authStore.clear();
                 router.push('/login');
@@ -98,7 +132,7 @@ export default function ProfilePage() {
             setLoading(false);
         };
         init();
-    }, [router]);
+    }, [router, syncFromUserPreferences]);
 
     // Fetch zugeordnete Kunden/Projekte/Aufgaben
     useEffect(() => {
@@ -211,8 +245,7 @@ export default function ProfilePage() {
         setSaving(true);
         try {
             const updated = await pb.collection('users').update(user.id, {
-                first_name: firstName.trim() || null,
-                last_name: lastName.trim() || null,
+                name,
                 language,
                 expertise,
             });
@@ -283,7 +316,7 @@ export default function ProfilePage() {
                         <AvatarUpload
                             userId={user.id}
                             currentAvatar={user.avatar}
-                            userName={user.first_name || getUserDisplayName(user)}
+                            userName={user.name}
                             onAvatarUpdate={handleAvatarUpdate}
                         />
 
@@ -293,45 +326,33 @@ export default function ProfilePage() {
                         {/* Name & Email */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="first-name">Vorname</Label>
+                                <Label htmlFor="name">Name</Label>
                                 <Input
-                                    id="first-name"
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
-                                    placeholder="Dein Vorname"
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Dein Name"
                                     className="bg-background border-border"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="last-name">Nachname</Label>
+                                <Label htmlFor="email">E-Mail</Label>
                                 <Input
-                                    id="last-name"
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
-                                    placeholder="Dein Nachname"
-                                    className="bg-background border-border"
+                                    id="email"
+                                    value={user.email || ''}
+                                    disabled
+                                    className="bg-background border-border opacity-60"
                                 />
+                                <p className="text-xs text-muted-foreground">Die E-Mail-Adresse kann nicht geändert werden</p>
                             </div>
                         </div>
 
-                        {/* Email */}
-                        <div className="space-y-2">
-                            <Label htmlFor="email">E-Mail</Label>
-                            <Input
-                                id="email"
-                                value={user.email || ''}
-                                disabled
-                                className="bg-background border-border opacity-60"
-                            />
-                            <p className="text-xs text-muted-foreground">Die E-Mail-Adresse kann nicht geändert werden</p>
-                        </div>
-
-                        {/* Language Select */}
-                        <div className="space-y-2">
-                            <Label htmlFor="language">Sprache</Label>
-                            <div className="flex items-center gap-3">
+                        {/* Language Select & Hourly Rate */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="language">Sprache</Label>
                                 <Select value={language} onValueChange={(val) => val && setLanguage(val)}>
-                                    <SelectTrigger className="w-48 bg-background border-border">
+                                    <SelectTrigger className="w-full bg-background border-border">
                                         <Globe size={14} />
                                         <SelectValue>
                                             {(value: string) => ({ de: 'Deutsch', en: 'English' } as Record<string, string>)[value] || value}
@@ -346,6 +367,17 @@ export default function ProfilePage() {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="hourlyRate">Stundensatz (€/h)</Label>
+                                <Input
+                                    id="hourlyRate"
+                                    type="number"
+                                    value={hourlyRate}
+                                    onChange={(e) => setHourlyRate(e.target.value)}
+                                    placeholder="z.B. 100"
+                                    className="bg-background border-border"
+                                />
                             </div>
                         </div>
 
@@ -553,8 +585,204 @@ export default function ProfilePage() {
                     </CardContent>
                 </Card>
 
-                {/* User Preferences */}
-                <UserPreferencesCard />
+                {/* Timer-Anzeige */}
+                <Card className="border-border bg-card/40">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                <Clock size={18} />
+                            </div>
+                            <div>
+                                <CardTitle>Timer-Anzeige</CardTitle>
+                                <CardDescription>Wähle, wie der Zeiterfassungs-Timer dargestellt wird</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                            <div className="space-y-0.5">
+                                <span className="text-sm font-medium text-foreground">Darstellung</span>
+                                <p className="text-xs text-muted-foreground">Timer-Leiste (unten) oder Header-Timer (oben)</p>
+                            </div>
+                            <Select value={timerMode} onValueChange={(val) => { if (val) setTimerMode(val as 'bar' | 'header'); }}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue>
+                                        {(value: string | null) => {
+                                            if (value === 'bar') return 'Timer-Leiste (unten)';
+                                            if (value === 'header') return 'Header-Timer (oben)';
+                                            return 'Darstellung wählen';
+                                        }}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="bar">Timer-Leiste (unten)</SelectItem>
+                                    <SelectItem value="header">Header-Timer (oben)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Arbeitsplatz & Workflow-Präferenzen */}
+                <Card className="border-border bg-card/40">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-teal-500/10 text-teal-400">
+                                <Sliders size={18} />
+                            </div>
+                            <div>
+                                <CardTitle>Arbeitsplatz & Workflow-Präferenzen</CardTitle>
+                                <CardDescription>Passe Ansichten, Rundungslogik und Vorbelegungen an deine Arbeitsweise an</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {/* Standard-Aufgabenansicht */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <KanbanSquare size={14} className="text-teal-400" />
+                                    <Label htmlFor="default-task-view" className="text-sm font-medium text-foreground cursor-pointer">
+                                        Standard-Aufgabenansicht
+                                    </Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Standardmäßige Ansichtsform für Aufgaben und Projektboards</p>
+                            </div>
+                            <Select
+                                value={defaultTaskView}
+                                onValueChange={async (val) => {
+                                    if (val) {
+                                        setDefaultTaskView(val as any);
+                                        await saveUserPreferences({ defaultTaskView: val as any });
+                                        toast.success('Standard-Aufgabenansicht gespeichert');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger id="default-task-view" className="w-[200px] bg-background border-border">
+                                    <SelectValue>
+                                        {(value: string) => {
+                                            if (value === 'kanban') return 'Kanban-Board';
+                                            if (value === 'list') return 'Tabellen-Liste';
+                                            if (value === 'timeline') return 'Zeitstrahl (Timeline)';
+                                            return value;
+                                        }}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-border text-foreground">
+                                    <SelectItem value="kanban">Kanban-Board</SelectItem>
+                                    <SelectItem value="list">Tabellen-Liste</SelectItem>
+                                    <SelectItem value="timeline">Zeitstrahl (Timeline)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Zeiterfassungs-Rundung */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <Clock size={14} className="text-teal-400" />
+                                    <Label htmlFor="time-rounding" className="text-sm font-medium text-foreground cursor-pointer">
+                                        Zeiterfassungs-Rundung
+                                    </Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Automatische Rundung gestoppter Timer auf buchhalterische Intervalle</p>
+                            </div>
+                            <Select
+                                value={String(timeRoundingMinutes)}
+                                onValueChange={async (val) => {
+                                    const mins = parseInt(val) || 0;
+                                    setTimeRoundingMinutes(mins);
+                                    await saveUserPreferences({ timeRoundingMinutes: mins });
+                                    toast.success('Zeiterfassungs-Rundung gespeichert');
+                                }}
+                            >
+                                <SelectTrigger id="time-rounding" className="w-[200px] bg-background border-border">
+                                    <SelectValue>
+                                        {(value: string) => {
+                                            if (value === '0') return 'Exakt (Minutengenau)';
+                                            if (value === '5') return '5-Minuten-Takt';
+                                            if (value === '15') return '15-Minuten-Takt';
+                                            return `${value} Minuten`;
+                                        }}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-border text-foreground">
+                                    <SelectItem value="0">Exakt (Minutengenau)</SelectItem>
+                                    <SelectItem value="5">5-Minuten-Takt (aufrunden)</SelectItem>
+                                    <SelectItem value="15">15-Minuten-Takt (Standard Agentur)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Standard-Status "Abrechenbar" */}
+                        <div className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <CheckSquare size={14} className="text-teal-400" />
+                                    <Label htmlFor="default-billable-toggle" className="text-sm font-medium text-foreground cursor-pointer">
+                                        Standardmäßig als "Abrechenbar" markieren
+                                    </Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Neue Timer und Zeiteinträge standardmäßig als abrechenbar vorselektieren</p>
+                            </div>
+                            <button
+                                id="default-billable-toggle"
+                                role="switch"
+                                aria-checked={defaultBillable}
+                                onClick={async () => {
+                                    const next = !defaultBillable;
+                                    setDefaultBillable(next);
+                                    await saveUserPreferences({ defaultBillable: next });
+                                    toast.success(next ? 'Standardmäßig abrechenbar aktiviert' : 'Standardmäßig abrechenbar deaktiviert');
+                                }}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${defaultBillable ? 'bg-teal-500' : 'bg-zinc-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${defaultBillable ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* UI-Dichte */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                    <LayoutGrid size={14} className="text-teal-400" />
+                                    <Label htmlFor="ui-density" className="text-sm font-medium text-foreground cursor-pointer">
+                                        UI-Dichte & Informationsgrad
+                                    </Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Kompakte Darstellung für kleinere Bildschirme oder mehr Übersicht</p>
+                            </div>
+                            <Select
+                                value={uiDensity}
+                                onValueChange={async (val) => {
+                                    if (val) {
+                                        setUiDensity(val as any);
+                                        await saveUserPreferences({ uiDensity: val as any });
+                                        toast.success('UI-Dichte gespeichert');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger id="ui-density" className="w-[200px] bg-background border-border">
+                                    <SelectValue>
+                                        {(value: string) => {
+                                            if (value === 'comfortable') return 'Komfortabel';
+                                            if (value === 'compact') return 'Kompakt';
+                                            return value;
+                                        }}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-border text-foreground">
+                                    <SelectItem value="comfortable">Komfortabel (Standard)</SelectItem>
+                                    <SelectItem value="compact">Kompakt (Mehr Daten)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Password Change */}
                 <PasswordChange />

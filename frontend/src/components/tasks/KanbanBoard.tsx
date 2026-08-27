@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { pb } from '@/lib/pocketbase';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
+import { Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { TaskRecord, TaskStatus } from '@/lib/pocketbase-types';
+import { TaskRecord, type TaskStatus } from '@/lib/pocketbase-types';
 import { TASK_TYPE_LABELS } from '@/lib/constants';
-import { getUserInitials } from '@/lib/user-utils';
+import { updateTaskAction } from '@/app/actions/tasks';
+
+import { TaskContextMenu } from '@/components/tasks/TaskContextMenu';
 
 const priorityLabels: Record<string, string> = {
   acute: 'Akut',
@@ -29,16 +32,19 @@ export function KanbanBoard({
   projectKey,
   clientMap,
   onTaskUpdated,
-  onTaskClick
+  onTaskClick,
+  onAddTask
 }: {
   initialTasks: TaskRecord[],
   projectKey?: string,
   clientMap?: Record<string, string>,
   onTaskUpdated: () => void,
-  onTaskClick: (taskId: string) => void
+  onTaskClick: (taskId: string) => void,
+  onAddTask?: (defaultStatus: TaskStatus) => void
 }) {
-  const [tasks, setTasks] = useState<TaskRecord[]>([]);
-  const [taskHours, setTaskHours] = useState<Record<string, number>>({});
+    const router = useRouter();
+    const [tasks, setTasks] = useState<TaskRecord[]>([]);
+    const [taskHours, setTaskHours] = useState<Record<string, number>>({});
 
   // Update local state when props change
   useEffect(() => {
@@ -91,6 +97,7 @@ export function KanbanBoard({
     if (!task) return;
 
     const newStatus = destination.droppableId;
+    const previousTasks = [...tasks];
 
     // Optimistic UI Update
     const updatedTasks: TaskRecord[] = tasks.map(t => {
@@ -103,16 +110,14 @@ export function KanbanBoard({
 
     // Persist to PocketBase
     try {
-      await pb.collection('tasks').update(draggableId, {
-        status: newStatus
-      });
-      // Trigger parent callback to sync other views (e.g. list view, Gantt)
+      await updateTaskAction(draggableId, { status: newStatus as TaskStatus });
+      router.refresh();
       onTaskUpdated();
     } catch (error) {
       console.error(error);
       toast.error('Fehler beim Speichern des Status');
       // Revert optimistic update
-      setTasks(initialTasks);
+      setTasks(previousTasks);
     }
   };
 
@@ -121,20 +126,40 @@ export function KanbanBoard({
     return tasks.filter(t => t.status === status);
   };
 
+  // Dynamically calculate columns based on tasks
+  const dynamicColumns = [...COLUMNS];
+  const uniqueStatuses = Array.from(new Set(tasks.map(t => t.status)));
+  uniqueStatuses.forEach(status => {
+    if (!dynamicColumns.find(c => c.id === status)) {
+      dynamicColumns.push({ id: status, title: status, color: 'border-zinc-500/30' });
+    }
+  });
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       {/* data-rbd-no-nested-scroll suppresses @hello-pangea/dnd warning
           about nested scroll containers – the grid layout itself handles overflow */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start" data-rbd-no-nested-scroll>
-        {COLUMNS.map((column) => (
+      <div className={`grid grid-cols-1 md:grid-cols-${dynamicColumns.length > 4 ? dynamicColumns.length : 4} gap-6 items-start overflow-x-auto`} data-rbd-no-nested-scroll>
+        {dynamicColumns.map((column) => (
           <div key={column.id} className="flex flex-col h-full">
 
             {/* Column Header */}
             <div className={`flex items-center justify-between mb-4 pb-2 border-b ${column.color}`}>
-              <h3 className="text-foreground font-semibold">{column.title}</h3>
-              <Badge variant="secondary" className="bg-card text-muted-foreground hover:bg-card">
-                {getTasksByStatus(column.id).length}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <h3 className="text-foreground font-semibold text-sm">{column.title}</h3>
+                <Badge variant="secondary" className="bg-card text-muted-foreground hover:bg-card text-[10px]">
+                  {getTasksByStatus(column.id).length}
+                </Badge>
+              </div>
+              {onAddTask && (
+                <button
+                  onClick={() => onAddTask(column.id as TaskStatus)}
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
+                  title={`Aufgabe zu '${column.title}' hinzufügen`}
+                >
+                  <Plus size={14} />
+                </button>
+              )}
             </div>
 
             {/* Droppable Area */}
@@ -175,9 +200,16 @@ export function KanbanBoard({
                                   </span>
                                 )}
                               </div>
-                              <Badge variant="outline" className={`text-[9px] uppercase tracking-wider font-bold ${getPriorityColor(task.priority)}`}>
-                                {priorityLabels[task.priority] || task.priority}
-                              </Badge>
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant="outline" className={`text-[9px] uppercase tracking-wider font-bold ${getPriorityColor(task.priority)}`}>
+                                  {priorityLabels[task.priority] || task.priority}
+                                </Badge>
+                                <TaskContextMenu
+                                  task={task}
+                                  onViewDetails={onTaskClick}
+                                  onUpdated={onTaskUpdated}
+                                />
+                              </div>
                             </div>
 
                             <h4 className="text-sm text-foreground font-medium mb-4 leading-snug">{task.title}</h4>
@@ -188,7 +220,15 @@ export function KanbanBoard({
                                 <span>{taskHours[task.id] ? `${taskHours[task.id].toFixed(1)}h` : '0h'} erfasst</span>
                               </div>
                               <div className="h-6 w-6 rounded-full border border-indigo-500/30 flex items-center justify-center bg-indigo-500/10 text-indigo-400 font-bold text-[10px]">
-                                {getUserInitials(task.expand?.assignees?.[0] || (task.expand?.assignees as any)) || '?'}
+                                {Array.isArray(task.expand?.assignees) ? (
+                                  task.expand.assignees[0]?.name?.charAt(0).toUpperCase() ||
+                                  task.expand.assignees[0]?.email?.charAt(0).toUpperCase() ||
+                                  '?'
+                                ) : (task.expand?.assignees ? (
+                                  (task.expand.assignees as any).name?.charAt(0).toUpperCase() ||
+                                  (task.expand.assignees as any).email?.charAt(0).toUpperCase() ||
+                                  '?'
+                                ) : '?')}
                               </div>
                             </div>
                           </div>

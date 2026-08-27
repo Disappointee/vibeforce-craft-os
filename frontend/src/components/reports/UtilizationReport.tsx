@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Users, TrendingUp, Clock } from 'lucide-react';
+import { Users, TrendingUp, Clock, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { UserRecord, TimeEntryRecord, TaskRecord } from '@/lib/pocketbase-types';
-import { getUserDisplayName } from '@/lib/user-utils';
 
 interface UtilizationRow {
   userId: string;
@@ -13,6 +12,7 @@ interface UtilizationRow {
   totalHours: number;
   billableHours: number;
   utilizationRate: number;
+  effectiveRate: number;
   budgetedHours: number;
 }
 
@@ -26,12 +26,14 @@ interface UtilizationReportProps {
 
 export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo }: UtilizationReportProps) {
   const { rows, summary } = useMemo(() => {
+    // Calculate period weeks for capacity
     let capacityWeeks = 4;
     if (dateFrom && dateTo) {
       const diffMs = new Date(dateTo).getTime() - new Date(dateFrom).getTime();
       capacityWeeks = Math.max(1, Math.round(diffMs / (7 * 24 * 60 * 60 * 1000)));
     }
 
+    // user -> task hours (budget from estimated_hours)
     const userBudgetMap = new Map<string, number>();
     for (const task of tasks) {
       const assignees = Array.isArray((task as any).expand?.assignees)
@@ -45,6 +47,7 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
       }
     }
 
+    // user -> logged hours + billable hours
     const loggedMap = new Map<string, { total: number; billable: number }>();
     for (const entry of timeEntries) {
       const userId = entry.user;
@@ -65,13 +68,17 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
         const capacity = budgetedHours > 0 ? budgetedHours : defaultCapacity;
         const utilizationRate = capacity > 0 ? (logged.billable / capacity) * 100 : 0;
 
+        const revenue = logged.billable * (u.hourly_rate || 0);
+        const effectiveRate = logged.billable > 0 ? revenue / logged.billable : 0;
+
         return {
           userId: u.id,
-          userName: getUserDisplayName(u) || 'Unbekannt',
+          userName: u.name || u.email?.split('@')[0] || 'Unbekannt',
           userEmail: u.email || '',
           totalHours: Math.round(logged.total * 100) / 100,
           billableHours: Math.round(logged.billable * 100) / 100,
           utilizationRate: Math.round(utilizationRate * 10) / 10,
+          effectiveRate: Math.round(effectiveRate * 100) / 100,
           budgetedHours: Math.round(budgetedHours * 100) / 100,
         };
       })
@@ -89,6 +96,7 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
         totalHours: totalAll,
         totalBillable,
         overallUtilization: Math.round(overallUtilization * 10) / 10,
+        totalRevenue: computedRows.reduce((s, r) => s + r.billableHours * (users.find(u => u.id === r.userId)?.hourly_rate || 0), 0),
       },
     };
   }, [users, timeEntries, tasks, dateFrom, dateTo]);
@@ -117,7 +125,7 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-border bg-card/40">
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
@@ -161,6 +169,21 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
             </div>
           </CardContent>
         </Card>
+        <Card className="border-border bg-card/40">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <DollarSign size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Umsatz (abrechenbar)</p>
+                <h3 className="text-xl font-bold text-white tabular-nums">
+                  {summary.totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}€
+                </h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-border bg-card/40">
@@ -189,7 +212,7 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
                     style={{ width: `${Math.min(row.utilizationRate, 100)}%` }}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                <div className="grid grid-cols-3 gap-4 text-xs text-muted-foreground">
                   <div>
                     <span className="block">Gesamt</span>
                     <span className="text-white font-medium">{row.totalHours.toFixed(1)}h</span>
@@ -197,6 +220,10 @@ export function UtilizationReport({ users, timeEntries, tasks, dateFrom, dateTo 
                   <div>
                     <span className="block">Abrechenbar</span>
                     <span className="text-white font-medium">{row.billableHours.toFixed(1)}h</span>
+                  </div>
+                  <div>
+                    <span className="block">Effektiver Satz</span>
+                    <span className="text-white font-medium">{row.effectiveRate.toFixed(2)}€/h</span>
                   </div>
                 </div>
               </div>

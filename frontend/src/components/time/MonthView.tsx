@@ -26,9 +26,10 @@ interface MonthViewProps {
     onPrevMonth: () => void;
     onNextMonth: () => void;
     onDayClick?: (day: Date) => void;
+    onEditEntry?: (entry: TimeEntryRecord) => void;
 }
 
-export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDayClick }: MonthViewProps) {
+export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDayClick, onEditEntry }: MonthViewProps) {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -92,7 +93,7 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-foreground text-base font-bold uppercase tracking-tight">
-                        <Calendar size={18} className="text-primary" />
+                        <Calendar size={18} className="text-teal-500" />
                         Monatsansicht
                     </CardTitle>
                     <div className="flex items-center gap-3">
@@ -175,26 +176,26 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
                                         className={`aspect-square rounded-xl border p-2 transition-all group relative text-left ${!inMonth
                                             ? 'border-transparent opacity-10 cursor-default'
                                             : isSelected
-                                                ? 'border-primary/60 bg-primary/15 shadow-lg shadow-primary/10 ring-1 ring-primary/30'
+                                                ? 'border-primary/60 bg-primary/15 shadow-lg shadow-teal-500/10 ring-1 ring-teal-500/30'
                                                 : today
-                                                    ? 'border-primary/40 bg-primary/10 shadow-lg shadow-primary/5'
+                                                    ? 'border-primary/40 bg-primary/10 shadow-lg shadow-teal-500/5'
                                                     : dayMinutes > 0
                                                         ? 'border-border bg-card/50 hover:bg-accent/50 hover:border-white/20'
                                                         : 'border-border bg-background/30 hover:bg-accent/50 hover:border-border'
                                             } ${getIntensityClass(dayMinutes)}`}
                                     >
-                                        <div className={`text-xs font-bold ${today ? 'text-blue-300' : inMonth ? 'text-muted-foreground group-hover:text-foreground' : 'text-muted-foreground/30'
+                                        <div className={`text-xs font-bold ${today ? 'text-teal-200' : inMonth ? 'text-muted-foreground group-hover:text-foreground' : 'text-muted-foreground/30'
                                             }`}>
                                             {format(day, 'd')}
                                         </div>
                                         {dayMinutes > 0 && (
-                                            <div className="text-[9px] font-bold text-primary/70 mt-1 tabular-nums leading-tight">
+                                            <div className="text-[9px] font-bold text-teal-500/70 mt-1 tabular-nums leading-tight">
                                                 {formatDuration(dayMinutes)}
                                             </div>
                                         )}
                                         {inMonth && (
                                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 scale-75 group-hover:scale-100 pointer-events-none">
-                                                <div className="bg-primary text-black rounded-full p-0.5 shadow-lg shadow-primary/30 border border-primary/20 flex items-center justify-center">
+                                                <div className="bg-primary text-black rounded-full p-0.5 shadow-lg shadow-teal-500/30 border border-teal-300/20 flex items-center justify-center">
                                                     <Plus size={10} className="stroke-[3]" />
                                                 </div>
                                             </div>
@@ -214,7 +215,7 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
                         <div className="mt-6 rounded-2xl border border-border bg-background/50 p-4">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <Clock size={16} className="text-primary" />
+                                    <Clock size={16} className="text-teal-500" />
                                     <span className="text-sm font-bold text-foreground">
                                         {format(selectedDay, 'EEEE, dd. MMM yyyy', { locale: de })}
                                     </span>
@@ -236,7 +237,7 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
                                     <p className="text-sm text-muted-foreground italic">Keine Einträge an diesem Tag</p>
                                     <button
                                         onClick={() => onDayClick?.(selectedDay)}
-                                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-teal-300 transition-colors"
                                     >
                                         <Plus size={14} />
                                         Neuen Eintrag erstellen
@@ -250,11 +251,13 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
                                         return (
                                             <div
                                                 key={entry.id}
-                                                className="flex items-center justify-between rounded-xl bg-card/50 border border-border px-4 py-2.5"
+                                                onClick={() => onEditEntry?.(entry)}
+                                                className="flex items-center justify-between rounded-xl bg-card/50 border border-border px-4 py-2.5 cursor-pointer hover:bg-card hover:border-primary/30 transition-colors"
+                                                title="Klicken zum Bearbeiten"
                                             >
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     {project && (
-                                                        <span className="text-[10px] font-bold tracking-wider text-primary/50 bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                                                        <span className="text-[10px] font-bold tracking-wider text-teal-500/50 bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded shrink-0">
                                                             {project.key}
                                                         </span>
                                                     )}

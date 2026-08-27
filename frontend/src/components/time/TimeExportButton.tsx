@@ -12,8 +12,8 @@ import {
 import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { pb } from '@/lib/pocketbase';
-import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
-import { getUserDisplayName } from '@/lib/user-utils';
+import { getClientName, hasHourlyRates, buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import type { ReportTemplate } from '@/lib/stundenreport';
 
 interface TimeExportButtonProps {
     entries: TimeEntryRecord[];
@@ -21,6 +21,7 @@ interface TimeExportButtonProps {
 
 export function TimeExportButton({ entries }: TimeExportButtonProps) {
     const [isExporting, setIsExporting] = useState(false);
+    const template: ReportTemplate = 'default';
 
     const getDateRange = () => {
         const dates = entries
@@ -33,13 +34,13 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
         return first === last ? first : `${first}_bis_${last}`;
     };
 
-    const handlePDFExport = async () => {
+    const handlePDFExport = async (showHourlyRate: boolean) => {
         if (entries.length === 0) {
             toast.error('Keine Daten zum Exportieren vorhanden');
             return;
         }
 
-        const reportData = buildStundenreportInput(entries);
+        const reportData = buildStundenreportInput(entries, showHourlyRate);
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -54,7 +55,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
             const res = await fetch('/api/reports/stundenreport-export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(reportData),
+                body: JSON.stringify({ ...reportData, template }),
             });
 
             if (!res.ok) {
@@ -113,7 +114,7 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
                     formattedDate,
                     escapeCSV(client?.name || 'Kein Kunde'),
                     escapeCSV(project ? `${project.key} - ${project.name}` : 'Kein Projekt'),
-                    escapeCSV(getUserDisplayName(user) || 'Mitarbeiter'),
+                    escapeCSV(user?.name || user?.email || 'Mitarbeiter'),
                     escapeCSV(task?.title || 'Keine Aufgabe'),
                     escapeCSV(entry.description || ''),
                     formatHoursHM(hours)
@@ -155,12 +156,21 @@ export function TimeExportButton({ entries }: TimeExportButtonProps) {
                 className="bg-background border-border text-foreground min-w-[240px]"
             >
                 <DropdownMenuItem
-                    onClick={() => handlePDFExport()}
+                    onClick={() => handlePDFExport(false)}
                     className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"
                 >
                     <FileText size={16} className="text-red-400" />
-                    <span>PDF (Leistungsnachweis)</span>
+                    <span>PDF (Stunden)</span>
                 </DropdownMenuItem>
+                {hasHourlyRates(entries) && (
+                    <DropdownMenuItem
+                        onClick={() => handlePDFExport(true)}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"
+                    >
+                        <FileText size={16} className="text-orange-400" />
+                        <span>PDF (Stunden + Kosten)</span>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                     onClick={handleCSVExport}
                     className="flex items-center gap-2 cursor-pointer hover:bg-muted focus:bg-muted"

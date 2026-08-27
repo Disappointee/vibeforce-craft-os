@@ -19,6 +19,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
+import { useUiStore } from '@/lib/store';
 
 export function CommandPalette() {
     const [open, setOpen] = useState(false);
@@ -78,19 +79,8 @@ export function CommandPalette() {
         command();
     };
 
-    const handleCreateTask = async () => {
-        try {
-            const projects = await pb.collection('projects').getList(1, 50, { sort: '-created' });
-            if (projects.items.length === 0) {
-                toast.error('Keine Projekte vorhanden. Erstelle zuerst ein Projekt.');
-                return;
-            }
-            // Navigate to tasks page - user can create from there
-            router.push('/tasks');
-            toast.info('Aufgabe kann auf der Aufgaben-Seite erstellt werden');
-        } catch {
-            toast.error('Fehler beim Laden der Projekte');
-        }
+    const handleCreateTask = () => {
+        useUiStore.getState().setTaskDialogOpen(true);
     };
 
     const handleCreateClient = async () => {
@@ -137,7 +127,7 @@ export function CommandPalette() {
                     {/* Quick Actions */}
                     <Command.Group heading="Navigation" className="px-2 mb-2">
                         <CommandItem onSelect={() => runCommand(() => router.push('/'))}>
-                            <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
+                            <LayoutDashboard className="mr-3 h-4 w-4 text-teal-500" />
                             <span>Dashboard</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/tasks'))}>
@@ -145,11 +135,11 @@ export function CommandPalette() {
                             <span>Aufgaben</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/time'))}>
-                            <Clock className="mr-3 h-4 w-4 text-primary" />
+                            <Clock className="mr-3 h-4 w-4 text-teal-500" />
                             <span>Zeiterfassung</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/planner'))}>
-                            <BarChart3 className="mr-3 h-4 w-4 text-primary" />
+                            <BarChart3 className="mr-3 h-4 w-4 text-teal-500" />
                             <span>Planer</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/projects'))}>
@@ -169,7 +159,7 @@ export function CommandPalette() {
                     {/* Actions */}
                     <Command.Group heading="Aktionen" className="px-2 mb-2">
                         <CommandItem onSelect={() => runCommand(handleStartTimer)}>
-                            <Timer className="mr-3 h-4 w-4 text-primary" />
+                            <Timer className="mr-3 h-4 w-4 text-teal-500" />
                             <span>Timer starten</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(handleCreateTask)}>
@@ -201,7 +191,7 @@ export function CommandPalette() {
                         <Command.Group heading="Aufgaben" className="px-2 mb-2">
                             {results.tasks.map((task) => (
                                 <CommandItem key={task.id} onSelect={() => runCommand(() => router.push(`/tasks?id=${task.id}`))}>
-                                    <ArrowRight className="mr-3 h-4 w-4 text-primary/50" />
+                                    <ArrowRight className="mr-3 h-4 w-4 text-teal-500/50" />
                                     <span>{task.title}</span>
                                 </CommandItem>
                             ))}

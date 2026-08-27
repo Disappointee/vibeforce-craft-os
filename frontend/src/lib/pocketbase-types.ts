@@ -23,7 +23,7 @@ export interface BaseRecord {
 // User (PocketBase auth record)
 // ============================================
 
-export type UserRole = 'admin' | 'manager' | 'employee' | 'freelancer' | 'client';
+export type UserRole = 'admin' | 'employee' | 'freelancer' | 'client' | 'manager';
 export type UserLanguage = 'de' | 'en';
 
 export type BillingRoundingInterval = 0 | 5 | 6 | 10 | 15 | 30; // 0 = Exakt / 1 Min
@@ -174,7 +174,7 @@ export interface ClientRecord extends BaseRecord {
     address?: string;
     notes?: string;
     status: 'active' | 'inactive';
-    // Extended fields
+    // Extended fields (Phase B)
     auftragsvolumen?: number;
     stundenhonorar?: number;
     stundenzahl_monatlich?: number;
@@ -273,7 +273,6 @@ export interface ExternalExpenseRecord extends BaseRecord {
 }
 
 export interface ReportTemplateConfig {
-    datePreset?: string;
     dateFrom?: string;
     dateTo?: string;
     projectIds?: string[];
@@ -338,3 +337,4 @@ export interface ListResult<T> {
     totalPages: number;
     items: T[];
 }
+

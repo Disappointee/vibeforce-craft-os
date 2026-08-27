@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { pb } from '@/lib/pocketbase';
-import { Users, Mail, Clock, MoreVertical, AlertCircle, Activity, Edit3, ListTodo, Save, Loader2, Plus, Trash2, ExternalLink, Shield } from 'lucide-react';
+import { Users, Mail, Clock, MoreVertical, AlertCircle, Activity, Edit3, ListTodo, Save, Loader2, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import type { UserRecord, TaskRecord, TimeEntryRecord, UserRole, TeamRecord, TeamMemberRecord } from '@/lib/pocketbase-types';
 import { ROLE_LABELS } from '@/lib/i18n';
-import { updateUserSupervisor, updateUserRole } from '@/app/actions/admin-users';
+import { updateUserProfileAdminAction } from '@/app/actions/admin-users';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
 
 const EXPERTISE_OPTIONS = [
   { value: 'sea', label: 'SEA' },
@@ -81,6 +80,7 @@ export default function TeamPage() {
   const [workloads, setWorkloads] = useState<UserWorkload[]>([]);
   const [allTasks, setAllTasks] = useState<TaskRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchErrors, setFetchErrors] = useState<string[]>([]);
   const [teamScope, setTeamScope] = useState<'all' | 'my_team'>('all');
   
   // Teams states
@@ -106,7 +106,6 @@ export default function TeamPage() {
   const [editWeeklyHours, setEditWeeklyHours] = useState(40);
   const [editExpertise, setEditExpertise] = useState<string[]>([]);
   const [editRole, setEditRole] = useState('employee');
-  const [editSupervisor, setEditSupervisor] = useState<string>('none');
   const [isSaving, setIsSaving] = useState(false);
 
   const currentUser = pb.authStore.record as unknown as UserRecord | null;
@@ -117,7 +116,6 @@ export default function TeamPage() {
       setEditWeeklyHours(Number(selectedUser.user.weekly_hours_target) || 40);
       setEditExpertise(selectedUser.user.expertise || []);
       setEditRole(selectedUser.user.role || 'employee');
-      setEditSupervisor(selectedUser.user.supervisor || 'none');
     }
   }, [selectedUser]);
 
@@ -126,18 +124,16 @@ export default function TeamPage() {
     if (!selectedUser) return;
     setIsSaving(true);
     try {
-      const updateData: Record<string, unknown> = {
+      const res = await updateUserProfileAdminAction(selectedUser.user.id, {
         name: editName,
         weekly_hours_target: editWeeklyHours,
         expertise: editExpertise,
-        supervisor: editSupervisor === 'none' ? null : editSupervisor,
-      };
+        role: currentUser?.role === 'admin' ? editRole : undefined,
+      });
 
-      if (currentUser?.role === 'admin') {
-        updateData.role = editRole;
+      if (res?.error) {
+        throw new Error(res.error);
       }
-
-      await pb.collection('users').update(selectedUser.user.id, updateData);
 
       setWorkloads(prev => prev.map(w => {
         if (w.user.id === selectedUser.user.id) {
@@ -148,20 +144,29 @@ export default function TeamPage() {
               name: editName,
               weekly_hours_target: editWeeklyHours,
               expertise: editExpertise,
-              supervisor: editSupervisor === 'none' ? undefined : editSupervisor,
-              role: currentUser?.role === 'admin' ? (editRole as UserRole) : w.user.role,
+              role: currentUser?.role === 'admin' ? (editRole as any) : w.user.role,
             }
           };
         }
         return w;
       }));
 
-      setSelectedUser(null);
-      toast.success('Mitarbeiterdaten erfolgreich aktualisiert');
-    } catch (error: unknown) {
+      // Update dialog values
+      setSelectedUser(prev => prev ? {
+        ...prev,
+        user: {
+          ...prev.user,
+          name: editName,
+          weekly_hours_target: editWeeklyHours,
+          expertise: editExpertise,
+          role: currentUser?.role === 'admin' ? (editRole as any) : prev.user.role,
+        }
+      } : null);
+
+      toast.success('Profil erfolgreich aktualisiert');
+    } catch (error: any) {
       console.error('Failed to update user profile:', error);
-      const msg = error instanceof Error ? error.message : 'Profil konnte nicht aktualisiert werden';
-      toast.error(msg);
+      toast.error(error?.message || 'Profil konnte nicht aktualisiert werden');
     } finally {
       setIsSaving(false);
     }
@@ -221,6 +226,7 @@ export default function TeamPage() {
 
   const fetchWorkloadData = async (showSkeleton = false) => {
     if (showSkeleton) setIsLoading(true);
+    const errors: string[] = [];
     let users: UserRecord[] = [];
     let tasks: TaskRecord[] = [];
     let timeEntries: TimeEntryRecord[] = [];
@@ -229,28 +235,28 @@ export default function TeamPage() {
 
     // Fetch users
     try {
-      const userResult = await pb.collection('users').getList<UserRecord>(1, 100, {
+      const userResult = await pb.collection('users').getList<UserRecord>(1, 50, {
         sort: 'created',
-        expand: 'supervisor',
       });
       users = userResult.items;
     } catch (err) {
       console.error('[Team] Failed to fetch users:', err);
+      errors.push('Benutzer konnten nicht geladen werden');
     }
 
     // Fetch tasks
     try {
       const taskResult = await pb.collection('tasks').getList<TaskRecord>(1, 200, {
         expand: 'assignees,project',
-        filter: "status != 'done'",
         sort: '-created',
       });
       tasks = taskResult.items;
     } catch (err) {
       console.error('[Team] Failed to fetch tasks:', err);
+      errors.push('Aufgaben konnten nicht geladen werden');
     }
 
-    // Fetch time entries (letzter Monat für Workload-Berechnung)
+    // Fetch time entries
     try {
       const timeResult = await pb.collection('time_entries').getList<TimeEntryRecord>(1, 500, {
         sort: '-created',
@@ -258,6 +264,7 @@ export default function TeamPage() {
       timeEntries = timeResult.items;
     } catch (err) {
       console.error('[Team] Failed to fetch time entries:', err);
+      errors.push('Zeiteinträge konnten nicht geladen werden');
     }
 
     // Fetch teams
@@ -268,7 +275,8 @@ export default function TeamPage() {
       });
       teamsList = teamsResult;
     } catch (err) {
-      console.warn('[Team] Teams collection might be empty or not yet created:', err);
+      console.error('[Team] Failed to fetch teams:', err);
+      errors.push('Teams konnten nicht geladen werden');
     }
 
     // Fetch team members
@@ -278,15 +286,21 @@ export default function TeamPage() {
       });
       teamMembersList = membersResult;
     } catch (err) {
-      console.warn('[Team] Team members collection optional load:', err);
+      console.error('[Team] Failed to fetch team members:', err);
+      errors.push('Team-Mitglieder konnten nicht geladen werden');
     }
 
+    if (errors.length > 0) {
+      setFetchErrors(errors);
+    }
+
+    // Build maps even with partial data
     try {
       const loggedHoursMap = new Map<string, number>();
       for (const entry of timeEntries) {
         const userId = entry.user;
         if (!userId) continue;
-        const minutes = Number(entry.duration_minutes) || 0;
+        const minutes = Number((entry as any).duration_minutes) || 0;
         const hours = minutes / 60;
         loggedHoursMap.set(userId, (loggedHoursMap.get(userId) || 0) + hours);
       }
@@ -311,9 +325,9 @@ export default function TeamPage() {
         const totalLoggedHours = loggedHoursMap.get(user.id) || 0;
         const taskCount = taskCountMap.get(user.id) || 0;
 
-        const targetCapacity = user.weekly_hours_target || 40;
+        const targetCapacity = totalBudgetedHours > 0 ? totalBudgetedHours : (user.weekly_hours_target || 40);
         const workloadPercentage = Math.min(
-          150,
+          100,
           Math.round((totalLoggedHours / targetCapacity) * 100)
         );
 
@@ -341,6 +355,7 @@ export default function TeamPage() {
     fetchWorkloadData(true);
   }, []);
 
+  // Team creation & edit handlers
   const handleOpenCreateTeam = () => {
     setEditingTeam(null);
     setTeamName('');
@@ -374,6 +389,7 @@ export default function TeamPage() {
       const finalLeadId = teamLeadId && teamLeadId !== 'none' ? teamLeadId : null;
 
       if (editingTeam) {
+        // Edit mode
         await pb.collection('teams').update(editingTeam.id, {
           name: teamName,
           description: teamDescription,
@@ -383,7 +399,9 @@ export default function TeamPage() {
         const currentMembers = teamMembers.filter(m => m.team === editingTeam.id);
         const memberIdsToAdd = selectedMemberIds.filter(id => !currentMembers.some(m => m.user === id));
         const membersToRemove = currentMembers.filter(m => !selectedMemberIds.includes(m.user));
+        const membersToUpdate = currentMembers.filter(m => selectedMemberIds.includes(m.user));
 
+        // Create new member records
         await Promise.all(
           memberIdsToAdd.map(userId =>
             pb.collection('team_members').create({
@@ -394,20 +412,34 @@ export default function TeamPage() {
           )
         );
 
+        // Delete removed member records
         await Promise.all(
           membersToRemove.map(m =>
             pb.collection('team_members').delete(m.id)
           )
         );
 
+        // Update roles for existing members
+        await Promise.all(
+          membersToUpdate.map(m => {
+            const targetRole = m.user === finalLeadId ? 'lead' : 'member';
+            if (m.role !== targetRole) {
+              return pb.collection('team_members').update(m.id, { role: targetRole });
+            }
+            return Promise.resolve();
+          })
+        );
+
         toast.success('Team erfolgreich aktualisiert');
       } else {
+        // Create mode
         const newTeam = await pb.collection('teams').create<TeamRecord>({
           name: teamName,
           description: teamDescription,
           lead: finalLeadId,
         });
 
+        // Create team member records
         await Promise.all(
           selectedMemberIds.map(userId =>
             pb.collection('team_members').create({
@@ -468,24 +500,23 @@ export default function TeamPage() {
 
   return (
     <div className="p-8">
-      <div className="max-w-6xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto space-y-12">
 
-        {/* Page Header */}
         <div className="flex items-center justify-between border-b border-border/40 pb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Users size={24} className="text-primary" />
+            <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              <Users size={24} className="text-indigo-400" />
               Team & Ressourcen
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm">Übersicht über Team-Workload, Auslastung und Zuständigkeiten.</p>
+            </h2>
+            <p className="text-muted-foreground mt-1 text-sm">Verwalte dein Team und überprüfe den aktuellen Workload.</p>
           </div>
           {currentUser?.role === 'admin' && (
-            <Button
+            <button
               onClick={() => router.push('/admin/users')}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs rounded-lg"
+              className="bg-white text-zinc-950 px-4 py-2 rounded-full font-medium text-sm hover:bg-zinc-200 transition-colors cursor-pointer"
             >
-              Mitarbeiter anlegen
-            </Button>
+              Mitglied einladen
+            </button>
           )}
         </div>
 
@@ -496,7 +527,7 @@ export default function TeamPage() {
                 Mitarbeiter & Auslastung
               </TabsTrigger>
               <TabsTrigger value="teams" className="cursor-pointer">
-                Teams & Abteilungen
+                Teams
               </TabsTrigger>
             </TabsList>
 
@@ -518,7 +549,7 @@ export default function TeamPage() {
                   onClick={() => setTeamScope('my_team')}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${
                     teamScope === 'my_team'
-                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -542,22 +573,20 @@ export default function TeamPage() {
                 return (
                   <Card
                     key={user.id}
-                    className="border-border bg-card/40 relative overflow-hidden group cursor-pointer hover:border-primary/40 transition-all duration-300"
+                    className="border-border bg-card/40 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition-all duration-300"
                     onClick={() => setSelectedUser(workloadItem)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-transparent to-primary/0 group-hover:from-primary/5 transition-all duration-500"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-500"></div>
 
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-3.5">
-                          <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center font-bold text-sm text-black shadow-md">
-                            {getUserInitials(user) || 'M'}
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg shadow-lg">
+                            {user.email ? user.email.charAt(0).toUpperCase() : '?'}
                           </div>
                           <div>
-                            <CardTitle className="text-base text-foreground font-semibold">
-                              {getUserDisplayName(user)}
-                            </CardTitle>
-                            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mt-0.5">
+                            <CardTitle className="text-lg text-foreground">{user.name || (user.email ? user.email.split('@')[0] : 'Unbekannt')}</CardTitle>
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mt-1">
                               <Mail size={12} /> {user.email || '—'}
                             </div>
                           </div>
@@ -565,7 +594,6 @@ export default function TeamPage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-accent cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical size={16} />
                           </DropdownMenuTrigger>
@@ -596,7 +624,7 @@ export default function TeamPage() {
                                 Stundenziel ändern
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent className="bg-background border border-border text-foreground w-44">
-                                {[10, 20, 30, 35, 40].map((hours) => {
+                                {[5, 10, 15, 20, 25, 30, 35, 40].map((hours) => {
                                   const isCurrent = Number(user.weekly_hours_target) === hours;
                                   return (
                                     <DropdownMenuCheckboxItem
@@ -620,12 +648,12 @@ export default function TeamPage() {
                     <CardContent>
                       <div className="flex flex-col gap-4">
                         <div>
-                          <div className="flex flex-wrap gap-1.5 items-center">
+                          <div className="flex flex-wrap gap-2 items-center">
                             <Badge variant="outline" className="bg-background border-border text-muted-foreground uppercase tracking-wider text-[10px]">
-                              {ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] || user.role || 'Mitarbeiter'}
+                              {ROLE_LABELS[(user as any).role] || (user as any).role || 'Mitglied'}
                             </Badge>
                             {user.weekly_hours_target && (
-                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[10px]">
                                 Ziel: {user.weekly_hours_target}h/Woche
                               </Badge>
                             )}
@@ -641,7 +669,7 @@ export default function TeamPage() {
                                 const opt = EXPERTISE_OPTIONS.find(o => o.value === val);
                                 if (!opt) return null;
                                 return (
-                                  <span key={val} className="text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/60 px-2 py-0.5 rounded-md">
+                                  <span key={val} className="text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/80 px-2 py-0.5 rounded-md">
                                     {opt.label}
                                   </span>
                                 );
@@ -650,27 +678,27 @@ export default function TeamPage() {
                           )}
                         </div>
 
-                        <div className="pt-3 border-t border-border/50">
-                          <div className="flex justify-between text-xs font-medium mb-1.5">
+                        <div className="pt-4 border-t border-border/50">
+                          <div className="flex justify-between text-xs font-medium mb-2">
                             <span className="text-muted-foreground flex items-center gap-1.5">
-                              <Clock size={13} /> Workload
+                              <Clock size={14} /> Workload
                             </span>
                             <span className={getWorkloadTextColor(workloadPercentage)}>
                               {workloadPercentage}%
                             </span>
                           </div>
 
-                          <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
+                          <div className="h-2 w-full bg-background rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-700 ${getWorkloadColor(workloadPercentage)}`}
-                              style={{ width: `${Math.min(100, workloadPercentage)}%` }}
+                              style={{ width: `${workloadPercentage}%` }}
                             ></div>
                           </div>
                           <div className="flex justify-between text-[11px] text-muted-foreground mt-1.5">
                             <span>
-                              {totalLoggedHours.toFixed(1)}h erfasst / {user.weekly_hours_target || 40}h Soll
+                              {totalLoggedHours.toFixed(1)}h / {totalBudgetedHours > 0 ? `${totalBudgetedHours.toFixed(1)}h budgetiert` : `${user.weekly_hours_target || 40}h Soll`}
                             </span>
-                            <span>{taskCount} offen</span>
+                            <span>{taskCount} {taskCount === 1 ? 'Aufgabe' : 'Aufgaben'}</span>
                           </div>
                         </div>
                       </div>
@@ -684,17 +712,17 @@ export default function TeamPage() {
           <TabsContent value="teams" className="space-y-8 mt-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold tracking-tight text-foreground">
+                <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
                   Teams & Abteilungen
                 </h3>
-                <p className="text-muted-foreground text-xs mt-0.5">
+                <p className="text-muted-foreground mt-1 text-sm">
                   Verwalte Projekt-Teams, weise Leiter zu und verwalte die Mitglieder.
                 </p>
               </div>
-              {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+              {((currentUser?.role as string) === 'admin' || (currentUser?.role as string) === 'manager') && (
                 <Button
                   onClick={handleOpenCreateTeam}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-1.5 font-medium py-1.5 px-3 rounded-lg text-xs"
+                  className="bg-white text-zinc-950 hover:bg-zinc-200 transition-colors flex items-center gap-1.5 font-semibold py-1.5 px-4 rounded-full text-xs shadow-md border-0"
                 >
                   <Plus size={14} /> Team erstellen
                 </Button>
@@ -703,9 +731,9 @@ export default function TeamPage() {
 
             {teams.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl text-muted-foreground">
-                <Users size={40} className="mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium">Keine Teams angelegt.</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Erstelle ein neues Team, um Abteilungen und Leiter zu strukturieren.</p>
+                <Users size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+                <p className="text-sm font-medium">Keine Teams gefunden.</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Erstelle ein neues Team, um loszulegen.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -713,36 +741,40 @@ export default function TeamPage() {
                   const members = teamMembers.filter(m => m.team === team.id);
                   const leadUser = team.expand?.lead;
                   const leadName = leadUser?.name || leadUser?.email || 'Kein Teamleiter';
+                  const canEdit = currentUser?.role === 'admin' || team.lead === currentUser?.id;
                   
                   return (
                     <Card
                       key={team.id}
-                      className="border-border bg-card/40 relative overflow-hidden group hover:border-primary/40 transition-all duration-300 cursor-pointer"
+                      className="border-border bg-card/40 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300 cursor-pointer"
                       onClick={() => router.push(`/team/teams/${team.id}`)}
                     >
-                      <CardHeader className="pb-3">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-500"></div>
+                      
+                      <CardHeader className="pb-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <CardTitle className="text-base text-foreground font-bold hover:text-primary transition-colors">
+                            <CardTitle className="text-lg text-foreground font-bold hover:text-indigo-400 transition-colors flex items-center gap-2">
                               {team.name}
                             </CardTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Leiter: <span className="text-primary font-medium">{leadName}</span>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Leiter: <span className="text-indigo-400 font-medium">{leadName}</span>
                             </p>
                           </div>
                           <div onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger
                                 className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-border/50 cursor-pointer"
+                                title="Team-Optionen"
                               >
                                 <MoreVertical size={16} />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48 bg-background border-border text-foreground">
                                 <DropdownMenuItem
                                   onSelect={() => router.push(`/team/teams/${team.id}`)}
-                                  className="cursor-pointer flex items-center gap-2 text-xs text-primary font-medium"
+                                  className="cursor-pointer flex items-center gap-2 text-xs text-indigo-400 font-medium hover:text-indigo-300"
                                 >
-                                  <Edit3 size={14} /> Team bearbeiten
+                                  <Edit3 size={14} /> Team Bearbeiten (URL)
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onSelect={(e) => {
@@ -751,14 +783,14 @@ export default function TeamPage() {
                                   }}
                                   className="cursor-pointer flex items-center gap-2 text-xs"
                                 >
-                                  <Edit3 size={14} /> Schnelldialog
+                                  <Edit3 size={14} /> Modal Bearbeiten
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onSelect={(e) => {
                                     e.preventDefault();
                                     setTimeout(() => setTeamToDelete(team), 50);
                                   }}
-                                  className="cursor-pointer flex items-center gap-2 text-xs text-destructive hover:bg-destructive/10"
+                                  className="cursor-pointer flex items-center gap-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                 >
                                   <Trash2 size={14} /> Löschen
                                 </DropdownMenuItem>
@@ -767,13 +799,45 @@ export default function TeamPage() {
                           </div>
                         </div>
                       </CardHeader>
+                      
                       <CardContent>
-                        <p className="text-xs text-muted-foreground line-clamp-2 min-h-[32px]">
-                          {team.description || 'Keine Beschreibung hinterlegt.'}
-                        </p>
-                        <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{members.length} Mitglieder</span>
-                          <span className="text-primary text-[11px] font-medium group-hover:underline">Details &rarr;</span>
+                        <div className="flex flex-col gap-4">
+                          <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
+                            {team.description || 'Keine Beschreibung vorhanden.'}
+                          </p>
+                          
+                          <div className="pt-4 border-t border-border/50 flex flex-col gap-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-muted-foreground font-medium">Mitglieder ({members.length})</span>
+                            </div>
+                            
+                            {members.length > 0 ? (
+                              <div className="flex -space-x-2 overflow-hidden mt-1 py-1">
+                                {members.slice(0, 8).map((m) => {
+                                  const user = m.expand?.user;
+                                  const initial = user?.name 
+                                    ? user.name.charAt(0).toUpperCase() 
+                                    : (user?.email ? user.email.charAt(0).toUpperCase() : '?');
+                                  return (
+                                    <div
+                                      key={m.id}
+                                      className="inline-block h-8 w-8 rounded-full ring-2 ring-background bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300 uppercase shadow-md border border-zinc-700/50"
+                                      title={user?.name || user?.email}
+                                    >
+                                      {initial}
+                                    </div>
+                                  );
+                                })}
+                                {members.length > 8 && (
+                                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-background bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300 shadow-md">
+                                    +{members.length - 8}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground italic mt-1">Keine Mitglieder zugewiesen.</p>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -784,144 +848,280 @@ export default function TeamPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Edit User Profile Dialog */}
+      </div>
+
+      {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-          <DialogContent className="sm:max-w-md border-border bg-background">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit3 size={18} className="text-primary" />
-                Mitarbeiter bearbeiten
-              </DialogTitle>
-              <DialogDescription>
-                Profil und Zielvorgaben für {selectedUser?.user.email} anpassen.
-              </DialogDescription>
+          <DialogContent className="sm:max-w-2xl border-border bg-background/95 backdrop-blur-xl text-foreground">
+            <DialogHeader className="pb-2 border-b border-border/50">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-xl shadow-lg border border-indigo-500/20">
+                  {selectedUser.user.email ? selectedUser.user.email.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2.5">
+                    {selectedUser.user.name || (selectedUser.user.email ? selectedUser.user.email.split('@')[0] : 'Mitglied')}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                    <Mail size={12} /> {selectedUser.user.email}
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
 
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Vollständiger Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="bg-card border-border"
-                  placeholder="Max Mustermann"
-                />
-              </div>
+            <Tabs defaultValue="workload" className="mt-4">
+              <TabsList className={`grid ${currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id ? 'grid-cols-2' : 'grid-cols-1'} bg-muted/50 border border-border/30 rounded-lg p-1`}>
+                <TabsTrigger value="workload" className="flex items-center gap-2 py-2 cursor-pointer">
+                  <Activity size={14} />
+                  Auslastung & Aufgaben
+                </TabsTrigger>
+                {(currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id) && (
+                  <TabsTrigger value="edit" className="flex items-center gap-2 py-2 cursor-pointer">
+                    <Edit3 size={14} />
+                    Profil bearbeiten
+                  </TabsTrigger>
+                )}
+              </TabsList>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-hours">Soll-Stunden / Woche</Label>
-                  <Input
-                    id="edit-hours"
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={editWeeklyHours}
-                    onChange={(e) => setEditWeeklyHours(Number(e.target.value))}
-                    className="bg-card border-border"
-                  />
+              {/* Tab 1: Auslastung & Aufgaben */}
+              <TabsContent value="workload" className="space-y-6 pt-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-muted/30 border border-border/40 rounded-xl p-4 flex flex-col justify-between">
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Workload</span>
+                    <span className={`text-2xl font-bold mt-2 ${getWorkloadTextColor(selectedUser.workloadPercentage)}`}>
+                      {selectedUser.totalBudgetedHours === 0 ? '—' : `${selectedUser.workloadPercentage}%`}
+                    </span>
+                  </div>
+                  <div className="bg-muted/30 border border-border/40 rounded-xl p-4 flex flex-col justify-between">
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Erfasst / Budgetiert</span>
+                    <span className="text-xl font-bold mt-2 text-foreground">
+                      {selectedUser.totalLoggedHours.toFixed(1)}h <span className="text-xs text-muted-foreground font-normal">/ {selectedUser.totalBudgetedHours.toFixed(1)}h</span>
+                    </span>
+                  </div>
+                  <div className="bg-muted/30 border border-border/40 rounded-xl p-4 flex flex-col justify-between">
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Wochenstundenziel</span>
+                    <span className="text-xl font-bold mt-2 text-indigo-400">
+                      {selectedUser.user.weekly_hours_target ? `${selectedUser.user.weekly_hours_target}h` : 'Nicht definiert'}
+                    </span>
+                  </div>
                 </div>
 
-                {currentUser?.role === 'admin' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-role">Rolle</Label>
-                    <Select value={editRole} onValueChange={(val) => val && setEditRole(val)}>
-                      <SelectTrigger className="bg-card border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="employee">Mitarbeiter</SelectItem>
-                        <SelectItem value="freelancer">Freelancer</SelectItem>
-                        <SelectItem value="client">Kunde</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <ListTodo size={15} className="text-indigo-400" />
+                    Aktive Aufgaben ({allTasks.filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id)).length})
+                  </h4>
+
+                  <div className="max-h-[220px] overflow-y-auto pr-1 space-y-2.5">
+                    {allTasks.filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id)).length === 0 ? (
+                      <div className="text-center py-8 border border-dashed border-border/40 rounded-xl text-muted-foreground text-xs">
+                        Keine aktiven Aufgaben zugewiesen.
+                      </div>
+                    ) : (
+                      allTasks
+                        .filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id))
+                        .map((task) => {
+                          const project = task.expand?.project as any;
+                          return (
+                            <div key={task.id} className="flex justify-between items-center p-3 bg-muted/20 border border-border/30 rounded-xl hover:bg-muted/30 transition-colors">
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">{task.title}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {project ? `[${project.key}] ${project.name}` : 'Kein Projekt'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {task.estimated_hours && (
+                                  <Badge variant="outline" className="bg-background text-[10px]">
+                                    {task.estimated_hours}h geschätzt
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[10px] capitalize bg-zinc-800 text-zinc-300">
+                                  {task.status || 'todo'}
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-supervisor">Vorgesetzter / Teamleiter</Label>
-                <Select value={editSupervisor} onValueChange={(val) => val && setEditSupervisor(val)}>
-                  <SelectTrigger className="bg-card border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Kein Vorgesetzter</SelectItem>
-                    {eligibleUsers
-                      .filter(u => u.id !== selectedUser?.user.id)
-                      .map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {getUserDisplayName(u)} ({ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || u.role})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Tab 2: Profil bearbeiten */}
+              {(currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id) && (
+                <TabsContent value="edit" className="pt-4">
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-name" className="text-xs">Name</Label>
+                        <Input
+                          id="edit-name"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Name des Mitarbeiters"
+                          className="bg-muted/20 border-border text-sm"
+                        />
+                      </div>
 
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setSelectedUser(null)}>
-                  Abbrechen
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving && <Loader2 size={14} className="animate-spin mr-2" />}
-                  Speichern
-                </Button>
-              </DialogFooter>
-            </form>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-weekly-hours" className="text-xs">Stundenziel / Woche</Label>
+                        <Select
+                          value={String(editWeeklyHours)}
+                          onValueChange={(val) => val && setEditWeeklyHours(Number(val))}
+                        >
+                          <SelectTrigger className="bg-muted/20 border-border text-sm">
+                            <SelectValue placeholder="Wähle Stundenziel">
+                              {(value: string) => value ? `${value} Std. / Woche` : 'Wähle Stundenziel'}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border-border">
+                            {[5, 10, 15, 20, 25, 30, 35, 40].map((hours) => (
+                              <SelectItem key={hours} value={String(hours)} className="cursor-pointer">
+                                {hours} Std. / Woche
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Expertise / Fähigkeiten</Label>
+                        <div className="border border-border/40 bg-muted/10 rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-1.5">
+                          {EXPERTISE_OPTIONS.map((opt) => (
+                            <div key={opt.value} className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`exp-${opt.value}`}
+                                checked={editExpertise.includes(opt.value)}
+                                onChange={(e) => {
+                                  setEditExpertise(prev =>
+                                    e.target.checked
+                                      ? [...prev, opt.value]
+                                      : prev.filter(v => v !== opt.value)
+                                  );
+                                }}
+                                className="rounded border-zinc-700 bg-zinc-950 text-indigo-500 focus:ring-indigo-500/20 h-3.5 w-3.5"
+                              />
+                              <Label htmlFor={`exp-${opt.value}`} className="text-xs cursor-pointer text-muted-foreground hover:text-foreground">
+                                {opt.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-role" className="text-xs">Systemrolle</Label>
+                        {currentUser?.role === 'admin' ? (
+                          <>
+                            <Select
+                              value={editRole}
+                              onValueChange={(val) => val && setEditRole(val)}
+                            >
+                              <SelectTrigger className="bg-muted/20 border-border text-sm">
+                                <SelectValue placeholder="Wähle Rolle">
+                                  {(value: string) => ROLE_LABELS[value] || value}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border-border">
+                                <SelectItem value="admin">Administrator</SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="employee">Mitarbeiter</SelectItem>
+                                <SelectItem value="freelancer">Freelancer</SelectItem>
+                                <SelectItem value="client">Kunde</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-muted-foreground mt-1">Ändert Berechtigungen im OS.</p>
+                          </>
+                        ) : (
+                          <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex items-center justify-between">
+                            <Badge variant="outline" className="bg-background text-xs">
+                              {ROLE_LABELS[selectedUser.user.role || 'employee'] || selectedUser.user.role || 'Mitarbeiter'}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground italic">Nur Admins können Rollen ändern</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <DialogFooter className="pt-4 border-t border-border/50 mt-6">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setSelectedUser(null)}>
+                        Abbrechen
+                      </Button>
+                      <Button type="submit" size="sm" disabled={isSaving}>
+                        {isSaving && <Loader2 size={12} className="animate-spin mr-1.5" />}
+                        <Save size={14} className="mr-1.5" />
+                        Speichern
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </TabsContent>
+              )}
+            </Tabs>
           </DialogContent>
         </Dialog>
+      )}
 
-        {/* Team Dialog (Create / Edit) */}
-        <Dialog open={isTeamDialogOpen} onOpenChange={setIsTeamDialogOpen}>
-          <DialogContent className="sm:max-w-lg border-border bg-background">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Users size={18} className="text-primary" />
-                {editingTeam ? 'Team bearbeiten' : 'Neues Team anlegen'}
+      {/* Team Create/Edit Dialog */}
+      {isTeamDialogOpen && (
+        <Dialog open={isTeamDialogOpen} onOpenChange={(open) => !open && setIsTeamDialogOpen(false)}>
+          <DialogContent className="sm:max-w-lg border-border bg-background/95 backdrop-blur-xl text-foreground">
+            <DialogHeader className="pb-2 border-b border-border/50">
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                {editingTeam ? 'Team bearbeiten' : 'Neues Team erstellen'}
               </DialogTitle>
-              <DialogDescription>
-                Strukturiere Abteilungen und weise einen Teamleiter sowie Mitglieder zu.
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                {editingTeam ? 'Passe die Team-Struktur, den Leiter und die Mitglieder an.' : 'Erstelle ein neues Team und weise Mitglieder und einen Leiter zu.'}
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSaveTeam} className="space-y-4">
+            <form onSubmit={handleSaveTeam} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="team-name">Teamname *</Label>
+                <Label htmlFor="team-name" className="text-xs">Teamname</Label>
                 <Input
                   id="team-name"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="z.B. Marketing & SEA"
-                  className="bg-card border-border"
+                  placeholder="z.B. Marketing, Entwicklung"
+                  className="bg-muted/20 border-border text-sm"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="team-desc">Beschreibung</Label>
+                <Label htmlFor="team-desc" className="text-xs">Beschreibung</Label>
                 <Input
                   id="team-desc"
                   value={teamDescription}
                   onChange={(e) => setTeamDescription(e.target.value)}
-                  placeholder="Aufgabenbereich des Teams"
-                  className="bg-card border-border"
+                  placeholder="Optionale Kurzbeschreibung des Teams"
+                  className="bg-muted/20 border-border text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="team-lead">Teamleiter</Label>
-                <Select value={teamLeadId || 'none'} onValueChange={(val) => setTeamLeadId(val || 'none')}>
-                  <SelectTrigger className="bg-card border-border">
-                    <SelectValue placeholder="Kein Leiter" />
+                <Label htmlFor="team-lead" className="text-xs">Teamleiter</Label>
+                <Select
+                  value={teamLeadId || 'none'}
+                  onValueChange={(val) => setTeamLeadId(!val || val === 'none' ? '' : val)}
+                >
+                  <SelectTrigger className="bg-muted/20 border-border text-sm">
+                    <SelectValue placeholder="Wähle Teamleiter">
+                      {(() => {
+                        if (!teamLeadId || teamLeadId === 'none') return 'Kein Teamleiter';
+                        const u = eligibleUsers.find((x) => x.id === teamLeadId);
+                        return u ? (u.name || u.email) : teamLeadId;
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Kein Teamleiter</SelectItem>
-                    {eligibleUsers.map(u => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {getUserDisplayName(u)}
+                  <SelectContent className="bg-background border-border">
+                    <SelectItem value="none" className="cursor-pointer">Kein Teamleiter</SelectItem>
+                    {eligibleUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id} className="cursor-pointer">
+                        {user.name || user.email}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -929,73 +1129,80 @@ export default function TeamPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Teammitglieder</Label>
-                <div className="max-h-48 overflow-y-auto border border-border rounded-lg p-2 space-y-1 bg-card/50">
-                  {eligibleUsers.map(u => {
-                    const isChecked = selectedMemberIds.includes(u.id);
+                <Label className="text-xs">Mitglieder auswählen</Label>
+                <div className="border border-border/40 bg-muted/10 rounded-xl p-3 max-h-[180px] overflow-y-auto space-y-1.5">
+                  {eligibleUsers.map((user) => {
+                    const isChecked = selectedMemberIds.includes(user.id);
                     return (
-                      <label
-                        key={u.id}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer text-xs"
-                      >
+                      <div key={user.id} className="flex items-center gap-2">
                         <input
                           type="checkbox"
+                          id={`member-${user.id}`}
                           checked={isChecked}
                           onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedMemberIds([...selectedMemberIds, u.id]);
-                            } else {
-                              setSelectedMemberIds(selectedMemberIds.filter(id => id !== u.id));
-                            }
+                            setSelectedMemberIds(prev =>
+                              e.target.checked
+                                ? [...prev, user.id]
+                                : prev.filter(id => id !== user.id)
+                            );
                           }}
-                          className="rounded border-border"
+                          className="rounded border-zinc-700 bg-zinc-950 text-indigo-500 focus:ring-indigo-500/20 h-3.5 w-3.5"
                         />
-                        <span className="text-foreground">{getUserDisplayName(u)}</span>
-                        <span className="text-muted-foreground text-[10px]">({u.email})</span>
-                      </label>
+                        <Label
+                          htmlFor={`member-${user.id}`}
+                          className="text-xs cursor-pointer text-muted-foreground hover:text-foreground"
+                        >
+                          {user.name || user.email}
+                        </Label>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsTeamDialogOpen(false)}>
+              <DialogFooter className="pt-4 border-t border-border/50 mt-6">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsTeamDialogOpen(false)} disabled={isSavingTeam}>
                   Abbrechen
                 </Button>
-                <Button type="submit" disabled={isSavingTeam}>
-                  {isSavingTeam && <Loader2 size={14} className="animate-spin mr-2" />}
-                  {editingTeam ? 'Änderungen speichern' : 'Team erstellen'}
+                <Button type="submit" size="sm" disabled={isSavingTeam}>
+                  {isSavingTeam && <Loader2 size={12} className="animate-spin mr-1.5" />}
+                  <Save size={14} className="mr-1.5" />
+                  Speichern
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
+      )}
 
-        {/* Delete Team Dialog */}
+      {/* Team Delete Confirmation Dialog */}
+      {teamToDelete && (
         <Dialog open={!!teamToDelete} onOpenChange={(open) => !open && setTeamToDelete(null)}>
-          <DialogContent className="sm:max-w-md border-border bg-background">
+          <DialogContent className="sm:max-w-md border-border bg-background/95 backdrop-blur-xl text-foreground">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-destructive">
-                <Trash2 size={18} />
-                Team löschen
-              </DialogTitle>
-              <DialogDescription>
-                Möchtest du das Team <strong>{teamToDelete?.name}</strong> wirklich löschen? Die Mitglieder bleiben im System erhalten.
+              <DialogTitle className="text-lg font-bold text-red-400">Team löschen</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground mt-2">
+                Bist du sicher, dass du das Team &ldquo;{teamToDelete.name}&rdquo; löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setTeamToDelete(null)}>
+            <DialogFooter className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" size="sm" onClick={() => setTeamToDelete(null)} disabled={isDeletingTeam}>
                 Abbrechen
               </Button>
-              <Button variant="destructive" onClick={handleDeleteTeam} disabled={isDeletingTeam}>
-                {isDeletingTeam && <Loader2 size={14} className="animate-spin mr-2" />}
+              <Button
+                variant="destructive"
+                size="sm"
+                className="bg-red-500 hover:bg-red-600 text-white"
+                onClick={handleDeleteTeam}
+                disabled={isDeletingTeam}
+              >
+                {isDeletingTeam && <Loader2 size={12} className="animate-spin mr-1.5" />}
                 Löschen
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-      </div>
+      )}
     </div>
   );
 }

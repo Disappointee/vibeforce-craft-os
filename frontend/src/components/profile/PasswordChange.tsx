@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { updatePasswordAction } from '@/app/actions/profile';
 
 export function PasswordChange() {
     const [currentPassword, setCurrentPassword] = useState('');
@@ -36,28 +36,23 @@ export function PasswordChange() {
 
         setLoading(true);
         try {
-            const userId = pb.authStore.record?.id;
-            if (!userId) {
-                toast.error('Nicht authentifiziert');
-                return;
-            }
-            await pb.collection('users').update(userId, {
+            const result = await updatePasswordAction({
                 oldPassword: currentPassword,
                 password: newPassword,
                 passwordConfirm: confirmPassword,
             });
 
-            toast.success('Passwort erfolgreich geändert');
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            if (result.success) {
+                toast.success('Passwort erfolgreich geändert');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                toast.error(result.error || 'Fehler beim Ändern des Passworts');
+            }
         } catch (error: any) {
             console.error('Password change error:', error);
-            if (error?.status === 400) {
-                toast.error('Aktuelles Passwort ist falsch');
-            } else {
-                toast.error(error?.message || 'Fehler beim Ändern des Passworts');
-            }
+            toast.error(error?.message || 'Fehler beim Ändern des Passworts');
         } finally {
             setLoading(false);
         }

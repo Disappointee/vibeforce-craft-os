@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "react-day-picker/style.css";
+/* react-day-picker default styles intentionally omitted — custom classNames in date-picker.tsx / date-time-picker.tsx */
 @import "shadcn/tailwind.css";
 @import "./frappe-gantt-base.css";
 
@@ -110,36 +110,36 @@
 }
 
 .dark {
-  --background: oklch(0.096 0.01 272.091);
-  --foreground: oklch(0.967 0.003 272.091);
-  --card: oklch(0.221 0.018 272.091);
-  --card-foreground: oklch(0.967 0.003 272.091);
-  --popover: oklch(0.221 0.018 272.091);
-  --popover-foreground: oklch(0.967 0.003 272.091);
+  --background: #121212;
+  --foreground: oklch(0.985 0 0);
+  --card: #18181a;
+  --card-foreground: oklch(0.985 0 0);
+  --popover: #1c1c1e;
+  --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.638 0.187 263.676);
   --primary-foreground: oklch(0.09 0 0);
   --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.967 0.003 272.091);
+  --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.704 0.022 267.968);
+  --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.967 0.003 272.091);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 5%);
-  --input: oklch(1 0 0 / 15%);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
   --ring: oklch(0.638 0.187 263.676 / 0.5);
   --chart-1: oklch(0.646 0.222 263.676);
   --chart-2: oklch(0.6 0.239 52.946);
   --chart-3: oklch(0.6 0.118 184.704);
   --chart-4: oklch(0.554 0.246 315.969);
   --chart-5: oklch(0.528 0.253 28.477);
-  --sidebar: oklch(0.221 0.018 272.091);
-  --sidebar-foreground: oklch(0.967 0.003 272.091);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.638 0.187 263.676);
   --sidebar-primary-foreground: oklch(0.09 0 0);
   --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.967 0.003 272.091);
-  --sidebar-border: oklch(1 0 0 / 5%);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.638 0.187 263.676 / 0.5);
   --success: oklch(0.627 0.194 149.214);
   --success-foreground: oklch(0.145 0 0);
@@ -155,11 +155,8 @@
   --duration-slower: 300ms;
 }
 
-
-
 /* Map .dark class to frappe-gantt's [data-theme="dark"] selector */
 .dark {
-
   &,
   & .gantt-container-root,
   & .gantt-outer {

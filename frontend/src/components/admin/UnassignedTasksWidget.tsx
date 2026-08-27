@@ -5,6 +5,7 @@ import { pb } from '@/lib/pocketbase';
 import type { TaskRecord, UserRecord } from '@/lib/pocketbase-types';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { updateTaskAction } from '@/app/actions/tasks';
 
 export function UnassignedTasksWidget() {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
@@ -36,9 +37,7 @@ export function UnassignedTasksWidget() {
   const handleAssign = async (taskId: string, userId: string) => {
     setAssigning(taskId);
     try {
-      await pb.collection('tasks').update(taskId, {
-        assignees: [userId],
-      });
+      await updateTaskAction(taskId, { assignees: [userId] });
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
       toast.success('Aufgabe zugewiesen');
     } catch (err) {

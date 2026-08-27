@@ -196,7 +196,7 @@ export default function TimePage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                            <Clock size={32} className="text-primary" />
+                            <Clock size={32} className="text-teal-500" />
                             Zeiterfassung
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">Erfasse und verwalte deine Arbeitszeit.</p>
@@ -341,7 +341,7 @@ export default function TimePage() {
                         <button
                             onClick={() => setViewMode('week')}
                             className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'week'
-                                ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                                ? 'bg-primary text-black shadow-lg shadow-teal-500/20'
                                 : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
@@ -350,7 +350,7 @@ export default function TimePage() {
                         <button
                             onClick={() => setViewMode('month')}
                             className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'month'
-                                ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                                ? 'bg-primary text-black shadow-lg shadow-teal-500/20'
                                 : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
@@ -360,7 +360,7 @@ export default function TimePage() {
 
                     <button
                         onClick={() => setIsManualEntryOpen(true)}
-                        className="bg-primary hover:bg-primary/80 text-black font-bold h-10 px-5 rounded-xl shadow-lg shadow-primary/10 transition-all flex items-center gap-2 text-xs uppercase tracking-wider active:scale-[0.98] w-full sm:w-auto justify-center"
+                        className="bg-primary hover:bg-teal-400 text-black font-bold h-10 px-5 rounded-xl shadow-lg shadow-teal-500/10 transition-all flex items-center gap-2 text-xs uppercase tracking-wider active:scale-[0.98] w-full sm:w-auto justify-center"
                     >
                         <Plus size={16} />
                         Zeit buchen
@@ -394,6 +394,7 @@ export default function TimePage() {
                         onPrevMonth={() => setCurrentDate(prev => subMonths(prev, 1))}
                         onNextMonth={() => setCurrentDate(prev => addMonths(prev, 1))}
                         onDayClick={handleDayClick}
+                        onEditEntry={handleEditEntry}
                     />
                 )}
 
@@ -421,7 +422,7 @@ export default function TimePage() {
                     <DialogHeader className="pb-4 border-b border-border">
                         <DialogTitle className="text-lg font-black tracking-tight text-foreground flex items-center justify-between">
                             <span className="flex items-center gap-2">
-                                <Clock size={20} className="text-primary" />
+                                <Clock size={20} className="text-teal-500" />
                                 {editingEntry ? 'Eintrag bearbeiten' : 'Zeit buchen'}
                             </span>
                         </DialogTitle>

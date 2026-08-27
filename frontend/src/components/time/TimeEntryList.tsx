@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '@/lib/pocketbase';
+import { useRouter } from 'next/navigation';
 import { TimeEntryRecord } from '@/lib/pocketbase-types';
+import { deleteTimeEntryAction } from '@/app/actions/time-entries';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -70,14 +71,17 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
         return 'Kein Projekt';
     };
 
+    const router = useRouter();
+
     const deleteEntry = async (entryId: string) => {
         if (!window.confirm('Möchtest du diesen Zeiteintrag wirklich unwiderruflich löschen?')) {
             return;
         }
         setDeletingId(entryId);
         try {
-            await pb.collection('time_entries').delete(entryId);
+            await deleteTimeEntryAction(entryId);
             toast.success('Zeiteintrag gelöscht');
+            router.refresh();
             onEntryUpdated();
         } catch (error) {
             toast.error('Fehler beim Löschen');
@@ -139,7 +143,7 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
                     <div
                         key={entry.id}
                         onClick={() => onEditEntry(entry)}
-                        className="rounded-xl border border-border bg-card/40 p-4 space-y-3 cursor-pointer hover:border-primary/30 transition-colors"
+                        className="rounded-xl border border-border bg-card/40 p-4 space-y-3 cursor-pointer hover:border-teal-500/30 transition-colors"
                     >
                         {/* Top row: Date + Duration + Actions */}
                         <div className="flex items-start justify-between gap-3">

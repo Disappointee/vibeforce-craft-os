@@ -1,8 +1,8 @@
 /**
- * ZUGFeRD/Factur-X XML-Generator
+ * ZUGFeRD/Faktur-X XML-Generator
  *
  * Erzeugt ein ZUGFeRD 2.1.1 BASIC WL XML nach DIN EN 16931.
- * Das XML kann in PDF-Berichte eingebettet oder separat exportiert werden.
+ * Das XML kann in die PDF-Datei eingebettet oder separat heruntergeladen werden.
  */
 
 export interface ZugferdInvoiceData {
@@ -36,16 +36,19 @@ export interface ZugferdInvoiceData {
   paymentTerms?: string;
 }
 
-function esc(text: string): string {
-  return text
+function esc(text?: string | null): string {
+  if (!text) return '';
+  return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 export function generateZugferdXml(data: ZugferdInvoiceData): string {
   const now = new Date().toISOString().split('T')[0];
+  const docId = `${data.invoiceNumber}-${now}`;
 
   const itemsXml = data.lineItems.map((item, i) => `
     <ram:IncludedSupplyChainTradeLineItem>

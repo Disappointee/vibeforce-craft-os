@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
+import { createExpenseAction, updateExpenseAction } from '@/app/actions/expenses';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,7 @@ interface ExternalExpensesDialogProps {
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaved: () => void;
+  onSaved?: () => void;
 }
 
 const CATEGORIES = ['Freelancer', 'Lizenzen', 'Werbung', 'Hosting', 'Sonstiges'];
@@ -75,14 +75,14 @@ export function ExternalExpensesDialog({
     setIsSaving(true);
     try {
       if (isEditing && expense) {
-        await pb.collection('external_expenses').update(expense.id, {
+        await updateExpenseAction(expense.id, {
           amount: parsedAmount,
           description: description || undefined,
           category,
         });
         toast.success('Fremdkosten aktualisiert');
       } else {
-        await pb.collection('external_expenses').create({
+        await createExpenseAction({
           project: projectId,
           amount: parsedAmount,
           description: description || undefined,
@@ -91,7 +91,7 @@ export function ExternalExpensesDialog({
         toast.success('Fremdkosten hinzugefügt');
       }
       onOpenChange(false);
-      onSaved();
+      onSaved?.();
     } catch (error) {
       console.error('Failed to save external expense:', error);
       toast.error('Fehler beim Speichern der Fremdkosten');

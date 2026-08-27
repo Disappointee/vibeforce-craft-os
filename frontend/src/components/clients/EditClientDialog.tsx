@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { pb } from '@/lib/pocketbase';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { updateClientAction } from '@/app/actions/clients';
 import {
     Dialog,
     DialogContent,
@@ -41,6 +42,7 @@ const toPbDate = (dateStr: string) => {
 };
 
 export function EditClientDialog({ client, open, onOpenChange, onClientUpdated }: EditClientDialogProps) {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -59,6 +61,8 @@ export function EditClientDialog({ client, open, onOpenChange, onClientUpdated }
         laufzeit_ende: '',
         abrechenbar: 'true',
         kundenstatus: 'aktiv',
+        billing_rounding: 'inherit',
+        rounding_mode: 'ceil',
     });
 
     useEffect(() => {
@@ -79,6 +83,8 @@ export function EditClientDialog({ client, open, onOpenChange, onClientUpdated }
                 laufzeit_ende: client.laufzeit_ende ? client.laufzeit_ende.replace(' ', 'T').substring(0, 16) : '',
                 abrechenbar: client.abrechenbar !== false ? 'true' : 'false',
                 kundenstatus: client.kundenstatus || 'aktiv',
+                billing_rounding: client.billing_rounding != null ? String(client.billing_rounding) : 'inherit',
+                rounding_mode: client.rounding_mode || 'ceil',
             });
         }
     }, [client]);
@@ -112,11 +118,14 @@ export function EditClientDialog({ client, open, onOpenChange, onClientUpdated }
                 laufzeit_ende: toPbDate(formData.laufzeit_ende),
                 abrechenbar: formData.abrechenbar === 'true',
                 kundenstatus: formData.kundenstatus,
+                billing_rounding: formData.billing_rounding === 'inherit' ? null : parseInt(formData.billing_rounding),
+                rounding_mode: formData.rounding_mode,
             };
 
-            await pb.collection('clients').update(client.id, updateData);
+            await updateClientAction(client.id, updateData);
 
             toast.success('Kunde aktualisiert!');
+            router.refresh();
             onOpenChange(false);
             onClientUpdated();
         } catch (error: any) {
@@ -347,6 +356,61 @@ export function EditClientDialog({ client, open, onOpenChange, onClientUpdated }
                                     <SelectContent className="bg-background border-border text-foreground">
                                         <SelectItem value="true">Ja</SelectItem>
                                         <SelectItem value="false">Nein</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-billing-rounding" className="text-foreground text-xs uppercase tracking-wider">Abrechnungs-Takt</Label>
+                                <Select
+                                    value={formData.billing_rounding}
+                                    onValueChange={(val) => setFormData({ ...formData, billing_rounding: val })}
+                                >
+                                    <SelectTrigger id="edit-billing-rounding" className="bg-card border-border">
+                                        <SelectValue placeholder="Takt wählen">
+                                            {(value: string) => {
+                                                if (value === 'inherit') return 'Global erben (Standard)';
+                                                if (value === '0') return 'Exakt (1 Min)';
+                                                if (value === '5') return '5-Minuten-Takt';
+                                                if (value === '6') return '6-Minuten-Takt (0,1h)';
+                                                if (value === '10') return '10-Minuten-Takt';
+                                                if (value === '15') return '15-Minuten-Takt';
+                                                if (value === '30') return '30-Minuten-Takt';
+                                                return value;
+                                            }}
+                                        </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-border text-foreground">
+                                        <SelectItem value="inherit">Global erben (Standard)</SelectItem>
+                                        <SelectItem value="0">Exakt (1 Minute - Minutengenau)</SelectItem>
+                                        <SelectItem value="5">5-Minuten-Takt</SelectItem>
+                                        <SelectItem value="6">6-Minuten-Takt (0,1h Dezimal-Standard)</SelectItem>
+                                        <SelectItem value="10">10-Minuten-Takt</SelectItem>
+                                        <SelectItem value="15">15-Minuten-Takt</SelectItem>
+                                        <SelectItem value="30">30-Minuten-Takt</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-rounding-mode" className="text-foreground text-xs uppercase tracking-wider">Rundungs-Methode</Label>
+                                <Select
+                                    value={formData.rounding_mode}
+                                    onValueChange={(val) => setFormData({ ...formData, rounding_mode: val })}
+                                >
+                                    <SelectTrigger id="edit-rounding-mode" className="bg-card border-border">
+                                        <SelectValue placeholder="Methode wählen">
+                                            {(value: string) => {
+                                                if (value === 'ceil') return 'Immer aufrunden';
+                                                if (value === 'round') return 'Kaufmännisch';
+                                                return value;
+                                            }}
+                                        </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-border text-foreground">
+                                        <SelectItem value="ceil">Immer aufrunden (Standard)</SelectItem>
+                                        <SelectItem value="round">Kaufmännisch runden</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

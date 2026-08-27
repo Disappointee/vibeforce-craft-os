@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
+import { createProjectAction } from '@/app/actions/projects';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +36,7 @@ export function NewProjectDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = setExternalOpen || setInternalOpen;
@@ -45,6 +48,7 @@ export function NewProjectDialog({
     name: '',
     key: '',
     budget_hours: '',
+    hourly_rate: '',
     client: '',
     start_date: undefined as Date | undefined,
     due_date: undefined as Date | undefined,
@@ -133,20 +137,21 @@ export function NewProjectDialog({
         return;
       }
 
-      // In PocketBase, the schema requires status. We default to 'active'
-      await pb.collection('projects').create({
+      await createProjectAction({
         name: formData.name,
         key: formData.key.toUpperCase(),
         status: 'active',
         budget_hours: formData.budget_hours ? Number(formData.budget_hours) : null,
+        hourly_rate: formData.hourly_rate ? Number(formData.hourly_rate) : null,
         client: formData.client || null,
         start_date: formData.start_date ? formData.start_date.toISOString() : null,
         due_date: formData.due_date ? formData.due_date.toISOString() : null,
       });
 
       toast.success('Projekt erfolgreich erstellt!');
+      router.refresh();
       setOpen(false);
-      setFormData({ name: '', key: '', budget_hours: '', client: '', start_date: undefined, due_date: undefined });
+      setFormData({ name: '', key: '', budget_hours: '', hourly_rate: '', client: '', start_date: undefined, due_date: undefined });
       setKeyError(null);
       onProjectCreated(); // Trigger reload
     } catch (error: any) {
@@ -206,8 +211,8 @@ export function NewProjectDialog({
               <Label htmlFor="key" className="text-foreground text-xs uppercase tracking-wider">Projektschlüssel</Label>
               <Input
                 id="key"
-                placeholder="WEB"
-                maxLength={5}
+                placeholder="DEV-1"
+                maxLength={10}
                 value={formData.key}
                 onChange={(e) => setFormData({ ...formData, key: e.target.value.toUpperCase() })}
                 required
@@ -225,12 +230,24 @@ export function NewProjectDialog({
               <Input
                 id="budget"
                 type="number"
-                placeholder="optional"
+                placeholder="z.B. 100"
                 value={formData.budget_hours}
                 onChange={(e) => setFormData({ ...formData, budget_hours: e.target.value })}
                 className="bg-card border-border focus-visible:ring-indigo-500"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hourly_rate" className="text-foreground text-xs uppercase tracking-wider">Stundensatz (€/h)</Label>
+            <Input
+              id="hourly_rate"
+              type="number"
+              placeholder="z.B. 120"
+              value={formData.hourly_rate}
+              onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+              className="bg-card border-border focus-visible:ring-indigo-500"
+            />
           </div>
 
           {/* Date fields */}

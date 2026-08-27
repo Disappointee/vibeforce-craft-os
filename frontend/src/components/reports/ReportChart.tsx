@@ -26,7 +26,7 @@ interface ReportChartProps {
 }
 
 const CHART_COLORS = [
-    '#3B82F6', // cyan (tealish)
+    '#06b6d4', // cyan (tealish)
     '#10b981', // emerald
     '#6366f1', // indigo
     '#f59e0b', // amber
@@ -34,7 +34,7 @@ const CHART_COLORS = [
     '#8b5cf6', // violet
     '#f97316', // orange
     '#ec4899', // pink
-    '#2563EB', // teal
+    '#14b8a6', // teal
     '#84cc16', // lime
 ];
 

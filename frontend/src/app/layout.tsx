@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
     siteName: 'Vibeforce Flow OS',
     images: [
       {
-        url: '/logo.png', // Fallback to logo if no specific OG image is present
+        url: '/icon-vfos.png',
         width: 800,
         height: 600,
       },
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vibeforce Flow OS | Premium Agency OS',
     description: 'The definitive, bespoke project management solution for agencies.',
-    images: ['/logo.png'],
+    images: ['/icon-vfos.png'],
   },
 };
 

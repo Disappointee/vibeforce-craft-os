@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { TaskCommentRecord, UserRecord } from '@/lib/pocketbase-types';
 import { MentionInput } from '@/components/ui/mention-input';
 import { Loader2, Trash2, MessageSquare, AtSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { createCommentAction, deleteCommentAction } from '@/app/actions/comments';
 
 interface TaskCommentsProps {
     taskId: string;
@@ -33,26 +35,26 @@ function getTimeAgo(dateStr: string): string {
     });
 }
 
-function escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;',
-    };
-    return text.replace(/[&<>"']/g, (c) => map[c] || c);
-}
-
-function formatContent(content: string): string {
-    const escaped = escapeHtml(content);
-    return escaped.replace(
-        /@(\w[\w\s.-]*\w|\w)/g,
-        '<span class="text-indigo-400 font-medium bg-indigo-500/10 px-1 rounded">@$1</span>'
+function RenderCommentContent({ content }: { content: string }) {
+    const parts = content.split(/(@\w[\w\s.-]*\w|@\w)/g);
+    return (
+        <span>
+            {parts.map((part, idx) => {
+                if (part.startsWith('@')) {
+                    return (
+                        <span key={idx} className="text-indigo-400 font-medium bg-indigo-500/10 px-1 rounded">
+                            {part}
+                        </span>
+                    );
+                }
+                return part;
+            })}
+        </span>
     );
 }
 
 export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProps) {
+    const router = useRouter();
     const [comments, setComments] = useState<TaskCommentRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newComment, setNewComment] = useState('');
@@ -108,27 +110,13 @@ export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProp
         setIsSubmitting(true);
 
         try {
-            const created = await pb.collection('task_comments').create({
-                task: taskId,
-                author: currentUser.id,
-                content: newComment.trim(),
-                mentions: mentionedUserIds.length > 0 ? mentionedUserIds : null,
-            });
+            const created = await createCommentAction(taskId, newComment.trim(), mentionedUserIds);
 
-            // Fetch the created comment with author expand
-            const commentWithAuthor = await pb.collection('task_comments').getOne(created.id, {
-                expand: 'author',
-            });
-
-            setComments(prev => [...prev, commentWithAuthor as TaskCommentRecord]);
+            setComments(prev => [...prev, created as TaskCommentRecord]);
             setNewComment('');
             setMentionedUserIds([]);
-
-            // Create notifications for mentioned users
-            if (mentionedUserIds.length > 0) {
-                await createMentionNotifications(mentionedUserIds, taskId, taskTitle, projectKey);
-            }
-
+            router.refresh();
+            fetchComments();
             toast.success('Kommentar hinzugefügt');
         } catch (error) {
             console.error('Failed to create comment:', error);
@@ -138,39 +126,12 @@ export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProp
         }
     };
 
-    const createMentionNotifications = async (
-        userIds: string[],
-        taskId: string,
-        taskTitle: string,
-        projectKey: string
-    ) => {
-        const authorName = currentUser?.name || currentUser?.email || 'Jemand';
-        const taskRef = `${projectKey}-${taskId.substring(0, 4).toUpperCase()}`;
-
-        for (const userId of userIds) {
-            // Skip notification for self-mentions
-            if (userId === currentUser?.id) continue;
-
-            try {
-                await pb.collection('notifications').create({
-                    user: userId,
-                    type: 'task_mention',
-                    title: `Erwähnung in ${taskRef}`,
-                    message: `${authorName} hat dich in einem Kommentar zu "${taskTitle}" erwähnt`,
-                    read: false,
-                    link: `/tasks?task=${taskId}`,
-                });
-            } catch (error) {
-                console.error('Failed to create mention notification:', error);
-            }
-        }
-    };
-
     const handleDeleteComment = async (commentId: string) => {
         setDeletingId(commentId);
         try {
-            await pb.collection('task_comments').delete(commentId);
+            await deleteCommentAction(commentId);
             setComments(prev => prev.filter(c => c.id !== commentId));
+            router.refresh();
             toast.success('Kommentar gelöscht');
         } catch (error) {
             console.error('Failed to delete comment:', error);
@@ -198,14 +159,14 @@ export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProp
             {/* Comments List */}
             <div
                 ref={listRef}
-                className="space-y-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent"
+                className="space-y-3 max-h-[400px] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent min-w-0"
             >
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
                         <Loader2 size={20} className="animate-spin text-muted-foreground" />
                     </div>
                 ) : comments.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="flex flex-col items-center justify-center py-8 text-center min-w-0">
                         <MessageSquare size={32} className="text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground">Keine Kommentare vorhanden</p>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -220,7 +181,7 @@ export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProp
                         return (
                             <div
                                 key={comment.id}
-                                className="flex gap-3 p-3 rounded-xl border border-border/50 bg-card/20 hover:bg-card/40 transition-colors group"
+                                className="flex gap-3 p-3 rounded-xl border border-border/50 bg-card/20 hover:bg-card/40 transition-colors group min-w-0"
                             >
                                 {/* Author Avatar */}
                                 <div className="flex-shrink-0">
@@ -254,10 +215,9 @@ export function TaskComments({ taskId, taskTitle, projectKey }: TaskCommentsProp
                                         )}
                                     </div>
 
-                                    <div
-                                        className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words"
-                                        dangerouslySetInnerHTML={{ __html: formatContent(comment.content) }}
-                                    />
+                                    <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                        <RenderCommentContent content={comment.content} />
+                                    </div>
 
                                     {/* Delete Button (own comments only) */}
                                     {isOwn && (

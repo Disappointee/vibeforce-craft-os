@@ -30,6 +30,14 @@ export default function RootError({
                     <p className="text-sm text-zinc-400">
                         Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut oder kontaktiere den Support.
                     </p>
+                    <div className="mt-4 p-4 bg-red-950/50 border border-red-500/20 rounded-md text-left overflow-auto max-h-64">
+                        <p className="text-xs text-red-400 font-mono mb-2">ERROR DETAILS (FOR DEBUGGING):</p>
+                        <pre className="text-xs text-red-300 font-mono whitespace-pre-wrap">
+                            {error?.message || 'Unknown error'}
+                            {'\n'}
+                            {error?.stack || ''}
+                        </pre>
+                    </div>
                 </div>
                 <Button
                     onClick={() => reset()}

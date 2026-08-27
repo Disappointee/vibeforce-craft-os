@@ -31,25 +31,40 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle, Pencil, LogIn, UserCheck } from 'lucide-react';
+import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { USER_ROLES, USER_ROLE_LABEL_MAP, labelFor } from '@/lib/constants';
-import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
-import { impersonateUser } from '@/lib/impersonate';
 import {
-    fetchAdminUsers,
-    inviteUser,
-    updateUserRole,
-    toggleUserDeactivation,
-    updateUserSupervisor,
-    adminResetUserPassword,
-    deleteUserAdmin,
+    updateUserRoleAction,
+    toggleUserActiveAction,
+    deleteUserAdminAction,
+    createUserAction,
+    resetUserPasswordAction,
+    updateUserSupervisorAction,
 } from '@/app/actions/admin-users';
-import type { UserRecord } from '@/lib/pocketbase-types';
+
+interface UserItem {
+    id: string;
+    email: string;
+    name?: string;
+    role?: string;
+    supervisor?: string;
+    avatar?: string;
+    verified: boolean;
+    created: string;
+    language?: string;
+    expand?: {
+        supervisor?: {
+            id: string;
+            name?: string;
+            email: string;
+        };
+    };
+}
 
 export default function AdminUsersPage() {
     const router = useRouter();
-    const [users, setUsers] = useState<UserRecord[]>([]);
+    const [users, setUsers] = useState<UserItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -59,7 +74,7 @@ export default function AdminUsersPage() {
     const [inviteName, setInviteName] = useState('');
     const [inviteRole, setInviteRole] = useState('employee');
     const [inviteSupervisor, setInviteSupervisor] = useState<string>('none');
-    const [inviteWeeklyHours, setInviteWeeklyHours] = useState(40);
+    const [inviteHourlyRate, setInviteHourlyRate] = useState('');
     const [inviting, setInviting] = useState(false);
 
     // Fallback dialog when SMTP is not configured
@@ -74,16 +89,6 @@ export default function AdminUsersPage() {
     const [resetPassword, setResetPassword] = useState('');
     const [resetPasswordConfirm, setResetPasswordConfirm] = useState('');
     const [resetting, setResetting] = useState(false);
-
-    // Edit user dialog
-    const [editOpen, setEditOpen] = useState(false);
-    const [editUserId, setEditUserId] = useState('');
-    const [editName, setEditName] = useState('');
-    const [editEmail, setEditEmail] = useState('');
-    const [editRole, setEditRole] = useState('employee');
-    const [editSupervisor, setEditSupervisor] = useState<string>('none');
-    const [editWeeklyHours, setEditWeeklyHours] = useState(40);
-    const [editing, setEditing] = useState(false);
 
     useEffect(() => {
         checkAuth();
@@ -114,52 +119,65 @@ export default function AdminUsersPage() {
 
     const loadUsers = async () => {
         try {
-            const res = await fetchAdminUsers();
-            if (res.success && res.data) {
-                setUsers(res.data);
-            } else {
-                // Fallback to client-side load if needed
-                const result = await pb.collection('users').getList<UserRecord>(1, 100, {
-                    sort: '-created',
-                    expand: 'supervisor',
-                });
-                setUsers(result.items);
-            }
+            const result = await pb.collection('users').getList(1, 100, {
+                sort: '-created',
+                expand: 'supervisor',
+            });
+            setUsers(result.items as unknown as UserItem[]);
         } catch (error) {
             console.error('Error loading users:', error);
             toast.error('Fehler beim Laden der Benutzer');
         }
     };
 
+    const handleSupervisorChange = async (userId: string, supervisorId: string) => {
+        const targetId = supervisorId === 'none' ? null : supervisorId;
+        try {
+            const res = await updateUserSupervisorAction(userId, targetId);
+            if (res?.error) throw new Error(res.error);
+            toast.success('Zuständiger Admin erfolgreich zugewiesen');
+            await loadUsers();
+        } catch (error: any) {
+            console.error('Supervisor update error:', error);
+            toast.error(error?.message || 'Fehler beim Zuweisen des Admins');
+        }
+    };
+
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!inviteEmail.trim()) {
+        if (!inviteEmail) {
             toast.error('Bitte E-Mail-Adresse eingeben');
             return;
         }
 
         setInviting(true);
         try {
-            const res = await inviteUser({
-                email: inviteEmail.trim(),
-                name: inviteName.trim() || undefined,
-                role: inviteRole,
-                supervisor: inviteSupervisor !== 'none' ? inviteSupervisor : undefined,
-                weekly_hours_target: inviteWeeklyHours,
-            });
+            const generatedPw = crypto.randomUUID() + '!Aa1';
 
-            if (!res.success) {
-                toast.error(res.error || 'Fehler beim Anlegen des Benutzers');
-                return;
-            }
-
-            if (res.smtpFailed) {
-                setFallbackEmail(inviteEmail);
-                setFallbackPassword('Einladungs-Passwort wurde generiert. Bitte neues Passwort über Reset anfordern.');
-                setFallbackOpen(true);
-            } else {
-                toast.success(`Benutzer ${inviteEmail} erfolgreich angelegt`);
+            try {
+                const res = await createUserAction({
+                    email: inviteEmail,
+                    password: generatedPw,
+                    passwordConfirm: generatedPw,
+                    name: inviteName || undefined,
+                    role: inviteRole,
+                    supervisor: inviteSupervisor === 'none' ? null : inviteSupervisor,
+                    stundenhonorar: inviteHourlyRate ? Number(inviteHourlyRate) : null,
+                    hourly_rate: inviteHourlyRate ? Number(inviteHourlyRate) : null,
+                    emailVisibility: true,
+                });
+                if (res?.error) throw new Error(res.error);
+                
+                if (res?.smtpFailed) {
+                    setFallbackEmail(inviteEmail);
+                    setFallbackPassword(generatedPw);
+                    setFallbackOpen(true);
+                } else {
+                    toast.success(`Benutzer erstellt. E-Mail mit Set-Link wurde an ${inviteEmail} gesendet.`);
+                }
+            } catch (actionErr: any) {
+                throw actionErr;
             }
 
             setInviteOpen(false);
@@ -167,35 +185,36 @@ export default function AdminUsersPage() {
             setInviteName('');
             setInviteRole('employee');
             setInviteSupervisor('none');
-            setInviteWeeklyHours(40);
+            setInviteHourlyRate('');
             await loadUsers();
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Invite error:', error);
-            const msg = error instanceof Error ? error.message : 'Fehler beim Erstellen des Benutzers';
-            toast.error(msg);
+            if (error?.data?.data?.email?.code === 'validation_invalid_email') {
+                toast.error('Ungültige E-Mail-Adresse');
+            } else if (error?.data?.data?.email?.code === 'validation_unique_email') {
+                toast.error('Ein Benutzer mit dieser E-Mail existiert bereits');
+            } else {
+                toast.error(error?.message || 'Fehler beim Erstellen des Benutzers');
+            }
         } finally {
             setInviting(false);
         }
     };
 
-    const handleToggleStatus = async (user: UserRecord) => {
+    const handleToggleStatus = async (user: UserItem) => {
         if (user.id === pb.authStore.record?.id) {
             toast.error('Du kannst dich nicht selbst deaktivieren');
             return;
         }
 
         try {
-            const res = await toggleUserDeactivation(user.id, !user.deactivated);
-            if (!res.success) {
-                toast.error(res.error || 'Status konnte nicht geändert werden');
-                return;
-            }
-
-            toast.success(`Benutzer ${user.deactivated ? 'aktiviert' : 'deaktiviert'}`);
+            const res = await toggleUserActiveAction(user.id, !user.verified);
+            if (res?.error) throw new Error(res.error);
+            toast.success(`Benutzer ${user.verified ? 'deaktiviert' : 'aktiviert'}`);
             await loadUsers();
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Toggle status error:', error);
-            toast.error('Fehler beim Ändern des Status');
+            toast.error(error?.message || 'Fehler beim Ändern des Status');
         }
     };
 
@@ -206,54 +225,32 @@ export default function AdminUsersPage() {
         }
 
         try {
-            const res = await updateUserRole(userId, newRole);
-            if (!res.success) {
-                toast.error(res.error || 'Rolle konnte nicht geändert werden');
-                return;
-            }
+            const res = await updateUserRoleAction(userId, newRole);
+            if (res?.error) throw new Error(res.error);
             toast.success('Rolle erfolgreich aktualisiert');
             await loadUsers();
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Role change error:', error);
-            toast.error('Fehler beim Ändern der Rolle');
+            toast.error(error?.message || 'Fehler beim Ändern der Rolle');
         }
     };
 
-    const handleSupervisorChange = async (userId: string, supervisorId: string) => {
-        try {
-            const finalSupervisor = supervisorId === 'none' ? null : supervisorId;
-            const res = await updateUserSupervisor(userId, finalSupervisor);
-            if (!res.success) {
-                toast.error(res.error || 'Vorgesetzter konnte nicht geändert werden');
-                return;
-            }
-            toast.success('Vorgesetzter erfolgreich zugewiesen');
-            await loadUsers();
-        } catch (error: unknown) {
-            console.error('Supervisor change error:', error);
-            toast.error('Fehler beim Zuweisen des Vorgesetzten');
-        }
-    };
-
-    const handleDelete = async (user: UserRecord) => {
+    const handleDelete = async (user: UserItem) => {
         if (user.id === pb.authStore.record?.id) {
             toast.error('Du kannst dich nicht selbst löschen');
             return;
         }
 
-        if (!confirm(`Möchtest du "${getUserDisplayName(user)}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+        if (!confirm(`Möchtest du "${user.name || user.email}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
 
         try {
-            const res = await deleteUserAdmin(user.id);
-            if (!res.success) {
-                toast.error(res.error || 'Fehler beim Löschen des Benutzers');
-                return;
-            }
-            toast.success(`Benutzer "${getUserDisplayName(user)}" gelöscht`);
+            const res = await deleteUserAdminAction(user.id);
+            if (res?.error) throw new Error(res.error);
+            toast.success(`Benutzer "${user.name || user.email}" gelöscht`);
             await loadUsers();
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Delete error:', error);
-            toast.error('Fehler beim Löschen des Benutzers');
+            toast.error(error?.message || 'Fehler beim Löschen des Benutzers');
         }
     };
 
@@ -272,90 +269,60 @@ export default function AdminUsersPage() {
 
         setResetting(true);
         try {
-            const res = await adminResetUserPassword(resetUserId, {
+            const res = await resetUserPasswordAction(resetUserId, {
                 password: resetPassword,
                 passwordConfirm: resetPasswordConfirm,
             });
-
-            if (!res.success) {
-                toast.error(res.error || 'Fehler beim Zurücksetzen des Passworts');
-                return;
-            }
-
+            if (res?.error) throw new Error(res.error);
             toast.success(`Passwort für ${resetUserEmail} zurückgesetzt`);
             setResetOpen(false);
             setResetUserId('');
             setResetUserEmail('');
             setResetPassword('');
             setResetPasswordConfirm('');
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Reset password error:', error);
-            toast.error('Fehler beim Zurücksetzen des Passworts');
+            toast.error(error?.message || 'Fehler beim Zurücksetzen des Passworts');
         } finally {
             setResetting(false);
         }
     };
 
-    const handleEdit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!editName.trim()) {
-            toast.error('Name darf nicht leer sein');
-            return;
-        }
-
-        setEditing(true);
-        try {
-            await pb.collection('users').update(editUserId, {
-                name: editName.trim(),
-                role: editRole,
-                supervisor: editSupervisor === 'none' ? null : editSupervisor,
-                weekly_hours_target: editWeeklyHours,
-            });
-            toast.success('Benutzerdaten erfolgreich aktualisiert');
-            setEditOpen(false);
-            await loadUsers();
-        } catch (error: unknown) {
-            console.error('Edit user error:', error);
-            const msg = error instanceof Error ? error.message : 'Fehler beim Aktualisieren';
-            toast.error(msg);
-        } finally {
-            setEditing(false);
-        }
-    };
-
     const ROLE_LABELS_FALLBACK: Record<string, string> = {
-        admin: 'Administrator',
-        manager: 'Manager',
-        employee: 'Mitarbeiter',
         freelancer: 'Freelancer',
-        client: 'Kunde',
     };
 
     const getRoleBadge = (role?: string) => {
-        const label = ROLE_LABELS_FALLBACK[role || 'employee'] || role || '—';
+        let label: string;
+        if (!role) {
+            label = '—';
+        } else if ((USER_ROLES as readonly string[]).includes(role)) {
+            label = labelFor(USER_ROLE_LABEL_MAP, role as (typeof USER_ROLES)[number]);
+        } else {
+            label = ROLE_LABELS_FALLBACK[role] || role;
+        }
         switch (role) {
             case 'admin':
-                return <Badge variant="default" className="bg-primary/10 text-primary border-primary/20 text-[11px]">{label}</Badge>;
+                return <Badge variant="default" className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30">{label}</Badge>;
             case 'manager':
-                return <Badge variant="default" className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[11px]">{label}</Badge>;
+                return <Badge variant="default" className="bg-amber-500/10 text-amber-400 border-amber-500/30">{label}</Badge>;
             case 'employee':
-                return <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[11px]">{label}</Badge>;
+                return <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{label}</Badge>;
             case 'freelancer':
-                return <Badge variant="outline" className="text-orange-400 border-orange-500/20 text-[11px]">{label}</Badge>;
+                return <Badge variant="outline" className="text-orange-400 border-orange-500/20">{label}</Badge>;
             case 'client':
-                return <Badge variant="outline" className="text-muted-foreground border-border text-[11px]">{label}</Badge>;
+                return <Badge variant="ghost" className="text-muted-foreground">{label}</Badge>;
             default:
-                return <Badge variant="outline" className="text-[11px]">{label}</Badge>;
+                return <Badge variant="outline">{label}</Badge>;
         }
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground text-sm font-medium">Lade Benutzer...</p>
+                <div className="flex flex-col items-center gap-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+                    <p className="text-muted-foreground font-medium tracking-wide">Lade Benutzer...</p>
                 </div>
             </div>
         );
@@ -370,12 +337,12 @@ export default function AdminUsersPage() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                            <Shield size={24} className="text-primary" />
+                            <Shield size={24} className="text-indigo-400" />
                             Benutzerverwaltung
                         </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Mitarbeiter einladen, Rollen und Vorgesetzte zuweisen sowie Konten verwalten.</p>
+                        <p className="text-muted-foreground mt-1 text-sm">Benutzer einladen, verwalten und deaktivieren</p>
                     </div>
-                    <Button onClick={() => setInviteOpen(true)} className="flex items-center gap-2">
+                    <Button onClick={() => setInviteOpen(true)}>
                         <UserPlus size={16} />
                         Mitarbeiter anlegen
                     </Button>
@@ -385,12 +352,12 @@ export default function AdminUsersPage() {
                 <Card className="border-border bg-card/40">
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
                                 <Users size={18} />
                             </div>
                             <div>
-                                <CardTitle className="text-base font-semibold">Alle Benutzer ({users.length})</CardTitle>
-                                <CardDescription className="text-xs">Rollen, Vorgesetzte und Zugriffsstatus der Teammitglieder</CardDescription>
+                                <CardTitle>Alle Benutzer ({users.length})</CardTitle>
+                                <CardDescription>Verwalte Rollen und Status der Benutzer</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
@@ -398,178 +365,150 @@ export default function AdminUsersPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-border">
-                                    <TableHead className="text-muted-foreground text-xs font-semibold">Benutzer</TableHead>
-                                    <TableHead className="text-muted-foreground text-xs font-semibold">Rolle</TableHead>
-                                    <TableHead className="text-muted-foreground text-xs font-semibold">Vorgesetzter</TableHead>
-                                    <TableHead className="text-muted-foreground text-xs font-semibold">Status</TableHead>
-                                    <TableHead className="text-muted-foreground text-xs font-semibold text-right">Aktionen</TableHead>
+                                    <TableHead className="text-muted-foreground">Benutzer</TableHead>
+                                    <TableHead className="text-muted-foreground">Rolle</TableHead>
+                                    <TableHead className="text-muted-foreground">Zuständiger Admin</TableHead>
+                                    <TableHead className="text-muted-foreground">Status</TableHead>
+                                    <TableHead className="text-muted-foreground">Erstellt</TableHead>
+                                    <TableHead className="text-muted-foreground text-right">Aktionen</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                                             <Users size={32} className="mx-auto mb-2 opacity-30" />
                                             Keine Benutzer gefunden
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    users.map((user) => {
-                                        const supervisorUser = (user.expand?.supervisor as UserRecord | undefined);
-                                        return (
-                                            <TableRow key={user.id} className="border-border/50 hover:bg-muted/20">
-                                                <TableCell>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center text-xs font-bold text-black shrink-0">
-                                                            {getUserInitials(user)}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-foreground">
-                                                                {getUserDisplayName(user)}
-                                                                {user.id === pb.authStore.record?.id && (
-                                                                    <span className="ml-2 text-xs text-primary font-semibold">(Du)</span>
-                                                                )}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground">{user.email}</p>
-                                                        </div>
+                                    users.map((user) => (
+                                        <TableRow key={user.id} className="border-border/50 hover:bg-muted/20">
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                                                        {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
                                                     </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Select
-                                                        value={user.role || 'employee'}
-                                                        onValueChange={(val) => val && handleRoleChange(user.id, val)}
-                                                    >
-                                                        <SelectTrigger className="w-32 h-8 text-xs bg-background border-border">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="admin">Administrator</SelectItem>
-                                                            <SelectItem value="manager">Manager</SelectItem>
-                                                            <SelectItem value="employee">Mitarbeiter</SelectItem>
-                                                            <SelectItem value="freelancer">Freelancer</SelectItem>
-                                                            <SelectItem value="client">Kunde</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Select
-                                                        value={user.supervisor || 'none'}
-                                                        onValueChange={(val) => val && handleSupervisorChange(user.id, val)}
-                                                    >
-                                                        <SelectTrigger className="w-40 h-8 text-xs bg-background border-border">
-                                                            <span className="truncate">
-                                                                {supervisorUser ? getUserDisplayName(supervisorUser) : 'Kein Vorgesetzter'}
-                                                            </span>
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="none">Kein Vorgesetzter</SelectItem>
-                                                            {users
-                                                                .filter(u => u.id !== user.id && u.role !== 'client')
-                                                                .map(u => (
-                                                                    <SelectItem key={u.id} value={u.id}>
-                                                                        {getUserDisplayName(u)}
-                                                                    </SelectItem>
-                                                                ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {!user.deactivated || user.id === pb.authStore.record?.id ? (
-                                                        <Badge variant="default" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
-                                                            <CheckCircle size={11} className="mr-1" />
-                                                            Aktiv
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="destructive" className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">
-                                                            <Ban size={11} className="mr-1" />
-                                                            Deaktiviert
-                                                        </Badge>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {pb.authStore.record?.role === 'admin' && user.id !== pb.authStore.record?.id && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={async () => {
-                                                                    try {
-                                                                        const { token, record } = await impersonateUser(user.id);
-                                                                        pb.authStore.save(token, record);
-                                                                        toast.success('Eingeloggt als ' + getUserDisplayName(user));
-                                                                        router.push('/');
-                                                                    } catch (error: unknown) {
-                                                                        const msg = error instanceof Error ? error.message : 'Fehler bei der Impersonation';
-                                                                        toast.error(msg);
-                                                                    }
-                                                                }}
-                                                                className="text-amber-400 hover:bg-amber-500/10 h-8 w-8 p-0"
-                                                                title="Als Benutzer einloggen"
-                                                            >
-                                                                <LogIn size={14} />
-                                                            </Button>
-                                                        )}
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setEditUserId(user.id);
-                                                                setEditName(user.name || '');
-                                                                setEditEmail(user.email);
-                                                                setEditRole(user.role || 'employee');
-                                                                setEditSupervisor(user.supervisor || 'none');
-                                                                setEditWeeklyHours(Number(user.weekly_hours_target) || 40);
-                                                                setEditOpen(true);
-                                                            }}
-                                                            className="text-primary hover:bg-primary/10 h-8 w-8 p-0"
-                                                            title="Benutzer bearbeiten"
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setResetUserId(user.id);
-                                                                setResetUserEmail(user.email);
-                                                                setResetPassword('');
-                                                                setResetPasswordConfirm('');
-                                                                setResetOpen(true);
-                                                            }}
-                                                            className="text-primary hover:bg-primary/10 h-8 w-8 p-0"
-                                                            title="Passwort zurücksetzen"
-                                                        >
-                                                            <KeyRound size={14} />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleToggleStatus(user)}
-                                                            disabled={user.id === pb.authStore.record?.id}
-                                                            className={!user.deactivated || user.id === pb.authStore.record?.id ? 'text-destructive hover:bg-destructive/10 h-8 w-8 p-0' : 'text-emerald-400 hover:bg-emerald-500/10 h-8 w-8 p-0'}
-                                                            title={!user.deactivated ? 'Deaktivieren' : 'Aktivieren'}
-                                                        >
-                                                            {!user.deactivated || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(user)}
-                                                            disabled={user.id === pb.authStore.record?.id}
-                                                            className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                                                            title="Benutzer löschen"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </Button>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {user.name || 'Kein Name'}
+                                                            {user.id === pb.authStore.record?.id && (
+                                                                <span className="ml-2 text-xs text-indigo-400">(Du)</span>
+                                                            )}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">{user.email}</p>
                                                     </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Select
+                                                    value={user.role || 'employee'}
+                                                    onValueChange={(val) => val && handleRoleChange(user.id, val)}
+                                                >
+                                                    <SelectTrigger className="w-32 h-7 text-xs bg-background border-border">
+                                                        <span>
+                                                            {ROLE_LABELS_FALLBACK[user.role || 'employee'] || 
+                                                                ((USER_ROLES as readonly string[]).includes(user.role || 'employee') 
+                                                                    ? labelFor(USER_ROLE_LABEL_MAP, (user.role || 'employee') as any) 
+                                                                    : (user.role || 'employee'))
+                                                            }
+                                                        </span>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(USER_ROLES as readonly string[]).map(r => (
+                                                            <SelectItem key={r} value={r}>{labelFor(USER_ROLE_LABEL_MAP, r as (typeof USER_ROLES)[number])}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Select
+                                                    value={user.supervisor || 'none'}
+                                                    onValueChange={(val) => handleSupervisorChange(user.id, val)}
+                                                >
+                                                    <SelectTrigger className="w-40 h-7 text-xs bg-background border-border">
+                                                        <SelectValue placeholder="Zuständiger Admin">
+                                                            {(value: string) => {
+                                                                if (value === 'none' || !value) return 'Kein Lead (GL)';
+                                                                const lead = users.find(u => u.id === value);
+                                                                return lead ? (lead.name || lead.email) : 'Lead zugewiesen';
+                                                            }}
+                                                        </SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-background border-border text-foreground">
+                                                        <SelectItem value="none">Kein Lead (GL)</SelectItem>
+                                                        {users
+                                                            .filter(u => (u.role === 'admin' || u.role === 'manager') && u.id !== user.id)
+                                                            .map(adminUser => (
+                                                                <SelectItem key={adminUser.id} value={adminUser.id}>
+                                                                    {adminUser.name || adminUser.email} ({adminUser.role})
+                                                                </SelectItem>
+                                                            ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                            <TableCell>
+                                                {user.verified || user.id === pb.authStore.record?.id ? (
+                                                    <Badge variant="default" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                                                        <CheckCircle size={12} className="mr-1" />
+                                                        Aktiv
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="destructive" className="bg-red-500/10 text-red-400 border-red-500/20">
+                                                        <Ban size={12} className="mr-1" />
+                                                        Deaktiviert
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm text-muted-foreground">
+                                                    {new Date(user.created).toLocaleDateString('de-DE')}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="xs"
+                                                        onClick={() => {
+                                                            setResetUserId(user.id);
+                                                            setResetUserEmail(user.email);
+                                                            setResetPassword('');
+                                                            setResetPasswordConfirm('');
+                                                            setResetOpen(true);
+                                                        }}
+                                                        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                                                        title="Passwort zurücksetzen"
+                                                    >
+                                                        <KeyRound size={14} />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="xs"
+                                                        onClick={() => handleToggleStatus(user)}
+                                                        disabled={user.id === pb.authStore.record?.id}
+                                                        className={user.verified || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
+                                                    >
+                                                        {user.verified || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
+                                                        {user.verified || user.id === pb.authStore.record?.id ? 'Deaktivieren' : 'Aktivieren'}
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="xs"
+                                                        onClick={() => handleDelete(user)}
+                                                        disabled={user.id === pb.authStore.record?.id}
+                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
                                 )}
                             </TableBody>
                         </Table>
-                    </CardContent>
+                      </CardContent>
                 </Card>
 
             </div>
@@ -581,36 +520,35 @@ export default function AdminUsersPage() {
                     setInviteEmail('');
                     setInviteName('');
                     setInviteRole('employee');
-                    setInviteSupervisor('none');
                 }
             }}>
                 <DialogContent className="sm:max-w-md border-border bg-background">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <UserPlus size={18} className="text-primary" />
+                            <UserPlus size={18} className="text-indigo-400" />
                             Mitarbeiter anlegen
                         </DialogTitle>
                         <DialogDescription>
-                            Erstelle ein neues Benutzerkonto. Der Mitarbeiter erhält einen Einladungs-Link per E-Mail.
+                            Lege einen neuen Mitarbeiter an. Der Benutzer erhält eine E-Mail zum Setzen seines Passworts.
                         </DialogDescription>
                     </DialogHeader>
 
                     <form onSubmit={handleInvite} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="invite-email">E-Mail-Adresse *</Label>
+                            <Label htmlFor="invite-email">E-Mail *</Label>
                             <Input
                                 id="invite-email"
                                 type="email"
                                 value={inviteEmail}
                                 onChange={(e) => setInviteEmail(e.target.value)}
-                                placeholder="name@vibeforce.de"
+                                placeholder="max@example.com"
                                 className="bg-card border-border"
                                 required
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="invite-name">Vollständiger Name</Label>
+                            <Label htmlFor="invite-name">Name</Label>
                             <Input
                                 id="invite-name"
                                 value={inviteName}
@@ -620,52 +558,56 @@ export default function AdminUsersPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="invite-role">Rolle</Label>
-                                <Select value={inviteRole} onValueChange={(val) => val && setInviteRole(val)}>
-                                    <SelectTrigger className="bg-card border-border">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="admin">Administrator</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="employee">Mitarbeiter</SelectItem>
-                                        <SelectItem value="freelancer">Freelancer</SelectItem>
-                                        <SelectItem value="client">Kunde</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="invite-hours">Soll-Stunden / Woche</Label>
-                                <Input
-                                    id="invite-hours"
-                                    type="number"
-                                    min="1"
-                                    max="60"
-                                    value={inviteWeeklyHours}
-                                    onChange={(e) => setInviteWeeklyHours(Number(e.target.value))}
-                                    className="bg-card border-border"
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="invite-role">Rolle</Label>
+                            <Select value={inviteRole} onValueChange={(val) => val && setInviteRole(val)}>
+                                <SelectTrigger className="bg-card border-border">
+                                    <span>{ROLE_LABELS_FALLBACK[inviteRole || 'employee']}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(USER_ROLES as readonly string[]).map(r => (
+                                        <SelectItem key={r} value={r}>{labelFor(USER_ROLE_LABEL_MAP, r as (typeof USER_ROLES)[number])}</SelectItem>
+                                    ))}
+                                    <SelectItem value="freelancer">Freelancer</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="invite-supervisor">Vorgesetzter</Label>
-                            <Select value={inviteSupervisor} onValueChange={(val) => val && setInviteSupervisor(val)}>
-                                <SelectTrigger className="bg-card border-border">
-                                    <SelectValue placeholder="Kein Vorgesetzter" />
+                            <Label htmlFor="invite-supervisor">Zuständiger Admin / Lead</Label>
+                            <Select value={inviteSupervisor} onValueChange={setInviteSupervisor}>
+                                <SelectTrigger id="invite-supervisor" className="bg-card border-border">
+                                    <SelectValue placeholder="Lead auswählen">
+                                        {(value: string) => {
+                                            if (value === 'none' || !value) return 'Kein Lead (GL)';
+                                            const lead = users.find(u => u.id === value);
+                                            return lead ? `${lead.name || lead.email} (${lead.role})` : 'Lead ausgewählt';
+                                        }}
+                                    </SelectValue>
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">Kein Vorgesetzter</SelectItem>
-                                    {users.filter(u => u.role !== 'client').map(u => (
-                                        <SelectItem key={u.id} value={u.id}>
-                                            {getUserDisplayName(u)}
-                                        </SelectItem>
-                                    ))}
+                                <SelectContent className="bg-background border-border text-foreground">
+                                    <SelectItem value="none">Kein Lead (Direkt Geschäftsleitung)</SelectItem>
+                                    {users
+                                        .filter(u => u.role === 'admin' || u.role === 'manager')
+                                        .map(adminUser => (
+                                            <SelectItem key={adminUser.id} value={adminUser.id}>
+                                                {adminUser.name || adminUser.email} ({adminUser.role})
+                                            </SelectItem>
+                                        ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="invite-rate">Stundensatz (€/h)</Label>
+                            <Input
+                                id="invite-rate"
+                                type="number"
+                                value={inviteHourlyRate}
+                                onChange={(e) => setInviteHourlyRate(e.target.value)}
+                                placeholder="z.B. 90"
+                                className="bg-card border-border"
+                            />
                         </div>
 
                         <DialogFooter className="pt-2">
@@ -673,8 +615,8 @@ export default function AdminUsersPage() {
                                 Abbrechen
                             </Button>
                             <Button type="submit" disabled={inviting}>
-                                {inviting && <Loader2 size={14} className="animate-spin mr-2" />}
-                                <Mail size={14} className="mr-1.5" />
+                                {inviting && <Loader2 size={14} className="animate-spin" />}
+                                <Mail size={14} />
                                 {inviting ? 'Wird erstellt...' : 'Mitarbeiter anlegen'}
                             </Button>
                         </DialogFooter>
@@ -682,21 +624,41 @@ export default function AdminUsersPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Fallback Dialog */}
+            {/* Fallback: SMTP not configured – show generated password */}
             <Dialog open={fallbackOpen} onOpenChange={setFallbackOpen}>
                 <DialogContent className="sm:max-w-md border-border bg-background">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <AlertTriangle size={18} className="text-amber-400" />
-                            E-Mail-Hinweis
+                            E-Mail-Versand nicht verfügbar
                         </DialogTitle>
                         <DialogDescription>
-                            Benutzerkonto für <strong>{fallbackEmail}</strong> wurde angelegt.
+                            Das System konnte keine E-Mail an <strong>{fallbackEmail}</strong> senden, da kein SMTP-Server konfiguriert ist.
+                            Bitte teile dem Benutzer das folgende temporäre Passwort mit:
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
-                        {fallbackPassword}
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                            <code className="flex-1 text-sm font-mono text-amber-400 break-all select-all">
+                                {fallbackPassword}
+                            </code>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(fallbackPassword);
+                                    toast.success('Passwort kopiert');
+                                }}
+                                className="shrink-0 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                            >
+                                <Copy size={14} className="mr-1" />
+                                Kopieren
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Der Benutzer kann das Passwort nach der ersten Anmeldung in seinem Profil ändern.
+                        </p>
                     </div>
 
                     <DialogFooter>
@@ -712,11 +674,11 @@ export default function AdminUsersPage() {
                 <DialogContent className="sm:max-w-md border-border bg-background">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <KeyRound size={18} className="text-primary" />
+                            <KeyRound size={18} className="text-indigo-400" />
                             Passwort zurücksetzen
                         </DialogTitle>
                         <DialogDescription>
-                            Neues Passwort für <strong>{resetUserEmail}</strong> vergeben.
+                            Neues Passwort für <strong>{resetUserEmail}</strong> vergeben. Der Benutzer wird beim nächsten Login das neue Passwort verwenden müssen.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -753,96 +715,7 @@ export default function AdminUsersPage() {
                             </Button>
                             <Button type="submit" disabled={resetting}>
                                 {resetting && <Loader2 size={14} className="animate-spin mr-2" />}
-                                Passwort speichern
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit User Dialog */}
-            <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) { setEditName(''); setEditEmail(''); setEditRole('employee'); } }}>
-                <DialogContent className="sm:max-w-md border-border bg-background">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Pencil size={18} className="text-primary" />
-                            Benutzer bearbeiten
-                        </DialogTitle>
-                        <DialogDescription>
-                            Stammdaten von <strong>{editEmail}</strong> ändern.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleEdit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-user-name">Vollständiger Name *</Label>
-                            <Input
-                                id="edit-user-name"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                placeholder="Max Mustermann"
-                                className="bg-card border-border"
-                                required
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-role">Rolle</Label>
-                                <Select value={editRole} onValueChange={(val) => val && setEditRole(val)}>
-                                    <SelectTrigger className="bg-card border-border">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="admin">Administrator</SelectItem>
-                                        <SelectItem value="manager">Manager</SelectItem>
-                                        <SelectItem value="employee">Mitarbeiter</SelectItem>
-                                        <SelectItem value="freelancer">Freelancer</SelectItem>
-                                        <SelectItem value="client">Kunde</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-hours">Soll-Stunden / Woche</Label>
-                                <Input
-                                    id="edit-hours"
-                                    type="number"
-                                    min="1"
-                                    max="60"
-                                    value={editWeeklyHours}
-                                    onChange={(e) => setEditWeeklyHours(Number(e.target.value))}
-                                    className="bg-card border-border"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-user-supervisor">Vorgesetzter</Label>
-                            <Select value={editSupervisor} onValueChange={(val) => val && setEditSupervisor(val)}>
-                                <SelectTrigger className="bg-card border-border">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">Kein Vorgesetzter</SelectItem>
-                                    {users
-                                        .filter(u => u.id !== editUserId && u.role !== 'client')
-                                        .map(u => (
-                                            <SelectItem key={u.id} value={u.id}>
-                                                {getUserDisplayName(u)}
-                                            </SelectItem>
-                                        ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
-                                Abbrechen
-                            </Button>
-                            <Button type="submit" disabled={editing}>
-                                {editing && <Loader2 size={14} className="animate-spin mr-2" />}
-                                Speichern
+                                {resetting ? 'Wird gespeichert...' : 'Passwort speichern'}
                             </Button>
                         </DialogFooter>
                     </form>

@@ -120,7 +120,7 @@ function ResetPasswordForm() {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold text-base shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center group min-h-[44px]"
+        className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold text-base shadow-lg shadow-primary/20 transition-all flex items-center justify-center group min-h-[44px]"
       >
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/30 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/30 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="w-full max-w-[420px] z-10 animate-in fade-in zoom-in-95 duration-700">

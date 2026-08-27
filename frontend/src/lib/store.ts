@@ -23,9 +23,7 @@ interface TimerState {
   setDescription: (description: string) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
-  setPaused?: (isPaused: boolean, pauseStartTime?: string | null) => void;
   setSelectedTaskId: (taskId: string) => void;
-  setTotalPausedSeconds?: (seconds: number) => void;
   setBillable: (isBillable: boolean) => void;
   setTimerMode: (mode: 'bar' | 'header') => void;
   syncTimerFromDB: () => Promise<void>;
@@ -53,17 +51,18 @@ export const useTimerStore = create<TimerState>()(
         startTimer: async (taskId, title, description = '', customStartTime) => {
           const state = get();
 
-          // Stoppe und speichere vorherigen laufenden Timer falls vorhanden
+          // Stoppe und speichere laufenden Timer
           if (state.runningTaskId) {
             try {
               await get().stopAndSaveTimer();
             } catch (e) {
               console.error('Failed to stop previous timer:', e);
+              // Nicht fortfahren - alter Timer muss erst gespeichert werden
               return;
             }
           }
 
-          // Ermittle Standard-Abrechenbarkeit für diesen Task
+          // Fetch billable default for this task (check client override first, fallback to user preference)
           let isBillableDefault = useSettingsStore.getState().defaultBillable ?? true;
           try {
             const task = await pb.collection('tasks').getOne(taskId, {
@@ -74,12 +73,12 @@ export const useTimerStore = create<TimerState>()(
               isBillableDefault = client.abrechenbar;
             }
           } catch (e) {
-            console.error('Failed to fetch billable default for task:', e);
+            console.error("Failed to fetch billable default for task:", e);
           }
 
           const startTimeISO = customStartTime || new Date().toISOString();
 
-          // Neuen time_entry Record sofort in DB persistieren
+          // Create time_entry record immediately on start
           const record = await pb.collection('time_entries').create({
             task: taskId,
             user: pb.authStore.record?.id,
@@ -87,7 +86,8 @@ export const useTimerStore = create<TimerState>()(
             description: description || undefined,
             is_billable: isBillableDefault,
           }).catch((e: unknown) => {
-            console.error('Failed to create time entry in DB:', e);
+            console.error('Failed to create time entry:', e);
+            // Store NICHT setzen - kein Phantom-Timer
             throw e;
           });
 
@@ -121,12 +121,17 @@ export const useTimerStore = create<TimerState>()(
           if (!state.runningTaskId || !state.startTime) return;
 
           const endTime = new Date().toISOString();
+          let effectivePausedSeconds = state.totalPausedSeconds;
+          if (state.isPaused && state.pauseStartTime) {
+            const ongoingPauseMs = new Date(endTime).getTime() - new Date(state.pauseStartTime).getTime();
+            effectivePausedSeconds += Math.max(0, Math.floor(ongoingPauseMs / 1000));
+          }
           const durationSeconds = Math.max(0, Math.round(
             (new Date(endTime).getTime() - new Date(state.startTime).getTime()) / 1000
-          ) - state.totalPausedSeconds);
+          ) - effectivePausedSeconds);
           const rawDurationMinutes = Math.max(1, Math.round(durationSeconds / 60));
 
-          // Kaskadierende Rundung: Projekt -> Kunde -> Global Settings
+          // Resolve contractual rounding from project/client or fallback to global settings
           let roundingInterval: BillingRoundingInterval = (useSettingsStore.getState().globalRoundingInterval as BillingRoundingInterval) ?? 6;
           let roundingMode: BillingRoundingMode = (useSettingsStore.getState().globalRoundingMode as BillingRoundingMode) ?? 'ceil';
 
@@ -149,7 +154,7 @@ export const useTimerStore = create<TimerState>()(
               }
             }
           } catch (e) {
-            console.warn('Could not fetch project/client rounding settings, using global fallback:', e);
+            console.warn("Could not fetch project/client rounding settings, using global fallback:", e);
           }
 
           const billableMinutes = calculateBillableMinutes({
@@ -181,7 +186,7 @@ export const useTimerStore = create<TimerState>()(
               });
             }
 
-            // Nur bei erfolgreichem DB-Write Store leeren
+            // Nur bei Erfolg Store clearen
             set({
               runningTaskId: null,
               startTime: null,
@@ -195,8 +200,8 @@ export const useTimerStore = create<TimerState>()(
               runningTimeEntryId: null,
             });
           } catch (error) {
-            console.error('Failed to stop and save timer:', error);
-            throw error;
+            console.error('Failed to stop timer:', error);
+            throw error; // UI kann Fehler anzeigen
           }
         },
         saveRunningNote: async () => {
@@ -207,9 +212,10 @@ export const useTimerStore = create<TimerState>()(
             await pb.collection('time_entries').update(state.runningTimeEntryId, {
               description: state.description || undefined,
             });
+            return Promise.resolve();
           } catch (e) {
-            console.error('Failed to save running note:', e);
-            throw e;
+            console.error("Failed to save running note:", e);
+            return Promise.reject(e);
           }
         },
         setDescription: (description) => set({ description }),
@@ -230,9 +236,7 @@ export const useTimerStore = create<TimerState>()(
             });
           }
         },
-        setPaused: (isPaused, pauseStartTime = null) => set({ isPaused, pauseStartTime }),
         setSelectedTaskId: (taskId) => set({ selectedTaskId: taskId }),
-        setTotalPausedSeconds: (seconds) => set({ totalPausedSeconds: seconds }),
         setBillable: (isBillable) => set({ isBillable }),
         setTimerMode: (mode) => set({ timerMode: mode }),
         syncTimerFromDB: async () => {
@@ -257,7 +261,7 @@ export const useTimerStore = create<TimerState>()(
               const nowMs = Date.now();
               const diffSeconds = (nowMs - startTimeMs) / 1000;
 
-              // Auto-Cap Prüfung: Laufzeit über Limit?
+              // Auto-Cap check: If open time entry exceeds configured max continuous runtime (e.g. 8h)
               if (diffSeconds > maxDurationSeconds) {
                 const cappedEndTime = new Date(startTimeMs + maxDurationSeconds * 1000).toISOString();
                 const cappedDurationMinutes = Math.round(maxDurationSeconds / 60);
@@ -268,6 +272,7 @@ export const useTimerStore = create<TimerState>()(
                     duration_minutes: cappedDurationMinutes,
                   });
 
+                  // Clear store state if it was tracking this ghost timer
                   if (state.runningTimeEntryId === entry.id || state.runningTaskId === entry.task) {
                     set({
                       runningTaskId: null,
@@ -470,11 +475,14 @@ export const useSettingsStore = create<SettingsState>()(
           try {
             const existingPrefs = (pb.authStore.record as any).preferences || {};
             const mergedPrefs = { ...existingPrefs, ...updated };
-            (pb.authStore.record as any).preferences = mergedPrefs;
 
-            await pb.collection('users').update(userId, {
+            const updatedRecord = await pb.collection('users').update(userId, {
               preferences: mergedPrefs,
             });
+
+            if (pb.authStore.token) {
+              pb.authStore.save(pb.authStore.token, updatedRecord);
+            }
           } catch (err) {
             console.warn('PocketBase user preferences sync fallback to local store:', err);
           }
@@ -484,27 +492,6 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'vibeforce-settings-storage',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
-
-interface ThemeState {
-  nightShiftEnabled: boolean;
-  nightShiftBypass: boolean;
-  setNightShiftEnabled: (enabled: boolean) => void;
-  setNightShiftBypass: (bypass: boolean) => void;
-}
-
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      nightShiftEnabled: false,
-      nightShiftBypass: false,
-      setNightShiftEnabled: (enabled) => set({ nightShiftEnabled: enabled }),
-      setNightShiftBypass: (bypass) => set({ nightShiftBypass: bypass }),
-    }),
-    {
-      name: 'vibeforce-theme-storage',
     }
   )
 );

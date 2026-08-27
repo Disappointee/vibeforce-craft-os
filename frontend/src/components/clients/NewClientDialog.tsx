@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '@/lib/pocketbase';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { createClientAction } from '@/app/actions/clients';
 import {
     Dialog,
     DialogContent,
@@ -34,6 +35,7 @@ export function NewClientDialog({
     onOpenChange: (open: boolean) => void;
     onClientCreated: () => void;
 }) {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -51,6 +53,8 @@ export function NewClientDialog({
         laufzeit_ende: '',
         abrechenbar: 'true',
         kundenstatus: 'aktiv',
+        billing_rounding: 'inherit',
+        rounding_mode: 'ceil',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +68,7 @@ export function NewClientDialog({
         setIsLoading(true);
 
         try {
-            await pb.collection('clients').create({
+            await createClientAction({
                 name: formData.name.trim(),
                 company: formData.company.trim() || null,
                 email: formData.email.trim() || null,
@@ -80,9 +84,12 @@ export function NewClientDialog({
                 laufzeit_ende: formData.laufzeit_ende || null,
                 abrechenbar: formData.abrechenbar === 'true',
                 kundenstatus: formData.kundenstatus,
+                billing_rounding: formData.billing_rounding === 'inherit' ? null : parseInt(formData.billing_rounding),
+                rounding_mode: formData.rounding_mode,
             });
 
             toast.success('Kunde erfolgreich erstellt!');
+            router.refresh();
             onOpenChange(false);
             setFormData({
                 name: '',
@@ -100,6 +107,8 @@ export function NewClientDialog({
                 laufzeit_ende: '',
                 abrechenbar: 'true',
                 kundenstatus: 'aktiv',
+                billing_rounding: 'inherit',
+                rounding_mode: 'ceil',
             });
             onClientCreated();
         } catch (error: any) {
@@ -344,6 +353,61 @@ export function NewClientDialog({
                                     <SelectContent className="bg-background border-border text-foreground">
                                         <SelectItem value="true">Ja</SelectItem>
                                         <SelectItem value="false">Nein</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="new-billing-rounding" className="text-foreground text-xs uppercase tracking-wider">Abrechnungs-Takt</Label>
+                                <Select
+                                    value={formData.billing_rounding}
+                                    onValueChange={(val) => setFormData({ ...formData, billing_rounding: val })}
+                                >
+                                    <SelectTrigger id="new-billing-rounding" className="bg-card border-border">
+                                        <SelectValue placeholder="Takt wählen">
+                                            {(value: string) => {
+                                                if (value === 'inherit') return 'Global erben (Standard)';
+                                                if (value === '0') return 'Exakt (1 Min)';
+                                                if (value === '5') return '5-Minuten-Takt';
+                                                if (value === '6') return '6-Minuten-Takt (0,1h)';
+                                                if (value === '10') return '10-Minuten-Takt';
+                                                if (value === '15') return '15-Minuten-Takt';
+                                                if (value === '30') return '30-Minuten-Takt';
+                                                return value;
+                                            }}
+                                        </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-border text-foreground">
+                                        <SelectItem value="inherit">Global erben (Standard)</SelectItem>
+                                        <SelectItem value="0">Exakt (1 Minute - Minutengenau)</SelectItem>
+                                        <SelectItem value="5">5-Minuten-Takt</SelectItem>
+                                        <SelectItem value="6">6-Minuten-Takt (0,1h Dezimal-Standard)</SelectItem>
+                                        <SelectItem value="10">10-Minuten-Takt</SelectItem>
+                                        <SelectItem value="15">15-Minuten-Takt</SelectItem>
+                                        <SelectItem value="30">30-Minuten-Takt</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="new-rounding-mode" className="text-foreground text-xs uppercase tracking-wider">Rundungs-Methode</Label>
+                                <Select
+                                    value={formData.rounding_mode}
+                                    onValueChange={(val) => setFormData({ ...formData, rounding_mode: val })}
+                                >
+                                    <SelectTrigger id="new-rounding-mode" className="bg-card border-border">
+                                        <SelectValue placeholder="Methode wählen">
+                                            {(value: string) => {
+                                                if (value === 'ceil') return 'Immer aufrunden';
+                                                if (value === 'round') return 'Kaufmännisch';
+                                                return value;
+                                            }}
+                                        </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-border text-foreground">
+                                        <SelectItem value="ceil">Immer aufrunden (Standard)</SelectItem>
+                                        <SelectItem value="round">Kaufmännisch runden</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

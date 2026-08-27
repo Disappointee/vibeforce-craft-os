@@ -10,6 +10,8 @@ import { NewSimpleTaskDialog } from '@/components/tasks/NewSimpleTaskDialog';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
 import { Input } from '@/components/ui/input';
+import { revalidateClientsPath } from '@/app/actions/clients';
+import { revalidateProjectsPath } from '@/app/actions/projects';
 
 interface TaskOption {
   id: string;
@@ -25,13 +27,11 @@ export function SimpleActionMenu() {
   const { startTimer } = useTimerStore();
   const router = useRouter();
 
-  // Inline timer task search state
   const [showTimerSearch, setShowTimerSearch] = useState(false);
   const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
   const [timerSearchQuery, setTimerSearchQuery] = useState('');
   const [timerTasksLoading, setTimerTasksLoading] = useState(false);
 
-  // Fetch tasks when timer search opens
   useEffect(() => {
     if (!showTimerSearch) return;
     const fetchTasks = async () => {
@@ -63,7 +63,6 @@ export function SimpleActionMenu() {
     fetchTasks();
   }, [showTimerSearch]);
 
-  // Reset timer search when menu closes
   useEffect(() => {
     if (!open) {
       setShowTimerSearch(false);
@@ -71,7 +70,6 @@ export function SimpleActionMenu() {
     }
   }, [open]);
 
-  // Escape key to close
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -147,7 +145,6 @@ export function SimpleActionMenu() {
 
   return (
     <>
-      {/* Menu Backdrop + Content — only shown when open */}
       {open && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150"
@@ -163,7 +160,6 @@ export function SimpleActionMenu() {
             className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
@@ -187,7 +183,6 @@ export function SimpleActionMenu() {
               </button>
             </div>
 
-            {/* Content: either action list or inline task search */}
             {showTimerSearch ? (
               <div className="p-3">
                 <div className="relative mb-2">
@@ -264,36 +259,18 @@ export function SimpleActionMenu() {
                     </div>
                   </button>
                 ))}
-                
-                {/* Suggestion Button */}
-                <div className="pt-2 mt-2 border-t border-border">
-                  <a
-                    href="mailto:admin@vibeforce-flow.de?subject=Schnellaktion%20Feld%20Vorschlag"
-                    className="flex w-full items-center justify-between gap-4 px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500/10 to-purple-500/10 hover:from-fuchsia-500/20 hover:to-purple-500/20 border border-fuchsia-500/20 transition-all text-left group"
-                    onClick={() => setOpen(false)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-fuchsia-400 group-hover:text-fuchsia-300">
-                        Vorschlag? Her damit →
-                      </p>
-                      <p className="text-xs text-fuchsia-400/70 mt-0.5">
-                        Dir fehlt eine Aktion? Schreib mir!
-                      </p>
-                    </div>
-                  </a>
-                </div>
+
+
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Dialogs — always rendered so external triggers work */}
       <NewSimpleTaskDialog
         open={taskDialogOpen}
         onOpenChange={setTaskDialogOpen}
         onTaskCreated={() => {
-          window.dispatchEvent(new CustomEvent('task-updated'));
           router.refresh();
         }}
       />
@@ -301,8 +278,8 @@ export function SimpleActionMenu() {
       <NewClientDialog
         open={clientDialogOpen}
         onOpenChange={setClientDialogOpen}
-        onClientCreated={() => {
-          window.dispatchEvent(new CustomEvent('client-updated'));
+        onClientCreated={async () => {
+          await revalidateClientsPath();
           router.refresh();
         }}
       />
@@ -310,8 +287,8 @@ export function SimpleActionMenu() {
       <NewProjectDialog
         open={projectDialogOpen}
         onOpenChange={setProjectDialogOpen}
-        onProjectCreated={() => {
-          window.dispatchEvent(new CustomEvent('project-updated'));
+        onProjectCreated={async () => {
+          await revalidateProjectsPath();
           router.refresh();
         }}
       />

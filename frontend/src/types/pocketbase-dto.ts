@@ -19,10 +19,9 @@ export interface UserRecord {
   last_name?: string;
   email: string;
   avatar?: string;
-  role?: 'admin' | 'manager' | 'employee' | 'freelancer' | 'client';
+  role?: 'admin' | 'manager' | 'user';
   deactivated?: boolean;
-  expertise?: string[];
-  supervisor?: string;
+  expertise?: string;
 }
 
 export interface ClientRecord {
@@ -32,20 +31,16 @@ export interface ClientRecord {
   company?: string;
   betreuer?: string[];
   beobachter?: string[];
-  billing_rounding?: number;
-  rounding_mode?: string;
 }
 
 export interface ProjectRecord {
   name: string;
   key: string;
-  status: 'active' | 'completed' | 'archived' | string;
+  status: 'active' | 'completed' | 'archived';
   client?: string;
   budget_hours?: number;
   start_date?: string;
   due_date?: string;
-  billing_rounding?: number | 'inherit';
-  rounding_mode?: string | 'inherit';
 }
 
 export interface TaskRecord {
@@ -53,7 +48,7 @@ export interface TaskRecord {
   description?: string;
   project: string;
   status?: string;
-  priority?: 'low' | 'medium' | 'high' | 'acute';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignees?: string[];
   due_date?: string;
   start_date?: string;
@@ -68,7 +63,6 @@ export interface TimeEntryRecord {
   start_time: string;
   end_time?: string;
   duration_minutes?: number;
-  billable_minutes?: number;
   description?: string;
   is_billable?: boolean;
 }

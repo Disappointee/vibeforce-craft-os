@@ -3,13 +3,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
-import type { UserRecord, ProjectRecord, TaskRecord } from '@/lib/pocketbase-types';
+import type { UserRecord } from '@/lib/pocketbase-types';
 import {
-  LayoutDashboard,
   CheckSquare,
-  Clock,
   Users,
-  BarChart3,
   Settings,
   LogOut,
   Search,
@@ -19,6 +16,7 @@ import {
   X,
   Menu,
   Building2,
+  Shield,
   UserCircle,
   Timer,
   AlertTriangle,
@@ -27,19 +25,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  BookOpen,
 } from 'lucide-react';
+
 import Link from 'next/link';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { HeaderTimer } from '@/components/layout/HeaderTimer';
-import { useUiStore } from '@/lib/store';
+import { useUiStore, useSettingsStore } from '@/lib/store';
 import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
 import { useOffline } from '@/hooks/use-offline';
-import { toast } from 'sonner';
 import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
 import { LiveClock } from '@/components/layout/LiveClock';
-import { QuickAddMenu } from '@/components/layout/QuickAddMenu';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
-import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import {
@@ -51,7 +48,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
+import { NewSimpleTaskDialog } from '@/components/tasks/NewSimpleTaskDialog';
+import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
+import { NewClientDialog } from '@/components/clients/NewClientDialog';
 
 interface SearchResult {
   type: 'project' | 'task' | 'client' | 'user';
@@ -84,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useUiStore.getState().setTaskDialogOpen(true);
   }, []);
 
-  const handleOpenActionMenu = useCallback(() => {
+  const handleOpenTimerBar = useCallback(() => {
     useUiStore.getState().setActionMenuOpen(true);
   }, []);
 
@@ -98,16 +97,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useGlobalShortcuts({
     onOpenTaskDialog: handleOpenTaskDialog,
-    onOpenActionMenu: handleOpenActionMenu,
+    onOpenTimerBar: handleOpenTimerBar,
     onOpenClientDialog: handleOpenClientDialog,
     onOpenProjectDialog: handleOpenProjectDialog,
   });
 
-  // Activate real-time PocketBase SSE subscriptions
-  useRealtimeSync();
-
-
-  // Initialize dark mode from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('vibeforce-theme');
     if (stored === 'light') {
@@ -133,7 +127,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   };
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -142,7 +135,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const searchInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keyboard shortcut: Ctrl+K or / to focus search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !e.metaKey && !e.ctrlKey && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA')) {
@@ -168,7 +160,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ),
             ]);
             if (!cancelled) {
-              setUser(pb.authStore.record as unknown as UserRecord);
+              const currentRecord = pb.authStore.record;
+              setUser(currentRecord as unknown as UserRecord);
+              useSettingsStore.getState().syncFromUserPreferences(currentRecord);
             }
           } catch {
             if (!cancelled) {
@@ -196,7 +190,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
   }, [router]);
 
-  // Close search results on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -210,7 +203,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search
   const performSearch = useCallback(async (query: string) => {
     if (!query || query.length < 2) {
       setSearchResults([]);
@@ -222,7 +214,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       const lower = query.toLowerCase();
 
-      // Search projects, tasks, clients, and users in parallel (fail-safe)
       const [projectResult, taskResult, clientResult, userResult] = await Promise.allSettled([
         pb.collection('projects').getList(1, 5, {
           filter: pb.filter('name ~ {:q} || key ~ {:q}', { q: lower }),
@@ -333,6 +324,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   };
 
+  const {
+    taskDialogOpen,
+    setTaskDialogOpen,
+    projectDialogOpen,
+    setProjectDialogOpen,
+    clientDialogOpen,
+    setClientDialogOpen,
+  } = useUiStore();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -349,9 +349,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex h-screen bg-background font-sans text-foreground overflow-hidden">
 
         {/* Sidebar */}
-        {/* Sidebar */}
         <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out border-r border-border bg-sidebar/50 backdrop-blur-xl flex flex-col hidden md:flex z-20 relative`}>
-          {/* Collapse Toggle Button */}
           <button
             type="button"
             onClick={() => {
@@ -379,15 +377,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className={`flex-1 space-y-1 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
-            <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} collapsed={sidebarCollapsed} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
-            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} />
-            <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} collapsed={sidebarCollapsed} />
+            <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} collapsed={sidebarCollapsed} />
+            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-            <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} collapsed={sidebarCollapsed} />
-            <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} collapsed={sidebarCollapsed} />
+            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} collapsed={sidebarCollapsed} />
+            {user?.role === 'admin' && (
+              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+            )}
             <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
+            <NavItem href="/docs" icon={<BookOpen size={18} />} label="Handbuch & Hilfe" active={pathname === '/docs'} collapsed={sidebarCollapsed} />
           </nav>
 
           <div className={`border-t border-border mt-auto pb-16 transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
@@ -429,15 +428,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/reports" icon={<BarChart3 size={18} />} label="Zeitauswertungen" active={pathname === '/reports'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
+            {user?.role === 'admin' && (
+              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+            )}
             <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/docs" icon={<BookOpen size={18} />} label="Handbuch & Hilfe" active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
           </nav>
 
           <div className="p-4 border-t border-border mt-auto pb-16">
@@ -454,16 +454,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col h-full relative overflow-hidden">
-          {/* Offline Banner */}
           {isOffline && (
             <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/15 border-b border-amber-500/30 text-amber-400 text-sm">
               <AlertTriangle size={16} />
               <span>Keine Verbindung — Daten werden lokal zwischengespeichert</span>
             </div>
           )}
-          {/* Top Header */}
           <header className="h-16 flex-shrink-0 flex items-center justify-between px-4 md:px-8 border-b border-border bg-background/80 backdrop-blur-md z-10">
-            {/* Mobile Hamburger + Search */}
             <div className="flex items-center gap-3 flex-1 md:flex-initial">
               <button
                 onClick={() => setMobileSidebarOpen(true)}
@@ -503,7 +500,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   )}
                 </div>
 
-                {/* Search Results Dropdown */}
                 {showResults && (
                   <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-border bg-popover shadow-2xl shadow-black/50 overflow-hidden z-50">
                     <div className="p-2 space-y-0.5">
@@ -543,7 +539,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Dark/Light Mode Toggle — icon only */}
               <button
                 onClick={toggleDarkMode}
                 className="relative p-3 min-h-[44px] min-w-[44px] rounded-lg transition-all text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -553,7 +548,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
               <LiveClock />
               <HeaderTimer />
-              <QuickAddMenu />
               <button
                 onClick={() => useUiStore.getState().toggleActionMenu()}
                 className="relative p-3 min-h-[44px] min-w-[44px] rounded-lg transition-all text-amber-500 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-400"
@@ -562,7 +556,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Zap size={18} />
               </button>
               <NotificationBell />
-              {/* User Dropdown */}
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen((prev) => !prev)}
@@ -574,14 +567,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <p className="text-sm font-semibold text-foreground">{getUserDisplayName(user)}</p>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider">{user?.role || 'Mitglied'}</p>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center font-bold shadow-lg text-black">
-                    {getUserInitials(user) || 'K'}
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center font-bold shadow-lg text-white">
+                    {getUserInitials(user) || 'V'}
                   </div>
                 </button>
 
                 {userMenuOpen && (
                   <>
-                    {/* Backdrop for closing on outside click */}
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-popover shadow-2xl z-50 overflow-hidden">
                       <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">
@@ -594,6 +586,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         >
                           <UserCircle size={16} className="text-muted-foreground" />
                           Profil
+                        </button>
+                        <button
+                          onClick={() => { router.push('/docs'); setUserMenuOpen(false); }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                        >
+                          <BookOpen size={16} className="text-muted-foreground" />
+                          Handbuch & Hilfe
                         </button>
                         {user?.role === 'admin' && (
                           <>
@@ -630,7 +629,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </header>
 
-          {/* Dynamic Page Content */}
           <div className="flex-1 overflow-auto pb-20">
             {children}
           </div>
@@ -639,7 +637,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SimpleActionMenu />
       </div>
 
-      {/* Logout Confirmation Dialog */}
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <DialogContent className="sm:max-w-md border-border bg-card">
           <DialogHeader>
@@ -668,6 +665,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <NewSimpleTaskDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        onTaskCreated={() => router.refresh()}
+      />
+      <NewProjectDialog
+        open={projectDialogOpen}
+        onOpenChange={setProjectDialogOpen}
+        onProjectCreated={() => router.refresh()}
+      />
+      <NewClientDialog
+        open={clientDialogOpen}
+        onOpenChange={setClientDialogOpen}
+        onClientCreated={() => router.refresh()}
+      />
     </SidebarProvider>
   );
 }

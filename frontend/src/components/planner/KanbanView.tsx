@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import type { TaskRecord } from '@/lib/pocketbase-types';
+import { useRouter } from 'next/navigation';
+import type { TaskRecord, TaskStatus } from '@/lib/pocketbase-types';
 import { cn } from '@/lib/utils';
 import { PRIORITY_LABELS } from '@/lib/constants';
+import { updateTaskAction } from '@/app/actions/tasks';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -106,6 +108,7 @@ function KanbanCard({
 // ---------------------------------------------------------------------------
 
 export function KanbanView({ tasks, onTaskClick, onTaskUpdated }: KanbanViewProps) {
+    const router = useRouter();
     const [draggedId, setDraggedId] = useState<string | null>(null);
 
     const columns = useMemo(() => {
@@ -133,8 +136,8 @@ export function KanbanView({ tasks, onTaskClick, onTaskUpdated }: KanbanViewProp
         setDraggedId(null);
 
         try {
-            const { pb } = await import('@/lib/pocketbase');
-            await pb.collection('tasks').update(taskId, { status: newStatus });
+            await updateTaskAction(taskId, { status: newStatus as TaskStatus });
+            router.refresh();
             onTaskUpdated?.();
         } catch (err) {
             console.error('Failed to move task:', err);

@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
+import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
 
 export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 'all', statusFilter = 'active' }: { refreshTrigger: number; viewMode?: 'grid' | 'list'; clientFilter?: string; statusFilter?: string }) {
   const [projects, setProjects] = useState<any[]>([]);
@@ -75,14 +76,6 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
     };
 
     fetchProjects();
-
-    const handleProjectUpdated = () => {
-      fetchProjects();
-    };
-    window.addEventListener('project-updated', handleProjectUpdated);
-    return () => {
-      window.removeEventListener('project-updated', handleProjectUpdated);
-    };
   }, [refreshTrigger]);
 
   const handleEdit = (project: any) => {
@@ -95,9 +88,8 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
     const label = newStatus === 'archived' ? 'archiviert' : 'reaktiviert';
 
     try {
-      await pb.collection('projects').update(project.id, { status: newStatus });
+      await updateProjectAction(project.id, { status: newStatus });
       toast.success(`Projekt "${project.name}" ${label}!`);
-      // Optimistic update
       setProjects(prev => prev.map(p =>
         p.id === project.id ? { ...p, status: newStatus } : p
       ));
@@ -166,7 +158,40 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
   };
 
   const renderBudgetBar = (project: any) => {
-    return null; {/* MVP: Hide budget bars */}
+    const workedHours = project._workedHours || 0;
+    const budgetHours = project.budget_hours || 0;
+    const percent = budgetHours > 0 ? Math.min(100, Math.round((workedHours / budgetHours) * 100)) : 0;
+    const isOverBudget = budgetHours > 0 && workedHours > budgetHours;
+    const isNearBudget = budgetHours > 0 && !isOverBudget && percent >= 80;
+
+    return (
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-xs">
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Clock size={12} /> {workedHours.toFixed(1)} / {budgetHours || '?'} h
+          </span>
+          <span className={`font-mono font-bold ${isOverBudget ? 'text-red-400' : isNearBudget ? 'text-amber-400' : 'text-muted-foreground'}`}>
+            {percent}%
+          </span>
+        </div>
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isNearBudget ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'bg-primary'}`}
+            style={{ width: `${Math.max(2, percent)}%` }}
+          ></div>
+        </div>
+        {isOverBudget && (
+          <span className="text-[10px] font-semibold text-red-400 flex items-center gap-1 mt-1">
+            ⚠️ Budget-Überschreitung (+{(workedHours - budgetHours).toFixed(1)}h)
+          </span>
+        )}
+        {isNearBudget && (
+          <span className="text-[10px] font-semibold text-amber-400 flex items-center gap-1 mt-1">
+            ⚠️ Budget zu {percent}% erschöpft
+          </span>
+        )}
+      </div>
+    );
   };
 
   const renderActions = (project: any) => (
@@ -277,8 +302,8 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
         project={editProject}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        onProjectUpdated={() => {
-          window.dispatchEvent(new CustomEvent('project-updated'));
+        onProjectUpdated={async () => {
+          await revalidateProjectsPath();
         }}
       />
     </>

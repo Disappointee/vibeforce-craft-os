@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FileText, Loader2, Download } from 'lucide-react';
 import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 
 import { toast } from 'sonner';
 import { generateTimeEntryReport, generateTimeEntryReportBlob, type ReportGenerationContext } from '@/lib/report-generator';
+import { createReportAction } from '@/app/actions/reports';
 import type { TimeEntryReportRecord } from '@/lib/pocketbase-types';
 
 interface GenerateReportButtonProps {
@@ -29,6 +31,7 @@ export function GenerateReportButton({
     const [isChecking, setIsChecking] = useState(true);
     const [collectionExists, setCollectionExists] = useState(true);
     const isCheckingRef = useRef(false);
+    const router = useRouter();
 
     useEffect(() => {
         let cancelled = false;
@@ -68,22 +71,21 @@ export function GenerateReportButton({
 
         try {
             const markdown = generateTimeEntryReport(context);
-            const blob = generateTimeEntryReportBlob(markdown);
             const title = context.sessionTitle || `Report ${new Date().toLocaleDateString('de-DE')}`;
             const filename = `report_${context.timeEntry.id.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.md`;
 
-            const formData = new FormData();
-            formData.append('time_entry', context.timeEntry.id);
-            formData.append('file', new File([blob], filename, { type: 'text/markdown' }), filename);
-            formData.append('title', title);
-            formData.append('size', String(blob.size));
-
-            const created = await pb.collection('time_entry_reports').create(formData);
+            const created = await createReportAction({
+                timeEntry: context.timeEntry.id,
+                title,
+                content: markdown,
+                filename,
+            });
             setExistingReportId(created.id);
+            router.refresh();
             toast.success('Report generiert');
             onGenerated?.(created as TimeEntryReportRecord);
         } catch (error: any) {
-            if (error?.status === 404) {
+            if (error?.status === 404 || error?.message?.includes('404')) {
                 setCollectionExists(false);
                 handleFallbackDownload();
             } else {
@@ -118,7 +120,7 @@ export function GenerateReportButton({
         if (!existingReportId) return;
         try {
             const record = await pb.collection('time_entry_reports').getOne(existingReportId);
-            const fileUrl = pb.files.getUrl(record, (record as any).file);
+            const fileUrl = pb.files.getURL(record, (record as any).file);
             window.open(fileUrl, '_blank');
         } catch {
             toast.error('Fehler beim Herunterladen');

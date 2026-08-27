@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,22 +15,18 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Clock, Loader2, ChevronDown, ChevronRight, AlertCircle, Sparkles } from 'lucide-react';
+import { Clock, Loader2, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import { createTimeEntryAction, updateTimeEntryAction } from '@/app/actions/time-entries';
 import { format, parse, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { TimePicker } from '@/components/ui/time-picker';
-import type { TimeEntryRecord } from '@/lib/pocketbase-types';
-import { createTimeEntry, updateTimeEntry } from '@/app/actions/time-entries';
-import { calculateBillableMinutes, formatBillingDuration } from '@/lib/billing-calculator';
+import { TimeEntryRecord } from '@/lib/pocketbase-types';
 import { useSettingsStore } from '@/lib/store';
 
 interface TaskOption {
     id: string;
     title: string;
     projectKey: string;
-    roundingInterval?: number;
-    roundingMode?: 'ceil' | 'round';
-    isBillableDefault?: boolean;
 }
 
 interface ManualTimeEntryProps {
@@ -52,17 +48,6 @@ function parseLocalDateTime(dateStr: string, timeStr: string): Date {
     return new Date(y, m - 1, d, hh, mm, 0);
 }
 
-function timeStringToMinutes(timeStr: string): number {
-    const [h, m] = timeStr.split(':').map(Number);
-    return h * 60 + m;
-}
-
-function minutesToTimeString(total: number): string {
-    const h = Math.floor(total / 60) % 24;
-    const m = total % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
-
 export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange, isInsideSheet = false, editEntry }: ManualTimeEntryProps) {
     const [tasks, setTasks] = useState<TaskOption[]>([]);
     const [selectedTaskId, setSelectedTaskId] = useState('');
@@ -77,82 +62,68 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
     const [customTime, setCustomTime] = useState(defaultTimeStr);
-    const [hours, setHours] = useState('1');
-    const [minutes, setMinutes] = useState('0');
+    const [manualDuration, setManualDuration] = useState(false);
+    const [hours, setHours] = useState('');
+    const [minutes, setMinutes] = useState('');
     const [description, setDescription] = useState('');
-    const [isBillable, setIsBillable] = useState(true);
+    const [isBillable, setIsBillable] = useState(() => useSettingsStore.getState().defaultBillable ?? true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const lastChangedRef = useRef<'start' | 'end' | 'duration' | 'init' | null>(null);
-    const lastEditEntryId = useRef<string | undefined>(undefined);
-
     useEffect(() => {
-        const currentId = editEntry?.id ?? '__none__';
-        if (lastEditEntryId.current === currentId) return;
-        lastEditEntryId.current = currentId;
-
         if (editEntry) {
-            lastChangedRef.current = 'init';
             setSelectedTaskId(editEntry.task);
-
+            
             const entryDate = editEntry.start_time ? parseISO(editEntry.start_time) : (editEntry.date ? parseLocalDate(editEntry.date) : new Date(editEntry.created));
             const entryDateStr = editEntry.date || format(entryDate, 'yyyy-MM-dd');
             setDateStr(entryDateStr);
             setDateDisplay(format(entryDate, 'dd.MM.yyyy', { locale: de }));
-
+            
             if (editEntry.start_time && editEntry.end_time) {
                 const sDate = parseISO(editEntry.start_time);
                 const eDate = parseISO(editEntry.end_time);
                 setStartTime(`${String(sDate.getHours()).padStart(2, '0')}:${String(sDate.getMinutes()).padStart(2, '0')}`);
                 setEndTime(`${String(eDate.getHours()).padStart(2, '0')}:${String(eDate.getMinutes()).padStart(2, '0')}`);
             } else {
-                const duration = editEntry.duration_minutes || 0;
-                const st = parseLocalDateTime(entryDateStr, '09:00');
-                const stStr = `${String(st.getHours()).padStart(2, '0')}:${String(st.getMinutes()).padStart(2, '0')}`;
-                setStartTime(stStr);
-                const et = new Date(st.getTime() + duration * 60000);
-                setEndTime(`${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}`);
+                setStartTime('09:00');
+                setEndTime('10:00');
             }
-
+            
+            // Set duration override
+            setManualDuration(true);
             const duration = editEntry.duration_minutes || 0;
-            setHours(String(Math.floor(duration / 60)));
-            setMinutes(String(duration % 60));
+            setHours(String(Math.floor(duration / 60) || 0));
+            setMinutes(String(duration % 60 || 0));
+            
             setDescription(editEntry.description || '');
             setIsBillable(editEntry.is_billable !== false);
         } else {
-            lastChangedRef.current = 'init';
+            // Reset to defaults if editEntry goes back to null
             setSelectedTaskId('');
             setDateStr(initialDate || defaultDateStr);
             setDateDisplay(initialDate ? format(parseLocalDate(initialDate), 'dd.MM.yyyy', { locale: de }) : format(now, 'dd.MM.yyyy', { locale: de }));
             setStartTime('09:00');
             setEndTime('10:00');
-            setHours('1');
-            setMinutes('0');
+            setManualDuration(false);
+            setHours('');
+            setMinutes('');
             setDescription('');
-            setIsBillable(true);
+            setIsBillable(useSettingsStore.getState().defaultBillable ?? true);
         }
     }, [editEntry, initialDate]);
 
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const result = await pb.collection('tasks').getList(1, 200, {
+                const result = await pb.collection('tasks').getList(1, 500, {
                     sort: '-created',
-                    expand: 'project,project.client',
+                    expand: 'project',
                 });
-                setTasks(result.items.map((t: any) => {
-                    const project = t.expand?.project;
-                    const client = project?.expand?.client;
-                    return {
-                        id: t.id,
-                        title: t.title,
-                        projectKey: project?.key || '—',
-                        roundingInterval: project?.billing_rounding !== 'inherit' ? project?.billing_rounding : client?.billing_rounding,
-                        roundingMode: project?.rounding_mode !== 'inherit' ? project?.rounding_mode : client?.rounding_mode,
-                        isBillableDefault: client?.abrechenbar ?? true,
-                    };
-                }));
+                setTasks(result.items.map((t: any) => ({
+                    id: t.id,
+                    title: t.title,
+                    projectKey: t.expand?.project?.key || '—',
+                })));
             } catch (error) {
                 console.error('Failed to fetch tasks:', error);
             }
@@ -160,68 +131,27 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
         fetchTasks();
     }, []);
 
-    const handleStartTimeChange = (value: string) => {
-        lastChangedRef.current = 'start';
-        setStartTime(value);
+    // Calculate duration from start/end times
+    const calculateDuration = (): number => {
+        const [startH, startM] = startTime.split(':').map(Number);
+        const [endH, endM] = endTime.split(':').map(Number);
+        const startTotal = startH * 60 + startM;
+        const endTotal = endH * 60 + endM;
+        let diff = endTotal - startTotal;
+        if (diff < 0) diff += 24 * 60; // handle crossing midnight
+        return diff;
     };
 
-    const handleEndTimeChange = (value: string) => {
-        lastChangedRef.current = 'end';
-        setEndTime(value);
-    };
+    const calculatedMinutes = calculateDuration();
+    const calculatedHours = Math.floor(calculatedMinutes / 60);
+    const calculatedRemainder = calculatedMinutes % 60;
 
-    const handleHoursChange = (value: string) => {
-        lastChangedRef.current = 'duration';
-        setHours(value);
-    };
-
-    const handleMinutesChange = (value: string) => {
-        lastChangedRef.current = 'duration';
-        setMinutes(value);
-    };
-
-    const getTotalDuration = (): number => {
-        return (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
-    };
-
-    useEffect(() => {
-        if (lastChangedRef.current === 'init') return;
-        if (lastChangedRef.current === 'start' || lastChangedRef.current === 'duration') {
-            const startMinutes = timeStringToMinutes(startTime);
-            const duration = getTotalDuration();
-            const endTotal = startMinutes + duration;
-            const newEndTime = minutesToTimeString(endTotal);
-            setEndTime(newEndTime);
+    const getDurationMinutes = (): number => {
+        if (manualDuration) {
+            return (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
         }
-    }, [startTime, hours, minutes]);
-
-    useEffect(() => {
-        if (lastChangedRef.current === 'init') return;
-        if (lastChangedRef.current === 'end') {
-            const startTotal = timeStringToMinutes(startTime);
-            const endTotal = timeStringToMinutes(endTime);
-            let diff = endTotal - startTotal;
-            if (diff < 0) diff += 24 * 60;
-            setHours(String(Math.floor(diff / 60)));
-            setMinutes(String(diff % 60));
-        }
-    }, [endTime]);
-
-    // Dual duration calculation (Raw vs. Billable)
-    const selectedTask = tasks.find(t => t.id === selectedTaskId);
-    const rawMinutes = getTotalDuration();
-
-    const calculatedBillableMinutes = useMemo(() => {
-        if (!isBillable || rawMinutes <= 0) return 0;
-        const interval = (selectedTask?.roundingInterval as any) ?? useSettingsStore.getState().globalRoundingInterval ?? 6;
-        const mode = selectedTask?.roundingMode ?? useSettingsStore.getState().globalRoundingMode ?? 'ceil';
-        return calculateBillableMinutes({
-            rawMinutes,
-            interval,
-            mode,
-            isBillable,
-        });
-    }, [rawMinutes, isBillable, selectedTask]);
+        return calculatedMinutes;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -234,9 +164,9 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
             return;
         }
 
-        const totalMinutes = getTotalDuration();
+        const totalMinutes = getDurationMinutes();
         if (totalMinutes < 1) {
-            toast.error('Bitte gib eine gültige Dauer ein (mindestens 1 Minute)');
+            toast.error('Bitte gib eine gültige Dauer ein');
             return;
         }
 
@@ -244,48 +174,41 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
         try {
             const datePart = dateStr;
             const startDateTime = parseLocalDateTime(datePart, startTime);
-            const endDateTime = new Date(startDateTime.getTime() + totalMinutes * 60000);
+            const endDateTime = parseLocalDateTime(datePart, endTime);
+            // If end time is before start time, it crosses midnight
+            if (endDateTime <= startDateTime) {
+                endDateTime.setDate(endDateTime.getDate() + 1);
+            }
 
             const payload = {
                 task: selectedTaskId,
+                user: pb.authStore.record?.id,
                 start_time: startDateTime.toISOString(),
                 end_time: endDateTime.toISOString(),
                 duration_minutes: totalMinutes,
-                billable_minutes: calculatedBillableMinutes,
                 description: description || undefined,
                 is_billable: isBillable,
                 date: datePart,
             };
 
-            let res;
             if (editEntry) {
-                res = await updateTimeEntry(editEntry.id, payload);
+                await updateTimeEntryAction(editEntry.id, payload);
+                toast.success(`Zeiteintrag aktualisiert: ${totalMinutes} Min.`);
             } else {
-                res = await createTimeEntry(payload);
+                await createTimeEntryAction(payload);
+                toast.success(`Zeiteintrag erstellt: ${totalMinutes} Min.`);
             }
-
-            if (!res.success) {
-                toast.error(res.error || 'Fehler beim Speichern des Zeiteintrags');
-                return;
-            }
-
-            toast.success(
-                editEntry
-                    ? `Zeiteintrag aktualisiert: ${totalMinutes} Min. (${formatBillingDuration(calculatedBillableMinutes)} abrechenbar)`
-                    : `Zeiteintrag erfasst: ${totalMinutes} Min. (${formatBillingDuration(calculatedBillableMinutes)} abrechenbar)`
-            );
-
             setSelectedTaskId('');
             setStartTime('09:00');
             setEndTime('10:00');
-            setHours('1');
-            setMinutes('0');
+            setHours('');
+            setMinutes('');
+            setManualDuration(false);
             setDescription('');
             onEntryCreated();
-        } catch (err: unknown) {
-            console.error(err);
-            const msg = err instanceof Error ? err.message : 'Fehler beim Erstellen des Zeiteintrags';
-            toast.error(msg);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Fehler beim Erstellen des Zeiteintrags';
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -296,18 +219,7 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
             {/* Task Select */}
             <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Aufgabe</Label>
-                <Select
-                    value={selectedTaskId || null}
-                    onValueChange={(val) => {
-                        if (val) {
-                            setSelectedTaskId(val);
-                            const t = tasks.find(item => item.id === val);
-                            if (t && typeof t.isBillableDefault === 'boolean') {
-                                setIsBillable(t.isBillableDefault);
-                            }
-                        }
-                    }}
-                >
+                <Select value={selectedTaskId || null} onValueChange={(val) => val && setSelectedTaskId(val)}>
                     <SelectTrigger className="bg-background border-border w-full">
                         <SelectValue placeholder="Aufgabe auswählen...">
                             {(value: string) => {
@@ -330,7 +242,7 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
                 </Select>
             </div>
 
-            {/* Date */}
+            {/* Date (German format display, ISO internally) */}
             <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Datum</Label>
                 <div className="flex gap-2">
@@ -365,40 +277,45 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
                     <Label className="text-muted-foreground text-xs">Startzeit</Label>
                     <TimePicker
                         value={startTime}
-                        onChange={handleStartTimeChange}
+                        onChange={setStartTime}
                     />
                 </div>
                 <div className="space-y-1.5">
                     <Label className="text-muted-foreground text-xs">Endzeit</Label>
                     <TimePicker
                         value={endTime}
-                        onChange={handleEndTimeChange}
+                        onChange={setEndTime}
                     />
                 </div>
             </div>
 
-            {/* Duration Display + Dual Duration Badge */}
-            <div className="rounded-xl bg-background border border-border px-4 py-3 space-y-3">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest block">Erfasste Zeit</span>
-                        <span className="text-lg font-black text-primary tabular-nums">
-                            {(parseInt(hours) || 0)}h {(parseInt(minutes) || 0)}m
-                        </span>
-                    </div>
-
-                    {isBillable && (
-                        <div className="text-right">
-                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-end gap-1">
-                                <Sparkles size={10} className="text-amber-400" /> Abrechenbar
-                            </span>
-                            <span className="text-sm font-bold text-amber-400 tabular-nums">
-                                {formatBillingDuration(calculatedBillableMinutes)}
-                            </span>
-                        </div>
-                    )}
+            {/* Auto-calculated duration display */}
+            {!manualDuration && calculatedMinutes > 0 && (
+                <div className="rounded-xl bg-background border border-border px-4 py-3 flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Dauer</span>
+                    <span className="text-lg font-black text-primary tabular-nums">
+                        {calculatedHours}h {calculatedRemainder}m
+                    </span>
                 </div>
+            )}
 
+            {/* Manual duration override toggle */}
+            <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => setManualDuration(!manualDuration)}
+                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${manualDuration
+                        ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
+                        : 'text-muted-foreground hover:text-foreground border border-transparent'
+                        }`}
+                >
+                    <RefreshCw size={12} />
+                    {manualDuration ? 'Manuelle Dauer aktiv' : 'Dauer manuell eingeben'}
+                </button>
+            </div>
+
+            {/* Manual Duration (shown when override is active) */}
+            {manualDuration && (
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                         <Label className="text-muted-foreground text-xs">Stunden</Label>
@@ -408,7 +325,7 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
                             max="24"
                             placeholder="0"
                             value={hours}
-                            onChange={(e) => handleHoursChange(e.target.value)}
+                            onChange={(e) => setHours(e.target.value)}
                             className="bg-background border-border"
                         />
                     </div>
@@ -418,54 +335,57 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
                             type="number"
                             min="0"
                             max="59"
-                            placeholder="0"
+                            placeholder="30"
                             value={minutes}
-                            onChange={(e) => handleMinutesChange(e.target.value)}
+                            onChange={(e) => setMinutes(e.target.value)}
                             className="bg-background border-border"
                         />
                     </div>
                 </div>
+            )}
+
+            {/* Billable Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border">
+                <div className="space-y-0.5">
+                    <Label htmlFor="billable-toggle" className="text-xs font-semibold cursor-pointer">Abrechenbar</Label>
+                    <p className="text-[10px] text-muted-foreground">Zeiteintrag für Kunden-Abrechnung verwenden</p>
+                </div>
+                <button
+                    id="billable-toggle"
+                    type="button"
+                    onClick={() => setIsBillable(!isBillable)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        isBillable ? 'bg-emerald-600' : 'bg-zinc-700'
+                    }`}
+                >
+                    <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            isBillable ? 'translate-x-4' : 'translate-x-1'
+                        }`}
+                    />
+                </button>
             </div>
 
-            {/* Billable Switch & Description */}
-            <div className="flex items-center justify-between py-1">
-                <Label htmlFor="manual-billable" className="text-xs text-foreground font-medium cursor-pointer">
-                    Abrechenbare Leistung
-                </Label>
-                <input
-                    id="manual-billable"
-                    type="checkbox"
-                    checked={isBillable}
-                    onChange={(e) => setIsBillable(e.target.checked)}
-                    className="rounded border-border text-primary cursor-pointer h-4 w-4"
-                />
-            </div>
-
+            {/* Description */}
             <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">Beschreibung (optional)</Label>
                 <Textarea
+                    placeholder="Was wurde gemacht?"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Woran hast du gearbeitet?"
-                    className="bg-background border-border resize-none h-20 text-xs"
+                    className="bg-background border-border resize-y min-h-[100px]"
                 />
             </div>
 
             <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                disabled={isSubmitting || !selectedTaskId}
+                className="w-full bg-primary hover:bg-teal-400 text-black font-bold h-11 rounded-xl shadow-lg shadow-teal-500/10 transition-all active:scale-[0.98]"
             >
                 {isSubmitting ? (
-                    <>
-                        <Loader2 size={16} className="animate-spin mr-2" />
-                        Wird gespeichert...
-                    </>
+                    <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                    <>
-                        <Clock size={16} className="mr-2" />
-                        {editEntry ? 'Zeiteintrag aktualisieren' : 'Zeit erfassen'}
-                    </>
+                    editEntry ? 'Änderungen speichern' : 'Zeit eintragen'
                 )}
             </Button>
         </form>
@@ -476,21 +396,27 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
     }
 
     return (
-        <Card className="border-border bg-card/40">
-            <CardHeader className="cursor-pointer select-none" onClick={() => {
+        <Card className="border-border bg-card/40 backdrop-blur-md">
+            <CardHeader className="cursor-pointer" onClick={() => {
                 const next = !isCollapsed;
                 setIsCollapsed(next);
                 onCollapseChange?.(next);
             }}>
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <Clock size={18} className="text-primary" />
-                        {editEntry ? 'Zeiteintrag bearbeiten' : 'Manuelle Zeiterfassung'}
-                    </CardTitle>
-                    {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                </div>
+                <CardTitle className="flex items-center gap-2 text-foreground text-base font-bold uppercase tracking-tight">
+                    <Clock size={18} className="text-teal-500" />
+                    Manueller Zeiteintrag
+                    {isCollapsed ? (
+                        <ChevronRight size={16} className="ml-auto text-muted-foreground" />
+                    ) : (
+                        <ChevronDown size={16} className="ml-auto text-muted-foreground" />
+                    )}
+                </CardTitle>
             </CardHeader>
-            {!isCollapsed && <CardContent>{formContent}</CardContent>}
+            {!isCollapsed && (
+                <CardContent>
+                    {formContent}
+                </CardContent>
+            )}
         </Card>
     );
 }

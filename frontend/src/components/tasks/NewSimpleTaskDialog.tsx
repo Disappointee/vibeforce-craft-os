@@ -7,6 +7,7 @@ import { Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { parseSlashCommands } from '@/lib/slashParser';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
 import { getUserDisplayName } from '@/lib/user-utils';
+import { createTaskAction } from '@/app/actions/tasks';
 import {
   Dialog,
   DialogContent,
@@ -53,9 +54,9 @@ export function NewSimpleTaskDialog({
   const [selectedClientId, setSelectedClientId] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
 
-  const availableProjects = selectedClientId 
-    ? projects.filter(p => (p as any).client === selectedClientId) 
-    : [];
+  const availableProjects = selectedClientId
+    ? projects.filter(p => (p as any).client === selectedClientId)
+    : projects;
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
@@ -64,13 +65,13 @@ export function NewSimpleTaskDialog({
       setProjectsLoading(true);
       try {
         const [projectsResult, usersResult, clientsResult] = await Promise.all([
-          pb.collection('projects').getList(1, 500, { sort: 'name' }),
-          pb.collection('users').getList(1, 50, { sort: 'name' }),
-          pb.collection('clients').getList(1, 500, { sort: 'name' }),
+          pb.collection('projects').getFullList({ sort: 'name' }),
+          pb.collection('users').getFullList({ sort: 'name' }),
+          pb.collection('clients').getFullList({ sort: 'name' }),
         ]);
-        setProjects(projectsResult.items as ProjectRecord[]);
-        setUsers(usersResult.items as UserRecord[]);
-        setClients(clientsResult.items as ClientRecord[]);
+        setProjects(projectsResult as ProjectRecord[]);
+        setUsers(usersResult as UserRecord[]);
+        setClients(clientsResult as ClientRecord[]);
       } catch {
         toast.error('Fehler beim Laden der Daten');
       } finally {
@@ -98,33 +99,15 @@ export function NewSimpleTaskDialog({
     setIsLoading(true);
 
     try {
-      const userId = pb.authStore.record?.id;
-      await pb.collection('tasks').create({
+      await createTaskAction({
         project: projectId,
         title,
-        description,
+        description: description || undefined,
         status,
         priority,
-        assignees: assigneeId ? [assigneeId] : (userId ? [userId] : []),
+        assignees: assigneeId ? [assigneeId] : [],
         due_date: dueDate ? dueDate.toISOString() : undefined,
       });
-
-      if (assigneeId) {
-        try {
-          const assignee = await pb.collection('users').getOne(assigneeId);
-          if (assignee.notify_on_assignment !== false) {
-            await pb.collection('notifications').create({
-              user: assigneeId,
-              type: 'task_assigned',
-              title: `Neue Aufgabe: ${title}`,
-              message: `${getUserDisplayName(pb.authStore.record as any) || 'Jemand'} hat dir eine Aufgabe zugewiesen.`,
-              link: `/tasks`,
-            });
-          }
-        } catch {
-          console.error('Fehler beim Erstellen der Benachrichtigung');
-        }
-      }
 
       toast.success('Aufgabe erstellt!');
       localStorage.setItem('vibeforce-last-project-id', projectId);
@@ -133,6 +116,7 @@ export function NewSimpleTaskDialog({
       setDescription('');
       setShowDescription(false);
       setProjectId('');
+      setSelectedClientId('');
       setPriority('medium');
       setStatus('todo');
       setAssigneeId('');
@@ -207,18 +191,21 @@ export function NewSimpleTaskDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-[0.06em]">Kunde</Label>
-              <Select value={selectedClientId} onValueChange={(val) => {
-                if (val) {
+              <Select value={selectedClientId || 'all'} onValueChange={(val) => {
+                if (val === 'all' || !val) {
+                  setSelectedClientId('');
+                } else {
                   setSelectedClientId(val);
-                  setProjectId(''); 
+                  setProjectId('');
                 }
               }}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Kunde wählen">
-                    {selectedClientId ? decodeGermanHtmlEntities(clients.find(c => c.id === selectedClientId)?.name || '') : 'Kunde wählen'}
+                    {selectedClientId ? decodeGermanHtmlEntities(clients.find(c => c.id === selectedClientId)?.name || '') : 'Alle Kunden'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">
+                  <SelectItem value="all">Alle Kunden</SelectItem>
                   {clients.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {decodeGermanHtmlEntities(c.name)}
@@ -229,11 +216,19 @@ export function NewSimpleTaskDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="st-project" className="text-foreground text-xs uppercase tracking-[0.06em]">Projekt</Label>
-              <Select value={projectId} onValueChange={(val) => val && setProjectId(val)} disabled={!selectedClientId}>
+              <Label htmlFor="st-project" className="text-foreground text-xs uppercase tracking-[0.06em]">Projekt *</Label>
+              <Select value={projectId} onValueChange={(val) => {
+                if (val) {
+                  setProjectId(val);
+                  const selectedProj = projects.find(p => p.id === val);
+                  if (selectedProj && (selectedProj as any).client) {
+                    setSelectedClientId((selectedProj as any).client);
+                  }
+                }
+              }}>
                 <SelectTrigger id="st-project" className="bg-card border-border">
-                  <SelectValue placeholder={!selectedClientId ? 'Erst Kunde wählen' : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen')}>
-                    {projectId ? decodeGermanHtmlEntities(availableProjects.find(p => p.id === projectId)?.name || '') : (!selectedClientId ? 'Erst Kunde wählen' : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen'))}
+                  <SelectValue placeholder={projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen'}>
+                    {projectId ? decodeGermanHtmlEntities(projects.find(p => p.id === projectId)?.name || '') : (projectsLoading ? 'Lade Projekte...' : 'Projekt auswählen')}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">
@@ -282,13 +277,14 @@ export function NewSimpleTaskDialog({
 
             <div className="space-y-2">
               <Label className="text-foreground text-xs uppercase tracking-[0.06em]">Zuständig</Label>
-              <Select value={assigneeId} onValueChange={(val) => val && setAssigneeId(val)}>
+              <Select value={assigneeId || 'unassigned'} onValueChange={(val) => setAssigneeId(!val || val === 'unassigned' ? '' : val)}>
                 <SelectTrigger className="bg-card border-border">
                   <SelectValue placeholder="Nicht zugewiesen">
                     {assigneeId ? (getUserDisplayName(users.find(u => u.id === assigneeId)) || '') : 'Nicht zugewiesen'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">
+                  <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.name || u.email}
@@ -305,6 +301,7 @@ export function NewSimpleTaskDialog({
               value={dueDate}
               onChange={setDueDate}
               placeholder="tt.mm.jjjj"
+              minYear={new Date().getFullYear()}
             />
           </div>
 

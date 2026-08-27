@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { Loader2, Pencil } from 'lucide-react';
+import { updateProjectAction } from '@/app/actions/projects';
 import {
     Dialog,
     DialogContent,
@@ -41,6 +43,7 @@ interface EditProjectDialogProps {
 }
 
 export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdated }: EditProjectDialogProps) {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [clients, setClients] = useState<any[]>([]);
     const [formData, setFormData] = useState({
@@ -92,7 +95,7 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
         setIsLoading(true);
 
         try {
-            await pb.collection('projects').update(project.id, {
+            await updateProjectAction(project.id, {
                 name: formData.name,
                 key: formData.key.toUpperCase(),
                 status: formData.status,
@@ -103,6 +106,7 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
             });
 
             toast.success('Projekt aktualisiert!');
+            router.refresh();
             onOpenChange(false);
             onProjectUpdated();
         } catch (error: any) {
@@ -117,20 +121,19 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
         if (!project) return;
 
         const newStatus = project.status === 'archived' ? 'active' : 'archived';
-        const label = newStatus === 'archived' ? 'archiviert' : 'reaktiviert';
+        const actionLabel = newStatus === 'archived' ? 'Archivieren' : 'Reaktivieren';
 
         setIsLoading(true);
         try {
-            await pb.collection('projects').update(project.id, {
-                status: newStatus,
-            });
+            await updateProjectAction(project.id, { status: newStatus });
 
-            toast.success(`Projekt ${label}!`);
+            toast.success(newStatus === 'archived' ? 'Projekt archiviert!' : 'Projekt reaktiviert!');
+            router.refresh();
             onOpenChange(false);
             onProjectUpdated();
         } catch (error) {
             console.error(error);
-            toast.error(`Fehler beim ${label} des Projekts.`);
+            toast.error(`Fehler beim ${actionLabel} des Projekts.`);
         } finally {
             setIsLoading(false);
         }
@@ -165,8 +168,8 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
                             <Label htmlFor="edit-key" className="text-foreground text-xs uppercase tracking-wider">Projektschlüssel</Label>
                             <Input
                                 id="edit-key"
-                                placeholder="WEB"
-                                maxLength={5}
+                                placeholder="DEV-1"
+                                maxLength={10}
                                 value={formData.key}
                                 onChange={(e) => setFormData({ ...formData, key: e.target.value.toUpperCase() })}
                                 required

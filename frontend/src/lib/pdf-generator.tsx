@@ -9,10 +9,8 @@ import {
     Image,
     StyleSheet
 } from '@react-pdf/renderer';
-import { BRANDING } from '@/lib/branding';
 
 export interface BillingLineItem {
-    id: string;
     date: string;
     taskName: string;
     projectKey: string;
@@ -20,13 +18,11 @@ export interface BillingLineItem {
     hours: number;
     hourlyRate: number;
     total: number;
-    userName?: string;
 }
 
 export interface BillingSummary {
-    projectId?: string;
-    projectName: string;
-    projectKey: string;
+    companyName: string;
+    companyAddress: string;
     clientName: string;
     clientAddress: string;
     invoiceNumber: string;
@@ -39,279 +35,260 @@ export interface BillingSummary {
     taxAmount: number;
     total: number;
     notes?: string;
-    companyName?: string;
-    companyAddress?: string;
 }
 
-export interface TaskDetailEntry {
-    taskName: string;
-    note: string;
-    durationHours: number;
-    duration: string;
-}
-
-export interface ProjectDetailGroup {
-    projectName: string;
-    projectKey: string;
-    clientName: string;
-    projectTotalHours: number;
-    projectTotalDuration: string;
-    entries: TaskDetailEntry[];
-}
-
-export interface ClientDetailGroup {
-    clientName: string;
-    projects: ProjectDetailGroup[];
-    clientTotalDuration: string;
-}
-
-export interface TaskDetailReportData {
-    clientName: string;
-    periodFrom: string;
-    periodTo: string;
-    generatedAt: string;
-    logoUrl?: string;
-    clients: ClientDetailGroup[];
-    grandTotalHours: number;
-    grandTotalDuration: string;
-}
-
-export interface ReportRow {
-    id: string;
-    projectId?: string;
-    projectName?: string;
-    projectKey?: string;
-    userName?: string;
-    userEmail?: string;
-    hours: number;
-    billableHours: number;
-    taskCount: number;
-    budgetHours?: number;
-}
-
+// -------------------------------------------------------------
+// Stylesheet matching Vibeforce's professional, clean corporate style
+// -------------------------------------------------------------
 const styles = StyleSheet.create({
     page: {
-        padding: 40,
+        padding: 45,
         fontFamily: 'Helvetica',
         fontSize: 9,
-        color: '#1e293b',
+        color: '#374151',
         lineHeight: 1.5,
     },
     header: {
-        marginBottom: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
-        paddingBottom: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 30,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+        paddingBottom: 20,
     },
     headerLeft: {
-        width: '55%',
+        flex: 1,
     },
     headerRight: {
-        width: '40%',
         textAlign: 'right',
+        alignItems: 'flex-end',
+    },
+    logo: {
+        maxHeight: 35,
+        marginBottom: 10,
     },
     companyName: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#0f172a',
-        marginBottom: 4,
+        color: '#111827',
     },
     companyAddress: {
-        fontSize: 8.5,
-        color: '#64748b',
-        lineHeight: 1.4,
+        fontSize: 8,
+        color: '#6b7280',
+        marginTop: 2,
     },
     docTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: '#2563eb',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        color: '#111827',
+        letterSpacing: -0.5,
     },
     metaLabel: {
-        fontSize: 7.5,
-        fontWeight: 'bold',
-        color: '#94a3b8',
+        fontSize: 8,
+        color: '#9ca3af',
         marginTop: 4,
-        textTransform: 'uppercase',
     },
     metaValue: {
         fontSize: 9,
-        color: '#0f172a',
-        fontWeight: 'medium',
+        fontWeight: 'bold',
+        color: '#111827',
     },
     addressSection: {
-        marginBottom: 20,
-        padding: 12,
-        backgroundColor: '#f8fafc',
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        marginBottom: 25,
     },
     addressLabel: {
         fontSize: 8,
         fontWeight: 'bold',
-        color: '#64748b',
         textTransform: 'uppercase',
+        color: '#9ca3af',
         marginBottom: 4,
     },
     addressContent: {
-        fontSize: 9.5,
-        color: '#0f172a',
+        fontSize: 9,
+        color: '#374151',
         lineHeight: 1.4,
     },
+    // Table Styles
     table: {
         width: '100%',
-        marginBottom: 20,
+        marginTop: 15,
     },
     tableHeaderRow: {
         flexDirection: 'row',
-        backgroundColor: '#2563eb',
+        backgroundColor: '#f9fafb',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
         paddingVertical: 6,
         paddingHorizontal: 8,
-        borderRadius: 4,
     },
     tableHeaderCell: {
-        color: '#ffffff',
-        fontWeight: 'bold',
         fontSize: 8,
-        textTransform: 'uppercase',
+        fontWeight: 'bold',
+        color: '#4b5563',
     },
     tableRow: {
         flexDirection: 'row',
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: '#f3f4f6',
         paddingVertical: 6,
         paddingHorizontal: 8,
         alignItems: 'center',
     },
     tableCell: {
-        fontSize: 8.5,
-        color: '#334155',
+        fontSize: 8,
+        color: '#4b5563',
     },
     tableCellBold: {
-        fontSize: 8.5,
+        fontSize: 8,
         fontWeight: 'bold',
-        color: '#0f172a',
+        color: '#111827',
     },
     tableCellDesc: {
-        fontSize: 7.5,
-        color: '#64748b',
-        marginTop: 2,
+        fontSize: 7,
+        color: '#9ca3af',
+        marginTop: 1,
     },
-    colNo: { width: '6%' },
-    colDate: { width: '14%' },
-    colDetails: { width: '44%' },
-    colHours: { width: '12%', textAlign: 'right' },
-    colRate: { width: '12%', textAlign: 'right' },
-    colTotal: { width: '12%', textAlign: 'right' },
-    
+    // Invoice totals
     totalsContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginBottom: 20,
+        marginTop: 20,
     },
     totalsBox: {
-        width: '45%',
-        backgroundColor: '#f8fafc',
-        padding: 12,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        width: 180,
     },
     totalRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 4,
+        paddingVertical: 3,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
     },
     totalRowLabel: {
-        fontSize: 8.5,
-        color: '#64748b',
+        fontSize: 8,
+        color: '#6b7280',
     },
     totalRowValue: {
-        fontSize: 8.5,
-        fontWeight: 'medium',
-        color: '#0f172a',
+        fontSize: 8,
+        color: '#374151',
+        textAlign: 'right',
     },
     totalRowFinal: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        paddingVertical: 6,
         borderTopWidth: 1,
-        borderTopColor: '#cbd5e1',
-        paddingTop: 6,
+        borderTopColor: '#111827',
         marginTop: 4,
     },
     totalRowFinalLabel: {
         fontSize: 10,
         fontWeight: 'bold',
-        color: '#0f172a',
+        color: '#111827',
     },
     totalRowFinalValue: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: '#3b82f6',
+        textAlign: 'right',
     },
+    // Service Record Summary
     summaryRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        backgroundColor: '#f8fafc',
-        padding: 10,
-        borderRadius: 6,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
+        gap: 25,
+        marginTop: 20,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
     },
     summaryItem: {
-        alignItems: 'center',
+        flexDirection: 'column',
     },
     summaryLabel: {
-        fontSize: 7.5,
-        color: '#64748b',
-        textTransform: 'uppercase',
+        fontSize: 8,
+        color: '#6b7280',
     },
     summaryValue: {
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 'bold',
-        color: '#0f172a',
+        color: '#111827',
         marginTop: 2,
     },
+    // Notes & Info
     notesBox: {
-        marginBottom: 20,
-        padding: 10,
-        backgroundColor: '#f1f5f9',
-        borderRadius: 6,
+        marginTop: 30,
+        padding: 12,
+        backgroundColor: '#f9fafb',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#f3f4f6',
     },
     notesTitle: {
         fontSize: 8,
         fontWeight: 'bold',
-        color: '#475569',
-        marginBottom: 2,
-        textTransform: 'uppercase',
+        color: '#4b5563',
+        marginBottom: 3,
     },
     notesText: {
         fontSize: 8,
-        color: '#64748b',
+        color: '#6b7280',
+        lineHeight: 1.4,
     },
     footer: {
         position: 'absolute',
-        bottom: 24,
-        left: 40,
-        right: 40,
-        fontSize: 7.5,
-        color: '#94a3b8',
+        bottom: 30,
+        left: 45,
+        right: 45,
         textAlign: 'center',
+        fontSize: 7,
+        color: '#9ca3af',
         borderTopWidth: 1,
-        borderTopColor: '#f1f5f9',
-        paddingTop: 8,
+        borderTopColor: '#f3f4f6',
+        paddingTop: 10,
     },
+    // Specific table columns
+    colNo: { width: '6%' },
+    colDate: { width: '12%' },
+    colDetails: { width: '52%' },
+    colHours: { width: '10%', textAlign: 'right' },
+    colRate: { width: '10%', textAlign: 'right' },
+    colTotal: { width: '10%', textAlign: 'right' },
+    
+    // Reports Columns
+    colReportProj: { width: '35%' },
+    colReportUser: { width: '25%' },
+    colReportHours: { width: '10%', textAlign: 'right' },
+    colReportBillable: { width: '10%', textAlign: 'right' },
+    colReportTasks: { width: '10%', textAlign: 'right' },
+    colReportBudget: { width: '10%', textAlign: 'right' },
 });
 
-// ──────────────────────────────────────────────
-// Document 1: Leistungsnachweis (Service Record)
-// ──────────────────────────────────────────────
+// Helper for rendering logo safely
+const renderLogo = (logoUrl?: string) => {
+    if (logoUrl && (logoUrl.startsWith('http') || logoUrl.startsWith('data:'))) {
+        return <Image style={styles.logo} src={logoUrl} />;
+    }
+    return null;
+};
+
+// -------------------------------------------------------------
+// Component 1: Service Record PDF Document (Leistungsnachweis)
+// -------------------------------------------------------------
+interface ServiceRecordDocumentProps {
+    projectName: string;
+    projectKey: string;
+    clientName?: string;
+    periodFrom: string;
+    periodTo: string;
+    lineItems: BillingLineItem[];
+    totalHours: number;
+    totalAmount: number;
+    logoUrl?: string;
+    companyName: string;
+    companyAddress: string;
+    notes?: string;
+}
+
 export const ServiceRecordDocument = ({
     projectName,
     projectKey,
@@ -321,26 +298,16 @@ export const ServiceRecordDocument = ({
     lineItems,
     totalHours,
     totalAmount,
-    companyName = BRANDING.name,
-    companyAddress = 'Vibeforce Operations & Management',
-    notes,
-}: {
-    projectName: string;
-    projectKey: string;
-    clientName?: string;
-    periodFrom: string;
-    periodTo: string;
-    lineItems: BillingLineItem[];
-    totalHours: number;
-    totalAmount: number;
-    companyName?: string;
-    companyAddress?: string;
-    notes?: string;
-}) => (
+    logoUrl,
+    companyName,
+    companyAddress,
+    notes
+}: ServiceRecordDocumentProps) => (
     <Document>
         <Page size="A4" style={styles.page}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
+                    {renderLogo(logoUrl)}
                     <Text style={styles.companyName}>{companyName}</Text>
                     <Text style={styles.companyAddress}>{companyAddress}</Text>
                 </View>
@@ -356,6 +323,8 @@ export const ServiceRecordDocument = ({
                     )}
                     <Text style={styles.metaLabel}>ZEITRAUM</Text>
                     <Text style={styles.metaValue}>{periodFrom} – {periodTo}</Text>
+                    <Text style={styles.metaLabel}>DATUM</Text>
+                    <Text style={styles.metaValue}>{new Date().toLocaleDateString('de-DE')}</Text>
                 </View>
             </View>
 
@@ -378,8 +347,8 @@ export const ServiceRecordDocument = ({
                             {item.description ? <Text style={styles.tableCellDesc}>{item.description}</Text> : null}
                         </View>
                         <Text style={[styles.tableCell, styles.colHours]}>{item.hours.toFixed(1)}h</Text>
-                        <Text style={[styles.tableCell, styles.colRate]}>{item.hourlyRate.toFixed(2)} €</Text>
-                        <Text style={[styles.tableCellBold, styles.colTotal]}>{item.total.toFixed(2)} €</Text>
+                        <Text style={[styles.tableCell, styles.colRate]}>{item.hourlyRate.toFixed(2)}€</Text>
+                        <Text style={[styles.tableCellBold, styles.colTotal]}>{item.total.toFixed(2)}€</Text>
                     </View>
                 ))}
             </View>
@@ -395,7 +364,7 @@ export const ServiceRecordDocument = ({
                 </View>
                 <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Gesamtbetrag</Text>
-                    <Text style={[styles.summaryValue, { color: '#059669' }]}>{totalAmount.toFixed(2)} €</Text>
+                    <Text style={[styles.summaryValue, { color: '#3b82f6' }]}>{totalAmount.toFixed(2)}€</Text>
                 </View>
             </View>
 
@@ -406,21 +375,27 @@ export const ServiceRecordDocument = ({
                 </View>
             ) : null}
 
-            <Text style={styles.footer}>Dieser Leistungsnachweis wurde automatisch mit {BRANDING.name} erstellt.</Text>
+            <Text style={styles.footer}>Dieser Leistungsnachweis wurde automatisch mit Vibeforce Flow OS erstellt.</Text>
         </Page>
     </Document>
 );
 
-// ──────────────────────────────────────────────
-// Document 2: Rechnung (Invoice)
-// ──────────────────────────────────────────────
-export const InvoiceDocument = ({ summary }: { summary: BillingSummary }) => (
+// -------------------------------------------------------------
+// Component 2: Invoice PDF Document (Rechnung)
+// -------------------------------------------------------------
+interface InvoiceDocumentProps {
+    summary: BillingSummary;
+    logoUrl?: string;
+}
+
+export const InvoiceDocument = ({ summary, logoUrl }: InvoiceDocumentProps) => (
     <Document>
         <Page size="A4" style={styles.page}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.companyName}>{summary.companyName || BRANDING.name}</Text>
-                    <Text style={styles.companyAddress}>{summary.companyAddress || 'Vibeforce Operations & Management'}</Text>
+                    {renderLogo(logoUrl)}
+                    <Text style={styles.companyName}>{summary.companyName}</Text>
+                    <Text style={styles.companyAddress}>{summary.companyAddress}</Text>
                 </View>
                 <View style={styles.headerRight}>
                     <Text style={styles.docTitle}>RECHNUNG</Text>
@@ -437,7 +412,7 @@ export const InvoiceDocument = ({ summary }: { summary: BillingSummary }) => (
                 <Text style={styles.addressLabel}>Rechnungsempfänger</Text>
                 <Text style={styles.addressContent}>
                     <Text style={{ fontWeight: 'bold' }}>{summary.clientName}</Text>
-                    {summary.clientAddress ? `\n${summary.clientAddress}` : ''}
+                    {"\n"}{summary.clientAddress}
                 </Text>
             </View>
 
@@ -460,8 +435,8 @@ export const InvoiceDocument = ({ summary }: { summary: BillingSummary }) => (
                             {item.description ? <Text style={styles.tableCellDesc}>{item.description}</Text> : null}
                         </View>
                         <Text style={[styles.tableCell, styles.colHours]}>{item.hours.toFixed(1)}h</Text>
-                        <Text style={[styles.tableCell, styles.colRate]}>{item.hourlyRate.toFixed(2)} €</Text>
-                        <Text style={[styles.tableCellBold, styles.colTotal]}>{item.total.toFixed(2)} €</Text>
+                        <Text style={[styles.tableCell, styles.colRate]}>{item.hourlyRate.toFixed(2)}€</Text>
+                        <Text style={[styles.tableCellBold, styles.colTotal]}>{item.total.toFixed(2)}€</Text>
                     </View>
                 ))}
             </View>
@@ -470,15 +445,15 @@ export const InvoiceDocument = ({ summary }: { summary: BillingSummary }) => (
                 <View style={styles.totalsBox}>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalRowLabel}>Nettobetrag</Text>
-                        <Text style={styles.totalRowValue}>{summary.subtotal.toFixed(2)} €</Text>
+                        <Text style={styles.totalRowValue}>{summary.subtotal.toFixed(2)}€</Text>
                     </View>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalRowLabel}>MwSt. ({(summary.taxRate * 100).toFixed(0)}%)</Text>
-                        <Text style={styles.totalRowValue}>{summary.taxAmount.toFixed(2)} €</Text>
+                        <Text style={styles.totalRowValue}>{summary.taxAmount.toFixed(2)}€</Text>
                     </View>
                     <View style={styles.totalRowFinal}>
                         <Text style={styles.totalRowFinalLabel}>Gesamtbetrag</Text>
-                        <Text style={styles.totalRowFinalValue}>{summary.total.toFixed(2)} €</Text>
+                        <Text style={styles.totalRowFinalValue}>{summary.total.toFixed(2)}€</Text>
                     </View>
                 </View>
             </View>
@@ -490,14 +465,128 @@ export const InvoiceDocument = ({ summary }: { summary: BillingSummary }) => (
                 </View>
             ) : null}
 
-            <Text style={styles.footer}>Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung. Erstellt mit {BRANDING.name}.</Text>
+            <Text style={styles.footer}>Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung. Erstellt mit Vibeforce Flow OS.</Text>
         </Page>
     </Document>
 );
 
-// ──────────────────────────────────────────────
-// Helpers for Client Downloads
-// ──────────────────────────────────────────────
+
+// -------------------------------------------------------------
+// Component 3: Stundenauswertung Report Document (for ExportButton)
+// -------------------------------------------------------------
+interface ReportRow {
+    id: string;
+    projectId?: string;
+    projectName?: string;
+    projectKey?: string;
+    userName?: string;
+    userEmail?: string;
+    hours: number;
+    billableHours: number;
+    taskCount: number;
+    budgetHours?: number;
+}
+
+interface ReportDocumentProps {
+    rows: ReportRow[];
+    groupBy: 'project' | 'user' | 'both';
+    dateFrom?: string;
+    dateTo?: string;
+    logoUrl?: string;
+}
+
+export const ReportDocument = ({
+    rows,
+    groupBy,
+    dateFrom,
+    dateTo,
+    logoUrl
+}: ReportDocumentProps) => {
+    const totalHours = rows.reduce((s, r) => s + r.hours, 0);
+    const totalBillable = rows.reduce((s, r) => s + r.billableHours, 0);
+
+    return (
+        <Document>
+            <Page size="A4" style={styles.page}>
+                <View style={styles.header}>
+                    <View style={styles.headerLeft}>
+                        {renderLogo(logoUrl)}
+                        <Text style={styles.companyName}>Vibeforce GmbH</Text>
+                        <Text style={styles.companyAddress}>Zeitauswertung und Controlling</Text>
+                    </View>
+                    <View style={styles.headerRight}>
+                        <Text style={styles.docTitle}>Stundenauswertung</Text>
+                        {dateFrom && dateTo ? (
+                            <>
+                                <Text style={styles.metaLabel}>ZEITRAUM</Text>
+                                <Text style={styles.metaValue}>{dateFrom} – {dateTo}</Text>
+                            </>
+                        ) : null}
+                        <Text style={styles.metaLabel}>DATUM</Text>
+                        <Text style={styles.metaValue}>{new Date().toLocaleDateString('de-DE')}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.table}>
+                    <View style={styles.tableHeaderRow}>
+                        {groupBy !== 'user' && <Text style={[styles.tableHeaderCell, styles.colReportProj]}>Projekt</Text>}
+                        {groupBy !== 'project' && <Text style={[styles.tableHeaderCell, styles.colReportUser]}>Mitarbeiter</Text>}
+                        <Text style={[styles.tableHeaderCell, styles.colReportHours]}>Stunden</Text>
+                        <Text style={[styles.tableHeaderCell, styles.colReportBillable]}>Abrechenbar</Text>
+                        <Text style={[styles.tableHeaderCell, styles.colReportTasks]}>Tasks</Text>
+                        <Text style={[styles.tableHeaderCell, styles.colReportBudget]}>Budget %</Text>
+                    </View>
+
+                    {rows.map((row, idx) => (
+                        <View key={idx} style={styles.tableRow}>
+                            {groupBy !== 'user' && (
+                                <Text style={[styles.tableCellBold, styles.colReportProj]}>
+                                    {row.projectKey || ''} - {row.projectName || ''}
+                                </Text>
+                            )}
+                            {groupBy !== 'project' && (
+                                <Text style={[styles.tableCell, styles.colReportUser]}>
+                                    {row.userName || row.userEmail || ''}
+                                </Text>
+                            )}
+                            <Text style={[styles.tableCell, styles.colReportHours]}>{row.hours.toFixed(1)}h</Text>
+                            <Text style={[styles.tableCellBold, styles.colReportBillable, { color: '#3b82f6' }]}>
+                                {row.billableHours.toFixed(1)}h
+                            </Text>
+                            <Text style={[styles.tableCell, styles.colReportTasks]}>{row.taskCount}</Text>
+                            <Text style={[styles.tableCell, styles.colReportBudget]}>
+                                {row.budgetHours ? `${((row.hours / row.budgetHours) * 100).toFixed(0)}%` : '—'}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+
+                <View style={styles.summaryRow}>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryLabel}>Gesamtstunden</Text>
+                        <Text style={styles.summaryValue}>{totalHours.toFixed(1)}h</Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryLabel}>Abrechenbar</Text>
+                        <Text style={[styles.summaryValue, { color: '#3b82f6' }]}>{totalBillable.toFixed(1)}h</Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryLabel}>Einträge</Text>
+                        <Text style={styles.summaryValue}>{rows.length}</Text>
+                    </View>
+                </View>
+
+                <Text style={styles.footer}>Erstellt mit Vibeforce Flow OS</Text>
+            </Page>
+        </Document>
+    );
+};
+
+// -------------------------------------------------------------
+// Client Side Download Action Triggers (Using dynamic imports)
+// -------------------------------------------------------------
+
+// Helper to download any PDF blob
 async function triggerBlobDownload(docElement: React.ReactElement, filename: string) {
     const { pdf } = await import('@react-pdf/renderer');
     const blob = await pdf(docElement as any).toBlob();
@@ -511,7 +600,13 @@ async function triggerBlobDownload(docElement: React.ReactElement, filename: str
     URL.revokeObjectURL(url);
 }
 
-export async function printServiceRecord(props: {
+export async function printInvoice(summary: BillingSummary): Promise<void> {
+    const logoUrl = process.env.NEXT_PUBLIC_REPORT_LOGO_URL || '';
+    const filename = `RECHNUNG_${summary.invoiceNumber}.pdf`;
+    await triggerBlobDownload(<InvoiceDocument summary={summary} logoUrl={logoUrl} />, filename);
+}
+
+export async function printServiceRecord(params: {
     projectName: string;
     projectKey: string;
     clientName?: string;
@@ -520,49 +615,42 @@ export async function printServiceRecord(props: {
     lineItems: BillingLineItem[];
     totalHours: number;
     totalAmount: number;
-    companyName?: string;
-    companyAddress?: string;
     notes?: string;
-}) {
-    const doc = <ServiceRecordDocument {...props} />;
-    await triggerBlobDownload(doc, `Leistungsnachweis_${props.projectKey}_${props.periodFrom}_${props.periodTo}.pdf`);
-}
+}): Promise<void> {
+    const logoUrl = process.env.NEXT_PUBLIC_REPORT_LOGO_URL || '';
+    const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Vibeforce GmbH';
+    const companyAddress = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '';
+    const filename = `LEISTUNGSNACHWEIS_${params.projectKey}.pdf`;
 
-export async function printInvoice(summary: BillingSummary) {
-    const doc = <InvoiceDocument summary={summary} />;
-    await triggerBlobDownload(doc, `Rechnung_${summary.invoiceNumber}.pdf`);
-}
-
-export async function downloadReportPDF(data: TaskDetailReportData) {
-    // Generate standard summary report
-    const lineItems: BillingLineItem[] = [];
-    for (const c of data.clients) {
-        for (const p of c.projects) {
-            for (const e of p.entries) {
-                lineItems.push({
-                    id: Math.random().toString(),
-                    date: data.generatedAt.split('T')[0],
-                    taskName: e.taskName,
-                    projectKey: p.projectKey,
-                    description: e.note,
-                    hours: e.durationHours,
-                    hourlyRate: 100,
-                    total: e.durationHours * 100,
-                });
-            }
-        }
-    }
-    const doc = (
+    await triggerBlobDownload(
         <ServiceRecordDocument
-            projectName={data.clientName || 'Gesamtbericht'}
-            projectKey="REPORT"
-            clientName={data.clientName}
-            periodFrom={data.periodFrom}
-            periodTo={data.periodTo}
-            lineItems={lineItems}
-            totalHours={data.grandTotalHours}
-            totalAmount={data.grandTotalHours * 100}
-        />
+            {...params}
+            logoUrl={logoUrl}
+            companyName={companyName}
+            companyAddress={companyAddress}
+        />,
+        filename
     );
-    await triggerBlobDownload(doc, `Stundenbericht_${data.periodFrom}_${data.periodTo}.pdf`);
+}
+
+export async function downloadReportPDF(
+    rows: ReportRow[],
+    groupBy: 'project' | 'user' | 'both',
+    dateFrom?: string,
+    dateTo?: string
+): Promise<void> {
+    const logoUrl = process.env.NEXT_PUBLIC_REPORT_LOGO_URL || '';
+    const dateRange = dateFrom && dateTo ? `${dateFrom}_${dateTo}` : new Date().toISOString().split('T')[0];
+    const filename = `stundenauswertung_${dateRange}.pdf`;
+
+    await triggerBlobDownload(
+        <ReportDocument
+            rows={rows}
+            groupBy={groupBy}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            logoUrl={logoUrl}
+        />,
+        filename
+    );
 }

@@ -2,184 +2,95 @@
 
 import { revalidatePath } from 'next/cache';
 import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
-import type { UserRecord } from '@/lib/pocketbase-types';
 
-export interface ActionResult<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  smtpFailed?: boolean;
-}
-
-export async function fetchAdminUsers(): Promise<ActionResult<UserRecord[]>> {
+export async function updateUserRoleAction(userId: string, role: string) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Benutzerdaten abrufen.' };
-    }
-
-    const pb = await getAdminPB();
-    const users = await pb.collection('users').getFullList<UserRecord>({
-      sort: '-created',
-      expand: 'supervisor',
-    });
-
-    return { success: true, data: JSON.parse(JSON.stringify(users)) };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unbekannter Fehler beim Laden der Benutzer';
-    return { success: false, error: message };
-  }
-}
-
-export async function inviteUser(data: {
-  email: string;
-  name?: string;
-  role?: string;
-  supervisor?: string;
-  hourly_rate?: number;
-  weekly_hours_target?: number;
-  expertise?: string[];
-}): Promise<ActionResult<UserRecord>> {
-  try {
-    const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Benutzer einladen.' };
-    }
-
-    if (!data.email) {
-      return { success: false, error: 'E-Mail-Adresse ist erforderlich.' };
-    }
-
-    const pb = await getAdminPB();
-    // Create random initial password, user will set it via reset link
-    const randomPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
-    const payload: Record<string, unknown> = {
-      email: data.email.trim().toLowerCase(),
-      name: data.name?.trim() || '',
-      role: data.role || 'employee',
-      supervisor: data.supervisor || null,
-      hourly_rate: data.hourly_rate ?? null,
-      weekly_hours_target: data.weekly_hours_target ?? 40,
-      expertise: data.expertise || [],
-      password: randomPassword,
-      passwordConfirm: randomPassword,
-      emailVisibility: true,
-      verified: true,
-      deactivated: false,
-    };
-
-    const record = await pb.collection('users').create<UserRecord>(payload);
-    let smtpFailed = false;
-
-    try {
-      await pb.collection('users').requestPasswordReset(data.email.trim());
-    } catch (err) {
-      console.warn('Passwort-Reset-Mail konnte nicht gesendet werden:', err);
-      smtpFailed = true;
-    }
-
-    revalidatePath('/admin/users');
-    revalidatePath('/team');
-    return {
-      success: true,
-      smtpFailed,
-      data: JSON.parse(JSON.stringify(record)),
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Anlegen des Benutzers';
-    return { success: false, error: message };
-  }
-}
-
-export async function updateUserRole(userId: string, role: string): Promise<ActionResult> {
-  try {
-    const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Rollen ändern.' };
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };
     }
 
     if (userId === sessionUser.id && role !== 'admin') {
-      return { success: false, error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
+      return { error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
     }
 
     const pb = await getAdminPB();
     await pb.collection('users').update(userId, { role });
     revalidatePath('/admin/users');
-    revalidatePath('/team');
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Aktualisieren der Rolle';
-    return { success: false, error: message };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
   }
 }
 
-export async function toggleUserDeactivation(
-  userId: string,
-  targetDeactivatedState: boolean
-): Promise<ActionResult> {
+export async function toggleUserActiveAction(userId: string, targetVerifiedState: boolean) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Benutzer aktivieren/deaktivieren.' };
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer aktivieren/deaktivieren.' };
     }
 
-    if (userId === sessionUser.id && targetDeactivatedState) {
-      return { success: false, error: 'Du kannst dich nicht selbst deaktivieren.' };
+    if (userId === sessionUser.id) {
+      return { error: 'Du kannst dich nicht selbst deaktivieren.' };
     }
 
     const pb = await getAdminPB();
-    await pb.collection('users').update(userId, {
-      deactivated: targetDeactivatedState,
-      verified: !targetDeactivatedState,
-    });
+    await pb.collection('users').update(userId, { verified: targetVerifiedState });
     revalidatePath('/admin/users');
-    revalidatePath('/team');
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Ändern des Benutzerstatus';
-    return { success: false, error: message };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
   }
 }
 
-export async function updateUserSupervisor(
-  userId: string,
-  supervisorId: string | null
-): Promise<ActionResult> {
+export async function deleteUserAdminAction(userId: string) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Vorgesetzte zuweisen.' };
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer löschen.' };
+    }
+
+    if (userId === sessionUser.id) {
+      return { error: 'Du kannst dich nicht selbst löschen.' };
     }
 
     const pb = await getAdminPB();
-    await pb.collection('users').update(userId, {
-      supervisor: supervisorId || null,
-    });
+    await pb.collection('users').delete(userId);
     revalidatePath('/admin/users');
-    revalidatePath('/team');
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Zuweisen des Vorgesetzten';
-    return { success: false, error: message };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
   }
 }
 
-export async function adminResetUserPassword(
-  userId: string,
-  data: { password: string; passwordConfirm: string }
-): Promise<ActionResult> {
+export async function createUserAction(data: Record<string, any>) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Passwörter zurücksetzen.' };
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer anlegen.' };
     }
 
-    if (!data.password || data.password.length < 8) {
-      return { success: false, error: 'Das Passwort muss mindestens 8 Zeichen lang sein.' };
+    const pb = await getAdminPB();
+    const record = await pb.collection('users').create(data);
+    let smtpFailed = false;
+    try {
+      await pb.collection('users').requestPasswordReset(data.email);
+    } catch (err) {
+      console.warn('Failed to send password reset email:', err);
+      smtpFailed = true;
     }
+    revalidatePath('/admin/users');
+    return { success: true, smtpFailed, data: JSON.parse(JSON.stringify(record)) };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
+  }
+}
 
-    if (data.password !== data.passwordConfirm) {
-      return { success: false, error: 'Die Passwörter stimmen nicht überein.' };
+export async function resetUserPasswordAction(userId: string, data: Record<string, any>) {
+  try {
+    const sessionUser = await verifyUserSession();
+    if (!sessionUser || sessionUser.role !== 'admin') {
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Passwörter zurücksetzen.' };
     }
 
     const pb = await getAdminPB();
@@ -189,30 +100,83 @@ export async function adminResetUserPassword(
     });
     revalidatePath('/admin/users');
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Zurücksetzen des Passworts';
-    return { success: false, error: message };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
   }
 }
 
-export async function deleteUserAdmin(userId: string): Promise<ActionResult> {
+export async function updateUserSupervisorAction(userId: string, supervisorId: string | null) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
-      return { success: false, error: 'Nicht autorisiert: Nur Administratoren dürfen Benutzer löschen.' };
-    }
-
-    if (userId === sessionUser.id) {
-      return { success: false, error: 'Du kannst dich nicht selbst löschen.' };
+      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Vorgesetzte zuweisen.' };
     }
 
     const pb = await getAdminPB();
-    await pb.collection('users').delete(userId);
+    await pb.collection('users').update(userId, {
+      supervisor: supervisorId || null,
+    });
     revalidatePath('/admin/users');
     revalidatePath('/team');
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Fehler beim Löschen des Benutzers';
-    return { success: false, error: message };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler' };
+  }
+}
+
+export async function updateUserProfileAdminAction(
+  userId: string,
+  data: {
+    name?: string;
+    weekly_hours_target?: number;
+    expertise?: string[];
+    role?: string;
+    supervisor?: string | null;
+  }
+) {
+  try {
+    const sessionUser = await verifyUserSession();
+    if (!sessionUser) {
+      return { error: '403 - Nicht autorisiert. Bitte erneut anmelden.' };
+    }
+
+    const isAdmin = sessionUser.role === 'admin';
+    const isSelf = sessionUser.id === userId;
+
+    // Only admins can update other users. Users can update their own non-privileged fields.
+    if (!isAdmin && !isSelf) {
+      return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen andere Profile bearbeiten.' };
+    }
+
+    const payload: Record<string, any> = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.weekly_hours_target !== undefined) payload.weekly_hours_target = data.weekly_hours_target;
+    if (data.expertise !== undefined) payload.expertise = data.expertise;
+
+    // Role and supervisor can ONLY be changed by admins
+    if (data.role !== undefined) {
+      if (!isAdmin) {
+        return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };
+      }
+      if (isSelf && data.role !== 'admin') {
+        return { error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
+      }
+      payload.role = data.role;
+    }
+
+    if (data.supervisor !== undefined) {
+      if (!isAdmin) {
+        return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen Vorgesetzte zuweisen.' };
+      }
+      payload.supervisor = data.supervisor || null;
+    }
+
+    const pb = await getAdminPB();
+    const updated = await pb.collection('users').update(userId, payload);
+    revalidatePath('/team');
+    revalidatePath('/admin/users');
+    return { success: true, data: JSON.parse(JSON.stringify(updated)) };
+  } catch (err: any) {
+    return { error: err.message || 'Unbekannter Fehler beim Aktualisieren des Profils' };
   }
 }

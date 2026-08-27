@@ -11,6 +11,7 @@ import {
   X,
   ChevronRight,
   Calendar,
+  User,
   ListTodo,
   Hourglass,
   LayoutDashboard,
@@ -104,6 +105,7 @@ function formatHoursMinutes(totalMinutes: number): string {
 
 function getTodayDateString(): string {
   const now = new Date();
+  // Format as YYYY-MM-DD for PocketBase date filtering
   return now.toISOString().split('T')[0];
 }
 
@@ -153,7 +155,7 @@ function getStatusBadge(status: string) {
       return (
         <Badge
           variant="outline"
-          className="text-primary border-primary/30 bg-primary/10 text-[10px]"
+          className="text-indigo-400 border-indigo-500/30 bg-indigo-500/10 text-[10px]"
         >
           In Arbeit
         </Badge>
@@ -258,7 +260,9 @@ export default function DashboardPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
 
-  // ── Stats ──
+
+
+  // ── Stats (existing) ──
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -357,6 +361,7 @@ export default function DashboardPage() {
     if (!currentUserId) return;
     setLinksLoading(true);
     try {
+      // Get tasks where current user is assignee
       const myTasksResult = await pb.collection('tasks').getList(1, 100, {
         filter: pb.filter('assignees ~ {:uid}', { uid: currentUserId }),
         fields: 'id',
@@ -369,6 +374,7 @@ export default function DashboardPage() {
         return;
       }
 
+      // Build filter: source_task is one of my tasks
       const filterParts = myTaskIds.map((id: string) => pb.filter('source_task = {:id}', { id }));
       const filter = filterParts.join(' || ');
 
@@ -391,6 +397,7 @@ export default function DashboardPage() {
     }
   }, [currentUserId, fetchMyLinks, refreshTrigger]);
 
+  // ── A3: Acknowledge (delete) a link ──
   const handleAcknowledgeLink = async (linkId: string) => {
     try {
       await pb.collection('task_links').delete(linkId);
@@ -406,6 +413,7 @@ export default function DashboardPage() {
   const fetchProjectAlerts = useCallback(async () => {
     setAlertsLoading(true);
     try {
+      // Get active projects
       const projectsResult = await pb.collection('projects').getList(1, 50, {
         filter: 'status = "active"',
       });
@@ -417,6 +425,7 @@ export default function DashboardPage() {
         return;
       }
 
+      // Batch: fetch ALL tasks for ALL active projects in ONE request
       const tasksFilterParts = projectIds.map((id: string) =>
         pb.filter('project = {:id}', { id }),
       );
@@ -425,6 +434,7 @@ export default function DashboardPage() {
         fields: 'id,estimated_hours,project',
       });
 
+      // Group tasks by project
       const tasksByProject: Record<string, { id: string; estimated_hours: number }[]> = {};
       for (const t of allTasksResult.items) {
         const pid = (t as any).project as string;
@@ -432,8 +442,10 @@ export default function DashboardPage() {
         tasksByProject[pid].push({ id: t.id, estimated_hours: (t as any).estimated_hours || 0 });
       }
 
+      // Collect all task IDs
       const allTaskIds = allTasksResult.items.map((t: any) => t.id);
 
+      // For time entries, we need task → time mapping
       let timeByTask: Record<string, number> = {};
       if (allTaskIds.length > 0) {
         const teFilterParts = allTaskIds.map((id: string) =>
@@ -453,19 +465,33 @@ export default function DashboardPage() {
 
       for (const project of projects) {
         const projectTasks = tasksByProject[project.id] || [];
-        const budgetHours = projectTasks.reduce((sum, t) => sum + t.estimated_hours, 0);
+
+        const budgetHours = projectTasks.reduce(
+          (sum, t) => sum + t.estimated_hours,
+          0,
+        );
 
         if (budgetHours <= 0) continue;
 
-        const loggedMinutes = projectTasks.reduce((sum, t) => sum + (timeByTask[t.id] || 0), 0);
+        const loggedMinutes = projectTasks.reduce(
+          (sum, t) => sum + (timeByTask[t.id] || 0),
+          0,
+        );
         const loggedHours = loggedMinutes / 60;
+
         const percentLogged = (loggedHours / budgetHours) * 100;
 
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+        );
         const daysInMonth = endOfMonth.getDate();
-        const daysPassed = Math.ceil((now.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24));
+        const daysPassed = Math.ceil(
+          (now.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+        );
         const percentTimePassed = (daysPassed / daysInMonth) * 100;
 
         const remainingHours = budgetHours - loggedHours;
@@ -580,14 +606,14 @@ export default function DashboardPage() {
           <Card className="border-border bg-card/40">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div className="flex items-center gap-2">
-                <ListTodo size={18} className="text-primary" />
+                <ListTodo size={18} className="text-indigo-400" />
                 <CardTitle className="text-foreground text-base font-semibold">
                   Meine Aufgaben
                 </CardTitle>
               </div>
               <Link
                 href="/tasks"
-                className="text-xs text-primary hover:underline transition-colors flex items-center gap-1"
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
               >
                 Alle anzeigen
                 <ChevronRight size={14} />
@@ -637,7 +663,7 @@ export default function DashboardPage() {
                             >
                               <Badge
                                 variant="outline"
-                                className="bg-background border-border text-muted-foreground font-mono text-[10px] hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
+                                className="bg-background border-border text-muted-foreground font-mono text-[10px] hover:border-indigo-500/50 hover:text-indigo-300 transition-colors cursor-pointer"
                               >
                                 {task.expand.project.key}
                               </Badge>
@@ -646,7 +672,7 @@ export default function DashboardPage() {
                           {task.expand?.project?.expand?.client && (
                             <Badge
                               variant="outline"
-                              className="bg-background border-border text-primary font-sans text-[10px]"
+                              className="bg-background border-border text-indigo-400 font-sans text-[10px]"
                             >
                               {task.expand.project.expand.client.name}
                             </Badge>
@@ -690,7 +716,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/time"
-                className="text-xs text-primary hover:underline transition-colors flex items-center gap-1"
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
               >
                 Details
                 <ChevronRight size={14} />
@@ -703,7 +729,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 py-2">
                     <div className="p-3 rounded-2xl bg-background border border-border">
-                      <Clock size={28} className="text-primary" />
+                      <Clock size={28} className="text-orange-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">
@@ -721,81 +747,81 @@ export default function DashboardPage() {
 
           {/* ── A3: Verlinkungen-Übersicht zum Abhaken ── */}
           <div className="hidden lg:block">
-            <Card className="border-border bg-card/40">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <div className="flex items-center gap-2">
-                  <Link2 size={18} className="text-primary" />
-                  <CardTitle className="text-foreground text-base font-semibold">
-                    Aufgaben-Verknüpfungen
-                  </CardTitle>
+          <Card className="border-border bg-card/40">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div className="flex items-center gap-2">
+                <Link2 size={18} className="text-blue-400" />
+                <CardTitle className="text-foreground text-base font-semibold">
+                  Aufgaben-Verknüpfungen
+                </CardTitle>
+              </div>
+              {myLinks.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="bg-background border-border text-muted-foreground"
+                >
+                  {myLinks.length} offen
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent className="p-0">
+              {linksLoading ? (
+                <div className="px-4 pb-4 space-y-3">
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-14 w-full bg-muted" />
+                  ))}
                 </div>
-                {myLinks.length > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="bg-background border-border text-muted-foreground"
-                  >
-                    {myLinks.length} offen
-                  </Badge>
-                )}
-              </CardHeader>
-              <CardContent className="p-0">
-                {linksLoading ? (
-                  <div className="px-4 pb-4 space-y-3">
-                    {[1, 2].map((i) => (
-                      <Skeleton key={i} className="h-14 w-full bg-muted" />
-                    ))}
-                  </div>
-                ) : myLinks.length === 0 ? (
-                  <div className="px-4 pb-4 flex flex-col items-center justify-center py-8 text-center">
-                    <Link2 size={32} className="text-muted-foreground/30 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Keine offenen Verknüpfungen
-                    </p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border/50">
-                    {myLinks.slice(0, 5).map((link) => {
-                      const sourceTask = link.expand?.source_task;
-                      const targetTask = link.expand?.target_task;
-                      return (
-                        <div
-                          key={link.id}
-                          className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors group"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] uppercase tracking-wider font-mono ${getLinkTypeColor(link.link_type)}`}
-                              >
-                                {getLinkTypeLabel(link.link_type)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-foreground truncate">
-                              {sourceTask?.title || 'Unbekannte Aufgabe'}
-                            </p>
-                            {targetTask && (
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                → {targetTask.title}
-                              </p>
-                            )}
+              ) : myLinks.length === 0 ? (
+                <div className="px-4 pb-4 flex flex-col items-center justify-center py-8 text-center">
+                  <Link2 size={32} className="text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Keine offenen Verknüpfungen
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {myLinks.slice(0, 5).map((link) => {
+                    const sourceTask = link.expand?.source_task;
+                    const targetTask = link.expand?.target_task;
+                    return (
+                      <div
+                        key={link.id}
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] uppercase tracking-wider font-mono ${getLinkTypeColor(link.link_type)}`}
+                            >
+                              {getLinkTypeLabel(link.link_type)}
+                            </Badge>
                           </div>
-                          <Button
-                            onClick={() => handleAcknowledgeLink(link.id)}
-                            size="sm"
-                            variant="outline"
-                            className="border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/30 flex-shrink-0 mt-1 h-7 px-2 text-xs"
-                          >
-                            <X size={12} className="mr-1" />
-                            Abgehakt
-                          </Button>
+                          <p className="text-sm text-foreground truncate">
+                            {sourceTask?.title || 'Unbekannte Aufgabe'}
+                          </p>
+                          {targetTask && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              → {targetTask.title}
+                            </p>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        <Button
+                          onClick={() => handleAcknowledgeLink(link.id)}
+                          size="xs"
+                          variant="outline"
+                          className="border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/30 flex-shrink-0 mt-1"
+                        >
+                          <X size={12} className="mr-1" />
+                          Abgehakt
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
           </div>
 
           {/* ── A4: Projekt-Stunden-Warnung ── */}
@@ -881,7 +907,7 @@ export default function DashboardPage() {
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${alert.isAtRisk
                               ? 'bg-red-500'
-                              : 'bg-primary'
+                              : 'bg-indigo-500'
                               }`}
                             style={{ width: `${Math.min(alert.percentLogged, 100)}%` }}
                           />
@@ -949,7 +975,7 @@ export default function DashboardPage() {
                           </Badge>
                         )}
                         {task.expand?.project?.expand?.client && (
-                          <Badge variant="outline" className="bg-background border-border text-primary font-sans text-[10px]">
+                          <Badge variant="outline" className="bg-background border-border text-indigo-400 font-sans text-[10px]">
                             {task.expand.project.expand.client.name}
                           </Badge>
                         )}
@@ -993,7 +1019,7 @@ export default function DashboardPage() {
                     }
                     setShowConfirmDialog(true);
                   }}
-                  className="bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 text-sm font-semibold"
+                  className="bg-primary text-black shadow-lg shadow-teal-500/20 hover:bg-primary/90 text-sm"
                 >
                   <Send size={14} className="mr-1" />
                   Zuweisen
@@ -1034,7 +1060,7 @@ export default function DashboardPage() {
               <Button variant="outline" onClick={() => setShowConfirmDialog(false)} className="border-border">
                 Abbrechen
               </Button>
-              <Button onClick={handleAssignConfirm} disabled={isAssigning} className="bg-primary text-primary-foreground">
+              <Button onClick={handleAssignConfirm} disabled={isAssigning} className="bg-primary text-black">
                 {isAssigning ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -1051,7 +1077,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                <FolderGit2 size={24} className="text-primary" />
+                <FolderGit2 size={24} className="text-indigo-400" />
                 Aktive Projekte
               </h2>
               <p className="text-muted-foreground mt-1 text-sm">

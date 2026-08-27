@@ -7,6 +7,12 @@ import { Bell, Loader2, CheckCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { NotificationRecord } from '@/lib/pocketbase-types';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
+import { useRealtime } from '@/hooks/useRealtime';
+import { toast } from 'sonner';
+import {
+  markNotificationAsReadAction,
+  markAllNotificationsAsReadAction,
+} from '@/app/actions/notifications';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -55,33 +61,45 @@ export function NotificationBell() {
 
     useEffect(() => {
         fetchNotifications();
-
-        const handleUpdate = () => fetchNotifications();
-        window.addEventListener('notification-received', handleUpdate);
-        window.addEventListener('vibeforce:notifications-updated', handleUpdate);
-
-        // Fallback Poll every 30 seconds
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener('notification-received', handleUpdate);
-            window.removeEventListener('vibeforce:notifications-updated', handleUpdate);
-        };
     }, [fetchNotifications]);
+
+    const uid = pb.authStore.isValid ? pb.authStore.record?.id : null;
+
+    useRealtime<NotificationRecord>(
+        'notifications',
+        (event) => {
+            if (event.action === 'create') {
+                const notif = event.record;
+                if (notif && notif.id) {
+                    setNotifications((prev) => [notif, ...prev]);
+                    if (!notif.read) {
+                        setUnreadCount((prev) => prev + 1);
+                    }
+                    const title = decodeGermanHtmlEntities(notif.title) || 'Neue Benachrichtigung';
+                    toast(title, {
+                        description: decodeGermanHtmlEntities(notif.message) || '',
+                        duration: 4000,
+                    });
+                }
+            }
+        },
+        {
+            filter: uid ? pb.filter('user = {:uid}', { uid }) : undefined,
+            enabled: !!uid,
+        }
+    );
 
     const handleMarkAllRead = async () => {
         setIsMarkingAll(true);
         try {
-            const unread = notifications.filter((n) => !n.read);
-            await Promise.all(
-                unread.map((n) =>
-                    pb.collection('notifications').update(n.id, { read: true })
-                )
-            );
+            const uid = pb.authStore.record?.id;
+            if (!uid) return;
+            await markAllNotificationsAsReadAction(uid);
             setNotifications((prev) =>
                 prev.map((n) => ({ ...n, read: true }))
             );
             setUnreadCount(0);
+            router.refresh();
         } catch (error) {
             console.error('Failed to mark notifications as read:', error);
         } finally {
@@ -93,11 +111,12 @@ export function NotificationBell() {
         // Mark as read
         if (!notification.read) {
             try {
-                await pb.collection('notifications').update(notification.id, { read: true });
+                await markNotificationAsReadAction(notification.id);
                 setNotifications((prev) =>
                     prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
                 );
                 setUnreadCount((prev) => Math.max(0, prev - 1));
+                router.refresh();
             } catch (error) {
                 console.error('Failed to mark notification as read:', error);
             }

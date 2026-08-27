@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '@/lib/pocketbase';
+import { useRouter } from 'next/navigation';
 import { TimeEntryRecord } from '@/lib/pocketbase-types';
+import { deleteTimeEntryAction } from '@/app/actions/time-entries';
 import {
     Dialog,
     DialogContent,
@@ -38,6 +39,7 @@ export function DayEntriesDialog({
     onEditEntry,
 }: DayEntriesDialogProps) {
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const router = useRouter();
 
     const formatDuration = (minutes: number) => {
         const h = Math.floor(minutes / 60);
@@ -79,8 +81,9 @@ export function DayEntriesDialog({
         }
         setDeletingId(entryId);
         try {
-            await pb.collection('time_entries').delete(entryId);
+            await deleteTimeEntryAction(entryId);
             toast.success('Zeiteintrag gelöscht');
+            router.refresh();
             onEntryUpdated();
         } catch (error) {
             toast.error('Fehler beim Löschen');
@@ -98,7 +101,7 @@ export function DayEntriesDialog({
                     <DialogTitle className="text-lg font-black tracking-tight text-foreground flex items-center justify-between">
                         <span>{format(day, 'EEEE, dd. MMMM yyyy', { locale: de })}</span>
                         {dayMinutes > 0 && (
-                            <span className="text-sm font-bold text-primary bg-primary/10 rounded-full px-3 py-1 font-mono">
+                            <span className="text-sm font-bold text-teal-400 bg-primary/10 rounded-full px-3 py-1 font-mono">
                                 {formatDuration(dayMinutes)}
                             </span>
                         )}
@@ -113,7 +116,7 @@ export function DayEntriesDialog({
                             <div
                                 key={entry.id}
                                 onClick={() => onEditEntry(entry)}
-                                className="rounded-xl border border-border bg-card/40 p-4 space-y-3 hover:border-primary/30 hover:bg-card/60 transition-colors cursor-pointer group relative"
+                                className="rounded-xl border border-border bg-card/40 p-4 space-y-3 hover:border-teal-500/30 hover:bg-card/60 transition-colors cursor-pointer group relative"
                             >
                                 {/* Top row: Project + Duration */}
                                 <div className="flex items-start justify-between gap-3">
@@ -201,7 +204,7 @@ export function DayEntriesDialog({
                     </Button>
                     <Button
                         onClick={onBookTimeClick}
-                        className="bg-primary hover:bg-primary/80 text-black font-bold h-9 rounded-xl shadow-lg shadow-primary/10 flex items-center gap-1.5"
+                        className="bg-primary hover:bg-teal-400 text-black font-bold h-9 rounded-xl shadow-lg shadow-teal-500/10 flex items-center gap-1.5"
                     >
                         <Plus size={16} />
                         Zeit buchen

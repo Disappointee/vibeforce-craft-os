@@ -6,6 +6,17 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Label } from '@/components/ui/label';
 import { Bell, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { updateNotificationSettingsAction } from '@/app/actions/profile';
+
+import { useSettingsStore } from '@/lib/store';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Mail } from 'lucide-react';
 
 interface NotificationPrefs {
     notify_on_assignment: boolean;
@@ -23,6 +34,8 @@ export function NotificationSettings() {
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState<string | null>(null);
+
+    const { emailNotificationFrequency, saveUserPreferences } = useSettingsStore();
 
     useEffect(() => {
         loadPrefs();
@@ -53,16 +66,25 @@ export function NotificationSettings() {
         setSaving(key);
 
         try {
-            const userId = pb.authStore.record?.id;
-            if (!userId) return;
-
-            await pb.collection('users').update(userId, { [key]: newValue });
+            const result = await updateNotificationSettingsAction({ [key]: newValue });
+            if (!result.success) {
+                throw new Error('Update fehlgeschlagen');
+            }
         } catch (error: any) {
             console.error('Error updating notification pref:', error);
             setPrefs((prev) => ({ ...prev, [key]: !newValue }));
             toast.error(error?.message || 'Fehler beim Speichern der Einstellung');
         } finally {
             setSaving(null);
+        }
+    };
+
+    const handleFrequencyChange = async (freq: 'immediate' | 'hourly' | 'daily' | 'never') => {
+        try {
+            await saveUserPreferences({ emailNotificationFrequency: freq });
+            toast.success('E-Mail-Frequenz aktualisiert');
+        } catch (e: any) {
+            toast.error('Fehler beim Speichern der E-Mail-Frequenz');
         }
     };
 
@@ -121,44 +143,78 @@ export function NotificationSettings() {
                     </div>
                     <div>
                         <CardTitle>Benachrichtigungen</CardTitle>
-                        <CardDescription>Verwalte deine Benachrichtigungseinstellungen</CardDescription>
+                        <CardDescription>Verwalte deine Benachrichtigungseinstellungen und E-Mail-Frequenz</CardDescription>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {notifications.map((notif) => (
-                        <div
-                            key={notif.key}
-                            className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-4 py-3"
-                        >
-                            <div className="space-y-0.5">
-                                <Label htmlFor={notif.key} className="text-sm font-medium text-foreground cursor-pointer">
-                                    {notif.title}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">{notif.description}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {saving === notif.key && <Loader2 size={14} className="text-muted-foreground animate-spin" />}
-                                <button
-                                    id={notif.key}
-                                    role="switch"
-                                    aria-checked={prefs[notif.key]}
-                                    onClick={() => handleToggle(notif.key)}
-                                    disabled={saving !== null}
-                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed ${prefs[notif.key] ? 'bg-indigo-500' : 'bg-zinc-700'
-                                        }`}
-                                >
-                                    <span
-                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${prefs[notif.key] ? 'translate-x-4' : 'translate-x-0'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
+            <CardContent className="space-y-4">
+                {/* E-Mail Frequency Selector */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+                    <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                            <Mail size={14} className="text-indigo-400" />
+                            <Label htmlFor="email-frequency" className="text-sm font-medium text-foreground cursor-pointer">
+                                E-Mail-Sammelfrequenz
+                            </Label>
                         </div>
-                    ))}
+                        <p className="text-xs text-muted-foreground">Wie oft sollen Benachrichtigungen gebündelt per E-Mail zugestellt werden</p>
+                    </div>
+                    <Select
+                        value={emailNotificationFrequency}
+                        onValueChange={(val) => handleFrequencyChange(val as any)}
+                    >
+                        <SelectTrigger id="email-frequency" className="w-[200px] bg-background border-border">
+                            <SelectValue>
+                                {(value: string) => {
+                                    if (value === 'immediate') return 'Sofort';
+                                    if (value === 'hourly') return 'Stündlich';
+                                    if (value === 'daily') return 'Täglich';
+                                    if (value === 'never') return 'Nie / Aus';
+                                    return value;
+                                }}
+                            </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border-border text-foreground">
+                            <SelectItem value="immediate">Sofort (Live)</SelectItem>
+                            <SelectItem value="hourly">Stündlich bündeln</SelectItem>
+                            <SelectItem value="daily">Tägliche Zusammenfassung</SelectItem>
+                            <SelectItem value="never">Keine E-Mails (Nie)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
+
+                {notifications.map((notif) => (
+                    <div
+                        key={notif.key}
+                        className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-4 py-3"
+                    >
+                        <div className="space-y-0.5">
+                            <Label htmlFor={notif.key} className="text-sm font-medium text-foreground cursor-pointer">
+                                {notif.title}
+                            </Label>
+                            <p className="text-xs text-muted-foreground">{notif.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {saving === notif.key && <Loader2 size={14} className="text-muted-foreground animate-spin" />}
+                            <button
+                                id={notif.key}
+                                role="switch"
+                                aria-checked={prefs[notif.key]}
+                                onClick={() => handleToggle(notif.key)}
+                                disabled={saving !== null}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed ${prefs[notif.key] ? 'bg-indigo-500' : 'bg-zinc-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${prefs[notif.key] ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </CardContent>
         </Card>
     );
 }
+

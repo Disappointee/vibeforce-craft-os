@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { UserRecord } from '@/lib/pocketbase-types';
-import { getUserDisplayName } from '@/lib/user-utils';
 import { Loader2 } from 'lucide-react';
 
 interface MentionInputProps {
@@ -40,7 +39,7 @@ export function MentionInput({
         setIsSearchingUsers(true);
         try {
             const result = await pb.collection('users').getList(1, 8, {
-                filter: pb.filter('name ~ {:q} || email ~ {:q} || first_name ~ {:q} || last_name ~ {:q}', { q: query }),
+                filter: pb.filter('name ~ {:q} || email ~ {:q}', { q: query }),
                 sort: 'name',
             });
             setMentionResults(result.items as UserRecord[]);
@@ -95,7 +94,7 @@ export function MentionInput({
         const beforeMention = currentValue.substring(0, mentionStartPos);
         const afterMention = currentValue.substring(textareaRef.current.selectionStart || mentionStartPos + mentionSearch.length + 1);
 
-        const mentionText = `@${getUserDisplayName(user)} `;
+        const mentionText = `@${user.name || user.email} `;
         const newValue = beforeMention + mentionText + afterMention;
 
         // Track mentioned user ID
@@ -229,11 +228,11 @@ export function MentionInput({
                                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-card transition-colors text-left data-[selected=true]:bg-card"
                             >
                                 <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs text-indigo-400 font-medium flex-shrink-0">
-                                    {getUserDisplayName(user).charAt(0).toUpperCase() || '?'}
+                                    {(user.name || user.email || '?')[0].toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <span className="block truncate font-medium">
-                                        {getUserDisplayName(user) || 'Unbekannt'}
+                                        {user.name || 'Unbekannt'}
                                     </span>
                                     <span className="block text-xs text-muted-foreground truncate">
                                         {user.email}

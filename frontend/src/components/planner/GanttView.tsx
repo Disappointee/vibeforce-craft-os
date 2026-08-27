@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Gantt, Task, ViewMode } from 'gantt-task-react';
 import "gantt-task-react/dist/index.css";
 import type { GanttTask } from '@/lib/gantt-utils';
+import type { TaskStatus } from '@/lib/pocketbase-types';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { BarChart3, Columns3, List, Maximize2, Minimize2 } from 'lucide-react';
+import { updateTaskAction } from '@/app/actions/tasks';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -70,10 +73,10 @@ function getTaskColors(status: string | undefined, priority: string, isSelected:
 
     if (status === 'in_progress') {
         backgroundColor = isDark ? 'rgba(0, 166, 153, 0.15)' : 'rgba(0, 140, 130, 0.2)';
-        progressColor = isDark ? '#2563EB' : '#1E40AF';
+        progressColor = isDark ? '#00A699' : '#008B7A';
     } else if (status === 'review') {
         backgroundColor = isDark ? 'rgba(0, 139, 129, 0.15)' : 'rgba(0, 120, 110, 0.2)';
-        progressColor = isDark ? '#1D4ED8' : '#1E3A8A';
+        progressColor = isDark ? '#008B81' : '#007066';
     } else if (status === 'done') {
         backgroundColor = isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(22, 163, 74, 0.2)';
         progressColor = isDark ? '#22c55e' : '#16a34a';
@@ -121,11 +124,11 @@ const CustomTooltipContent: React.FC<{
             <div className="flex items-center gap-2 mt-1">
                 <div className="flex-1 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                     <div 
-                        className="bg-primary h-full rounded-full" 
+                        className="bg-teal-500 h-full rounded-full" 
                         style={{ width: `${task.progress}%` }}
                     />
                 </div>
-                <span className="text-[10px] font-medium text-primary shrink-0">
+                <span className="text-[10px] font-medium text-teal-400 shrink-0">
                     Fortschritt: {Math.round(task.progress)}%
                 </span>
             </div>
@@ -138,6 +141,7 @@ const CustomTooltipContent: React.FC<{
 // ---------------------------------------------------------------------------
 
 export function GanttView({ tasks, taskStatusMap, isLoading, error, onTaskClick, scrollRef, sidebarOpen, activeView, onViewChange, isFullscreen, onToggleFullscreen, onTaskUpdated }: GanttViewProps) {
+    const router = useRouter();
     const isMobile = useIsMobile();
     const [viewMode, setViewMode] = useState<string>('Month');
     const [containerWidth, setContainerWidth] = useState(0);
@@ -269,11 +273,11 @@ export function GanttView({ tasks, taskStatusMap, isLoading, error, onTaskClick,
                 const day = String(d.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day} 00:00:00`;
             };
-            const { pb } = await import('@/lib/pocketbase');
-            await pb.collection('tasks').update(task.id, {
+            await updateTaskAction(task.id, {
                 start_date: fmtDate(task.start),
                 due_date: fmtDate(task.end),
             });
+            router.refresh();
             onTaskUpdated?.();
         } catch (err) {
             console.error('Failed to update task dates:', err);
@@ -289,8 +293,8 @@ export function GanttView({ tasks, taskStatusMap, isLoading, error, onTaskClick,
         else status = 'done';
 
         try {
-            const { pb } = await import('@/lib/pocketbase');
-            await pb.collection('tasks').update(task.id, { status });
+            await updateTaskAction(task.id, { status: status as TaskStatus });
+            router.refresh();
             onTaskUpdated?.();
         } catch (err) {
             console.error('Failed to update task progress:', err);
@@ -408,7 +412,7 @@ export function GanttView({ tasks, taskStatusMap, isLoading, error, onTaskClick,
                         onClick={() => setViewMode(mode)}
                         className={`px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all ${
                             viewMode === mode
-                                ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                                ? 'bg-primary text-black shadow-lg shadow-teal-500/20'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-transparent'
                         }`}
                     >
@@ -477,7 +481,7 @@ function ToolbarButton({
             title={title}
             className={`p-2 rounded-lg transition-all ${
                 active
-                    ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                    ? 'bg-primary text-black shadow-lg shadow-teal-500/20'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
             }`}
         >

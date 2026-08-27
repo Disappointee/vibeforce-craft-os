@@ -46,10 +46,5 @@ export function nowTime(): string {
 }
 
 export function now(): Date {
-  const d = new Date()
-  const berlinTime = d.toLocaleString('de-DE', { timeZone: TIMEZONE, hour12: false })
-  const [datePart, timePart] = berlinTime.split(', ')
-  const [day, month, year] = datePart.split('.').map(Number)
-  const [hours, minutes, seconds] = timePart.split(':').map(Number)
-  return new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds))
+  return new Date();
 }

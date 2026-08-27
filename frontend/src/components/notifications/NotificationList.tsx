@@ -6,6 +6,11 @@ import { pb } from '@/lib/pocketbase';
 import { NotificationRecord } from '@/lib/pocketbase-types';
 import { decodeGermanHtmlEntities } from '@/lib/utils';
 import { Bell, Loader2, CheckCheck, ArrowLeft, Filter } from 'lucide-react';
+import {
+  markNotificationAsReadAction,
+  markAllNotificationsAsReadAction,
+  deleteNotificationAction,
+} from '@/app/actions/notifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { t } from '@/lib/i18n';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
@@ -24,19 +30,15 @@ const NOTIFICATION_ICONS: Record<string, string> = {
     task_mention: '@',
     status_change: '🔄',
     project_update: '📋',
-    budget_warning: '⚠️',
-    system: '🔔',
 };
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-    task_assigned: t('notifications.type.task_assigned') || 'Aufgabenzuweisung',
-    task_due: t('notifications.type.task_due') || 'Fälligkeit',
-    task_comment: t('notifications.type.task_comment') || 'Kommentar',
-    task_mention: t('notifications.type.task_mention') || 'Erwähnung',
-    status_change: t('notifications.type.status_change') || 'Statusänderung',
-    project_update: t('notifications.type.project_update') || 'Projekt-Update',
-    budget_warning: 'Budget-Warnung',
-    system: 'System-Mitteilung',
+    task_assigned: t('notifications.type.task_assigned'),
+    task_due: t('notifications.type.task_due'),
+    task_comment: t('notifications.type.task_comment'),
+    task_mention: t('notifications.type.task_mention'),
+    status_change: t('notifications.type.status_change'),
+    project_update: t('notifications.type.project_update'),
 };
 
 export function NotificationList() {
@@ -46,6 +48,7 @@ export function NotificationList() {
     const [isMarkingAll, setIsMarkingAll] = useState(false);
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [readFilter, setReadFilter] = useState<string>('all');
+    const [timeFilter, setTimeFilter] = useState<string>('all');
 
     const fetchNotifications = useCallback(async () => {
         if (!pb.authStore.isValid) return;
@@ -64,6 +67,20 @@ export function NotificationList() {
                 filters.push('read = true');
             }
 
+            if (timeFilter === 'today') {
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                filters.push(`created >= "${todayStart.toISOString()}"`);
+            } else if (timeFilter === 'week') {
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - 7);
+                filters.push(`created >= "${weekStart.toISOString()}"`);
+            } else if (timeFilter === 'older') {
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - 7);
+                filters.push(`created < "${weekStart.toISOString()}"`);
+            }
+
             const result = await pb.collection('notifications').getList(1, 50, {
                 sort: '-created',
                 filter: filters.join(' && '),
@@ -74,33 +91,22 @@ export function NotificationList() {
         } finally {
             setIsLoading(false);
         }
-    }, [typeFilter, readFilter]);
+    }, [typeFilter, readFilter, timeFilter]);
 
     useEffect(() => {
         fetchNotifications();
-
-        const handleUpdate = () => fetchNotifications();
-        window.addEventListener('notification-received', handleUpdate);
-        window.addEventListener('vibeforce:notifications-updated', handleUpdate);
-
-        return () => {
-            window.removeEventListener('notification-received', handleUpdate);
-            window.removeEventListener('vibeforce:notifications-updated', handleUpdate);
-        };
     }, [fetchNotifications]);
 
     const handleMarkAllRead = async () => {
         setIsMarkingAll(true);
         try {
-            const unread = notifications.filter((n) => !n.read);
-            await Promise.all(
-                unread.map((n) =>
-                    pb.collection('notifications').update(n.id, { read: true })
-                )
-            );
+            const uid = pb.authStore.record?.id;
+            if (!uid) return;
+            await markAllNotificationsAsReadAction(uid);
             setNotifications((prev) =>
                 prev.map((n) => ({ ...n, read: true }))
             );
+            router.refresh();
         } catch (error) {
             console.error('Failed to mark notifications as read:', error);
         } finally {
@@ -110,14 +116,13 @@ export function NotificationList() {
 
     const handleToggleRead = async (notification: NotificationRecord) => {
         try {
-            await pb.collection('notifications').update(notification.id, {
-                read: !notification.read,
-            });
+            await markNotificationAsReadAction(notification.id, !notification.read);
             setNotifications((prev) =>
                 prev.map((n) =>
                     n.id === notification.id ? { ...n, read: !n.read } : n
                 )
             );
+            router.refresh();
         } catch (error) {
             console.error('Failed to toggle notification read status:', error);
         }
@@ -125,8 +130,9 @@ export function NotificationList() {
 
     const handleDelete = async (notificationId: string) => {
         try {
-            await pb.collection('notifications').delete(notificationId);
+            await deleteNotificationAction(notificationId);
             setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+            router.refresh();
         } catch (error) {
             console.error('Failed to delete notification:', error);
         }
@@ -227,26 +233,31 @@ export function NotificationList() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5 flex-1 min-w-[200px]">
                         <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block">
                             {t('notifications.filter.status')}
                         </label>
-                        <Select value={readFilter} onValueChange={(val) => val && setReadFilter(val)}>
-                            <SelectTrigger className="bg-background border-border h-9 min-w-[140px]">
-                                <SelectValue>
-                                    {(value: string) => ({
-                                        all: t('notifications.filter.all_statuses'),
-                                        unread: t('notifications.filter.unread'),
-                                        read: t('notifications.filter.read'),
-                                    } as Record<string, string>)[value] || value}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border-border text-foreground">
-                                <SelectItem value="all">{t('notifications.filter.all_statuses')}</SelectItem>
-                                <SelectItem value="unread">{t('notifications.filter.unread')}</SelectItem>
-                                <SelectItem value="read">{t('notifications.filter.read')}</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Tabs value={readFilter} onValueChange={(val) => setReadFilter(val)} className="w-full">
+                            <TabsList className="w-full h-9 bg-background border border-border">
+                                <TabsTrigger value="all" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">{t('notifications.filter.all_statuses')}</TabsTrigger>
+                                <TabsTrigger value="unread" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">{t('notifications.filter.unread')}</TabsTrigger>
+                                <TabsTrigger value="read" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">{t('notifications.filter.read')}</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+
+                    <div className="space-y-1.5 flex-1 min-w-[280px]">
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block">
+                            Zeitraum
+                        </label>
+                        <Tabs value={timeFilter} onValueChange={(val) => setTimeFilter(val)} className="w-full">
+                            <TabsList className="w-full h-9 bg-background border border-border">
+                                <TabsTrigger value="all" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">Alle</TabsTrigger>
+                                <TabsTrigger value="today" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">Heute</TabsTrigger>
+                                <TabsTrigger value="week" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">Woche</TabsTrigger>
+                                <TabsTrigger value="older" className="flex-1 text-xs data-[state=active]:bg-accent data-[state=active]:text-foreground">Älter</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
                 </div>
 

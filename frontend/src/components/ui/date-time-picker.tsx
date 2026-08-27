@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { format, parse, isValid, setHours, setMinutes } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { CalendarIcon, X, Clock } from 'lucide-react'
@@ -11,7 +12,14 @@ import { cn } from '@/lib/utils'
 
 function toDate(value: string): Date | undefined {
   if (!value) return undefined
-  const d = new Date(value)
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (trimmed.includes('.')) {
+    const parsed = parse(trimmed, trimmed.includes(':') ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy', new Date(), { locale: de })
+    if (isValid(parsed)) return parsed
+  }
+  const clean = trimmed.replace(' ', 'T')
+  const d = new Date(clean)
   return isValid(d) ? d : undefined
 }
 
@@ -31,6 +39,7 @@ interface DateTimePickerProps {
   placeholder?: string
   disabled?: boolean
   className?: string
+  minYear?: number
 }
 
 export function DateTimePicker({
@@ -39,94 +48,104 @@ export function DateTimePicker({
   placeholder = 'tt.mm.jjjj HH:MM',
   disabled = false,
   className,
+  minYear = 2000,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
   const [internalDate, setInternalDate] = React.useState<Date | undefined>(toDate(value))
+  const [month, setMonth] = React.useState<Date>(toDate(value) || new Date())
   const [inputValue, setInputValue] = React.useState(formatDisplay(toDate(value)))
   const [timeHours, setTimeHours] = React.useState('')
   const [timeMinutes, setTimeMinutes] = React.useState('')
-  const popoverRef = React.useRef<HTMLDivElement>(null)
+  const [coords, setCoords] = React.useState<{ top: number; left: number } | null>(null)
+
+  const triggerRef = React.useRef<HTMLDivElement>(null)
   const popoverDivRef = React.useRef<HTMLDivElement>(null)
-  const [popoverStyle, setPopoverStyle] = React.useState<React.CSSProperties>({})
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   React.useEffect(() => {
     const d = toDate(value)
     setInternalDate(d)
     setInputValue(formatDisplay(d))
-    if (d) {
+    if (d && isValid(d)) {
       setTimeHours(String(d.getHours()).padStart(2, '0'))
       setTimeMinutes(String(d.getMinutes()).padStart(2, '0'))
+      setMonth(d)
     } else {
       setTimeHours('')
       setTimeMinutes('')
     }
   }, [value])
 
+  const updatePosition = React.useCallback(() => {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    const popoverHeight = 390
+    const popoverWidth = 280
+    const vh = window.innerHeight
+    const vw = window.innerWidth
+
+    let top = rect.bottom + 4
+    if (rect.bottom + popoverHeight > vh - 12 && rect.top - popoverHeight > 12) {
+      top = rect.top - popoverHeight - 4
+    }
+
+    let left = rect.left
+    if (left + popoverWidth > vw - 16) {
+      left = Math.max(16, vw - popoverWidth - 16)
+    }
+    if (left < 16) {
+      left = 16
+    }
+
+    setCoords({ top, left })
+  }, [])
+
   React.useEffect(() => {
     if (!open) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+    updatePosition()
+
+    const handleMousedownOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (triggerRef.current && triggerRef.current.contains(target)) return
+      if (popoverDivRef.current && popoverDivRef.current.contains(target)) return
+      setOpen(false)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
 
-  React.useEffect(() => {
-    if (!open) {
-      setPopoverStyle({})
-      return
+    const handleScrollOrResize = () => {
+      updatePosition()
     }
-    const raf = requestAnimationFrame(() => {
-      const el = popoverDivRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      const style: React.CSSProperties = {}
 
-      if (rect.bottom > vh - 16) {
-        style.bottom = '100%'
-        style.top = 'auto'
-        style.marginTop = '0'
-        style.marginBottom = '0.25rem'
-      }
-      if (rect.top < 16) {
-        style.top = '100%'
-        style.bottom = 'auto'
-        style.marginTop = '0.25rem'
-        style.marginBottom = '0'
-      }
-      if (rect.right > vw - 16) {
-        style.left = 'auto'
-        style.right = '0'
-      }
-      if (rect.left < 16) {
-        style.left = '0'
-        style.right = 'auto'
-      }
+    document.addEventListener('mousedown', handleMousedownOutside)
+    window.addEventListener('resize', handleScrollOrResize)
+    window.addEventListener('scroll', handleScrollOrResize, { capture: true, passive: true })
 
-      if (Object.keys(style).length > 0) {
-        setPopoverStyle(style)
-      }
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [open])
+    return () => {
+      document.removeEventListener('mousedown', handleMousedownOutside)
+      window.removeEventListener('resize', handleScrollOrResize)
+      window.removeEventListener('scroll', handleScrollOrResize, { capture: true })
+    }
+  }, [open, updatePosition])
 
   const emit = (date: Date | undefined) => {
     setInternalDate(date)
     onChange(toValue(date))
     setInputValue(formatDisplay(date))
+    if (date && isValid(date)) {
+      setMonth(date)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value
     setInputValue(raw)
 
-    if (raw.length >= 16) {
-      const parsed = parse(raw, 'dd.MM.yyyy HH:mm', new Date(), { locale: de })
-      if (isValid(parsed)) {
+    if (raw.length >= 10) {
+      const parsed = toDate(raw)
+      if (parsed && isValid(parsed)) {
         emit(parsed)
       }
     }
@@ -137,8 +156,8 @@ export function DateTimePicker({
       emit(undefined)
       return
     }
-    const parsed = parse(inputValue, 'dd.MM.yyyy HH:mm', new Date(), { locale: de })
-    if (isValid(parsed)) {
+    const parsed = toDate(inputValue)
+    if (parsed && isValid(parsed)) {
       emit(parsed)
     } else {
       setInputValue(formatDisplay(internalDate))
@@ -189,8 +208,23 @@ export function DateTimePicker({
     setOpen(false)
   }
 
+  const toggleOpen = () => {
+    if (!open) {
+      const d = internalDate && isValid(internalDate) ? internalDate : undefined
+      if (d) {
+        setTimeHours(String(d.getHours()).padStart(2, '0'))
+        setTimeMinutes(String(d.getMinutes()).padStart(2, '0'))
+        setMonth(d)
+      } else {
+        setMonth(new Date())
+      }
+      updatePosition()
+    }
+    setOpen(!open)
+  }
+
   return (
-    <div ref={popoverRef} className={cn('relative', className)}>
+    <div ref={triggerRef} className={cn('relative', className)}>
       <div className="flex items-center gap-0">
         <input
           type="text"
@@ -200,7 +234,7 @@ export function DateTimePicker({
           placeholder={placeholder}
           disabled={disabled}
           className={cn(
-            'flex h-9 w-full rounded-l-lg border border-border bg-card px-3 py-1 text-sm text-foreground shadow-sm transition-colors',
+            'flex h-9 w-full min-w-0 flex-1 rounded-l-lg border border-border bg-card px-3 py-1 text-sm text-foreground shadow-sm transition-colors',
             'placeholder:text-muted-foreground',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
             'disabled:cursor-not-allowed disabled:opacity-50',
@@ -212,19 +246,10 @@ export function DateTimePicker({
           variant="outline"
           size="icon"
           disabled={disabled}
-          onClick={() => {
-            if (!open) {
-              const d = internalDate && isValid(internalDate) ? internalDate : undefined
-              if (d) {
-                setTimeHours(String(d.getHours()).padStart(2, '0'))
-                setTimeMinutes(String(d.getMinutes()).padStart(2, '0'))
-              }
-            }
-            setOpen(!open)
-          }}
-          className={cn('h-9 w-9 rounded-l-none rounded-r-lg border-l-0 shrink-0', open && 'bg-muted')}
+          onClick={toggleOpen}
+          className={cn('h-9 w-9 rounded-l-none rounded-r-lg border-l-0 shrink-0 cursor-pointer', open && 'bg-muted')}
         >
-          <CalendarIcon className="h-4 w-4" />
+          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
         </Button>
         {value && (
           <Button
@@ -233,62 +258,75 @@ export function DateTimePicker({
             size="icon-xs"
             disabled={disabled}
             onClick={handleClear}
-            className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X className="h-3 w-3" />
           </Button>
         )}
       </div>
 
-      {open && (
+      {open && mounted && coords && createPortal(
         <div
           ref={popoverDivRef}
+          style={{
+            position: 'fixed',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            zIndex: 10000,
+          }}
           className={cn(
-            'absolute top-full left-0 z-[9999] mt-1 rounded-xl border border-border bg-popover p-3 shadow-lg',
+            'fixed z-[10000] rounded-xl border border-border bg-popover p-3 shadow-2xl',
             'animate-in fade-in-0 zoom-in-95'
           )}
-          style={popoverStyle}
         >
           <DayPicker
             mode="single"
             selected={internalDate}
+            month={month}
+            onMonthChange={setMonth}
             onSelect={handleDaySelect}
             locale={de}
             weekStartsOn={1}
             showOutsideDays
+            captionLayout="dropdown"
+            startMonth={new Date(new Date().getFullYear() - 2, 0)}
+            endMonth={new Date(new Date().getFullYear() + 3, 11)}
             className="!m-0"
             classNames={{
               [UI.Month]: 'space-y-3',
               [UI.MonthCaption]: 'flex items-center justify-between px-1 py-1',
-              [UI.CaptionLabel]: 'text-sm font-medium text-foreground',
+              [UI.CaptionLabel]: 'hidden',
+              [UI.Dropdowns]: 'flex items-center gap-1.5 font-medium text-xs text-foreground',
+              [UI.Dropdown]: 'rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground cursor-pointer outline-none focus:ring-1 focus:ring-indigo-500 hover:bg-muted/50 transition-colors',
               [UI.Nav]: 'flex items-center gap-1',
               [UI.PreviousMonthButton]:
-                'inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors size-7',
+                'inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors size-7 cursor-pointer',
               [UI.NextMonthButton]:
-                'inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors size-7',
-              [UI.MonthGrid]: 'w-full border-collapse',
+                'inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors size-7 cursor-pointer',
+              [UI.MonthGrid]: 'w-full border-collapse border-spacing-0 mt-1',
               [UI.Weekdays]: '',
               [UI.Weekday]:
                 'w-9 text-xs font-medium text-muted-foreground text-center pb-2',
-              [UI.Weeks]: 'w-full mt-1',
+              [UI.Weeks]: '',
+              [UI.Week]: '',
               [UI.Day]: cn(
                 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
                 '[&:has([aria-selected])]:bg-accent/50'
               ),
               [UI.DayButton]: cn(
-                'inline-flex items-center justify-center rounded-lg size-9 text-sm font-normal text-foreground',
-                'hover:bg-muted hover:text-foreground transition-colors',
+                'inline-flex items-center justify-center rounded-lg size-9 text-xs font-medium text-foreground transition-all cursor-pointer',
+                'hover:bg-indigo-600/20 hover:text-indigo-300',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500'
               ),
               [SelectionState.selected]:
-                'bg-indigo-600 text-white hover:bg-indigo-500 font-medium',
-              [DayFlag.today]: 'font-bold text-indigo-400',
-              [DayFlag.outside]: 'text-muted-foreground/50',
-              [DayFlag.disabled]: 'text-muted-foreground/30',
+                '!bg-indigo-600 !text-white font-bold shadow-md shadow-indigo-600/30',
+              [DayFlag.today]: 'font-bold text-indigo-400 border border-indigo-500/50',
+              [DayFlag.outside]: '!text-muted-foreground/30 font-normal',
+              [DayFlag.disabled]: '!text-muted-foreground/20 cursor-not-allowed',
               [DayFlag.hidden]: 'invisible',
             }}
           />
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/60">
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <Input
               type="number"
@@ -314,13 +352,15 @@ export function DateTimePicker({
               variant="outline"
               size="sm"
               onClick={handleTimeOk}
-              className="h-8 ml-auto text-xs"
+              className="h-8 ml-auto text-xs font-semibold cursor-pointer"
             >
               OK
             </Button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
 }
+

@@ -5,6 +5,7 @@ import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 import { Camera, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { updateAvatarAction, removeAvatarAction } from '@/app/actions/profile';
 
 interface AvatarUploadProps {
     userId: string;
@@ -19,7 +20,7 @@ export function AvatarUpload({ userId, currentAvatar, userName, onAvatarUpdate }
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const avatarUrl = currentAvatar
-        ? pb.files.getUrl({ id: userId } as any, currentAvatar, { thumb: '256x256' })
+        ? pb.files.getURL({ id: userId } as any, currentAvatar, { thumb: '256x256' })
         : null;
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +52,14 @@ export function AvatarUpload({ userId, currentAvatar, userName, onAvatarUpdate }
             const formData = new FormData();
             formData.append('avatar', file);
 
-            const updated = await pb.collection('users').update(userId, formData);
-            const newUrl = pb.files.getUrl(updated, updated.avatar, { thumb: '256x256' });
-            onAvatarUpdate(newUrl);
-            setPreview(null);
-            toast.success('Avatar erfolgreich aktualisiert');
+            const result = await updateAvatarAction(formData);
+            if (result.success) {
+                onAvatarUpdate(result.url);
+                setPreview(null);
+                toast.success('Avatar erfolgreich aktualisiert');
+            } else {
+                throw new Error('Upload fehlgeschlagen');
+            }
         } catch (error: any) {
             console.error('Avatar upload error:', error);
             toast.error(error?.message || 'Fehler beim Hochladen des Avatars');
@@ -68,9 +72,13 @@ export function AvatarUpload({ userId, currentAvatar, userName, onAvatarUpdate }
     const handleRemoveAvatar = async () => {
         setUploading(true);
         try {
-            await pb.collection('users').update(userId, { 'avatar': null });
-            onAvatarUpdate('');
-            toast.success('Avatar entfernt');
+            const result = await removeAvatarAction();
+            if (result.success) {
+                onAvatarUpdate('');
+                toast.success('Avatar entfernt');
+            } else {
+                throw new Error('Remove fehlgeschlagen');
+            }
         } catch (error: any) {
             console.error('Avatar remove error:', error);
             toast.error(error?.message || 'Fehler beim Entfernen des Avatars');

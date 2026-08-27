@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Dialog,
     DialogContent,
@@ -16,8 +17,9 @@ import { Label } from '@/components/ui/label';
 import { Save, Loader2, Trash2, FileJson } from 'lucide-react';
 import { pb } from '@/lib/pocketbase';
 import { ReportTemplateRecord, ReportTemplateConfig } from '@/lib/pocketbase-types';
+import { createTemplateAction, deleteTemplateAction } from '@/app/actions/templates';
 import { toast } from 'sonner';
-import { ReportFilterValues, DatePreset } from './ReportFilters';
+import { ReportFilterValues } from './ReportFilters';
 
 interface SaveTemplateDialogProps {
     currentFilters: ReportFilterValues;
@@ -30,6 +32,7 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [templateName, setTemplateName] = useState('');
+    const router = useRouter();
 
     const fetchTemplates = async () => {
         setIsLoading(true);
@@ -60,7 +63,6 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
         setIsSaving(true);
         try {
             const config: ReportTemplateConfig = {
-                datePreset: currentFilters.datePreset,
                 dateFrom: currentFilters.dateFrom || undefined,
                 dateTo: currentFilters.dateTo || undefined,
                 projectIds: currentFilters.projectIds.length > 0 ? currentFilters.projectIds : undefined,
@@ -70,13 +72,13 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
                 groupBy: currentFilters.groupBy,
             };
 
-            await pb.collection('report_templates').create({
+            await createTemplateAction({
                 name: templateName.trim(),
-                user: pb.authStore.record?.id,
-                config: config,
+                config,
             });
 
             toast.success('Vorlage gespeichert');
+            router.refresh();
             setTemplateName('');
             fetchTemplates();
         } catch (error) {
@@ -92,7 +94,6 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
         if (!config) return;
 
         onLoadTemplate({
-            datePreset: (config.datePreset as DatePreset) || 'custom',
             dateFrom: config.dateFrom || '',
             dateTo: config.dateTo || '',
             projectIds: config.projectIds || [],
@@ -108,8 +109,9 @@ export function SaveTemplateDialog({ currentFilters, onLoadTemplate }: SaveTempl
 
     const handleDelete = async (template: ReportTemplateRecord) => {
         try {
-            await pb.collection('report_templates').delete(template.id);
+            await deleteTemplateAction(template.id);
             toast.success('Vorlage gelöscht');
+            router.refresh();
             fetchTemplates();
         } catch (error) {
             console.error('Failed to delete template:', error);

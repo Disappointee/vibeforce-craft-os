@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MoreVertical, Timer, UserCheck, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { MoreVertical, Timer, UserCheck, ExternalLink, Link, Trash2 } from 'lucide-react';
 import { pb } from '@/lib/pocketbase';
 import { TaskRecord, TaskStatus, TaskPriority } from '@/lib/pocketbase-types';
 import { toast } from 'sonner';
 import { useTimerStore } from '@/lib/store';
+import { updateTaskAction, deleteTaskAction } from '@/app/actions/tasks';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,6 +40,7 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
 ];
 
 export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextMenuProps) {
+    const router = useRouter();
     const { startTimer } = useTimerStore();
     const [users, setUsers] = useState<any[]>([]);
 
@@ -56,6 +59,23 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
         }
     };
 
+    const handleCopyLink = () => {
+        const url = `${window.location.origin}/tasks?taskId=${task.id}`;
+        navigator.clipboard.writeText(url);
+        toast.success('Link in Zwischenablage kopiert');
+    };
+
+    const handleDeleteTask = async () => {
+        try {
+            await deleteTaskAction(task.id);
+            toast.success('Aufgabe gelöscht');
+            router.refresh();
+            onUpdated();
+        } catch {
+            toast.error('Fehler beim Löschen der Aufgabe');
+        }
+    };
+
     const handleAssigneeChange = async (userId: string) => {
         const currentAssignees = Array.isArray(task.assignees)
             ? task.assignees
@@ -66,8 +86,9 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
             : [...currentAssignees, userId];
 
         try {
-            await pb.collection('tasks').update(task.id, { assignees: newAssignees });
+            await updateTaskAction(task.id, { assignees: newAssignees });
             toast.success('Zuständigkeit geändert');
+            router.refresh();
             onUpdated();
         } catch {
             toast.error('Zuständigkeit konnte nicht geändert werden');
@@ -77,8 +98,9 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
     const handleStatusChange = async (newStatus: TaskStatus) => {
         if (newStatus === task.status) return;
         try {
-            await pb.collection('tasks').update(task.id, { status: newStatus });
+            await updateTaskAction(task.id, { status: newStatus });
             toast.success(`Status auf „${STATUS_OPTIONS.find(s => s.value === newStatus)?.label}" geändert`);
+            router.refresh();
             onUpdated();
         } catch {
             toast.error('Status konnte nicht geändert werden');
@@ -88,8 +110,9 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
     const handlePriorityChange = async (newPriority: TaskPriority) => {
         if (newPriority === task.priority) return;
         try {
-            await pb.collection('tasks').update(task.id, { priority: newPriority });
+            await updateTaskAction(task.id, { priority: newPriority });
             toast.success(`Priorität auf „${PRIORITY_OPTIONS.find(p => p.value === newPriority)?.label}" geändert`);
+            router.refresh();
             onUpdated();
         } catch {
             toast.error('Priorität konnte nicht geändert werden');
@@ -112,6 +135,11 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDetails(task.id); }}>
                     <ExternalLink size={14} className="mr-2" />
                     Details öffnen
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopyLink(); }}>
+                    <Link size={14} className="mr-2" />
+                    Link kopieren
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -182,6 +210,16 @@ export function TaskContextMenu({ task, onViewDetails, onUpdated }: TaskContextM
                         })}
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(); }}
+                    className="text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                >
+                    <Trash2 size={14} className="mr-2 text-red-400" />
+                    Aufgabe löschen
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

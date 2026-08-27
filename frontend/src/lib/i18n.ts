@@ -352,6 +352,7 @@ export const dict = {
     admin: 'Administrator',
     manager: 'Manager',
     employee: 'Mitarbeiter',
+    freelancer: 'Freelancer',
     client: 'Kunde',
   },
 
@@ -518,6 +519,7 @@ export const ROLE_LABELS: Record<string, string> = {
   admin: t('role.admin'),
   manager: t('role.manager'),
   employee: t('role.employee'),
+  freelancer: t('role.freelancer'),
   client: t('role.client'),
 };
 

@@ -10,7 +10,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const TASK_PRIORITIES = ['low', 'medium', 'high', 'acute'] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
-export const TASK_TYPES = ['sea', 'seo', 'social', 'web', 'consulting', 'other'] as const;
+export const TASK_TYPES = ['sea', 'social_ads', 'tracking', 'seo', 'content', 'design', 'development', 'consulting', 'other'] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
 export const PROJECT_BUDGET_TYPES = ['fixed', 'hourly', 'retainer'] as const;
@@ -22,7 +22,7 @@ export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 export const CLIENT_STATUSES = ['noch_nicht_gestartet', 'aktiv', 'beendet'] as const;
 export type ClientStatus = (typeof CLIENT_STATUSES)[number];
 
-export const USER_ROLES = ['admin', 'manager', 'employee', 'client'] as const;
+export const USER_ROLES = ['admin', 'manager', 'employee', 'freelancer', 'client'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const RECURRING_INTERVALS = ['daily', 'weekly', 'monthly', 'yearly', 'custom'] as const;
@@ -81,6 +81,7 @@ export const USER_ROLE_LABEL_MAP: Record<UserRole, TranslationKey> = {
   admin: 'role.admin',
   manager: 'role.manager',
   employee: 'role.employee',
+  freelancer: 'role.freelancer',
   client: 'role.client',
 };
 
