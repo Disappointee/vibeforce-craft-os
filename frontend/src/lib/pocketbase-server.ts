@@ -21,8 +21,8 @@ export async function getAdminPB(): Promise<PocketBase> {
 
   const pb = new PocketBase(POCKETBASE_URL);
   pb.autoCancellation(false);
-  const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || '***REMOVED***').trim();
-  const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '***REMOVED***').trim();
+  const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || '').trim();
+  const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '').trim();
 
   if (!password) {
     console.error('[getAdminPB] POCKETBASE_ADMIN_PASSWORD is not set — admin actions will fail.');
