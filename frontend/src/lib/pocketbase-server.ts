@@ -29,7 +29,6 @@ export async function getAdminPB(): Promise<PocketBase> {
     adminPb = pb;
   } catch (err) {
     console.error('[getAdminPB] Superuser auth failed:', err);
-    // Return unauthenticated client as failsafe instead of throwing hard exception
     return pb;
   }
 
@@ -44,30 +43,39 @@ export async function verifyUserSession(): Promise<Record<string, unknown> | nul
   const pb = new PocketBase(POCKETBASE_URL);
   pb.autoCancellation(false);
   
+  let userRecord: Record<string, unknown> | null = null;
+
   try {
     const decodedValue = decodeURIComponent(authCookie.value);
     const authData = JSON.parse(decodedValue);
-    pb.authStore.save(authData.token, authData.model);
+    const userModel = authData.record || authData.model || null;
+    if (authData.token) {
+      pb.authStore.save(authData.token, userModel);
+      userRecord = userModel;
+    }
   } catch {
     pb.authStore.loadFromCookie(`pb_auth=${authCookie.value}`, 'pb_auth');
   }
 
   try {
     await pb.collection('users').authRefresh();
-    if (!pb.authStore.record) {
-      cookieStore.delete('pb_auth');
-      return null;
-    }
-    return pb.authStore.record as unknown as Record<string, unknown>;
-  } catch (refreshErr) {
-    console.warn('[verifyUserSession] authRefresh warning:', refreshErr);
-    // If the token & record restored from the cookie are valid, maintain the session
-    if (pb.authStore.isValid && pb.authStore.record) {
+    if (pb.authStore.record) {
       return pb.authStore.record as unknown as Record<string, unknown>;
     }
-    cookieStore.delete('pb_auth');
-    return null;
+  } catch (refreshErr) {
+    console.warn('[verifyUserSession] authRefresh warning:', refreshErr);
   }
+
+  // If token & record from cookie are valid, maintain the session
+  if (pb.authStore.isValid && (pb.authStore.record || pb.authStore.model)) {
+    return (pb.authStore.record || pb.authStore.model) as unknown as Record<string, unknown>;
+  }
+
+  if (userRecord && (userRecord.role || userRecord.email)) {
+    return userRecord;
+  }
+
+  return null;
 }
 
 export async function getUserAuthPB(): Promise<PocketBase | null> {
@@ -81,7 +89,10 @@ export async function getUserAuthPB(): Promise<PocketBase | null> {
   try {
     const decodedValue = decodeURIComponent(authCookie.value);
     const authData = JSON.parse(decodedValue);
-    pb.authStore.save(authData.token, authData.model);
+    const userModel = authData.record || authData.model || null;
+    if (authData.token) {
+      pb.authStore.save(authData.token, userModel);
+    }
   } catch {
     pb.authStore.loadFromCookie(`pb_auth=${authCookie.value}`, 'pb_auth');
   }

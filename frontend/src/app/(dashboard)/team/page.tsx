@@ -513,8 +513,9 @@ export default function TeamPage() {
           {currentUser?.role === 'admin' && (
             <button
               onClick={() => router.push('/admin/users')}
-              className="bg-white text-zinc-950 px-4 py-2 rounded-full font-medium text-sm hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm shadow-md shadow-primary/25 transition-all flex items-center gap-2 cursor-pointer"
             >
+              <Plus size={16} />
               Mitglied einladen
             </button>
           )}
@@ -722,7 +723,7 @@ export default function TeamPage() {
               {((currentUser?.role as string) === 'admin' || (currentUser?.role as string) === 'manager') && (
                 <Button
                   onClick={handleOpenCreateTeam}
-                  className="bg-white text-zinc-950 hover:bg-zinc-200 transition-colors flex items-center gap-1.5 font-semibold py-1.5 px-4 rounded-full text-xs shadow-md border-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all flex items-center gap-1.5 font-semibold py-1.5 px-4 rounded-full text-xs shadow-md shadow-primary/25 border-0"
                 >
                   <Plus size={14} /> Team erstellen
                 </Button>

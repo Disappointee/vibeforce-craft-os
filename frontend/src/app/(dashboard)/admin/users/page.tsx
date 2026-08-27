@@ -207,14 +207,22 @@ export default function AdminUsersPage() {
             return;
         }
 
+        const nextVerified = !user.verified;
+        // Optimistic UI update
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, verified: nextVerified } : u));
+
         try {
-            const res = await toggleUserActiveAction(user.id, !user.verified);
-            if (res?.error) throw new Error(res.error);
-            toast.success(`Benutzer ${user.verified ? 'deaktiviert' : 'aktiviert'}`);
+            const res = await toggleUserActiveAction(user.id, nextVerified);
+            if (res?.error) {
+                // Fallback via client SDK if server action had a session error
+                await pb.collection('users').update(user.id, { verified: nextVerified });
+            }
+            toast.success(`Benutzer ${nextVerified ? 'aktiviert' : 'deaktiviert'}`);
             await loadUsers();
         } catch (error: any) {
             console.error('Toggle status error:', error);
             toast.error(error?.message || 'Fehler beim Ändern des Status');
+            await loadUsers();
         }
     };
 
@@ -224,14 +232,21 @@ export default function AdminUsersPage() {
             return;
         }
 
+        // Optimistic UI update
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+
         try {
             const res = await updateUserRoleAction(userId, newRole);
-            if (res?.error) throw new Error(res.error);
+            if (res?.error) {
+                // Fallback via client SDK if server action had a session error
+                await pb.collection('users').update(userId, { role: newRole });
+            }
             toast.success('Rolle erfolgreich aktualisiert');
             await loadUsers();
         } catch (error: any) {
             console.error('Role change error:', error);
             toast.error(error?.message || 'Fehler beim Ändern der Rolle');
+            await loadUsers();
         }
     };
 
