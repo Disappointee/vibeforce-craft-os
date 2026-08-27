@@ -1,6 +1,6 @@
 import PocketBase from 'pocketbase';
 
-const pb = new PocketBase('https://api-46-225-178-235.sslip.io');
+const pb = new PocketBase('https://pb-vibeforce.46-225-178-235.sslip.io');
 pb.autoCancellation(false);
 
 async function run() {

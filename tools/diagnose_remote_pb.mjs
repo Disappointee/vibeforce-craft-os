@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
 const urlsToTest = [
-  'https://api-46-225-178-235.sslip.io',
+  'https://pb-vibeforce.46-225-178-235.sslip.io',
   'http://46.225.178.235:8090',
   'https://pb.vibeforce-flow.de',
   'https://vibeforce-flow.de'

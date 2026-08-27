@@ -8,13 +8,13 @@
  *   node tools/seed_new_backend.mjs [POCKETBASE_URL] [SUPERUSER_EMAIL] [SUPERUSER_PASSWORD]
  * 
  * Beispiel:
- *   node tools/seed_new_backend.mjs https://api-46-225-178-235.sslip.io ***REMOVED*** ***REMOVED***
+ *   node tools/seed_new_backend.mjs https://pb-vibeforce.46-225-178-235.sslip.io ***REMOVED*** ***REMOVED***
  */
 
 import PocketBase from 'pocketbase';
 
 // ── 1. Configuration & CLI Parameters ──
-const TARGET_URL = process.argv[2] || process.env.POCKETBASE_URL || 'https://api-46-225-178-235.sslip.io';
+const TARGET_URL = process.argv[2] || process.env.POCKETBASE_URL || 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const SUPER_EMAIL = process.argv[3] || process.env.PB_SUPERUSER_EMAIL || '***REMOVED***';
 const SUPER_PASS = process.argv[4] || process.env.PB_SUPERUSER_PASSWORD || '***REMOVED***';
 

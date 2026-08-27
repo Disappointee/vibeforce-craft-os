@@ -1,6 +1,6 @@
 import PocketBase from 'pocketbase';
 
-const liveUrl = 'https://api-46-225-178-235.sslip.io';
+const liveUrl = 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const pb = new PocketBase(liveUrl);
 
 const superEmail = '***REMOVED***';
