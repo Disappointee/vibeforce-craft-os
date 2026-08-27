@@ -34,10 +34,10 @@ function createPocketBase() {
     instance.autoCancellation(false);
     if (typeof document !== 'undefined') {
         if (instance.authStore.isValid) {
-            document.cookie = instance.authStore.exportToCookie({ httpOnly: false });
+            document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' });
         }
         instance.authStore.onChange(() => {
-            document.cookie = instance.authStore.exportToCookie({ httpOnly: false });
+            document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' });
         });
     }
     return instance;

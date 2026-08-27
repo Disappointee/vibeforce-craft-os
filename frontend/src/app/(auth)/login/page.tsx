@@ -29,7 +29,7 @@ export default function LoginPage() {
       const cleanEmail = email.trim().toLowerCase();
       await pb.collection('users').authWithPassword(cleanEmail, password);
       toast.success(t('auth.login.submit'));
-      router.push('/');
+      window.location.href = '/';
     } catch (err) {
       const pbError = err as ClientResponseError;
       toast.error(pbError?.message || t('auth.login_error'));
