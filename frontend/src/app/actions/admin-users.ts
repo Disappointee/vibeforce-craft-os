@@ -17,13 +17,14 @@ export async function updateUserRoleAction(userId: string, role: string) {
     const pb = await getAdminPB();
     await pb.collection('users').update(userId, { role });
     revalidatePath('/admin/users');
+    revalidatePath('/team');
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Unbekannter Fehler' };
   }
 }
 
-export async function toggleUserActiveAction(userId: string, targetVerifiedState: boolean) {
+export async function toggleUserActiveAction(userId: string, targetActiveState: boolean) {
   try {
     const sessionUser = await verifyUserSession();
     if (!sessionUser || sessionUser.role !== 'admin') {
@@ -35,8 +36,10 @@ export async function toggleUserActiveAction(userId: string, targetVerifiedState
     }
 
     const pb = await getAdminPB();
-    await pb.collection('users').update(userId, { verified: targetVerifiedState });
+    // PocketBase active state is stored in the 'deactivated' boolean field
+    await pb.collection('users').update(userId, { deactivated: !targetActiveState });
     revalidatePath('/admin/users');
+    revalidatePath('/team');
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Unbekannter Fehler' };
@@ -57,6 +60,7 @@ export async function deleteUserAdminAction(userId: string) {
     const pb = await getAdminPB();
     await pb.collection('users').delete(userId);
     revalidatePath('/admin/users');
+    revalidatePath('/team');
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Unbekannter Fehler' };
@@ -71,7 +75,11 @@ export async function createUserAction(data: Record<string, any>) {
     }
 
     const pb = await getAdminPB();
-    const record = await pb.collection('users').create(data);
+    const payload = {
+      ...data,
+      deactivated: false,
+    };
+    const record = await pb.collection('users').create(payload);
     let smtpFailed = false;
     try {
       await pb.collection('users').requestPasswordReset(data.email);
@@ -80,6 +88,7 @@ export async function createUserAction(data: Record<string, any>) {
       smtpFailed = true;
     }
     revalidatePath('/admin/users');
+    revalidatePath('/team');
     return { success: true, smtpFailed, data: JSON.parse(JSON.stringify(record)) };
   } catch (err: any) {
     return { error: err.message || 'Unbekannter Fehler' };
@@ -143,7 +152,6 @@ export async function updateUserProfileAdminAction(
     const isAdmin = sessionUser.role === 'admin';
     const isSelf = sessionUser.id === userId;
 
-    // Only admins can update other users. Users can update their own non-privileged fields.
     if (!isAdmin && !isSelf) {
       return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen andere Profile bearbeiten.' };
     }
@@ -153,7 +161,6 @@ export async function updateUserProfileAdminAction(
     if (data.weekly_hours_target !== undefined) payload.weekly_hours_target = data.weekly_hours_target;
     if (data.expertise !== undefined) payload.expertise = data.expertise;
 
-    // Role and supervisor can ONLY be changed by admins
     if (data.role !== undefined) {
       if (!isAdmin) {
         return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };

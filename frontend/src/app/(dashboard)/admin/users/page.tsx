@@ -51,6 +51,7 @@ interface UserItem {
     supervisor?: string;
     avatar?: string;
     verified: boolean;
+    deactivated?: boolean;
     created: string;
     language?: string;
     expand?: {
@@ -207,17 +208,20 @@ export default function AdminUsersPage() {
             return;
         }
 
-        const nextVerified = !user.verified;
+        const currentlyActive = !user.deactivated;
+        const targetActiveState = !currentlyActive;
+        const targetDeactivated = !targetActiveState;
+
         // Optimistic UI update
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, verified: nextVerified } : u));
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, deactivated: targetDeactivated } : u));
 
         try {
-            const res = await toggleUserActiveAction(user.id, nextVerified);
+            const res = await toggleUserActiveAction(user.id, targetActiveState);
             if (res?.error) {
-                // Fallback via client SDK if server action had a session error
-                await pb.collection('users').update(user.id, { verified: nextVerified });
+                // Fallback via client SDK
+                await pb.collection('users').update(user.id, { deactivated: targetDeactivated });
             }
-            toast.success(`Benutzer ${nextVerified ? 'aktiviert' : 'deaktiviert'}`);
+            toast.success(`Benutzer ${targetActiveState ? 'aktiviert' : 'deaktiviert'}`);
             await loadUsers();
         } catch (error: any) {
             console.error('Toggle status error:', error);
@@ -463,61 +467,61 @@ export default function AdminUsersPage() {
                                                 </Select>
                                             </TableCell>
                                             <TableCell>
-                                                {user.verified || user.id === pb.authStore.record?.id ? (
-                                                    <Badge variant="default" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                                                        <CheckCircle size={12} className="mr-1" />
-                                                        Aktiv
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="destructive" className="bg-red-500/10 text-red-400 border-red-500/20">
-                                                        <Ban size={12} className="mr-1" />
-                                                        Deaktiviert
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className="text-sm text-muted-foreground">
-                                                    {new Date(user.created).toLocaleDateString('de-DE')}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="xs"
-                                                        onClick={() => {
-                                                            setResetUserId(user.id);
-                                                            setResetUserEmail(user.email);
-                                                            setResetPassword('');
-                                                            setResetPasswordConfirm('');
-                                                            setResetOpen(true);
-                                                        }}
-                                                        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-                                                        title="Passwort zurücksetzen"
-                                                    >
-                                                        <KeyRound size={14} />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="xs"
-                                                        onClick={() => handleToggleStatus(user)}
-                                                        disabled={user.id === pb.authStore.record?.id}
-                                                        className={user.verified || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
-                                                    >
-                                                        {user.verified || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
-                                                        {user.verified || user.id === pb.authStore.record?.id ? 'Deaktivieren' : 'Aktivieren'}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="xs"
-                                                        onClick={() => handleDelete(user)}
-                                                        disabled={user.id === pb.authStore.record?.id}
-                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
+                                                 {!user.deactivated || user.id === pb.authStore.record?.id ? (
+                                                     <Badge variant="default" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                                                         <CheckCircle size={12} className="mr-1" />
+                                                         Aktiv
+                                                     </Badge>
+                                                 ) : (
+                                                     <Badge variant="destructive" className="bg-red-500/10 text-red-400 border-red-500/20">
+                                                         <Ban size={12} className="mr-1" />
+                                                         Deaktiviert
+                                                     </Badge>
+                                                 )}
+                                             </TableCell>
+                                             <TableCell>
+                                                 <span className="text-sm text-muted-foreground">
+                                                     {new Date(user.created).toLocaleDateString('de-DE')}
+                                                 </span>
+                                             </TableCell>
+                                             <TableCell className="text-right">
+                                                 <div className="flex items-center justify-end gap-1">
+                                                     <Button
+                                                         variant="ghost"
+                                                         size="xs"
+                                                         onClick={() => {
+                                                             setResetUserId(user.id);
+                                                             setResetUserEmail(user.email);
+                                                             setResetPassword('');
+                                                             setResetPasswordConfirm('');
+                                                             setResetOpen(true);
+                                                         }}
+                                                         className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                                                         title="Passwort zurücksetzen"
+                                                     >
+                                                         <KeyRound size={14} />
+                                                     </Button>
+                                                     <Button
+                                                         variant="ghost"
+                                                         size="xs"
+                                                         onClick={() => handleToggleStatus(user)}
+                                                         disabled={user.id === pb.authStore.record?.id}
+                                                         className={!user.deactivated || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
+                                                     >
+                                                         {!user.deactivated || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
+                                                         {!user.deactivated || user.id === pb.authStore.record?.id ? 'Deaktivieren' : 'Aktivieren'}
+                                                     </Button>
+                                                     <Button
+                                                         variant="ghost"
+                                                         size="xs"
+                                                         onClick={() => handleDelete(user)}
+                                                         disabled={user.id === pb.authStore.record?.id}
+                                                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                                     >
+                                                         <Trash2 size={14} />
+                                                     </Button>
+                                                 </div>
+                                             </TableCell>
                                         </TableRow>
                                     ))
                                 )}
