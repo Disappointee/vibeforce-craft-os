@@ -3,7 +3,7 @@ import 'server-only';
 import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
 
-const POCKETBASE_URL = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+const POCKETBASE_URL = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb-vibeforce.46-225-178-235.sslip.io';
 
 let adminPb: PocketBase | null = null;
 
