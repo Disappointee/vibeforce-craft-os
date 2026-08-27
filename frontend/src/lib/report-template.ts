@@ -8,8 +8,8 @@ export const reportTemplateHtml = `<!DOCTYPE html>
 
   :root {
     --brand: #2563EB;
-    --brand-light: rgba(0, 166, 153, 0.08);
-    --brand-pill: rgba(0, 166, 153, 0.12);
+    --brand-light: rgba(37, 99, 235, 0.08);
+    --brand-pill: rgba(37, 99, 235, 0.12);
     --text: #1e293b;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
@@ -155,7 +155,7 @@ export const reportTemplateHtml = `<!DOCTYPE html>
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(0, 166, 153, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.2);
     margin-top: 2px;
   }
 

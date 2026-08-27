@@ -92,7 +92,7 @@ async function main() {
         { name: "SEO-Optimierung", key: "SEO", client: clientIds["Technik Solutions"], status: "active", description: "Laufende SEO-Maßnahmen und Content-Optimierung." },
         { name: "Social Media Kampagne", key: "SMC", client: clientIds["Musterfirma AG"], status: "active", description: "Quartalsweise Social-Media-Kampagne für Produkteinführung." },
         { name: "Tracking-Integration", key: "TRK", client: clientIds["Beta Group e.K."], status: "active", description: "Implementierung von Tracking-Pixeln und Analytics." },
-        { name: "Awork Remastered", key: "AWR", client: clientIds["DigitalPulse GmbH"], status: "active", description: "Self-Tracking-Projekt für die Weiterentwicklung.", project_type: "development", is_billable: false },
+        { name: "Vibeforce Flow OS Core", key: "VFOS", client: clientIds["DigitalPulse GmbH"], status: "active", description: "Self-Tracking-Projekt für die Weiterentwicklung.", project_type: "development", is_billable: false },
         { name: "Cloud-Migration Phase 2", key: "CLM2", client: clientIds["CloudBase AG"], status: "active", description: "Migration der On-Premise-Infrastruktur zu Cloud-Native." },
         { name: "E-Commerce Plattform", key: "ECOM", client: clientIds["NovaTech Systems"], status: "active", description: "Entwicklung einer skalierbaren E-Commerce-Plattform." },
         { name: "Brand-Kampagne Q3", key: "BRQ3", client: clientIds["MediaHaus GmbH"], status: "active", description: "Medienübergreifende Brand-Awareness-Kampagne." },

@@ -382,7 +382,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} collapsed={sidebarCollapsed} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
-            {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} /> */}
+            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} collapsed={sidebarCollapsed} />
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
             <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} collapsed={sidebarCollapsed} />
@@ -432,7 +432,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
-            {/* <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} /> */}
+            <NavItem href="/planner" icon={<BarChart3 size={18} />} label="Planer" active={pathname === '/planner'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/time" icon={<Timer size={18} />} label="Zeiterfassung" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/team" icon={<Users size={18} />} label="Team & Ressourcen" active={pathname.startsWith('/team')} onClick={() => setMobileSidebarOpen(false)} />

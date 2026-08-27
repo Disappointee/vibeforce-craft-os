@@ -95,7 +95,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-2xl font-bold text-base shadow-lg shadow-primary/10 transition-all flex items-center justify-center group"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold text-base shadow-lg shadow-primary/20 transition-all flex items-center justify-center group"
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

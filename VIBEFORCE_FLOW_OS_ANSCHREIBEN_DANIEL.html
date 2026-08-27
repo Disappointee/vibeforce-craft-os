@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibeforce Flow OS — Offizielles Anschreiben für Daniel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-gradient: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%);
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #e0f2fe 0%, #f8fafc 60%, #f1f5f9 100%);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .letter-container {
+      max-width: 880px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 42px 46px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      position: relative;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 22px;
+      margin-bottom: 26px;
+    }
+
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+      flex-shrink: 0;
+      border: 1px solid #dbeafe;
+      padding: 4px;
+    }
+
+    .logo-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #059669;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    }
+
+    .welcome-box {
+      background: linear-gradient(135deg, #f0f7ff 0%, #eef2ff 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      padding: 22px 26px;
+      margin-bottom: 26px;
+    }
+
+    .welcome-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .welcome-text {
+      color: #334155;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+
+    .cta-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--primary-gradient);
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-bottom: 26px;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.35);
+    }
+
+    .cta-text h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .cta-text p {
+      font-size: 13px;
+      color: #dbeafe;
+      margin-top: 2px;
+    }
+
+    .cta-button {
+      background: #ffffff;
+      color: #1d4ed8;
+      text-decoration: none;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13.5px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      background: #f8fafc;
+    }
+
+    .section-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .credentials-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+      border: 1.5px solid #93c5fd;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 26px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+
+    .cred-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .cred-role {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+    }
+
+    .cred-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .cred-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cred-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cred-copy-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .cred-copy-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+
+    .cred-copy-btn.copied {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #059669;
+    }
+
+    .copy-icon {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .feature-box {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03);
+    }
+
+    .feature-icon {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .feature-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .feature-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .footer-signature {
+      border-top: 1px solid var(--card-border);
+      padding-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .signature-text {
+      font-size: 13.5px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    .signature-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 6px;
+    }
+
+    .signature-sub {
+      font-size: 11.5px;
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .qr-badge {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid #334155;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13.5px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="letter-container">
+    
+    <!-- Header mit offiziellem Master-Logo -->
+    <div class="header">
+      <div class="brand-title">
+        <div class="logo-badge">
+          <img src="./public/logos/konzept_4_4_infinity_wave.jpg" alt="Vibeforce Flow OS Logo" />
+        </div>
+        <span>Vibeforce Flow OS</span>
+      </div>
+      <div class="brand-badge">
+        <span class="dot"></span>
+        Admin-Zugang Bereit
+      </div>
+    </div>
+
+    <!-- Begrüßung für Daniel -->
+    <div class="welcome-box">
+      <div class="welcome-title">
+        👋 Hallo Daniel,
+      </div>
+      <p class="welcome-text">
+        herzlich willkommen bei <strong>Vibeforce Flow OS</strong>! Dein persönlicher Administrator-Vollzugang wurde erfolgreich eingerichtet und verifiziert. Das System vereint moderne Projektsteuerung (Multi-View: Kanban, Timeline & Liste), sekundengenaue Zeiterfassung mit Live-Stoppuhr, Team-Auslastungsmanagement sowie rechtskonforme <strong>ZUGFeRD 2.2 E-Rechnungsstellung</strong> und <strong>Multi-Market-Architektur</strong>.
+      </p>
+    </div>
+
+    <!-- CTA Banner zur Live-Vorschau -->
+    <div class="cta-banner">
+      <div class="cta-text">
+        <h3>🚀 Zur Online-Vorschau</h3>
+        <p>https://vibeforce-flow-os.vercel.app</p>
+      </div>
+      <a href="https://vibeforce-flow-os.vercel.app" target="_blank" class="cta-button">
+        Im Browser öffnen ↗
+      </a>
+    </div>
+
+    <!-- Persönliche Zugangsdaten für Daniel mit 1-Klick Kopierfunktion -->
+    <div class="section-title">
+      <span>🔑 Deine Administrator-Zugangsdaten</span>
+      <span class="section-subtitle">💡 Klick auf den Wert zum direkten Kopieren</span>
+    </div>
+    
+    <div class="credentials-card">
+      <div class="cred-header">
+        <span class="cred-role">👑 Daniel (Administrator mit Vollzugriff)</span>
+        <span class="badge-pill">Verifizierter Testaccount · Aktiv</span>
+      </div>
+      <div class="cred-grid">
+        <div class="cred-row">
+          <span class="cred-label">E-Mail-Adresse:</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('Daniel@vibeforcetest.de', this)">
+            <span>Daniel@vibeforcetest.de</span>
+            <span class="copy-icon">📋</span>
+          </button>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Passwort:</span>
+          <button class="cred-copy-btn" onclick="copyToClipboard('***REMOVED***', this)">
+            <span>***REMOVED***</span>
+            <span class="copy-icon">📋</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlight-Module im Überblick -->
+    <div class="section-title">
+      <span>✨ System-Highlights & Funktionen</span>
+    </div>
+    <div class="features-grid">
+      <div class="feature-box">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Planer & Multi-View</div>
+        <div class="feature-desc">Gantt-Timeline, Kanban-Board & Listenansicht mit Team- und Kundenfiltern.</div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon">⏱️</div>
+        <div class="feature-title">Live-Zeiterfassung</div>
+        <div class="feature-desc">Echtzeit-Stoppuhr im Header, Ghost-Timer Auto-Cap und globale Rundung.</div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon">📄</div>
+        <div class="feature-title">ZUGFeRD 2.2 & Multi-Market</div>
+        <div class="feature-desc">EU-rechtskonforme E-Rechnungen (EN 16931), Factur-X, Swiss QR & Peppol-Ready.</div>
+      </div>
+    </div>
+
+    <!-- Footer mit Signatur und freundlichen Grüßen -->
+    <div class="footer-signature">
+      <div class="signature-text">
+        Ich wünsche dir ganz viel Spaß beim Testen und Erkunden aller Module!<br /><br />
+        Mit freundlichen Grüßen,<br />
+        <div class="signature-name">Robin</div>
+        <div class="signature-sub">⚡ Vibeforce One — Operations & Growth</div>
+      </div>
+      <div class="qr-badge">
+        Vibeforce Flow OS v1.0.0<br />
+        Verifizierter Admin-Zugang
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast-msg">✓ In Zwischenablage kopiert!</div>
+
+  <script>
+    function copyToClipboard(text, element) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (err) {}
+        document.body.removeChild(textArea);
+      }
+
+      // Visual feedback on button
+      const origHtml = element.innerHTML;
+      element.classList.add('copied');
+      element.innerHTML = '<span>' + text + '</span> <span class="copy-icon">✓ Kopiert!</span>';
+
+      // Toast notification
+      const toast = document.getElementById('toast');
+      toast.innerText = '✓ "' + text + '" in Zwischenablage kopiert!';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        element.classList.remove('copied');
+        element.innerHTML = origHtml;
+        toast.classList.remove('show');
+      }, 2000);
+    }
+  </script>
+
+</body>
+</html>

@@ -120,7 +120,7 @@ function ResetPasswordForm() {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-2xl font-bold text-base shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center group min-h-[44px]"
+        className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold text-base shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center group min-h-[44px]"
       >
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
