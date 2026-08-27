@@ -306,6 +306,37 @@ export default function DocsPage() {
                     </ul>
                   </div>
                 </div>
+
+                {/* Detaillierter Zyklen-Bereich */}
+                <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                      <Layers size={18} />
+                    </div>
+                    <h3 className="font-bold text-foreground text-base">
+                      Projekt-Zyklen (Cycles, Phasen & Sprints)
+                    </h3>
+                  </div>
+
+                  <p className="text-xs leading-relaxed">
+                    Das <strong>Zyklen-System</strong> teilt komplexe Kundenprojekte in iterierbare Phasen oder feste Zeithorizonte ein (z. B. 2-Wochen-Sprints oder Meilensteine wie <em>Setup</em>, <em>Umsetzung</em>, <em>Rollout</em>).
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-card border border-border space-y-1">
+                      <strong className="text-foreground">1. Zyklus-Zuordnung</strong>
+                      <p>Jedes Projekt besitzt eine aktuelle Zyklusnummer (`cycle_number`, z.B. <code>Zyklus #0</code> für die Initialisierungsphase). Alle zugehörigen Aufgaben werden diesem Zyklus automatisch zugeordnet.</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-card border border-border space-y-1">
+                      <strong className="text-foreground">2. Button „Zyklen“</strong>
+                      <p>Der Toggle-Button oben rechts schaltet die Gruppenansicht ein/aus. Bei aktiver Zyklen-Ansicht werden alle Aufgaben nach Projekt und Zyklus gebündelt.</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-card border border-border space-y-1">
+                      <strong className="text-foreground">3. Zyklus-Fortschritt</strong>
+                      <p>Der Badge (z. B. <code>Zyklus #0 · 4 Aufgaben</code>) zeigt auf einen Blick den aktuellen Aufgabenstand der jeweiligen Iteration, ohne dass man die Übersicht verliert.</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

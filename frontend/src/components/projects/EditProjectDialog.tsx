@@ -261,7 +261,7 @@ export function EditProjectDialog({ project, open, onOpenChange, onProjectUpdate
                         >
                             {project.status === 'archived' ? 'Reaktivieren' : 'Archivieren'}
                         </Button>
-                        <Button type="submit" disabled={isLoading} className="bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-50">
+                        <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold disabled:opacity-50">
                             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Speichern
                         </Button>
