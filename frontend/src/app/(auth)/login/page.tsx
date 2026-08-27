@@ -26,12 +26,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await pb.collection('users').authWithPassword(email, password);
+      const cleanEmail = email.trim().toLowerCase();
+      await pb.collection('users').authWithPassword(cleanEmail, password);
       toast.success(t('auth.login.submit'));
       router.push('/');
     } catch (err) {
       const pbError = err as ClientResponseError;
-      toast.error(t('auth.login_error'));
+      toast.error(pbError?.message || t('auth.login_error'));
       console.error(pbError);
     } finally {
       setIsLoading(false);
