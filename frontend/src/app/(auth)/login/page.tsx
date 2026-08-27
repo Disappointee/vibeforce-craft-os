@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,10 +9,8 @@ import { Loader2, ArrowRight } from 'lucide-react';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { ContactAdminDialog } from '@/components/auth/ContactAdminDialog';
 import { t } from '@/lib/i18n';
-import { ClientResponseError } from 'pocketbase';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,14 +22,27 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const cleanEmail = email.trim().toLowerCase();
-      await pb.collection('users').authWithPassword(cleanEmail, password);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || t('auth.login_error'));
+      }
+
       toast.success(t('auth.login.submit'));
       window.location.href = '/';
-    } catch (err) {
-      const pbError = err as ClientResponseError;
-      toast.error(pbError?.message || t('auth.login_error'));
-      console.error(pbError);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : t('auth.login_error');
+      toast.error(message);
+      console.error('Login failed:', err);
     } finally {
       setIsLoading(false);
     }

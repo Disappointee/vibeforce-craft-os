@@ -33,6 +33,9 @@ function createPocketBase() {
     const instance = new PocketBase(POCKETBASE_URL);
     instance.autoCancellation(false);
     if (typeof document !== 'undefined') {
+        // Load existing session from cookie (set by server-side /api/auth/login)
+        instance.authStore.loadFromCookie(document.cookie);
+
         if (instance.authStore.isValid) {
             document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' });
         }
