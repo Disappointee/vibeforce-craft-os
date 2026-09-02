@@ -12,10 +12,15 @@ import { redirect } from 'next/navigation';
  * instances per request while safely reusing immutable admin JWT tokens.
  */
 
-export const POCKETBASE_URL =
+const rawServerUrl =
   process.env.POCKETBASE_URL ||
   process.env.NEXT_PUBLIC_POCKETBASE_URL ||
-  'https://pb-vibeforce.46-225-178-235.sslip.io';
+  '';
+
+export const POCKETBASE_URL =
+  (!rawServerUrl || rawServerUrl.includes('railway.app'))
+    ? 'https://pb-vibeforce.46-225-178-235.sslip.io'
+    : rawServerUrl;
 
 interface CachedAdminAuth {
   token: string;

@@ -2,9 +2,11 @@
 
 import PocketBase from 'pocketbase';
 
+const rawClientUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL || '';
 export const POCKETBASE_URL =
-  process.env.NEXT_PUBLIC_POCKETBASE_URL ||
-  'https://pb-vibeforce.46-225-178-235.sslip.io';
+  (!rawClientUrl || rawClientUrl.includes('railway.app'))
+    ? 'https://pb-vibeforce.46-225-178-235.sslip.io'
+    : rawClientUrl;
 
 function createPocketBase() {
   if (typeof window === 'undefined') {
