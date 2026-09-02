@@ -1,8 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
-
+import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 
 const CreateTimeEntrySchema = z.object({
@@ -22,32 +21,33 @@ export async function createTimeEntryAction(data: z.infer<typeof CreateTimeEntry
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = CreateTimeEntrySchema.parse(data);
-  const pb = await getAdminPB();
 
-  const existing = await pb.collection('time_entries').getList(1, 1, {
-    filter: pb.filter('user = {:uid} && start_time < {:end} && (end_time = "" || end_time = null || end_time > {:start})', {
-      uid: user.id,
-      start: validated.start_time,
-      end: validated.end_time,
-    }),
+  return withAdminPB(async (pb) => {
+    const existing = await pb.collection('time_entries').getList(1, 1, {
+      filter: pb.filter('user = {:uid} && start_time < {:end} && (end_time = "" || end_time = null || end_time > {:start})', {
+        uid: user.id,
+        start: validated.start_time,
+        end: validated.end_time,
+      }),
+    });
+    if (existing.totalItems > 0) {
+      throw new Error('Zeitblock überschneidet sich mit einem bestehenden Eintrag');
+    }
+
+    const record = await pb.collection('time_entries').create({
+      task: validated.task,
+      user: user.id,
+      start_time: validated.start_time,
+      end_time: validated.end_time,
+      duration_minutes: validated.duration_minutes,
+      description: validated.description || undefined,
+      is_billable: validated.is_billable !== false,
+      date: validated.date,
+    });
+
+    revalidatePath('/dashboard/time');
+    return JSON.parse(JSON.stringify(record));
   });
-  if (existing.totalItems > 0) {
-    throw new Error('Zeitblock überschneidet sich mit einem bestehenden Eintrag');
-  }
-
-  const record = await pb.collection('time_entries').create({
-    task: validated.task,
-    user: user.id,
-    start_time: validated.start_time,
-    end_time: validated.end_time,
-    duration_minutes: validated.duration_minutes,
-    description: validated.description || undefined,
-    is_billable: validated.is_billable !== false,
-    date: validated.date,
-  });
-
-  revalidatePath('/dashboard/time');
-  return JSON.parse(JSON.stringify(record));
 }
 
 export async function updateTimeEntryAction(
@@ -58,58 +58,60 @@ export async function updateTimeEntryAction(
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = UpdateTimeEntrySchema.parse(data);
-  const pb = await getAdminPB();
 
-  // 1. Target-Record laden für BOLA/IDOR-Schutz
-  const targetRecord = await pb.collection('time_entries').getOne(entryId);
+  return withAdminPB(async (pb) => {
+    // 1. Target-Record laden für BOLA/IDOR-Schutz
+    const targetRecord = await pb.collection('time_entries').getOne(entryId);
 
-  // 2. BOLA/IDOR: Nur Owner oder Admin darf bearbeiten
-  const isAdmin = user.role === 'admin';
-  const isOwner = (targetRecord as any).user === user.id;
-  if (!isAdmin && !isOwner) {
-    throw new Error('Nicht autorisiert: Zugriff auf fremden Zeiteintrag verweigert.');
-  }
-
-  // 3. Overlap-Check gegen den Mitarbeiter (targetRecord.user), nicht gegen den Admin
-  if (validated.start_time && validated.end_time) {
-    const effectiveUserId = (targetRecord as any).user;
-    const existing = await pb.collection('time_entries').getList(1, 1, {
-      filter: pb.filter('user = {:uid} && id != {:eid} && start_time < {:end} && (end_time = "" || end_time = null || end_time > {:start})', {
-        uid: effectiveUserId,
-        eid: entryId,
-        start: validated.start_time,
-        end: validated.end_time,
-      }),
-    });
-    if (existing.totalItems > 0) {
-      throw new Error('Zeitblock überschneidet sich mit einem bestehenden Eintrag');
+    // 2. BOLA/IDOR: Nur Owner oder Admin darf bearbeiten
+    const isAdmin = user.role === 'admin';
+    const isOwner = (targetRecord as any).user === user.id;
+    if (!isAdmin && !isOwner) {
+      throw new Error('Nicht autorisiert: Zugriff auf fremden Zeiteintrag verweigert.');
     }
-  }
 
-  const record = await pb.collection('time_entries').update(entryId, validated);
+    // 3. Overlap-Check gegen den Mitarbeiter (targetRecord.user), nicht gegen den Admin
+    if (validated.start_time && validated.end_time) {
+      const effectiveUserId = (targetRecord as any).user;
+      const existing = await pb.collection('time_entries').getList(1, 1, {
+        filter: pb.filter('user = {:uid} && id != {:eid} && start_time < {:end} && (end_time = "" || end_time = null || end_time > {:start})', {
+          uid: effectiveUserId,
+          eid: entryId,
+          start: validated.start_time,
+          end: validated.end_time,
+        }),
+      });
+      if (existing.totalItems > 0) {
+        throw new Error('Zeitblock überschneidet sich mit einem bestehenden Eintrag');
+      }
+    }
 
-  revalidatePath('/dashboard/time');
-  return JSON.parse(JSON.stringify(record));
+    const record = await pb.collection('time_entries').update(entryId, validated);
+
+    revalidatePath('/dashboard/time');
+    return JSON.parse(JSON.stringify(record));
+  });
 }
 
 export async function deleteTimeEntryAction(entryId: string) {
   const user = await verifyUserSession();
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
-  const pb = await getAdminPB();
+  return withAdminPB(async (pb) => {
+    // 1. Target-Record laden für BOLA/IDOR-Schutz
+    const targetRecord = await pb.collection('time_entries').getOne(entryId);
 
-  // 1. Target-Record laden für BOLA/IDOR-Schutz
-  const targetRecord = await pb.collection('time_entries').getOne(entryId);
+    // 2. BOLA/IDOR: Nur Owner oder Admin darf löschen
+    const isAdmin = user.role === 'admin';
+    const isOwner = (targetRecord as any).user === user.id;
+    if (!isAdmin && !isOwner) {
+      throw new Error('Nicht autorisiert: Zugriff auf fremden Zeiteintrag verweigert.');
+    }
 
-  // 2. BOLA/IDOR: Nur Owner oder Admin darf löschen
-  const isAdmin = user.role === 'admin';
-  const isOwner = (targetRecord as any).user === user.id;
-  if (!isAdmin && !isOwner) {
-    throw new Error('Nicht autorisiert: Zugriff auf fremden Zeiteintrag verweigert.');
-  }
+    await pb.collection('time_entries').delete(entryId);
 
-  await pb.collection('time_entries').delete(entryId);
-
-  revalidatePath('/dashboard/time');
-  return { success: true };
+    revalidatePath('/dashboard/time');
+    return { success: true };
+  });
 }
+

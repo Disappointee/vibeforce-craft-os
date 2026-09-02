@@ -1,32 +1,42 @@
 /**
- * Ensure Users Boot Hook für Vibeforce Flow OS
+ * 🛡️ Ensure Users Boot Hook für Vibeforce Flow OS
  *
- * Garantiert, dass der Master-Admin-Login bei Bedarf existiert.
- * In der Produktion/Pre-Launch standardmäßig deaktiviert, um keine Passwörter zu überschreiben.
+ * Boot-Hook mit ENV-Gate (FORCE_RESET_BOOT_PASSWORDS) und Passwort-Erhalt bei bestehenden Accounts.
+ * Verhindert das versehentliche Überschreiben von Passwörtern bei Re-Deployments.
  */
 
-// Deaktiviert für Produktivbetrieb
-// onBootstrap((e) => {
-//     e.next();
-//     try {
-//         const adminEmail = "***REMOVED***";
-//         const adminPassword = "***REMOVED***";
-//         try {
-//             const existing = $app.findAuthRecordByEmail("users", adminEmail);
-//             existing.set("role", "admin");
-//             $app.save(existing);
-//         } catch (_) {
-//             const collection = $app.findCollectionByNameOrId("users");
-//             const record = new Record(collection);
-//             record.set("email", adminEmail);
-//             record.set("password", adminPassword);
-//             record.set("passwordConfirm", adminPassword);
-//             record.set("name", "Admin User");
-//             record.set("role", "admin");
-//             record.set("emailVisibility", true);
-//             $app.save(record);
-//         }
-//     } catch (err) {
-//         console.error("[ensure_users] Boot error:", err);
-//     }
-// });
+onBootstrap((e) => {
+    e.next();
+    try {
+        const forceReset = $os.getenv("FORCE_RESET_BOOT_PASSWORDS") === "true";
+        const adminEmail = (process.env.POCKETBASE_ADMIN_EMAIL || "admin@vibeforce-flow.de").trim();
+        const adminPassword = (process.env.POCKETBASE_ADMIN_PASSWORD || "***REMOVED***").trim();
+
+        try {
+            const existing = $app.findAuthRecordByEmail("users", adminEmail);
+            if (forceReset) {
+                existing.setPassword(adminPassword);
+                existing.set("role", "admin");
+                $app.save(existing);
+                console.log("[ensure_users] Admin password force-synced via ENV: " + adminEmail);
+            } else {
+                console.log("[ensure_users] Admin user exists (password preserved): " + adminEmail);
+            }
+        } catch (_) {
+            const collection = $app.findCollectionByNameOrId("users");
+            const record = new Record(collection, {
+                email: adminEmail,
+                password: adminPassword,
+                passwordConfirm: adminPassword,
+                name: "Admin User",
+                role: "admin",
+                emailVisibility: true,
+            });
+            $app.save(record);
+            console.log("[ensure_users] Initial admin created: " + adminEmail);
+        }
+    } catch (err) {
+        console.error("[ensure_users] Boot error:", err);
+    }
+});
+
