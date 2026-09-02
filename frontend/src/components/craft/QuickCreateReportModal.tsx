@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { DailySiteReportForm } from './DailySiteReportForm';
 import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
 
@@ -52,8 +55,16 @@ export function QuickCreateReportModal({
         </DialogHeader>
 
         {projects.length === 0 ? (
-          <div className="p-8 text-center text-xs text-muted-foreground">
-            Keine Baustellen vorhanden. Bitte lege zuerst ein Projekt an.
+          <div className="py-8 px-4 text-center space-y-4">
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Es ist noch keine Baustelle angelegt. Um einen Bautagesbericht zu erfassen, lege bitte zuerst ein Projekt an.
+            </p>
+            <Link href="/projects" onClick={onClose}>
+              <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4">
+                <Plus size={15} className="mr-1.5" />
+                Erste Baustelle anlegen
+              </Button>
+            </Link>
           </div>
         ) : projectId ? (
           <div className="pt-3">
