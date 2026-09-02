@@ -244,6 +244,7 @@ export function CraftHubClient({
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <Button
+              id="craft-create-report-btn"
               onClick={() => setIsCreateModalOpen(true)}
               className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm"
             >
@@ -251,6 +252,7 @@ export function CraftHubClient({
               Bericht erfassen
             </Button>
             <Button
+              id="craft-datev-export-btn"
               variant="outline"
               onClick={handleDownloadDatevCsv}
               className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3.5"
