@@ -87,6 +87,9 @@ export interface ProjectRecord extends BaseRecord {
     due_date?: string;
     billing_rounding?: BillingRoundingInterval | 'inherit';
     rounding_mode?: BillingRoundingMode | 'inherit';
+    geofence_type?: 'none' | 'circle' | 'polygon';
+    geofence_data?: { center?: [number, number]; radius?: number; polygon?: Array<[number, number]> };
+    geofence_auto_prompt?: boolean;
     expand?: {
         members?: UserRecord[];
         client?: ClientRecord;
@@ -337,4 +340,87 @@ export interface ListResult<T> {
     totalPages: number;
     items: T[];
 }
+
+// ============================================
+// VIBE Craft Records (M007)
+// ============================================
+
+export type SiteReportStatus = 'draft' | 'signed' | 'invoiced';
+export type MeasurementUnit = 'm' | 'm2' | 'm3' | 'h' | 'stk' | 'kg' | 'psch';
+export type QualificationLevel = 'meister' | 'geselle' | 'helfer' | 'azubi';
+
+export interface SiteReportRecord extends BaseRecord {
+    collectionName: 'site_reports';
+    project: string;
+    author: string;
+    report_date: string;
+    status: SiteReportStatus;
+    weather?: string;
+    temperature?: number;
+    work_performed?: string;
+    special_events?: string;
+    qualification_hours?: Record<QualificationLevel, number>;
+    client_signature?: string;
+    client_name?: string;
+    client_signed_at?: string;
+    contractor_signature?: string;
+    contractor_signed_at?: string;
+    expand?: {
+        project?: ProjectRecord;
+        author?: UserRecord;
+        measurements?: MeasurementRecord[];
+        evidence_items?: EvidenceItemRecord[];
+    };
+}
+
+export interface MeasurementRecord extends BaseRecord {
+    collectionName: 'measurements';
+    site_report: string;
+    position_nr: string;
+    title: string;
+    formula?: string; // e.g. "2.50 * 4.20 * 0.15"
+    quantity: number;
+    unit: MeasurementUnit;
+    unit_price?: number;
+    total_price?: number;
+    notes?: string;
+    expand?: {
+        site_report?: SiteReportRecord;
+    };
+}
+
+export interface EvidenceItemRecord extends BaseRecord {
+    collectionName: 'evidence_items';
+    site_report: string;
+    image: string;
+    caption?: string;
+    sha256_hash?: string;
+    taken_at?: string;
+    gps_lat?: number;
+    gps_lon?: number;
+    expand?: {
+        site_report?: SiteReportRecord;
+    };
+}
+
+export interface InvoiceZugferdRecord extends BaseRecord {
+    collectionName: 'invoices_zugferd';
+    site_report?: string;
+    project: string;
+    invoice_number: string;
+    invoice_type?: 'abschlag' | 'schluss' | 'standard';
+    net_total: number;
+    tax_rate: number;
+    tax_total: number;
+    gross_total: number;
+    zugferd_xml: string;
+    pdf_file?: string;
+    datev_exported?: boolean;
+    datev_export_date?: string;
+    expand?: {
+        site_report?: SiteReportRecord;
+        project?: ProjectRecord;
+    };
+}
+
 

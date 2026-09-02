@@ -117,3 +117,47 @@ export const TASK_TYPE_LABELS: Record<string, string> = {
   consulting: 'Beratung',
   other: 'Sonstiges',
 };
+
+// ── VIBE Craft (M007) Konstanten ──
+
+export const GEOFENCE_TYPES = ['none', 'circle', 'polygon'] as const;
+export type GeofenceType = (typeof GEOFENCE_TYPES)[number];
+
+export const GEOFENCE_TYPE_LABEL_MAP: Record<GeofenceType, TranslationKey> = {
+  none: 'craft.geofence.type_none',
+  circle: 'craft.geofence.type_circle',
+  polygon: 'craft.geofence.type_polygon',
+};
+
+export const SITE_REPORT_STATUSES = ['draft', 'signed', 'invoiced'] as const;
+export type SiteReportStatus = (typeof SITE_REPORT_STATUSES)[number];
+
+export const SITE_REPORT_STATUS_LABEL_MAP: Record<SiteReportStatus, TranslationKey> = {
+  draft: 'craft.site_report.status_draft',
+  signed: 'craft.site_report.status_signed',
+  invoiced: 'craft.site_report.status_invoiced',
+};
+
+export const MEASUREMENT_UNITS = ['m', 'm2', 'm3', 'h', 'stk', 'kg', 'psch'] as const;
+export type MeasurementUnit = (typeof MEASUREMENT_UNITS)[number];
+
+export const MEASUREMENT_UNIT_LABEL_MAP: Record<MeasurementUnit, TranslationKey> = {
+  m: 'craft.measurement.unit_m',
+  m2: 'craft.measurement.unit_m2',
+  m3: 'craft.measurement.unit_m3',
+  h: 'craft.measurement.unit_h',
+  stk: 'craft.measurement.unit_stk',
+  kg: 'craft.measurement.unit_kg',
+  psch: 'craft.measurement.unit_psch',
+};
+
+export const QUALIFICATION_LEVELS = ['meister', 'geselle', 'helfer', 'azubi'] as const;
+export type QualificationLevel = (typeof QUALIFICATION_LEVELS)[number];
+
+export const QUALIFICATION_LEVEL_LABEL_MAP: Record<QualificationLevel, TranslationKey> = {
+  meister: 'craft.site_report.hours_meister',
+  geselle: 'craft.site_report.hours_geselle',
+  helfer: 'craft.site_report.hours_helfer',
+  azubi: 'craft.site_report.hours_azubi',
+};
+
