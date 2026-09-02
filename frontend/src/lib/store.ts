@@ -395,6 +395,8 @@ interface SettingsState {
   emailNotificationFrequency: 'immediate' | 'hourly' | 'daily' | 'never';
   globalRoundingInterval: BillingRoundingInterval;
   globalRoundingMode: BillingRoundingMode;
+  craftModuleEnabled: boolean;
+  setCraftModuleEnabled: (enabled: boolean) => void;
   setHideArchivedProjectTasks: (hide: boolean) => void;
   toggleHideArchivedProjectTasks: () => void;
   setDefaultTaskView: (view: 'kanban' | 'list' | 'timeline') => void;
@@ -416,6 +418,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
+      craftModuleEnabled: true,
       budgetWarningEnabled: true,
       budgetWarningThreshold: 80,
       autoFallbackTaskEnabled: true,
@@ -429,6 +432,7 @@ export const useSettingsStore = create<SettingsState>()(
       emailNotificationFrequency: 'immediate',
       globalRoundingInterval: 6,
       globalRoundingMode: 'ceil',
+      setCraftModuleEnabled: (enabled) => set({ craftModuleEnabled: enabled }),
       setHideArchivedProjectTasks: (hide) => set({ hideArchivedProjectTasks: hide }),
       toggleHideArchivedProjectTasks: () => set((s) => ({ hideArchivedProjectTasks: !s.hideArchivedProjectTasks })),
       setDefaultTaskView: (view) => set({ defaultTaskView: view }),
@@ -449,6 +453,7 @@ export const useSettingsStore = create<SettingsState>()(
         if (!prefs || typeof prefs !== 'object') return;
 
         set((state) => ({
+          craftModuleEnabled: prefs.craftModuleEnabled !== undefined ? prefs.craftModuleEnabled : state.craftModuleEnabled,
           defaultTaskView: prefs.defaultTaskView || state.defaultTaskView,
           timeRoundingMinutes: prefs.timeRoundingMinutes !== undefined ? prefs.timeRoundingMinutes : state.timeRoundingMinutes,
           defaultBillable: prefs.defaultBillable !== undefined ? prefs.defaultBillable : state.defaultBillable,
@@ -460,6 +465,7 @@ export const useSettingsStore = create<SettingsState>()(
       saveUserPreferences: async (newPrefs: Partial<UserPreferences>) => {
         const current = get();
         const updated = {
+          craftModuleEnabled: newPrefs.craftModuleEnabled !== undefined ? newPrefs.craftModuleEnabled : current.craftModuleEnabled,
           defaultTaskView: newPrefs.defaultTaskView !== undefined ? newPrefs.defaultTaskView : current.defaultTaskView,
           timeRoundingMinutes: newPrefs.timeRoundingMinutes !== undefined ? newPrefs.timeRoundingMinutes : current.timeRoundingMinutes,
           defaultBillable: newPrefs.defaultBillable !== undefined ? newPrefs.defaultBillable : current.defaultBillable,

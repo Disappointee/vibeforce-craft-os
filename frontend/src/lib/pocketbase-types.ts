@@ -36,6 +36,7 @@ export interface UserPreferences {
     emailNotificationFrequency?: 'immediate' | 'hourly' | 'daily' | 'never';
     uiDensity?: 'comfortable' | 'compact';
     hideArchivedProjectTasks?: boolean;
+    craftModuleEnabled?: boolean;
 }
 
 export interface UserRecord extends BaseRecord {

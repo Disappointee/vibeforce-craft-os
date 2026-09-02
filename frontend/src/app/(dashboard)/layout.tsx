@@ -26,6 +26,7 @@ import {
   ChevronRight,
   Zap,
   BookOpen,
+  Hammer,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -78,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const isOffline = useOffline();
+  const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
 
   const handleOpenTaskDialog = useCallback(() => {
     useUiStore.getState().setTaskDialogOpen(true);
@@ -381,6 +383,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} collapsed={sidebarCollapsed} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+            {craftModuleEnabled && (
+              <NavItem href="/projects" icon={<Hammer size={18} />} label="Handwerk & Baustelle" active={pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
+            )}
             <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} collapsed={sidebarCollapsed} />
             {user?.role === 'admin' && (
               <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
@@ -432,6 +437,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+            {craftModuleEnabled && (
+              <NavItem href="/projects" icon={<Hammer size={18} />} label="Handwerk & Baustelle" active={pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
+            )}
             <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
             {user?.role === 'admin' && (
               <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />

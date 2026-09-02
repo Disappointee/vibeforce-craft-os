@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sliders, LayoutGrid, BellRing, EyeOff, Save, Loader2 } from 'lucide-react';
+import { Sliders, LayoutGrid, BellRing, EyeOff, Save, Loader2, Hammer } from 'lucide-react';
 import { toast } from 'sonner';
 import type { UserPreferences } from '@/lib/pocketbase-types';
 
@@ -33,17 +33,22 @@ export function UserPreferencesCard() {
   const [hideArchived, setHideArchived] = useState<boolean>(
     settingsStore.hideArchivedProjectTasks ?? true
   );
+  const [craftEnabled, setCraftEnabled] = useState<boolean>(
+    settingsStore.craftModuleEnabled ?? true
+  );
 
   useEffect(() => {
     if (settingsStore.defaultTaskView) setDefaultTaskView(settingsStore.defaultTaskView);
     if (settingsStore.uiDensity) setUiDensity(settingsStore.uiDensity);
     if (settingsStore.emailNotificationFrequency) setEmailFrequency(settingsStore.emailNotificationFrequency);
     if (settingsStore.hideArchivedProjectTasks !== undefined) setHideArchived(settingsStore.hideArchivedProjectTasks);
+    if (settingsStore.craftModuleEnabled !== undefined) setCraftEnabled(settingsStore.craftModuleEnabled);
   }, [
     settingsStore.defaultTaskView,
     settingsStore.uiDensity,
     settingsStore.emailNotificationFrequency,
     settingsStore.hideArchivedProjectTasks,
+    settingsStore.craftModuleEnabled,
   ]);
 
   const handleSave = async () => {
@@ -54,6 +59,7 @@ export function UserPreferencesCard() {
         uiDensity,
         emailNotificationFrequency: emailFrequency,
         hideArchivedProjectTasks: hideArchived,
+        craftModuleEnabled: craftEnabled,
       };
 
       await settingsStore.saveUserPreferences(newPrefs);
@@ -171,6 +177,29 @@ export function UserPreferencesCard() {
               className="data-[state=checked]:bg-indigo-500"
             />
           </div>
+        </div>
+
+        {/* Modul M007: VIBE Craft Toggle */}
+        <div className="p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                <Hammer size={16} />
+              </div>
+              <Label htmlFor="craft-module-toggle" className="text-sm font-semibold text-foreground cursor-pointer">
+                Modul M007: VIBE Craft (Handwerk & Baustelle)
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Aktiviert GPS-Baustellen-Geofencing, VOB Teil C Aufmaße, digitale Bautagesberichte mit Vor-Ort-Signatur und ZUGFeRD E-Rechnungen in der Navigation und den Projekten.
+            </p>
+          </div>
+          <Switch
+            id="craft-module-toggle"
+            checked={craftEnabled}
+            onCheckedChange={setCraftEnabled}
+            className="data-[state=checked]:bg-teal-600"
+          />
         </div>
 
         <div className="flex justify-end pt-2">

@@ -6,7 +6,8 @@ import { pb } from '@/lib/pocketbase';
 import { useRealtime } from '@/hooks/useRealtime';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, Plus, CheckCircle2, Euro, KanbanSquare, List, BarChart3, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Clock, Plus, CheckCircle2, Euro, KanbanSquare, List, BarChart3, Pencil, Trash2, AlertTriangle, FileText, MapPin } from 'lucide-react';
+import { useSettingsStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { format, isValid, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -31,7 +32,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { useSettingsStore } from '@/lib/store';
 
 interface ProjectDetailsClientProps {
   id: string;
@@ -49,6 +49,7 @@ export function ProjectDetailsClient({
   initialExpenses,
 }: ProjectDetailsClientProps) {
   const router = useRouter();
+  const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
   const { defaultTaskView } = useSettingsStore();
   const [project, setProject] = useState<Record<string, unknown>>(initialProject);
   const [tasks, setTasks] = useState<Record<string, unknown>[]>(initialTasks);
@@ -330,6 +331,26 @@ export function ProjectDetailsClient({
                 <BarChart3 size={16} />
               </button>
             </div>
+            {craftModuleEnabled && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/projects/${id}/site-reports`)}
+                  className="flex items-center gap-2 border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400"
+                >
+                  <FileText size={16} />
+                  <span>Bautagesberichte</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/projects/${id}/geofence`)}
+                  className="flex items-center gap-2 border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400"
+                >
+                  <MapPin size={16} />
+                  <span>Geofence</span>
+                </Button>
+              </div>
+            )}
             <Button
               variant="outline"
               onClick={() => setIsManageExpensesOpen(true)}
