@@ -29,6 +29,19 @@ export function isInsideRadius(
   centerLon: number,
   radiusMeters: number
 ): boolean {
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    !Number.isFinite(centerLat) ||
+    !Number.isFinite(centerLon) ||
+    !Number.isFinite(radiusMeters) ||
+    radiusMeters < 0 ||
+    lat < -90 || lat > 90 ||
+    centerLat < -90 || centerLat > 90
+  ) {
+    return false;
+  }
+
   const R = 6371e3; // Earth radius in meters
   const dLat = ((centerLat - lat) * Math.PI) / 180;
   const dLon = ((centerLon - lon) * Math.PI) / 180;

@@ -57,9 +57,26 @@ export function SignaturePad({
       });
     }
 
-    padRef.current = pad;
+    const resizeCanvas = () => {
+      if (!canvas) return;
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const prevData = !pad.isEmpty() ? pad.toDataURL() : null;
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d')?.scale(ratio, ratio);
+      pad.clear();
+      if (prevData) {
+        pad.fromDataURL(prevData);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      resizeCanvas();
+    });
+    resizeObserver.observe(canvas);
 
     return () => {
+      resizeObserver.disconnect();
       pad.off();
     };
   }, [initialSignature, readOnly, onSave]);
