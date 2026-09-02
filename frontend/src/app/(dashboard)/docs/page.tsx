@@ -14,13 +14,23 @@ import {
   Sparkles,
   UserCheck,
   BellRing,
-  Timer
+  Timer,
+  Hammer,
+  MapPin,
+  FileText,
+  Camera,
+  PenTool,
+  Receipt,
+  FileSpreadsheet,
+  WifiOff,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useSettingsStore } from '@/lib/store';
 
 export default function DocsPage() {
+  const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
   const shortcuts = [
     {
       section: 'Globale Tastenkürzel',
@@ -96,6 +106,12 @@ export default function DocsPage() {
             </TabsTrigger>
             <TabsTrigger value="projekte" className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <Building2 size={14} /> Kunden, Verträge & Budgets
+            </TabsTrigger>
+            <TabsTrigger value="craft" className="flex items-center gap-2 text-xs font-semibold cursor-pointer text-teal-600 dark:text-teal-400">
+              <Hammer size={14} /> Handwerk & Baustelle (M007)
+              <Badge className="ml-1 text-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 px-1.5 py-0">
+                {craftModuleEnabled ? 'Aktiv' : 'Optional'}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="shortcuts" className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <Keyboard size={14} /> Shortcuts
@@ -471,7 +487,127 @@ export default function DocsPage() {
             </Card>
           </TabsContent>
 
-          {/* 7. Shortcuts */}
+          {/* 7. Modul M007: VIBE Craft (Handwerk, VOB & Geofencing) */}
+          <TabsContent value="craft" className="space-y-6 mt-6">
+            <Card className="border-teal-500/20 bg-teal-500/[0.02]">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                      <Hammer size={24} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-foreground">Modul M007: VIBE Craft (Handwerker- & Baustellen-Suite)</CardTitle>
+                      <CardDescription>
+                        Rechtssichere Baustellendokumentation, VOB Teil C Aufmaße, GPS-Geofencing, ZUGFeRD 2.1.1 E-Rechnung und DATEV-Export.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20">
+                    {craftModuleEnabled ? 'Modul Aktiv' : 'Im Profil aktivierbar'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6 text-sm text-muted-foreground">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 1. Geofencing */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <MapPin size={18} className="text-teal-500" />
+                      <h3>1. Baustellen-Geofencing & Auto-Check-in</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Definiere pro Projekt auf der OpenStreetMap-Karte einen <strong>GPS-Radius (20–1000m)</strong> oder ein freies <strong>Polygon</strong>. Bei Ankunft auf der Baustelle wird der Monteur automatisch gefragt, ob die Stoppuhr für das Projekt gestartet werden soll.
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>Anti-Drift Speed-Gate:</strong> Geschwindigkeiten &gt;15 km/h (Vorbeifahrt) lösen keinen Fehlalarm aus.</div>
+                      <div>✓ <strong>120s Dwell-Filter:</strong> Check-in erfolgt erst nach echtem Verweilen vor Ort.</div>
+                      <div>✓ <strong>100% DSGVO-konform:</strong> Kein dauerhaftes Bewegungsprofil.</div>
+                    </div>
+                  </div>
+
+                  {/* 2. VOB-Aufmaß */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <FileSpreadsheet size={18} className="text-teal-500" />
+                      <h3>2. VOB Teil C Aufmaß-Tabelle</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Erfasse Leistungspositionen direkt mit mathematischen Berechnungsformeln nach VOB/C (z.B. <code className="text-teal-500">4.5 * 3.2 * 0.15</code>).
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>Einheiten:</strong> m, m², m³, h, Stk., kg, Psch.</div>
+                      <div>✓ <strong>Formel-Engine:</strong> Sichere Berechnung ohne eval() mit Divisions- und NaN-Schutz.</div>
+                      <div>✓ <strong>Summen:</strong> Automatische Berechnung von Netto, 19% MwSt. und Brutto.</div>
+                    </div>
+                  </div>
+
+                  {/* 3. Bautagesbericht */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <FileText size={18} className="text-teal-500" />
+                      <h3>3. Digitaler Bautagesbericht & Regiebericht</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Vollständige Dokumentation des Tagesgeschehens: Witterung, Temperatur, ausgeführte Tätigkeiten und Behinderungsanzeigen.
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>Stunden nach Qualifikation:</strong> Meister, Geselle, Helfer, Azubi.</div>
+                      <div>✓ <strong>VOB-Rechtssicherheit:</strong> Dient als gerichtsfester Nachweis bei Streitigkeiten.</div>
+                    </div>
+                  </div>
+
+                  {/* 4. Fotodokumentation */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <Camera size={18} className="text-teal-500" />
+                      <h3>4. Beweisfotos mit SHA-256 Integritätshash</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Fotodokumentation von Baufortschritt und Mängeln direkt mit dem Smartphone.
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>Kryptographischer SHA-256 Hash:</strong> Garantiert Manipulationsfreiheit.</div>
+                      <div>✓ <strong>Automatischer Geotag:</strong> GPS-Koordinaten & ISO-Zeitstempel werden eingebettet.</div>
+                    </div>
+                  </div>
+
+                  {/* 5. Vor-Ort-Signatur */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <PenTool size={18} className="text-teal-500" />
+                      <h3>5. Vor-Ort-Unterschrift (Touch Canvas)</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Rechtssichere digitale Abnahme durch Bauleiter/Auftraggeber und Monteur direkt auf dem Baustellen-Tablet.
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>Touch & Pen-Support:</strong> Gestochen scharfe Vektor-Skalierung auf Retina/High-DPI.</div>
+                      <div>✓ <strong>ResizeObserver:</strong> Kein Abschneiden beim Drehen des Tablets vor Ort.</div>
+                    </div>
+                  </div>
+
+                  {/* 6. ZUGFeRD, DATEV & Offline */}
+                  <div className="p-5 rounded-2xl bg-card border border-border space-y-2.5">
+                    <div className="flex items-center gap-2 font-semibold text-foreground text-base">
+                      <Receipt size={18} className="text-teal-500" />
+                      <h3>6. ZUGFeRD 2.1.1, DATEV & Offline-Puffer</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      Nahtlose Anbindung an die Finanzbuchhaltung und unterbrechungsfreies Arbeiten im Funkloch.
+                    </p>
+                    <div className="text-[11px] p-2.5 rounded-lg bg-background/50 border border-border/50 text-foreground font-mono space-y-1">
+                      <div>✓ <strong>ZUGFeRD 2.1.1 BASIC WL:</strong> DIN EN 16931 konforme E-Rechnungen.</div>
+                      <div>✓ <strong>DATEV EXTF:</strong> Buchungsstapel Erlöskonto 8400 (SKR03/04).</div>
+                      <div>✓ <strong>IndexedDB Offline-Sync:</strong> Pufferung aller Daten bei Netzverlust & Auto-Flush bei Re-Connect.</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 8. Shortcuts */}
           <TabsContent value="shortcuts" className="space-y-6 mt-6">
             {shortcuts.map((section) => (
               <Card key={section.section} className="border-border bg-card/40">
