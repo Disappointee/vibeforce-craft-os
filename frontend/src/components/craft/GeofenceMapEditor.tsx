@@ -104,16 +104,27 @@ export function GeofenceMapEditor({
   const selectSearchResult = (item: { lat: string; lon: string }) => {
     const newCenter: [number, number] = [parseFloat(item.lat), parseFloat(item.lon)];
     setCenter(newCenter);
+    if (type === 'none') {
+      setType('circle');
+    }
     setSearchResults([]);
     setSearchQuery('');
   };
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const handleSave = async () => {
+    setValidationError(null);
+    if (type === 'polygon' && polygon.length < 3) {
+      setValidationError('Ein Polygon-Geofence benötigt mindestens 3 gesetzte Eckpunkte auf der Karte.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const config: GeofenceConfig = {
         type,
-        center: type === 'circle' ? center : undefined,
+        center: type === 'circle' ? center : (polygon.length > 0 ? polygon[0] : center),
         radius: type === 'circle' ? radius : undefined,
         polygon: type === 'polygon' ? polygon : undefined,
       };
@@ -241,6 +252,12 @@ export function GeofenceMapEditor({
           </button>
         </div>
       </div>
+
+      {validationError && (
+        <div className="p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium animate-in fade-in">
+          {validationError}
+        </div>
+      )}
 
       {/* Nominatim Search Bar */}
       <div className="relative">

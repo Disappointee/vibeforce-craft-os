@@ -56,8 +56,10 @@ export function generateDatevCsv(
   const headerLine2 = `"Umsatz (ohne Soll/Haben-Kz)";"Soll/Haben-Kennzeichen";"WKZ";"Kurs";"Basis-Umsatz";"WKZ Basis-Umsatz";"Konto";"Gegenkonto (ohne BU-Schlüssel)";"BU-Schlüssel";"Belegdatum";"Belegfeld 1";"Belegfeld 2";"Skonto";"Buchungstext";"Postensperre";"Diverse Adressnummer";"Geschäftspartnerbank";"Sachverhalt";"Zinssperre";"Beleglink";"Kost1 - Kostenstelle";"Kost2 - Kostenstelle"`;
 
   const rows = bookings.map((b) => {
-    // 1. Betrag im deutschen Format (z.B. 1190,00)
-    const amountStr = Math.abs(b.amount).toFixed(2).replace('.', ',');
+    // 1. Betrag im deutschen Format (z.B. 1190,00) mit Credit Note Handling
+    const rawAmount = typeof b.amount === 'number' && !isNaN(b.amount) ? b.amount : 0;
+    const isCreditNote = rawAmount < 0;
+    const amountStr = Math.abs(rawAmount).toFixed(2).replace('.', ',');
 
     // 2. Erlöskonto-Bestimmung nach SKR03 / SKR04 und § 13b
     let revenueAccount = b.accountNumber;
@@ -72,25 +74,48 @@ export function generateDatevCsv(
     // Debitor (Kunde) z.B. 10000
     const debtorAccount = b.contraAccount || '10000';
 
-    // 3. Belegdatum als MMDD (z.B. 0902)
-    const cleanDate = b.date ? b.date.replace(/-/g, '') : '';
-    const formattedDate = cleanDate.length >= 8 ? cleanDate.substring(4, 8) : '0101';
+    // 3. Robustes Belegdatum als MMDD (z.B. 0902)
+    let formattedDate = '0101';
+    if (b.date) {
+      if (b.date.includes('.')) {
+        // German date DD.MM.YYYY
+        const parts = b.date.trim().split('.');
+        if (parts.length >= 2) {
+          const dd = parts[0].padStart(2, '0');
+          const mm = parts[1].padStart(2, '0');
+          formattedDate = `${mm}${dd}`;
+        }
+      } else {
+        const d = new Date(b.date);
+        if (!isNaN(d.getTime())) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          formattedDate = `${mm}${dd}`;
+        } else {
+          const clean = b.date.replace(/-/g, '');
+          if (clean.length >= 8) {
+            formattedDate = clean.substring(4, 8);
+          }
+        }
+      }
+    }
 
     // 4. Feldlängenbegrenzungen nach DATEV Spezifikation
-    const invoiceNum = (b.invoiceNumber || '').substring(0, 36);
-    const costCenter = (b.costCenter || '').substring(0, 36);
+    const invoiceNum = (b.invoiceNumber || '').replace(/[";]/g, '').substring(0, 36);
+    const costCenter = (b.costCenter || '').replace(/[";]/g, '').substring(0, 36);
     
     // Buchungstext max 60 Zeichen mit Hinweispflicht bei §13b
     let rawText = b.bookingText || `Rechnung ${invoiceNum}`;
     if (b.isReverseCharge && !rawText.includes('§13b')) {
       rawText = `§13b ${rawText}`;
     }
-    const text = rawText.replace(/"/g, '""').substring(0, 60);
+    // Semicolon and double quote sanitization for CSV safety
+    const text = rawText.replace(/;/g, ' ').replace(/"/g, '""').substring(0, 60);
 
-    // Buchungslogik Ausgangsrechnung:
-    // Debitor (Soll) an Erlöskonto (Haben). 
-    // In DATEV: Wenn Konto = Erlöse gebucht wird, ist das Soll/Haben-Kz = "H".
-    const sollHaben = 'H';
+    // Buchungslogik:
+    // Ausgangsrechnung: Soll/Haben-Kz = "H"
+    // Gutschrift (negativer Betrag): Soll/Haben-Kz = "S"
+    const sollHaben = isCreditNote ? 'S' : 'H';
     const buSchluessel = b.buKey || (b.isReverseCharge ? '68' : '');
 
     return `"${amountStr}";"${sollHaben}";"EUR";"";"";"";"${revenueAccount}";"${debtorAccount}";"${buSchluessel}";"${formattedDate}";"${invoiceNum}";"";"";"${text}";"";"";"";"";"";"";"${costCenter}";""`;

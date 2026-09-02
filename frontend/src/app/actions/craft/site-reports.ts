@@ -15,12 +15,13 @@ const CreateSiteReportSchema = z.object({
   special_events: z.string().optional(),
   qualification_hours: z.record(z.string(), z.number()).optional(),
   client_name: z.string().optional(),
-});
-
-const UpdateSiteReportSchema = CreateSiteReportSchema.partial().extend({
+  client_signature: z.string().optional(),
+  client_signed_at: z.string().optional(),
   contractor_signature: z.string().optional(),
   contractor_signed_at: z.string().optional(),
 });
+
+const UpdateSiteReportSchema = CreateSiteReportSchema.partial();
 
 export type CreateSiteReportInput = z.infer<typeof CreateSiteReportSchema>;
 export type UpdateSiteReportInput = z.infer<typeof UpdateSiteReportSchema>;

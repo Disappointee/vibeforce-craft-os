@@ -605,7 +605,11 @@ export function CraftHubClient({
               </div>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
-              <MeasurementGrid initialItems={measurementItems} onChange={setMeasurementItems} />
+              <MeasurementGrid
+                initialItems={measurementItems}
+                onChange={setMeasurementItems}
+                isReverseCharge={isSelectedProject13b}
+              />
 
               {/* Total Calculation Bar */}
               <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row justify-end items-end sm:items-center gap-6">

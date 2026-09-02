@@ -53,12 +53,32 @@ function esc(text?: string | null): string {
 export function generateZugferdXml(data: ZugferdInvoiceData): string {
   const isRevCharge = Boolean(data.isReverseCharge || data.taxRate === 0);
   const taxCategory = isRevCharge ? 'AE' : 'S';
-  const appliedRate = isRevCharge ? 0 : Math.round(data.taxRate * 100);
-  const calculatedTax = isRevCharge ? 0 : data.taxAmount;
-  const grandTotal = isRevCharge ? data.subtotal : (data.subtotal + calculatedTax);
+  const appliedRate = isRevCharge ? 0 : Math.round((data.taxRate || 0) * 100);
+  const calculatedTax = isRevCharge ? 0 : (data.taxAmount || 0);
+  const subtotal = data.subtotal || 0;
+  const grandTotal = isRevCharge ? subtotal : (subtotal + calculatedTax);
   const exemptReason = data.exemptionReason || 'Steuerschuldnerschaft des Leistungsempfängers gemäß § 13b UStG (Reverse Charge)';
 
-  const itemsXml = data.lineItems.map((item, i) => {
+  // Safe 8-digit date formatting (YYYYMMDD) even if ISO timestamp is provided
+  const cleanInvoiceDate = (data.invoiceDate || new Date().toISOString())
+    .slice(0, 10)
+    .replace(/-/g, '');
+  const cleanPeriodTo = (data.periodTo || data.invoiceDate || new Date().toISOString())
+    .slice(0, 10)
+    .replace(/-/g, '');
+
+  const lineItems = (data.lineItems && data.lineItems.length > 0)
+    ? data.lineItems
+    : [{
+        name: 'Bau- und Handwerksleistungen nach Aufmaß',
+        description: 'Pauschale Abrechnung nach VOB/B',
+        quantity: 1,
+        unitCode: 'C62',
+        netAmount: subtotal,
+        taxPercent: isRevCharge ? 0 : (data.taxRate || 0.19),
+      }];
+
+  const itemsXml = lineItems.map((item, i) => {
     const itemTotal = Math.round(item.quantity * item.netAmount * 100) / 100;
     return `
     <ram:IncludedSupplyChainTradeLineItem>
@@ -72,11 +92,11 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
       <ram:SpecifiedLineTradeAgreement>
         <ram:NetPriceProductTradePrice>
           <ram:ChargeAmount>${item.netAmount.toFixed(2)}</ram:ChargeAmount>
-          <ram:BasisQuantity unitCode="${item.unitCode}">1</ram:BasisQuantity>
+          <ram:BasisQuantity unitCode="${item.unitCode || 'C62'}">1</ram:BasisQuantity>
         </ram:NetPriceProductTradePrice>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
-        <ram:BilledQuantity unitCode="${item.unitCode}">${item.quantity.toFixed(2)}</ram:BilledQuantity>
+        <ram:BilledQuantity unitCode="${item.unitCode || 'C62'}">${item.quantity.toFixed(2)}</ram:BilledQuantity>
       </ram:SpecifiedLineTradeDelivery>
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
@@ -107,16 +127,14 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
     <ram:Name>INVOICE</ram:Name>
     <ram:TypeCode>380</ram:TypeCode>
     <ram:IssueDateTime>
-      <udt:DateTimeString format="102">${data.invoiceDate.replace(/-/g, '')}</udt:DateTimeString>
+      <udt:DateTimeString format="102">${cleanInvoiceDate}</udt:DateTimeString>
     </ram:IssueDateTime>
     ${isRevCharge ? `<ram:IncludedNote>
       <ram:Content>Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge) gemäß § 13b Abs. 2 Nr. 4 UStG bei Bauleistungen.</ram:Content>
       <ram:SubjectCode>AAI</ram:SubjectCode>
     </ram:IncludedNote>` : ''}
   </rsm:HeaderExchangedDocument>
-  <rsm:SpecifiedSupplyChainTradeTransaction>
-    <ram:IncludedSupplyChainTradeLineItem>${itemsXml}
-    </ram:IncludedSupplyChainTradeLineItem>
+  <rsm:SpecifiedSupplyChainTradeTransaction>${itemsXml}
     <ram:ApplicableHeaderTradeAgreement>
       <ram:SellerTradeParty>
         <ram:Name>${esc(data.sellerName)}</ram:Name>
@@ -140,7 +158,7 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
     <ram:ApplicableHeaderTradeDelivery>
       <ram:ActualDeliverySupplyChainEvent>
         <ram:OccurrenceDateTime>
-          <udt:DateTimeString format="102">${(data.periodTo || data.invoiceDate).replace(/-/g, '')}</udt:DateTimeString>
+          <udt:DateTimeString format="102">${cleanPeriodTo}</udt:DateTimeString>
         </ram:OccurrenceDateTime>
       </ram:ActualDeliverySupplyChainEvent>
     </ram:ApplicableHeaderTradeDelivery>

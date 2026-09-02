@@ -21,9 +21,10 @@ interface MeasurementGridProps {
   initialItems?: MeasurementRowItem[];
   onChange?: (items: MeasurementRowItem[]) => void;
   readOnly?: boolean;
+  isReverseCharge?: boolean;
 }
 
-const SAFE_EXPR_REGEX = /^[\d+\-*/().\s]+$/;
+const SAFE_EXPR_REGEX = /^[\d+\-*/().,\s]+$/;
 
 function safeEval(expr: string): number {
   const trimmed = expr.trim();
@@ -32,7 +33,9 @@ function safeEval(expr: string): number {
     return 0;
   }
   try {
-    const fn = new Function(`'use strict'; return (${trimmed})`);
+    // German decimal commas support: "14,5 * 8,2" -> "14.5 * 8.2"
+    const normalized = trimmed.replace(/,/g, '.');
+    const fn = new Function(`'use strict'; return (${normalized})`);
     const res = fn();
     return typeof res === 'number' && Number.isFinite(res) ? Math.round(res * 1000) / 1000 : 0;
   } catch {
@@ -53,6 +56,7 @@ export function MeasurementGrid({
   initialItems,
   onChange,
   readOnly = false,
+  isReverseCharge = false,
 }: MeasurementGridProps) {
   const [rows, setRows] = useState<MeasurementRowItem[]>(() => {
     if (initialItems && initialItems.length > 0) {
@@ -80,11 +84,18 @@ export function MeasurementGrid({
 
         // Recalculate quantity if formula updated
         if (updates.formula !== undefined) {
-          const evalQty = safeEval(updates.formula);
-          merged.quantity = evalQty !== 0 ? evalQty : merged.quantity;
+          const trimmed = updates.formula.trim();
+          if (!trimmed) {
+            merged.quantity = 0;
+          } else {
+            const evalQty = safeEval(trimmed);
+            merged.quantity = evalQty;
+          }
         }
 
-        merged.total_price = Math.round(merged.quantity * merged.unit_price * 100) / 100;
+        const safeQty = typeof merged.quantity === 'number' && !isNaN(merged.quantity) ? merged.quantity : 0;
+        const safePrice = typeof merged.unit_price === 'number' && !isNaN(merged.unit_price) ? merged.unit_price : 0;
+        merged.total_price = Math.round(safeQty * safePrice * 100) / 100;
         return merged;
       })
     );
@@ -121,8 +132,9 @@ export function MeasurementGrid({
     () => rows.reduce((sum, r) => sum + (r.total_price || 0), 0),
     [rows]
   );
-  const tax = useMemo(() => Math.round(subtotal * 0.19 * 100) / 100, [subtotal]);
-  const total = useMemo(() => Math.round((subtotal + tax) * 100) / 100, [subtotal, tax]);
+  const taxRate = isReverseCharge ? 0 : 0.19;
+  const tax = useMemo(() => (isReverseCharge ? 0 : Math.round(subtotal * taxRate * 100) / 100), [subtotal, isReverseCharge, taxRate]);
+  const total = useMemo(() => (isReverseCharge ? subtotal : Math.round((subtotal + tax) * 100) / 100), [subtotal, tax, isReverseCharge]);
 
   return (
     <div className="w-full space-y-4">
@@ -249,7 +261,7 @@ export function MeasurementGrid({
             </tr>
             <tr>
               <td colSpan={6} className="py-2 px-3 text-right text-gray-500">
-                MwSt. (19%):
+                {isReverseCharge ? 'USt. (§ 13b Reverse Charge 0%):' : 'MwSt. (19%):'}
               </td>
               <td className="py-2 px-3 text-right font-mono text-gray-600 dark:text-gray-300">
                 {tax.toFixed(2)} €

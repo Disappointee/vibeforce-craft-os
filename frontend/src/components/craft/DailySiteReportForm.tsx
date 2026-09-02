@@ -94,14 +94,14 @@ export function DailySiteReportForm({
         special_events: specialEvents,
         client_name: clientName,
         qualification_hours: qualificationHours,
+        client_signature: clientSignature || undefined,
+        client_signed_at: clientSignature ? new Date().toISOString() : undefined,
+        contractor_signature: contractorSignature || undefined,
+        contractor_signed_at: contractorSignature ? new Date().toISOString() : undefined,
       };
 
       if (initialReport?.id) {
-        savedReport = await updateSiteReportAction(initialReport.id, {
-          ...payload,
-          contractor_signature: contractorSignature || undefined,
-          contractor_signed_at: contractorSignature ? new Date().toISOString() : undefined,
-        });
+        savedReport = await updateSiteReportAction(initialReport.id, payload);
       } else {
         savedReport = await createSiteReportAction(payload);
       }
