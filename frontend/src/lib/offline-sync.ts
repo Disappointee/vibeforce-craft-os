@@ -45,7 +45,11 @@ export async function queueOfflineAction(
   const db = await getDB();
   if (!db) return '';
 
-  const id = 'offline_' + crypto.randomUUID();
+  const safeUuid = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+
+  const id = 'offline_' + safeUuid;
   const item: PendingSyncItem = {
     id,
     collection,
@@ -75,4 +79,14 @@ export async function removePendingSyncItem(id: string): Promise<void> {
   const db = await getDB();
   if (!db) return;
   await db.delete('sync_queue', id);
+}
+
+export async function incrementRetryCount(id: string): Promise<void> {
+  const db = await getDB();
+  if (!db) return;
+  const item = await db.get('sync_queue', id);
+  if (item) {
+    item.retryCount = (item.retryCount || 0) + 1;
+    await db.put('sync_queue', item);
+  }
 }

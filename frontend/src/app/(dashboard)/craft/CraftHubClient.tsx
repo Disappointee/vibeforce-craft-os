@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/MeasurementGrid';
+import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModal';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
@@ -61,8 +62,9 @@ export function CraftHubClient({
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<CraftTab>('reports');
   const [projects] = useState<ProjectRecord[]>(initialProjects);
-  const [reports] = useState<SiteReportRecord[]>(initialReports);
+  const [reports, setReports] = useState<SiteReportRecord[]>(initialReports);
   const [invoices] = useState<any[]>(initialInvoices);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Selected project for scoped tabs
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -222,157 +224,141 @@ export function CraftHubClient({
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-8 max-w-7xl mx-auto animate-in fade-in duration-300">
-      {/* DISTINCT MODULE BRANDING BANNER */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-background to-teal-500/10 p-6 md:p-8 shadow-lg">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Badge className="bg-amber-500 text-black font-black uppercase tracking-wider text-[11px] px-3 py-1 border-0 shadow-sm">
-                MODUL M007 • VIBE CRAFT OS
-              </Badge>
-              <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400 text-xs font-semibold">
-                DIN 18299 • VOB/B & VOB/C
-              </Badge>
-              <Badge variant="outline" className="border-teal-500/40 text-teal-600 dark:text-teal-400 text-xs font-semibold">
-                § 13b UStG • EN 16931 E-Rechnung
-              </Badge>
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto pb-28 md:pb-8">
+      {/* SOBER FUNCTIONAL HEADER */}
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <span>M007 • VIBE CRAFT</span>
+              <span>•</span>
+              <span>VOB/B & VOB/C</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
-              <span className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                <Hammer size={28} />
-              </span>
-              Handwerk & Baustellen-Zentrale
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Handwerk & Baustellen
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground max-w-3xl">
-              Dediziertes Betriebsportal für Baustellendokumentation, VOB-Aufmaß, GPS-Geofencing und ZUGFeRD E-Rechnungen.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Bautagesberichte, VOB-Aufmaß, Geofencing und ZUGFeRD 2.1.1 E-Rechnungen.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {selectedProject && (
-              <Link href={`/projects/${selectedProject.id}/site-reports/new`}>
-                <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold shadow-md shadow-amber-500/20 transition-all">
-                  <Plus size={18} className="mr-1.5" />
-                  Neuer Bautagesbericht
-                </Button>
-              </Link>
-            )}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm"
+            >
+              <Plus size={16} className="mr-1.5" />
+              Bericht erfassen
+            </Button>
             <Button
               variant="outline"
               onClick={handleDownloadDatevCsv}
-              className="border-border hover:border-amber-500/50 text-foreground font-semibold"
+              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3.5"
             >
-              <Download size={16} className="mr-1.5 text-amber-500" />
-              DATEV EXTF
+              <Download size={14} className="mr-1.5 text-amber-500" />
+              DATEV Export
             </Button>
           </div>
         </div>
 
-        {/* Top 4 Realtime KPI Chips */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border/50">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-              <Building2 size={14} className="text-teal-500" /> Aktive Baustellen
-            </span>
-            <div className="text-2xl font-black text-foreground">{activeProjectsCount}</div>
-            <span className="text-[11px] text-muted-foreground">{geofencedProjectsCount} mit GPS-Radius</span>
+        {/* 4 Clean Sober KPIs */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t border-border/60">
+          <div>
+            <div className="text-xs text-muted-foreground">Aktive Baustellen</div>
+            <div className="text-xl font-bold text-foreground mt-0.5">{activeProjectsCount}</div>
+            <div className="text-[11px] text-muted-foreground">{geofencedProjectsCount} mit GPS</div>
           </div>
-
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-              <FileText size={14} className="text-indigo-500" /> Bautagesberichte
-            </span>
-            <div className="text-2xl font-black text-foreground">{reports.length}</div>
-            <span className="text-[11px] text-emerald-500 font-medium">{signedReportsCount} rechtssicher signiert</span>
+          <div>
+            <div className="text-xs text-muted-foreground">Bautagesberichte</div>
+            <div className="text-xl font-bold text-foreground mt-0.5">{reports.length}</div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+              {signedReportsCount} signiert
+            </div>
           </div>
-
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-              <FileSpreadsheet size={14} className="text-amber-500" /> VOB-Aufmaß Pos.
-            </span>
-            <div className="text-2xl font-black text-foreground">{measurementItems.length}</div>
-            <span className="text-[11px] text-muted-foreground">
-              {measurementNetTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })} Netto
-            </span>
+          <div>
+            <div className="text-xs text-muted-foreground">VOB-Aufmaß Netto</div>
+            <div className="text-xl font-bold text-foreground mt-0.5">
+              {measurementNetTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+            </div>
+            <div className="text-[11px] text-muted-foreground">{measurementItems.length} Positionen</div>
           </div>
-
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-              <Receipt size={14} className="text-emerald-500" /> E-Rechnungen
-            </span>
-            <div className="text-2xl font-black text-foreground">
+          <div>
+            <div className="text-xs text-muted-foreground">E-Rechnungen</div>
+            <div className="text-xl font-bold text-foreground mt-0.5">
               {totalInvoicedGross > 0
                 ? totalInvoicedGross.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
                 : '14.535,96 €'}
             </div>
-            <span className="text-[11px] text-muted-foreground">ZUGFeRD 2.1.1 & § 13b</span>
+            <div className="text-[11px] text-muted-foreground">ZUGFeRD 2.1.1 & § 13b</div>
           </div>
         </div>
       </div>
 
-      {/* 4 INTERACTIVE MAIN NAVIGATION TABS */}
-      <div className="flex border-b border-border/80 gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <button
-          onClick={() => setActiveTab('reports')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all shrink-0 ${
-            activeTab === 'reports'
-              ? 'bg-amber-500 text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-          }`}
-        >
-          <FileText size={17} />
-          <span>Bautages- & Regieberichte</span>
-          <Badge className={`ml-1 text-[10px] ${activeTab === 'reports' ? 'bg-black/20 text-black' : 'bg-muted'}`}>
-            {reports.length}
-          </Badge>
-        </button>
+      {/* HORIZONTALLY SCROLLABLE TOUCH-FRIENDLY TABS */}
+      <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1">
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'reports'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText size={15} />
+            <span>Bautagesberichte</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === 'reports' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {reports.length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('measurements')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all shrink-0 ${
-            activeTab === 'measurements'
-              ? 'bg-amber-500 text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-          }`}
-        >
-          <FileSpreadsheet size={17} />
-          <span>VOB Teil C Aufmaß-Center</span>
-          <Badge className={`ml-1 text-[10px] ${activeTab === 'measurements' ? 'bg-black/20 text-black' : 'bg-muted'}`}>
-            DIN 18299
-          </Badge>
-        </button>
+          <button
+            onClick={() => setActiveTab('measurements')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'measurements'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileSpreadsheet size={15} />
+            <span>VOB-Aufmaß</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('geofence')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all shrink-0 ${
-            activeTab === 'geofence'
-              ? 'bg-amber-500 text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-          }`}
-        >
-          <MapPin size={17} />
-          <span>Baustellen-Radar & Geofencing</span>
-          <Badge className={`ml-1 text-[10px] ${activeTab === 'geofence' ? 'bg-black/20 text-black' : 'bg-muted'}`}>
-            {geofencedProjectsCount}
-          </Badge>
-        </button>
+          <button
+            onClick={() => setActiveTab('geofence')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'geofence'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MapPin size={15} />
+            <span>GPS-Geofencing</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === 'geofence' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {geofencedProjectsCount}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('invoices')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all shrink-0 ${
-            activeTab === 'invoices'
-              ? 'bg-amber-500 text-black shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-          }`}
-        >
-          <Receipt size={17} />
-          <span>ZUGFeRD & DATEV Rechnungen</span>
-          <Badge className={`ml-1 text-[10px] ${activeTab === 'invoices' ? 'bg-black/20 text-black' : 'bg-muted'}`}>
-            EN 16931
-          </Badge>
-        </button>
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'invoices'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Receipt size={15} />
+            <span>Rechnungen & DATEV</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: BAUTAGESBERICHTE & REGIEBERICHTE */}
@@ -416,14 +402,14 @@ export function CraftHubClient({
               </div>
             </div>
 
-            {selectedProject && (
-              <Link href={`/projects/${selectedProject.id}/site-reports/new`}>
-                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-bold h-9">
-                  <Plus size={16} className="mr-1.5" />
-                  Neuen Bautagesbericht anlegen
-                </Button>
-              </Link>
-            )}
+            <Button
+              size="sm"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5"
+            >
+              <Plus size={15} className="mr-1.5" />
+              Bautagesbericht anlegen
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -510,14 +496,13 @@ export function CraftHubClient({
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
                   Erfasse den täglichen Baufortschritt, Arbeitsstunden nach Qualifikation und Wetterbedingungen nach VOB/B § 8.
                 </p>
-                {selectedProject && (
-                  <Link href={`/projects/${selectedProject.id}/site-reports/new`}>
-                    <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold">
-                      <Plus size={16} className="mr-1.5" />
-                      Ersten Bericht anlegen
-                    </Button>
-                  </Link>
-                )}
+                <Button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4"
+                >
+                  <Plus size={15} className="mr-1.5" />
+                  Ersten Bericht anlegen
+                </Button>
               </Card>
             )}
           </div>
@@ -887,6 +872,17 @@ export function CraftHubClient({
           </Card>
         </div>
       )}
+
+      {/* QUICK CREATE MODAL */}
+      <QuickCreateReportModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        projects={projects}
+        defaultProjectId={selectedProject?.id}
+        onSuccess={(savedReport) => {
+          setReports((prev) => [savedReport, ...prev]);
+        }}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   getPendingSyncCount,
   getPendingSyncItems,
   removePendingSyncItem,
+  incrementRetryCount,
   type PendingSyncItem,
 } from '@/lib/offline-sync';
 
@@ -31,9 +32,17 @@ export function useOfflineSync(onFlushItem?: (item: PendingSyncItem) => Promise<
     try {
       const items = await getPendingSyncItems();
       for (const item of items) {
+        // Skip poisoned items that failed more than 5 times
+        if (item.retryCount >= 5) {
+          console.warn(`[useOfflineSync] Item ${item.id} exceeded max retries (5). Skipping.`);
+          continue;
+        }
+
         const success = await onFlushItem(item);
         if (success) {
           await removePendingSyncItem(item.id);
+        } else {
+          await incrementRetryCount(item.id);
         }
       }
       await refreshPendingCount();

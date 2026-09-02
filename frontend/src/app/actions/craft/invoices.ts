@@ -102,6 +102,7 @@ export async function generateCraftInvoiceAction(
       clientName: report.client_name,
       authorName: typeof user.name === 'string' ? user.name : 'Monteur',
       measurements,
+      isReverseCharge,
     });
 
     const pdfBuffer = await pdfService.renderHtmlToPdf(html, {
@@ -116,7 +117,7 @@ export async function generateCraftInvoiceAction(
       invoice_number: invoiceNumber,
       invoice_type: invoiceType,
       net_total: netTotal,
-      tax_rate: 19,
+      tax_rate: isReverseCharge ? 0 : 19,
       tax_total: taxTotal,
       gross_total: grossTotal,
       zugferd_xml: zugferdXml,

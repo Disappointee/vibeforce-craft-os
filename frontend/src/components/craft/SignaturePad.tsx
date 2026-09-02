@@ -40,6 +40,7 @@ export function SignaturePad({
       minWidth: 1.5,
       maxWidth: 3.5,
     });
+    padRef.current = pad;
 
     if (initialSignature) {
       pad.fromDataURL(initialSignature);
@@ -78,6 +79,7 @@ export function SignaturePad({
     return () => {
       resizeObserver.disconnect();
       pad.off();
+      padRef.current = null;
     };
   }, [initialSignature, readOnly, onSave]);
 

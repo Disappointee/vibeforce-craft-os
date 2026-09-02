@@ -7,10 +7,11 @@ export interface CraftReportPdfData {
   clientName?: string;
   authorName?: string;
   measurements?: MeasurementRecord[];
+  isReverseCharge?: boolean;
 }
 
 export function generateSiteReportHtml(data: CraftReportPdfData): string {
-  const { report, projectName, projectKey, clientName, authorName, measurements = [] } = data;
+  const { report, projectName, projectKey, clientName, authorName, measurements = [], isReverseCharge = false } = data;
   const formattedDate = new Date(report.report_date).toLocaleDateString('de-DE', {
     day: '2-digit',
     month: '2-digit',
@@ -18,7 +19,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   });
 
   const subtotal = measurements.reduce((acc, m) => acc + (m.total_price || 0), 0);
-  const tax = subtotal * 0.19;
+  const tax = isReverseCharge ? 0 : subtotal * 0.19;
   const total = subtotal + tax;
 
   return `<!DOCTYPE html>
@@ -131,7 +132,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
     <div class="meta-item">
       <span class="meta-label">Stunden nach Qualifikation</span>
       <span class="meta-val">
-        Meister: ${report.qualification_hours?.meister || 0}h | Geselle: ${report.qualification_hours?.geselle || 0}h | Helfer: ${report.qualification_hours?.helfer || 0}h
+        Meister: ${report.qualification_hours?.meister || 0}h | Geselle: ${report.qualification_hours?.geselle || 0}h | Helfer: ${report.qualification_hours?.helfer || 0}h | Azubi: ${report.qualification_hours?.azubi || 0}h
       </span>
     </div>
   </div>
@@ -173,8 +174,16 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="6" class="text-right" style="font-weight: 700;">Gesamtsumme Netto:</td>
-          <td class="text-right" style="font-weight: 700;">${subtotal.toFixed(2)} €</td>
+          <td colspan="6" class="text-right" style="font-weight: 600;">Gesamtsumme Netto:</td>
+          <td class="text-right" style="font-weight: 600;">${subtotal.toFixed(2)} €</td>
+        </tr>
+        <tr>
+          <td colspan="6" class="text-right" style="font-size: 10px; color: #64748b;">${isReverseCharge ? 'USt. (§ 13b Reverse Charge 0%):' : 'MwSt. (19%):'}</td>
+          <td class="text-right" style="font-size: 10px; color: #64748b;">${tax.toFixed(2)} €</td>
+        </tr>
+        <tr>
+          <td colspan="6" class="text-right" style="font-weight: 700; color: #0d9488;">${isReverseCharge ? 'Gesamtbetrag (Netto):' : 'Gesamtbetrag Brutto:'}</td>
+          <td class="text-right" style="font-weight: 700; color: #0d9488;">${total.toFixed(2)} €</td>
         </tr>
       </tfoot>
     </table>

@@ -27,7 +27,9 @@ export async function createMeasurementAction(data: CreateMeasurementInput) {
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = CreateMeasurementSchema.parse(data);
-  const calculatedTotal = validated.total_price || (validated.quantity * (validated.unit_price || 0));
+  const qty = validated.quantity || 0;
+  const price = validated.unit_price || 0;
+  const calculatedTotal = Math.round(qty * price * 100) / 100;
 
   return withAdminPB(async (pb) => {
     const record = await pb.collection('measurements').create({
@@ -35,6 +37,7 @@ export async function createMeasurementAction(data: CreateMeasurementInput) {
       total_price: calculatedTotal,
     });
 
+    revalidatePath('/craft');
     return JSON.parse(JSON.stringify(record)) as MeasurementRecord;
   });
 }
@@ -51,10 +54,11 @@ export async function updateMeasurementAction(measurementId: string, data: Updat
       const existing = await pb.collection('measurements').getOne(measurementId);
       const qty = validated.quantity ?? existing.quantity ?? 0;
       const price = validated.unit_price ?? existing.unit_price ?? 0;
-      updateData.total_price = qty * price;
+      updateData.total_price = Math.round(qty * price * 100) / 100;
     }
 
     const record = await pb.collection('measurements').update(measurementId, updateData);
+    revalidatePath('/craft');
     return JSON.parse(JSON.stringify(record)) as MeasurementRecord;
   });
 }

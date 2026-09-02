@@ -24,12 +24,14 @@ interface DailySiteReportFormProps {
   projectId: string;
   initialReport?: Partial<SiteReportRecord>;
   onSaved?: (report: SiteReportRecord) => void;
+  redirectTo?: string | false;
 }
 
 export function DailySiteReportForm({
   projectId,
   initialReport,
   onSaved,
+  redirectTo,
 }: DailySiteReportFormProps) {
   const router = useRouter();
   const [reportDate, setReportDate] = useState(
@@ -129,7 +131,9 @@ export function DailySiteReportForm({
         text: 'Bautagesbericht erfolgreich gespeichert!',
       });
       onSaved?.(savedReport);
-      router.push(`/projects/${projectId}/site-reports`);
+      if (redirectTo !== false) {
+        router.push(typeof redirectTo === 'string' ? redirectTo : `/projects/${projectId}/site-reports`);
+      }
     } catch (err: any) {
       console.error('Failed to save site report:', err);
       setStatusMessage({

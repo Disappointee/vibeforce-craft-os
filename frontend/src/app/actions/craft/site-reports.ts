@@ -39,6 +39,7 @@ export async function createSiteReportAction(data: CreateSiteReportInput) {
     });
 
     revalidatePath(`/projects/${validated.project}/site-reports`);
+    revalidatePath('/craft');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
   });
 }
@@ -50,10 +51,16 @@ export async function updateSiteReportAction(reportId: string, data: UpdateSiteR
   const validated = UpdateSiteReportSchema.parse(data);
 
   return withAdminPB(async (pb) => {
+    const existing = await pb.collection('site_reports').getOne(reportId);
+    if (existing.status === 'invoiced') {
+      throw new Error('Dieser Bautagesbericht wurde bereits abgerechnet und ist schreibgeschützt (GoBD-Sperre).');
+    }
+
     const record = await pb.collection('site_reports').update(reportId, validated);
     if (record.project) {
       revalidatePath(`/projects/${record.project}/site-reports`);
     }
+    revalidatePath('/craft');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
   });
 }
