@@ -386,7 +386,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
             {craftModuleEnabled && (
-              <NavItem href="/projects" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
+              <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
             )}
             <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
             {user?.role === 'admin' && (
@@ -440,7 +440,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
             <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
             {craftModuleEnabled && (
-              <NavItem href="/projects" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
+              <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
             )}
             <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
             {user?.role === 'admin' && (
