@@ -14,13 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sliders, LayoutGrid, BellRing, EyeOff, Save, Loader2, Hammer } from 'lucide-react';
+import { Sliders, LayoutGrid, BellRing, EyeOff, Save, Loader2, Hammer, Globe } from 'lucide-react';
 import { toast } from 'sonner';
-import type { UserPreferences } from '@/lib/pocketbase-types';
+import { useI18n } from '@/lib/i18n';
+import type { UserPreferences, UserLanguage } from '@/lib/pocketbase-types';
 
 export function UserPreferencesCard() {
   const settingsStore = useSettingsStore();
+  const { t, language, setLanguage } = useI18n();
   const [saving, setSaving] = useState(false);
+  const [selectedLang, setSelectedLang] = useState<UserLanguage>(settingsStore.language || 'de');
   const [defaultTaskView, setDefaultTaskView] = useState<'kanban' | 'list' | 'timeline'>(
     settingsStore.defaultTaskView || 'kanban'
   );
@@ -38,12 +41,14 @@ export function UserPreferencesCard() {
   );
 
   useEffect(() => {
+    if (settingsStore.language) setSelectedLang(settingsStore.language);
     if (settingsStore.defaultTaskView) setDefaultTaskView(settingsStore.defaultTaskView);
     if (settingsStore.uiDensity) setUiDensity(settingsStore.uiDensity);
     if (settingsStore.emailNotificationFrequency) setEmailFrequency(settingsStore.emailNotificationFrequency);
     if (settingsStore.hideArchivedProjectTasks !== undefined) setHideArchived(settingsStore.hideArchivedProjectTasks);
     if (settingsStore.craftModuleEnabled !== undefined) setCraftEnabled(settingsStore.craftModuleEnabled);
   }, [
+    settingsStore.language,
     settingsStore.defaultTaskView,
     settingsStore.uiDensity,
     settingsStore.emailNotificationFrequency,
@@ -55,6 +60,7 @@ export function UserPreferencesCard() {
     setSaving(true);
     try {
       const newPrefs: Partial<UserPreferences> = {
+        language: selectedLang,
         defaultTaskView,
         uiDensity,
         emailNotificationFrequency: emailFrequency,
@@ -63,10 +69,11 @@ export function UserPreferencesCard() {
       };
 
       await settingsStore.saveUserPreferences(newPrefs);
-      toast.success('Präferenzen erfolgreich gespeichert');
+      setLanguage(selectedLang);
+      toast.success(selectedLang === 'en' ? 'Preferences saved successfully' : 'Präferenzen erfolgreich gespeichert');
     } catch (error) {
       console.error('Error saving preferences:', error);
-      toast.error('Fehler beim Speichern der Präferenzen');
+      toast.error(selectedLang === 'en' ? 'Error saving preferences' : 'Fehler beim Speichern der Präferenzen');
     } finally {
       setSaving(false);
     }
@@ -89,6 +96,29 @@ export function UserPreferencesCard() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* System Language */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Globe size={15} className="text-muted-foreground" />
+              <Label htmlFor="language-select">{t('profile.language')}</Label>
+            </div>
+            <Select
+              value={selectedLang}
+              onValueChange={(val) => setSelectedLang(val as UserLanguage)}
+            >
+              <SelectTrigger id="language-select" className="bg-background border-border">
+                <SelectValue placeholder={t('profile.language')} />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border text-foreground">
+                <SelectItem value="de">{t('profile.language_de')}</SelectItem>
+                <SelectItem value="en">{t('profile.language_en')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {selectedLang === 'en' ? 'Interface language and locale format' : 'Sprache der Benutzeroberfläche und Formate'}
+            </p>
+          </div>
+
           {/* Standard Task View */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">

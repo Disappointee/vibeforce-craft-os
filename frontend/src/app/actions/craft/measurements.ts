@@ -5,7 +5,7 @@ import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { MeasurementRecord } from '@/lib/pocketbase-types';
 
-export const CreateMeasurementSchema = z.object({
+const CreateMeasurementSchema = z.object({
   site_report: z.string().min(1, 'Berichts-ID ist erforderlich'),
   position_nr: z.string().optional().default('01'),
   title: z.string().min(1, 'Titel / Leistung ist erforderlich'),
@@ -17,7 +17,7 @@ export const CreateMeasurementSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const UpdateMeasurementSchema = CreateMeasurementSchema.partial();
+const UpdateMeasurementSchema = CreateMeasurementSchema.partial();
 
 export type CreateMeasurementInput = z.infer<typeof CreateMeasurementSchema>;
 export type UpdateMeasurementInput = z.infer<typeof UpdateMeasurementSchema>;

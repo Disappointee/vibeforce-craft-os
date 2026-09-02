@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { pb } from './pocketbase';
 import { calculateBillableMinutes } from './billing-calculator';
-import type { BillingRoundingInterval, BillingRoundingMode, UserPreferences } from './pocketbase-types';
+import type { BillingRoundingInterval, BillingRoundingMode, UserPreferences, UserLanguage } from './pocketbase-types';
 
 interface TimerState {
   runningTaskId: string | null;
@@ -397,6 +397,8 @@ interface SettingsState {
   globalRoundingMode: BillingRoundingMode;
   craftModuleEnabled: boolean;
   setCraftModuleEnabled: (enabled: boolean) => void;
+  language: UserLanguage;
+  setLanguage: (lang: UserLanguage) => void;
   setHideArchivedProjectTasks: (hide: boolean) => void;
   toggleHideArchivedProjectTasks: () => void;
   setDefaultTaskView: (view: 'kanban' | 'list' | 'timeline') => void;
@@ -419,6 +421,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
       craftModuleEnabled: false,
+      language: 'de' as UserLanguage,
       budgetWarningEnabled: true,
       budgetWarningThreshold: 80,
       autoFallbackTaskEnabled: true,
@@ -433,6 +436,12 @@ export const useSettingsStore = create<SettingsState>()(
       globalRoundingInterval: 6,
       globalRoundingMode: 'ceil',
       setCraftModuleEnabled: (enabled) => set({ craftModuleEnabled: enabled }),
+      setLanguage: (lang) => {
+        set({ language: lang });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('vibeforce-language', lang);
+        }
+      },
       setHideArchivedProjectTasks: (hide) => set({ hideArchivedProjectTasks: hide }),
       toggleHideArchivedProjectTasks: () => set((s) => ({ hideArchivedProjectTasks: !s.hideArchivedProjectTasks })),
       setDefaultTaskView: (view) => set({ defaultTaskView: view }),
@@ -450,22 +459,24 @@ export const useSettingsStore = create<SettingsState>()(
       syncFromUserPreferences: (userRecord: any) => {
         if (!userRecord) return;
         const prefs = userRecord.preferences as UserPreferences | undefined;
-        if (!prefs || typeof prefs !== 'object') return;
+        const recordLang = (userRecord.language || prefs?.language) as UserLanguage | undefined;
 
         set((state) => ({
-          craftModuleEnabled: prefs.craftModuleEnabled !== undefined ? prefs.craftModuleEnabled : state.craftModuleEnabled,
-          defaultTaskView: prefs.defaultTaskView || state.defaultTaskView,
-          timeRoundingMinutes: prefs.timeRoundingMinutes !== undefined ? prefs.timeRoundingMinutes : state.timeRoundingMinutes,
-          defaultBillable: prefs.defaultBillable !== undefined ? prefs.defaultBillable : state.defaultBillable,
-          emailNotificationFrequency: prefs.emailNotificationFrequency || state.emailNotificationFrequency,
-          uiDensity: prefs.uiDensity || state.uiDensity,
-          hideArchivedProjectTasks: prefs.hideArchivedProjectTasks !== undefined ? prefs.hideArchivedProjectTasks : state.hideArchivedProjectTasks,
+          craftModuleEnabled: prefs?.craftModuleEnabled !== undefined ? prefs.craftModuleEnabled : state.craftModuleEnabled,
+          language: recordLang || state.language || 'de',
+          defaultTaskView: prefs?.defaultTaskView || state.defaultTaskView,
+          timeRoundingMinutes: prefs?.timeRoundingMinutes !== undefined ? prefs.timeRoundingMinutes : state.timeRoundingMinutes,
+          defaultBillable: prefs?.defaultBillable !== undefined ? prefs.defaultBillable : state.defaultBillable,
+          emailNotificationFrequency: prefs?.emailNotificationFrequency || state.emailNotificationFrequency,
+          uiDensity: prefs?.uiDensity || state.uiDensity,
+          hideArchivedProjectTasks: prefs?.hideArchivedProjectTasks !== undefined ? prefs.hideArchivedProjectTasks : state.hideArchivedProjectTasks,
         }));
       },
       saveUserPreferences: async (newPrefs: Partial<UserPreferences>) => {
         const current = get();
         const updated = {
           craftModuleEnabled: newPrefs.craftModuleEnabled !== undefined ? newPrefs.craftModuleEnabled : current.craftModuleEnabled,
+          language: newPrefs.language !== undefined ? newPrefs.language : current.language,
           defaultTaskView: newPrefs.defaultTaskView !== undefined ? newPrefs.defaultTaskView : current.defaultTaskView,
           timeRoundingMinutes: newPrefs.timeRoundingMinutes !== undefined ? newPrefs.timeRoundingMinutes : current.timeRoundingMinutes,
           defaultBillable: newPrefs.defaultBillable !== undefined ? newPrefs.defaultBillable : current.defaultBillable,
@@ -475,6 +486,9 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         set({ ...updated });
+        if (typeof window !== 'undefined' && updated.language) {
+          localStorage.setItem('vibeforce-language', updated.language);
+        }
 
         if (typeof window !== 'undefined' && pb.authStore.isValid && pb.authStore.record) {
           const userId = pb.authStore.record.id;
@@ -482,9 +496,12 @@ export const useSettingsStore = create<SettingsState>()(
             const existingPrefs = (pb.authStore.record as any).preferences || {};
             const mergedPrefs = { ...existingPrefs, ...updated };
 
-            const updatedRecord = await pb.collection('users').update(userId, {
-              preferences: mergedPrefs,
-            });
+            const updatePayload: any = { preferences: mergedPrefs };
+            if (updated.language) {
+              updatePayload.language = updated.language;
+            }
+
+            const updatedRecord = await pb.collection('users').update(userId, updatePayload);
 
             if (pb.authStore.token) {
               pb.authStore.save(pb.authStore.token, updatedRecord);

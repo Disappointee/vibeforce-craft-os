@@ -37,6 +37,7 @@ export interface UserPreferences {
     uiDensity?: 'comfortable' | 'compact';
     hideArchivedProjectTasks?: boolean;
     craftModuleEnabled?: boolean;
+    language?: UserLanguage;
 }
 
 export interface UserRecord extends BaseRecord {

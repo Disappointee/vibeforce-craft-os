@@ -35,21 +35,36 @@ export async function generateCraftInvoiceAction(
 
     if (!project) throw new Error('Projekt zum Bericht nicht gefunden.');
 
-    // 2. Compute sums
+    // 2. Compute sums & map VOB units to UN/ECE Rec 20
+    const mapUnitCode = (u: string) => {
+      switch (u) {
+        case 'h': return 'HUR';
+        case 'm': return 'MTR';
+        case 'm2': return 'MTK';
+        case 'm3': return 'MTQ';
+        case 'kg': return 'KGM';
+        case 'stk': return 'C62';
+        default: return 'C62';
+      }
+    };
+
+    const isReverseCharge = Boolean((project as any)?.reverse_charge_13b);
+    const taxRate = isReverseCharge ? 0.00 : 0.19;
+
     const lineItems = measurements.map((m) => ({
       name: m.title,
       description: m.formula || '',
       quantity: m.quantity || 1,
-      unitCode: m.unit === 'h' ? 'HUR' : m.unit === 'stk' ? 'C62' : 'MTR',
+      unitCode: mapUnitCode(m.unit || 'm2'),
       netAmount: m.unit_price || 0,
-      taxPercent: 0.19,
+      taxPercent: taxRate,
     }));
 
     const netTotal = lineItems.reduce((acc, item) => acc + item.quantity * item.netAmount, 0);
-    const taxTotal = Math.round(netTotal * 0.19 * 100) / 100;
+    const taxTotal = isReverseCharge ? 0 : Math.round(netTotal * 0.19 * 100) / 100;
     const grossTotal = Math.round((netTotal + taxTotal) * 100) / 100;
 
-    // 3. Generate ZUGFeRD 2.1.1 XML
+    // 3. Generate ZUGFeRD 2.1.1 XML (EN16931 Compliant)
     const zugferdData: ZugferdInvoiceData = {
       invoiceNumber,
       invoiceDate: new Date().toISOString().split('T')[0],
@@ -59,18 +74,22 @@ export async function generateCraftInvoiceAction(
       sellerStreet: 'Baustellenring 1',
       sellerCity: '10115 Berlin',
       sellerCountry: 'DE',
-      sellerTaxId: 'DE123456789',
+      sellerTaxId: '12/345/67890',
+      sellerVatId: 'DE123456789',
       buyerName: report.client_name || project.name,
       buyerStreet: 'Musterstraße 42',
       buyerCity: '10115 Berlin',
       buyerCountry: 'DE',
       lineItems,
       subtotal: netTotal,
-      taxRate: 0.19,
+      taxRate,
       taxAmount: taxTotal,
       total: grossTotal,
       currency: 'EUR',
-      paymentTerms: 'Zahlbar innerhalb von 14 Tagen nach VOB/B.',
+      isReverseCharge,
+      paymentTerms: isReverseCharge
+        ? 'Steuerschuldnerschaft des Leistungsempfängers gemäß § 13b UStG. Zahlbar innerhalb von 14 Tagen nach VOB/B.'
+        : 'Zahlbar innerhalb von 14 Tagen nach VOB/B.',
     };
 
     const zugferdXml = generateZugferdXml(zugferdData);

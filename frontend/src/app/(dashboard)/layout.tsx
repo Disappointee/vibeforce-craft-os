@@ -33,6 +33,7 @@ import Link from 'next/link';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { HeaderTimer } from '@/components/layout/HeaderTimer';
 import { useUiStore, useSettingsStore } from '@/lib/store';
+import { useI18n } from '@/lib/i18n';
 import { getUserDisplayName, getUserInitials } from '@/lib/user-utils';
 import { useOffline } from '@/hooks/use-offline';
 import { SimpleActionMenu } from '@/components/layout/SimpleActionMenu';
@@ -80,6 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isOffline = useOffline();
   const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
+  const { t } = useI18n();
 
   const handleOpenTaskDialog = useCallback(() => {
     useUiStore.getState().setTaskDialogOpen(true);
@@ -379,29 +381,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className={`flex-1 space-y-1 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
-            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
-            <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} collapsed={sidebarCollapsed} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
-            <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
+            <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} collapsed={sidebarCollapsed} />
+            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
+            <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
             {craftModuleEnabled && (
-              <NavItem href="/projects" icon={<Hammer size={18} />} label="Handwerk & Baustelle" active={pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
+              <NavItem href="/projects" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
             )}
-            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} collapsed={sidebarCollapsed} />
+            <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
             {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+              <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
             )}
-            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
-            <NavItem href="/docs" icon={<BookOpen size={18} />} label="Handbuch & Hilfe" active={pathname === '/docs'} collapsed={sidebarCollapsed} />
+            <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
+            <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} collapsed={sidebarCollapsed} />
           </nav>
 
           <div className={`border-t border-border mt-auto pb-16 transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <button
               onClick={handleLogout}
-              aria-label="Abmelden"
+              aria-label={t('nav.logout')}
               className={`flex w-full items-center gap-3 rounded-lg py-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors mt-2 ${sidebarCollapsed ? 'justify-center px-2' : 'px-3'}`}
             >
               <LogOut size={18} className="shrink-0" />
-              {!sidebarCollapsed && <span className="font-medium text-sm">Abmelden</span>}
+              {!sidebarCollapsed && <span className="font-medium text-sm">{t('nav.logout')}</span>}
             </button>
           </div>
         </aside>
@@ -433,29 +435,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Meine Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/time" icon={<Timer size={18} />} label="Meine Zeiten" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Projekte" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/clients" icon={<Building2 size={18} />} label="Kunden" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
             {craftModuleEnabled && (
-              <NavItem href="/projects" icon={<Hammer size={18} />} label="Handwerk & Baustelle" active={pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
+              <NavItem href="/projects" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
             )}
-            <NavItem href="/team" icon={<Users size={18} />} label="Team" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
             {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label="Admin" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+              <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
             )}
-            <NavItem href="/notifications" icon={<Bell size={18} />} label="Benachrichtigungen" active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/docs" icon={<BookOpen size={18} />} label="Handbuch & Hilfe" active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
           </nav>
 
           <div className="p-4 border-t border-border mt-auto pb-16">
             <button
               onClick={() => { handleLogout(); setMobileSidebarOpen(false); }}
-              aria-label="Abmelden"
+              aria-label={t('nav.logout')}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors mt-2"
             >
               <LogOut size={18} />
-              <span className="font-medium text-sm">Abmelden</span>
+              <span className="font-medium text-sm">{t('nav.logout')}</span>
             </button>
           </div>
         </aside>

@@ -5,7 +5,7 @@ import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { SiteReportRecord } from '@/lib/pocketbase-types';
 
-export const CreateSiteReportSchema = z.object({
+const CreateSiteReportSchema = z.object({
   project: z.string().min(1, 'Projekt-ID ist erforderlich'),
   report_date: z.string().min(1, 'Berichtsdatum ist erforderlich'),
   status: z.enum(['draft', 'signed', 'invoiced']).optional().default('draft'),
@@ -17,7 +17,7 @@ export const CreateSiteReportSchema = z.object({
   client_name: z.string().optional(),
 });
 
-export const UpdateSiteReportSchema = CreateSiteReportSchema.partial().extend({
+const UpdateSiteReportSchema = CreateSiteReportSchema.partial().extend({
   contractor_signature: z.string().optional(),
   contractor_signed_at: z.string().optional(),
 });
