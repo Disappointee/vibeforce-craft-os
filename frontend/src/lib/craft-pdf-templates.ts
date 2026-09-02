@@ -1,0 +1,197 @@
+import type { SiteReportRecord, MeasurementRecord } from '@/lib/pocketbase-types';
+
+export interface CraftReportPdfData {
+  report: SiteReportRecord;
+  projectName: string;
+  projectKey: string;
+  clientName?: string;
+  authorName?: string;
+  measurements?: MeasurementRecord[];
+}
+
+export function generateSiteReportHtml(data: CraftReportPdfData): string {
+  const { report, projectName, projectKey, clientName, authorName, measurements = [] } = data;
+  const formattedDate = new Date(report.report_date).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const subtotal = measurements.reduce((acc, m) => acc + (m.total_price || 0), 0);
+  const tax = subtotal * 0.19;
+  const total = subtotal + tax;
+
+  return `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Bautagesbericht - ${projectName}</title>
+  <style>
+    @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.5;
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0d9488;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .title { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0; }
+    .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .meta-item { display: flex; flex-direction: column; }
+    .meta-label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; }
+    .meta-val { font-size: 12px; font-weight: 600; color: #0f172a; }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    .content-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      white-space: pre-wrap;
+      font-size: 11px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      padding: 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #475569;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    td { padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+    .text-right { text-align: right; }
+    .signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 30px;
+      page-break-inside: avoid;
+    }
+    .sig-box {
+      border-top: 1px solid #94a3b8;
+      padding-top: 8px;
+      text-align: center;
+    }
+    .sig-img { max-height: 50px; margin-bottom: 5px; }
+    .sig-label { font-size: 11px; color: #475569; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="title">Bautagesbericht / Regiebericht</h1>
+      <div class="subtitle">Projekt: [${projectKey}] ${projectName}</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-weight: 700; font-size: 13px;">Datum: ${formattedDate}</div>
+      <div style="color: #64748b; font-size: 11px;">Status: ${report.status === 'signed' ? 'Rechtsgültig signiert' : 'Entwurf'}</div>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span class="meta-label">Auftraggeber</span>
+      <span class="meta-val">${clientName || report.client_name || '-'}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Bauleiter / Erfasser</span>
+      <span class="meta-val">${authorName || '-'}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Wetter & Temperatur</span>
+      <span class="meta-val">${report.weather || 'Standard'} ${report.temperature ? `(${report.temperature} °C)` : ''}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Stunden nach Qualifikation</span>
+      <span class="meta-val">
+        Meister: ${report.qualification_hours?.meister || 0}h | Geselle: ${report.qualification_hours?.geselle || 0}h | Helfer: ${report.qualification_hours?.helfer || 0}h
+      </span>
+    </div>
+  </div>
+
+  <div class="section-title">Ausgeführte Arbeiten</div>
+  <div class="content-box">${report.work_performed || 'Keine Arbeiten dokumentiert.'}</div>
+
+  ${report.special_events ? `
+    <div class="section-title">Besondere Vorkommnisse / Behinderungen</div>
+    <div class="content-box" style="color: #991b1b; background: #fef2f2; border-color: #fecaca;">${report.special_events}</div>
+  ` : ''}
+
+  ${measurements.length > 0 ? `
+    <div class="section-title">VOB-Aufmaß & Leistungspositionen</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Pos.</th>
+          <th>Leistung</th>
+          <th>Formel</th>
+          <th class="text-right">Menge</th>
+          <th>Einheit</th>
+          <th class="text-right">EP (€)</th>
+          <th class="text-right">GP (€)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${measurements.map(m => `
+          <tr>
+            <td>${m.position_nr}</td>
+            <td>${m.title}</td>
+            <td style="font-family: monospace; color: #0d9488;">${m.formula || '-'}</td>
+            <td class="text-right">${m.quantity}</td>
+            <td>${m.unit}</td>
+            <td class="text-right">${(m.unit_price || 0).toFixed(2)}</td>
+            <td class="text-right" style="font-weight: 600;">${(m.total_price || 0).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" class="text-right" style="font-weight: 700;">Gesamtsumme Netto:</td>
+          <td class="text-right" style="font-weight: 700;">${subtotal.toFixed(2)} €</td>
+        </tr>
+      </tfoot>
+    </table>
+  ` : ''}
+
+  <div class="signatures">
+    <div class="sig-box">
+      ${report.client_signature ? `<img src="${report.client_signature}" class="sig-img" alt="Unterschrift Auftraggeber" />` : '<div style="height: 40px;"></div>'}
+      <div class="sig-label">Unterschrift Auftraggeber (${report.client_name || 'Bauleiter'})</div>
+      <div style="font-size: 9px; color: #94a3b8;">${report.client_signed_at ? `Signiert am ${new Date(report.client_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
+    </div>
+    <div class="sig-box">
+      ${report.contractor_signature ? `<img src="${report.contractor_signature}" class="sig-img" alt="Unterschrift Auftragnehmer" />` : '<div style="height: 40px;"></div>'}
+      <div class="sig-label">Unterschrift Auftragnehmer (${authorName || 'Monteur'})</div>
+      <div style="font-size: 9px; color: #94a3b8;">${report.contractor_signed_at ? `Signiert am ${new Date(report.contractor_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
