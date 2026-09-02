@@ -34,7 +34,7 @@ export function UserPreferencesCard() {
     settingsStore.hideArchivedProjectTasks ?? true
   );
   const [craftEnabled, setCraftEnabled] = useState<boolean>(
-    settingsStore.craftModuleEnabled ?? true
+    settingsStore.craftModuleEnabled ?? false
   );
 
   useEffect(() => {

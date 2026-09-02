@@ -418,7 +418,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
-      craftModuleEnabled: true,
+      craftModuleEnabled: false,
       budgetWarningEnabled: true,
       budgetWarningThreshold: 80,
       autoFallbackTaskEnabled: true,
