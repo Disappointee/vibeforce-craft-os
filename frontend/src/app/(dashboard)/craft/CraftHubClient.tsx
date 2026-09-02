@@ -17,6 +17,7 @@ import {
   Clock,
   Download,
   CheckCircle2,
+  AlertCircle,
   FileCode,
   ChevronRight,
 } from 'lucide-react';
@@ -377,6 +378,21 @@ export function CraftHubClient({
       {/* TAB 1: BAUTAGESBERICHTE & REGIEBERICHTE */}
       {activeTab === 'reports' && (
         <div className="space-y-5 animate-in fade-in duration-200">
+          {/* VOB/B § 6 Legal Compliance Callout */}
+          <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2.5 text-foreground font-medium">
+              <span className="p-1 rounded-lg bg-amber-500/15 text-amber-500">
+                <AlertCircle size={15} />
+              </span>
+              <span>
+                <strong>VOB/B § 6 Kausalitäts-Dokumentation:</strong> Witterungsbedingte Behinderungen werden mit Temperatur, Wetterlage und direktem Bezug zur Gewerke-Ausführung rechtssicher protokolliert.
+              </span>
+            </div>
+            <Badge variant="outline" className="text-[10px] shrink-0 border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono">
+              VOB/B § 6 Abs. 1
+            </Badge>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <Input
@@ -511,6 +527,21 @@ export function CraftHubClient({
       {/* TAB 2: VOB TEIL C AUFMAẞ-CENTER */}
       {activeTab === 'measurements' && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          {/* DIN 18299 § 4 Übermessungsregel Callout */}
+          <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2.5 text-foreground font-medium">
+              <span className="p-1 rounded-lg bg-indigo-500/15 text-indigo-500">
+                <CheckCircle2 size={15} />
+              </span>
+              <span>
+                <strong>DIN 18299 § 4 Übermessungsregel aktiv:</strong> Aussparungen, Einzelfenster und Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug).
+              </span>
+            </div>
+            <Badge variant="outline" className="text-[10px] shrink-0 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 font-mono">
+              DIN 18299 § 4.2
+            </Badge>
+          </div>
+
           {/* Project Selector Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border/70">
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -609,6 +640,21 @@ export function CraftHubClient({
       {/* TAB 3: BAUSTELLEN-RADAR & GEOFENCING */}
       {activeTab === 'geofence' && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          {/* DSGVO / BetrVG § 87 Compliance Callout */}
+          <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2.5 text-foreground font-medium">
+              <span className="p-1 rounded-lg bg-emerald-500/15 text-emerald-500">
+                <CheckCircle2 size={15} />
+              </span>
+              <span>
+                <strong>DSGVO & BetrVG § 87 Konformität:</strong> Kein Dauer-Tracking. Lokaler Radius-Abgleich (150m) ausschließlich während der gebuchten Schichtzeit. Automatische Löschung nach 30 Tagen.
+              </span>
+            </div>
+            <Badge variant="outline" className="text-[10px] shrink-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono">
+              DSGVO / BetrVG § 87
+            </Badge>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border/70">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Baustelle:</span>
@@ -737,6 +783,21 @@ export function CraftHubClient({
       {/* TAB 4: ZUGFERD & DATEV RECHNUNGEN */}
       {activeTab === 'invoices' && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          {/* EN 16931 CIUS Prüfpfad Callout */}
+          <div className="p-3.5 rounded-2xl border border-teal-500/30 bg-teal-500/5 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-2.5 text-foreground font-medium">
+              <span className="p-1 rounded-lg bg-teal-500/15 text-teal-500">
+                <CheckCircle2 size={15} />
+              </span>
+              <span>
+                <strong>EN 16931 CIUS Prüfpfad:</strong> Alle Rechnungen durchlaufen vor dem Export die Schematron-Syntaxprüfung für Bauleistungen nach § 13b UStG (0,00% USt., CategoryCode AE) und DATEV EXTF 7.0 Satzstruktur.
+              </span>
+            </div>
+            <Badge variant="outline" className="text-[10px] shrink-0 border-teal-500/30 text-teal-600 dark:text-teal-400 font-mono">
+              GoBD & EN 16931
+            </Badge>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border/70">
             <div>
               <h3 className="font-black text-lg text-foreground">E-Rechnungs- & DATEV Export-Zentrale</h3>
