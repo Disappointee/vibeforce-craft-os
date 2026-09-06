@@ -81,6 +81,87 @@ export function CraftHubClient({
     [projects, selectedProjectId]
   );
 
+  // Fallback sample project for demo & onboarding
+  const sampleProject: ProjectRecord = useMemo(
+    () => ({
+      id: 'sample_craft_project',
+      key: 'BAU-DEMO',
+      name: 'Neubau Gewerbehalle Nord (Muster-Baustelle)',
+      description: 'Demonstrations-Projekt für Soll/Ist-Nachkalkulation',
+      status: 'active',
+      budget_hours: 250,
+      budget_money: 48000,
+      external_costs_total: 14500,
+      members: [],
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      collectionId: 'projects',
+      collectionName: 'projects',
+    }),
+    []
+  );
+
+  const sampleSiteReports: SiteReportRecord[] = useMemo(
+    () => [
+      {
+        id: 'sr_sample_1',
+        project: 'sample_craft_project',
+        author: 'u1',
+        report_date: new Date().toISOString().slice(0, 10),
+        status: 'signed',
+        qualification_hours: {
+          meister: 16,
+          geselle: 40,
+          helfer: 20,
+          azubi: 10,
+        },
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        collectionId: 'site_reports',
+        collectionName: 'site_reports',
+      },
+    ],
+    []
+  );
+
+  const sampleTimeEntries: TimeEntryRecord[] = useMemo(
+    () => [
+      {
+        id: 'te_sample_1',
+        task: 't1',
+        user: 'u1',
+        duration_minutes: 4800,
+        duration: 80,
+        is_billable: true,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        collectionId: 'time_entries',
+        collectionName: 'time_entries',
+        expand: {
+          user: { name: 'Andreas Müller (Vorarbeiter)', hourly_rate: 55 } as any,
+          task: { title: 'Bodenplatte & Fundamentbewehrung' } as any,
+        },
+      },
+      {
+        id: 'te_sample_2',
+        task: 't2',
+        user: 'u2',
+        duration_minutes: 3600,
+        duration: 60,
+        is_billable: true,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        collectionId: 'time_entries',
+        collectionName: 'time_entries',
+        expand: {
+          user: { name: 'Klaus Schmidt (Monteur)', hourly_rate: 50 } as any,
+          task: { title: 'Estrichausbau & Trockenbauwand' } as any,
+        },
+      },
+    ],
+    []
+  );
+
   // Filter state for reports
   const [reportFilterStatus, setReportFilterStatus] = useState<string>('all');
   const [reportSearch, setReportSearch] = useState<string>('');
@@ -976,17 +1057,48 @@ export function CraftHubClient({
       )}
 
       {/* TAB 6: SOLL/IST-NACHKALKULATION & MARGEN-COCKPIT */}
-      {activeTab === 'margin' && selectedProject && (
+      {activeTab === 'margin' && (
         <div className="space-y-5 animate-in fade-in duration-200">
+          {!selectedProject && (
+            <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-4 text-xs">
+              <div className="flex items-center gap-2.5 text-foreground font-medium">
+                <span className="p-1 rounded-lg bg-amber-500/20 text-amber-500">
+                  <AlertCircle size={15} />
+                </span>
+                <span>
+                  <strong>Muster-Baustelle aktiv:</strong> Da noch kein eigenes Bauprojekt angelegt ist, wird das Margen-Cockpit mit realistischen Musterdaten demonstriert.
+                </span>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="text-xs h-7 px-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0"
+              >
+                Eigenes Projekt anlegen
+              </Button>
+            </div>
+          )}
           <CostCockpit
-            project={selectedProject}
-            timeEntries={timeEntries.filter((te: any) => {
-              const pId = te.expand?.task?.project || (te as any).project;
-              return !pId || pId === selectedProject.id;
-            })}
-            siteReports={reports.filter((r) => r.project === selectedProject.id)}
-            invoices={invoices.filter((inv) => inv.project === selectedProject.id)}
-            plannedBoqNetTotal={selectedProject.budget_money}
+            project={selectedProject || sampleProject}
+            timeEntries={
+              selectedProject
+                ? timeEntries.filter((te: any) => {
+                    const pId = te.expand?.task?.project || (te as any).project;
+                    return !pId || pId === selectedProject.id;
+                  })
+                : sampleTimeEntries
+            }
+            siteReports={
+              selectedProject
+                ? reports.filter((r) => r.project === selectedProject.id)
+                : sampleSiteReports
+            }
+            invoices={
+              selectedProject
+                ? invoices.filter((inv) => inv.project === selectedProject.id)
+                : [{ net_total: 48000 }]
+            }
+            plannedBoqNetTotal={(selectedProject || sampleProject).budget_money}
           />
         </div>
       )}
