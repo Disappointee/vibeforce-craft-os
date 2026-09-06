@@ -217,6 +217,7 @@ interface CraftEntitlementsState {
   enabledFeatures: Record<CraftFeatureId, boolean>;
   activeTier: CraftTierId;
   projectOverrides: Record<string, Partial<Record<CraftFeatureId, boolean>>>;
+  isSyncing: boolean;
 
   // Actions
   toggleFeature: (featureId: CraftFeatureId, enabled?: boolean) => void;
@@ -230,6 +231,8 @@ interface CraftEntitlementsState {
   isFeatureEnabled: (featureId: CraftFeatureId, projectId?: string) => boolean;
   calculateMonthlyTotal: (projectId?: string) => number;
   resetToDefaults: () => void;
+  fetchServerEntitlements: (projectId?: string) => Promise<void>;
+  saveServerEntitlements: (scope?: string) => Promise<boolean>;
 }
 
 const DEFAULT_ENABLED_FEATURES: Record<CraftFeatureId, boolean> = {
@@ -249,6 +252,7 @@ export const useCraftEntitlementsStore = create<CraftEntitlementsState>()(
       enabledFeatures: { ...DEFAULT_ENABLED_FEATURES },
       activeTier: 'enterprise',
       projectOverrides: {},
+      isSyncing: false,
 
       toggleFeature: (featureId, enabled) => {
         set((state) => {
@@ -357,6 +361,87 @@ export const useCraftEntitlementsStore = create<CraftEntitlementsState>()(
           activeTier: 'enterprise',
           projectOverrides: {},
         });
+      },
+
+      fetchServerEntitlements: async (projectId?: string) => {
+        try {
+          set({ isSyncing: true });
+          const url = projectId
+            ? `/api/craft/entitlements?projectId=${encodeURIComponent(projectId)}`
+            : '/api/craft/entitlements';
+
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              set((state) => {
+                const nextOverrides = { ...state.projectOverrides };
+                if (data.allLicenses && Array.isArray(data.allLicenses)) {
+                  for (const lic of data.allLicenses) {
+                    if (typeof lic.scope === 'string' && lic.scope.startsWith('project:')) {
+                      const pid = lic.scope.replace('project:', '');
+                      nextOverrides[pid] = lic.enabled_features || {};
+                    }
+                  }
+                }
+                return {
+                  enabledFeatures: {
+                    ...DEFAULT_ENABLED_FEATURES,
+                    ...(data.enabledFeatures || {}),
+                  },
+                  activeTier: (data.tier as CraftTierId) || state.activeTier,
+                  projectOverrides: nextOverrides,
+                  isSyncing: false,
+                };
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[fetchServerEntitlements] Warning:', err);
+        } finally {
+          set({ isSyncing: false });
+        }
+      },
+
+      saveServerEntitlements: async (scope: string = 'global') => {
+        try {
+          set({ isSyncing: true });
+          const state = get();
+          const isGlobal = scope === 'global';
+          const targetProjectId = !isGlobal ? scope.replace('project:', '') : undefined;
+
+          const featuresToSave = isGlobal
+            ? state.enabledFeatures
+            : targetProjectId
+            ? {
+                ...state.enabledFeatures,
+                ...(state.projectOverrides[targetProjectId] || {}),
+              }
+            : state.enabledFeatures;
+
+          const tierToSave = isGlobal ? state.activeTier : 'custom';
+
+          const res = await fetch('/api/craft/entitlements', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              scope,
+              tier: tierToSave,
+              enabledFeatures: featuresToSave,
+              notes: `Gespeichert via Vibeforce Flow OS Admin am ${new Date().toLocaleString('de-DE')}`,
+            }),
+          });
+
+          const data = await res.json();
+          return res.ok && !!data.success;
+        } catch (err) {
+          console.error('[saveServerEntitlements] Error:', err);
+          return false;
+        } finally {
+          set({ isSyncing: false });
+        }
       },
     }),
     {

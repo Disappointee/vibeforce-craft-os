@@ -67,6 +67,7 @@ export function CraftEntitlementsModal({
     clearProjectOverrides,
     calculateMonthlyTotal,
     resetToDefaults,
+    saveServerEntitlements,
   } = useCraftEntitlementsStore();
 
   const [selectedScope, setSelectedScope] = useState<string>(
@@ -308,7 +309,10 @@ export function CraftEntitlementsModal({
             </div>
 
             <Button
-              onClick={onClose}
+              onClick={async () => {
+                saveServerEntitlements(selectedScope);
+                onClose();
+              }}
               className="bg-amber-500 hover:bg-amber-600 text-black font-black text-xs px-5 h-9"
             >
               Fertig &amp; Übernehmen

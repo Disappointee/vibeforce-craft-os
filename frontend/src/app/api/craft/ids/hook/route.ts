@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseIdsCartXml } from '@/lib/ids-connect';
+import { assertCraftFeatureEntitlement } from '@/lib/server-entitlements';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,21 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId') || undefined;
+
+    // Hard Server-Side Entitlement Gate
+    try {
+      await assertCraftFeatureEntitlement('wholesale', projectId);
+    } catch (err: any) {
+      return NextResponse.json(
+        {
+          error: err?.message || 'Das Großhandelsmodul (IDS/DATANORM) ist für diesen Mandanten nicht lizenziert (403 Forbidden).',
+          status: 'forbidden',
+        },
+        { status: 403 }
+      );
+    }
     const contentType = req.headers.get('content-type') || '';
     let xmlContent = '';
 

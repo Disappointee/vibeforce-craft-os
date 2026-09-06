@@ -20,6 +20,8 @@ import {
   ShieldCheck,
   Check,
   Info,
+  Save,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,17 +54,24 @@ export function CraftSettingsSection() {
     enabledFeatures,
     activeTier,
     projectOverrides,
+    isSyncing,
     toggleFeature,
     applyTier,
     setProjectOverride,
     clearProjectOverrides,
     calculateMonthlyTotal,
     resetToDefaults,
+    fetchServerEntitlements,
+    saveServerEntitlements,
   } = useCraftEntitlementsStore();
 
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [selectedScope, setSelectedScope] = useState<string>('global');
   const [isLoadingProjects, setIsLoadingProjects] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetchServerEntitlements();
+  }, [fetchServerEntitlements]);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -115,6 +124,19 @@ export function CraftSettingsSection() {
     }
   };
 
+  const handleSaveToServer = async () => {
+    const ok = await saveServerEntitlements(selectedScope);
+    if (ok) {
+      toast.success(
+        isGlobal
+          ? 'Globale Handwerker-Lizenz erfolgreich in PocketBase synchronisiert!'
+          : `Projekt-Lizenz für "${currentProject?.name || targetProjectId}" in PocketBase gespeichert!`
+      );
+    } else {
+      toast.error('Fehler beim Speichern in PocketBase. Bitte Admin-Rechte prüfen.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Card */}
@@ -147,6 +169,15 @@ export function CraftSettingsSection() {
               >
                 <RotateCcw size={14} />
                 {isGlobal ? 'Standard wiederherstellen' : 'Projekt-Overrides löschen'}
+              </Button>
+              <Button
+                size="sm"
+                disabled={isSyncing}
+                onClick={handleSaveToServer}
+                className="bg-amber-500 hover:bg-amber-600 text-black font-semibold gap-1.5 text-xs shadow-md"
+              >
+                {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                {isSyncing ? 'Speichere in PB...' : 'In PocketBase sichern'}
               </Button>
             </div>
           </div>
@@ -365,11 +396,20 @@ export function CraftSettingsSection() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="text-right">
                 <span className="text-3xl font-black text-amber-400">{monthlyTotal} €</span>
                 <span className="text-xs text-zinc-400 block">zzgl. MwSt. / Monat</span>
               </div>
+              <Button
+                size="default"
+                disabled={isSyncing}
+                onClick={handleSaveToServer}
+                className="bg-amber-500 hover:bg-amber-600 text-black font-bold gap-2 shadow-lg"
+              >
+                {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {isSyncing ? 'Speichere...' : 'In PocketBase sichern'}
+              </Button>
             </div>
           </div>
         </CardContent>

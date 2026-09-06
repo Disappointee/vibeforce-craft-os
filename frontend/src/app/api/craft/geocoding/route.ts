@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { assertCraftFeatureEntitlement } from '@/lib/server-entitlements';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
+  const projectId = searchParams.get('projectId') || undefined;
+
+  try {
+    await assertCraftFeatureEntitlement('geofence', projectId);
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: 'GPS-Geofencing & Baustellenkarte ist für diesen Mandanten nicht lizenziert (403 Forbidden)' },
+      { status: 403 }
+    );
+  }
 
   if (!q || !q.trim()) {
     return NextResponse.json([]);

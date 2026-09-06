@@ -431,3 +431,15 @@ export interface InvoiceZugferdRecord extends BaseRecord {
     };
 }
 
+// ============================================
+// Craft Licenses (Entitlements & Upsell Engine)
+// ============================================
+
+export interface CraftLicenseRecord extends BaseRecord {
+    collectionName: 'craft_licenses';
+    scope: string; // 'global' | 'project:<id>'
+    tier: string; // 'starter' | 'pro' | 'enterprise' | 'custom'
+    enabled_features: Record<string, boolean>;
+    notes?: string;
+}
+
