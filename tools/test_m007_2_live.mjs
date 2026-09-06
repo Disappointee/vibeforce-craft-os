@@ -18,7 +18,12 @@ async function verifyGrillMeLive() {
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
   await page.fill('input[type="password"]', '***REMOVED***');
   await page.click('button[type="submit"]');
-  await page.waitForTimeout(3500);
+  
+  try {
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 8000 });
+  } catch {
+    await page.waitForTimeout(4000);
+  }
 
   console.log('2. Navigating to /craft...');
   await page.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
@@ -63,6 +68,16 @@ async function verifyGrillMeLive() {
   // Screenshot Margin Cockpit
   await page.screenshot({ path: `${screenshotDir}/live_audit_margin_cockpit.png` });
   console.log('Saved Margin Cockpit screenshot: live_audit_margin_cockpit.png');
+
+  // Check if Wholesale & DATANORM tab exists
+  console.log('6. Testing Großhandel & DATANORM / IDS-Connect Tab...');
+  const wholesaleTab = await page.$('#craft-tab-wholesale-btn');
+  if (wholesaleTab) {
+    await wholesaleTab.click();
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `${screenshotDir}/live_audit_wholesale_datanorm.png` });
+    console.log('Saved Wholesale screenshot: live_audit_wholesale_datanorm.png');
+  }
 
   await browser.close();
 

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   FileCode,
   TrendingUp,
+  ShoppingBag,
   ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,6 +31,7 @@ import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/Mea
 import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModal';
 import { GaebManager } from '@/components/craft/GaebManager';
 import { CostCockpit } from '@/components/craft/CostCockpit';
+import { WholesaleManager } from '@/components/craft/WholesaleManager';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
@@ -56,7 +58,7 @@ interface CraftHubClientProps {
   initialTimeEntries?: TimeEntryRecord[];
 }
 
-type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb' | 'margin';
+type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb' | 'margin' | 'wholesale';
 
 export function CraftHubClient({
   initialProjects = [],
@@ -520,6 +522,26 @@ export function CraftHubClient({
               }`}
             >
               DB II
+            </span>
+          </button>
+
+          <button
+            id="craft-tab-wholesale-btn"
+            onClick={() => setActiveTab('wholesale')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'wholesale'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ShoppingBag size={15} />
+            <span>Großhandel & DATANORM</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === 'wholesale' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              IDS 2.5
             </span>
           </button>
         </div>
@@ -1099,6 +1121,26 @@ export function CraftHubClient({
                 : [{ net_total: 48000 }]
             }
             plannedBoqNetTotal={(selectedProject || sampleProject).budget_money}
+          />
+        </div>
+      )}
+
+      {/* TAB 7: GROSSHANDELS-KATALOGE & IDS-CONNECT 2.5 */}
+      {activeTab === 'wholesale' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          <WholesaleManager
+            projectName={selectedProject?.name}
+            onTransferToAufmass={(newItems) => {
+              setMeasurementItems((prev) => {
+                const existingNrs = new Set(prev.map((p) => p.position_nr));
+                const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
+                return [...prev, ...toAdd];
+              });
+              setActiveTab('measurements');
+            }}
+            onTransferToGaeb={() => {
+              setActiveTab('gaeb');
+            }}
           />
         </div>
       )}
