@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import SignaturePadLib from 'signature_pad';
+import SignaturePadLib, { type PointGroup } from 'signature_pad';
 import { PenTool, Trash2, Check } from 'lucide-react';
 import { t } from '@/lib/i18n';
 
@@ -10,6 +10,7 @@ interface SignaturePadProps {
   initialSignature?: string;
   onSave?: (dataUrl: string) => void;
   onClear?: () => void;
+  onTelemetry?: (telemetry: { dataUrl: string; strokes: number[][][] }) => void;
   readOnly?: boolean;
 }
 
@@ -18,11 +19,16 @@ export function SignaturePad({
   initialSignature,
   onSave,
   onClear,
+  onTelemetry,
   readOnly = false,
 }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePadLib | null>(null);
   const [isEmpty, setIsEmpty] = useState(true);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const onTelemetryRef = useRef(onTelemetry);
+  onTelemetryRef.current = onTelemetry;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -53,7 +59,20 @@ export function SignaturePad({
       pad.addEventListener('endStroke', () => {
         setIsEmpty(pad.isEmpty());
         if (!pad.isEmpty()) {
-          onSave?.(pad.toDataURL('image/png'));
+          const dataUrl = pad.toDataURL('image/png');
+          onSaveRef.current?.(dataUrl);
+
+          if (onTelemetryRef.current) {
+            const raw = pad.toData();
+            const strokes = raw.map((stroke: PointGroup) =>
+              stroke.points.map((point: { x: number; y: number; time?: number }) => [
+                point.x,
+                point.y,
+                point.time ?? performance.now(),
+              ])
+            );
+            onTelemetryRef.current({ dataUrl, strokes });
+          }
         }
       });
     }
@@ -61,13 +80,16 @@ export function SignaturePad({
     const resizeCanvas = () => {
       if (!canvas) return;
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const prevData = !pad.isEmpty() ? pad.toDataURL() : null;
+      const strokesData = pad.toData();
+      const prevDataUrl = !pad.isEmpty() ? pad.toDataURL() : null;
       canvas.width = canvas.offsetWidth * ratio;
       canvas.height = canvas.offsetHeight * ratio;
       canvas.getContext('2d')?.scale(ratio, ratio);
       pad.clear();
-      if (prevData) {
-        pad.fromDataURL(prevData);
+      if (strokesData && strokesData.length > 0) {
+        pad.fromData(strokesData);
+      } else if (prevDataUrl) {
+        pad.fromDataURL(prevDataUrl);
       }
     };
 
@@ -81,7 +103,7 @@ export function SignaturePad({
       pad.off();
       padRef.current = null;
     };
-  }, [initialSignature, readOnly, onSave]);
+  }, [initialSignature, readOnly]);
 
   const handleClear = () => {
     padRef.current?.clear();

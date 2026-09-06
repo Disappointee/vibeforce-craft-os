@@ -3,6 +3,7 @@ import 'server-only';
 import PocketBase from 'pocketbase';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { withRetry } from './db-retry';
 
 /**
  * 🛡️ Next.js 16 SSR Request-Scope Isolation & Superuser Token Cache
@@ -101,22 +102,24 @@ export async function getAdminPB(): Promise<PocketBase> {
  * Executes an operation with Superuser PB and automatically invalidates token cache on 401/403.
  */
 export async function withAdminPB<T>(operation: (pb: PocketBase) => Promise<T>): Promise<T> {
-  try {
-    const pb = await getAdminPB();
-    return await operation(pb);
-  } catch (err: unknown) {
-    const status =
-      (err as { status?: number; response?: { status?: number } }).status ||
-      (err as { status?: number; response?: { status?: number } }).response?.status;
+  return withRetry(async () => {
+    try {
+      const pb = await getAdminPB();
+      return await operation(pb);
+    } catch (err: unknown) {
+      const status =
+        (err as { status?: number; response?: { status?: number } }).status ||
+        (err as { status?: number; response?: { status?: number } }).response?.status;
 
-    if (status === 401 || status === 403) {
-      console.warn('[withAdminPB] Received 401/403 with admin token. Invalidating cache and retrying...');
-      invalidateAdminTokenCache();
-      const freshPb = await getAdminPB();
-      return await operation(freshPb);
+      if (status === 401 || status === 403) {
+        console.warn('[withAdminPB] Received 401/403 with admin token. Invalidating cache and retrying...');
+        invalidateAdminTokenCache();
+        const freshPb = await getAdminPB();
+        return await operation(freshPb);
+      }
+      throw err;
     }
-    throw err;
-  }
+  });
 }
 
 /**

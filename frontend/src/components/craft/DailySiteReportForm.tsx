@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Calendar,
@@ -16,9 +16,12 @@ import { t } from '@/lib/i18n';
 import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/MeasurementGrid';
 import { EvidencePhotoUpload, type EvidencePhotoItem } from '@/components/craft/EvidencePhotoUpload';
 import { SignaturePad } from '@/components/craft/SignaturePad';
-import { createSiteReportAction, updateSiteReportAction } from '@/app/actions/craft/site-reports';
+import { createSiteReportAction, updateSiteReportAction, signSiteReportAction } from '@/app/actions/craft/site-reports';
 import { createMeasurementAction } from '@/app/actions/craft/measurements';
+import { createEvidenceItemAction } from '@/app/actions/craft/evidence';
+import { saveMediaBlob } from '@/lib/offline-sync';
 import type { SiteReportRecord, QualificationLevel } from '@/lib/pocketbase-types';
+import { useDraftAutosave } from '@/hooks/useOfflineSync';
 
 interface DailySiteReportFormProps {
   projectId: string;
@@ -74,9 +77,55 @@ export function DailySiteReportForm({
     text: string;
   } | null>(null);
 
+  const reportKey = initialReport?.id ?? `draft_${projectId}`;
+  const { saveDraft, draft, clearDraft } = useDraftAutosave(reportKey, true);
+  const signatureTelemetryRef = useRef<{ dataUrl: string; strokes: number[][][] } | null>(null);
+  const initialMergeDone = useRef(false);
+
   const handleHourChange = (level: QualificationLevel, val: number) => {
     setQualificationHours((prev) => ({ ...prev, [level]: Math.max(0, val) }));
   };
+
+  useEffect(() => {
+    if (initialMergeDone.current || !draft?.data) return;
+    initialMergeDone.current = true;
+    const d = draft.data;
+    if (!reportDate && d.report_date) setReportDate(d.report_date);
+    if (!weather && d.weather) setWeather(d.weather);
+    if (!temperature && d.temperature !== undefined) setTemperature(d.temperature);
+    if (!workPerformed && d.work_performed) setWorkPerformed(d.work_performed);
+    if (!specialEvents && d.special_events) setSpecialEvents(d.special_events);
+    if (!clientName && d.client_name) setClientName(d.client_name);
+    if (!clientSignature && d.client_signature) setClientSignature(d.client_signature);
+    if (!contractorSignature && d.contractor_signature) setContractorSignature(d.contractor_signature);
+    if (d.qualification_hours) {
+      setQualificationHours((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        for (const key of Object.keys(prev) as QualificationLevel[]) {
+          if ((prev[key] === 0 || prev[key] === undefined) && d.qualification_hours![key] !== undefined) {
+            next[key] = d.qualification_hours[key];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  }, [draft]);
+
+  useEffect(() => {
+    saveDraft({
+      report_date: reportDate,
+      weather,
+      temperature,
+      work_performed: workPerformed,
+      special_events: specialEvents,
+      qualification_hours: qualificationHours,
+      client_name: clientName,
+      client_signature: clientSignature,
+      contractor_signature: contractorSignature,
+    });
+  }, [reportDate, weather, temperature, workPerformed, specialEvents, qualificationHours, clientName, clientSignature, contractorSignature, saveDraft]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +157,7 @@ export function DailySiteReportForm({
         savedReport = await createSiteReportAction(payload);
       }
 
-      // Save Measurements
+      // Save Measurements (must precede signing to respect GoBD status lock)
       if (measurements.length > 0) {
         for (const m of measurements) {
           if (m.title.trim()) {
@@ -126,13 +175,87 @@ export function DailySiteReportForm({
         }
       }
 
-      setStatusMessage({
-        type: 'success',
-        text: 'Bautagesbericht erfolgreich gespeichert!',
-      });
-      onSaved?.(savedReport);
-      if (redirectTo !== false) {
-        router.push(typeof redirectTo === 'string' ? redirectTo : `/projects/${projectId}/site-reports`);
+      // Save Evidence Photos (Beweisfotodokumentation GoBD & Baustellennachweis)
+      if (evidencePhotos.length > 0) {
+        for (const photo of evidencePhotos) {
+          if (photo.file) {
+            try {
+              await createEvidenceItemAction({
+                site_report: savedReport.id,
+                file: photo.file,
+                caption: photo.caption,
+                sha256_hash: photo.sha256_hash,
+                taken_at: photo.taken_at,
+                gps_lat: photo.gps_lat,
+                gps_lon: photo.gps_lon,
+              });
+            } catch (photoErr) {
+              console.error('Failed to upload evidence photo to server, saving offline media blob:', photoErr);
+              try {
+                await saveMediaBlob(savedReport.id, photo.file, photo.file.type || 'image/jpeg');
+              } catch {}
+            }
+          }
+        }
+      }
+
+      // Sign Site Report (final step: seals report, marks status='signed' and enforces GoBD immutability)
+      let signError: string | undefined;
+      if (clientSignature && savedReport?.id) {
+        try {
+          const telemetry = signatureTelemetryRef.current
+            ? {
+                strokes: signatureTelemetryRef.current.strokes,
+                gpsLat: undefined as number | undefined,
+                gpsLon: undefined as number | undefined,
+                gpsAccuracy: undefined as number | undefined,
+              }
+            : undefined;
+
+          if (telemetry && typeof navigator !== 'undefined' && navigator.geolocation) {
+            try {
+              const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                  enableHighAccuracy: true,
+                  timeout: 5000,
+                });
+              });
+              telemetry.gpsLat = position.coords.latitude;
+              telemetry.gpsLon = position.coords.longitude;
+              telemetry.gpsAccuracy = position.coords.accuracy;
+            } catch {
+              // GPS-Fehler → Werte bleiben undefined
+            }
+          }
+
+          const signedReport = await signSiteReportAction(
+            savedReport.id,
+            clientName,
+            clientSignature,
+            telemetry
+          );
+          savedReport = signedReport;
+        } catch (signErr: any) {
+          signError = signErr?.message || 'Fehler beim Signieren des Berichts.';
+        }
+      }
+
+      await clearDraft();
+
+      if (signError) {
+        setStatusMessage({
+          type: 'error',
+          text: signError,
+        });
+      } else {
+        setStatusMessage({
+          type: 'success',
+          text: 'Bautagesbericht erfolgreich gespeichert!',
+        });
+        onSaved?.(savedReport);
+        if (redirectTo !== false) {
+          router.push(typeof redirectTo === 'string' ? redirectTo : `/projects/${projectId}/site-reports`);
+        }
       }
     } catch (err: any) {
       console.error('Failed to save site report:', err);
@@ -191,7 +314,7 @@ export function DailySiteReportForm({
             <input
               type="number"
               value={temperature ?? ''}
-              onChange={(e) => setTemperature(parseFloat(e.target.value) || undefined)}
+              onChange={(e) => { const val = parseFloat(e.target.value); setTemperature(isNaN(val) ? undefined : val); }}
               placeholder="18"
               className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm"
             />
@@ -336,6 +459,9 @@ export function DailySiteReportForm({
             initialSignature={clientSignature}
             onSave={setClientSignature}
             onClear={() => setClientSignature('')}
+            onTelemetry={(telemetry) => {
+              signatureTelemetryRef.current = telemetry;
+            }}
           />
 
           <SignaturePad

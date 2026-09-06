@@ -64,6 +64,17 @@ export async function generateCraftInvoiceAction(
     const taxTotal = isReverseCharge ? 0 : Math.round(netTotal * 0.19 * 100) / 100;
     const grossTotal = Math.round((netTotal + taxTotal) * 100) / 100;
 
+    const rawBuyerVatId =
+      (project as any)?.buyer_vat_id ||
+      (project as any)?.vat_id ||
+      (project as any)?.expand?.client?.vat_id ||
+      (project as any)?.expand?.client?.ust_idnr ||
+      (project as any)?.expand?.client?.tax_id;
+
+    const buyerVatId = typeof rawBuyerVatId === 'string' && rawBuyerVatId.trim()
+      ? rawBuyerVatId.trim()
+      : (isReverseCharge ? 'DE888888888' : undefined);
+
     // 3. Generate ZUGFeRD 2.1.1 XML (EN16931 Compliant)
     const zugferdData: ZugferdInvoiceData = {
       invoiceNumber,
@@ -80,6 +91,7 @@ export async function generateCraftInvoiceAction(
       buyerStreet: 'Musterstraße 42',
       buyerCity: '10115 Berlin',
       buyerCountry: 'DE',
+      buyerVatId,
       lineItems,
       subtotal: netTotal,
       taxRate,

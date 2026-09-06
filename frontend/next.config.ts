@@ -25,12 +25,17 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
+    value: 'camera=(self), microphone=(), geolocation=(self)',
   },
 ];
 
 const nextConfig: NextConfig = {
   output: isProduction ? 'standalone' : undefined,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 
   async headers() {
     return [

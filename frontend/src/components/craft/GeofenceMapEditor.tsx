@@ -28,10 +28,72 @@ const Marker = dynamic(
   () => import('react-leaflet').then((mod) => mod.Marker),
   { ssr: false }
 );
-const useMapEvents = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMapEvents as any),
-  { ssr: false }
-) as any;
+// MapClickHandler: Proper component wrapper for the useMapEvents hook.
+// next/dynamic cannot wrap hooks — only components. This child component
+// lives inside <MapContainer> and forwards click events to the parent.
+function MapClickHandler({
+  type,
+  onCircleClick,
+  onPolygonClick,
+}: {
+  type: 'none' | 'circle' | 'polygon';
+  onCircleClick: (latlng: [number, number]) => void;
+  onPolygonClick: (latlng: [number, number]) => void;
+}) {
+  // Dynamic import at render time — safe because this component only
+  // renders inside MapContainer which is already SSR-disabled.
+  const [ready, setReady] = useState(false);
+  const mapRef = useRef<any>(null);
+
+  useEffect(() => {
+    import('react-leaflet').then((mod) => {
+      // Store the hook reference — we'll use it via the map instance
+      mapRef.current = mod;
+      setReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
+    // We access the map via the Leaflet global instance approach
+  }, [ready]);
+
+  // We use a simpler approach: attach click handler directly to the map container
+  useEffect(() => {
+    const mapContainer = document.querySelector('.leaflet-container');
+    if (!mapContainer) return;
+
+    // Access Leaflet map instance from the container
+    const getMapInstance = () => (mapContainer as any)._leaflet_map;
+
+    const handleClick = (e: any) => {
+      const latlng: [number, number] = [e.latlng.lat, e.latlng.lng];
+      if (type === 'circle') {
+        onCircleClick(latlng);
+      } else if (type === 'polygon') {
+        onPolygonClick(latlng);
+      }
+    };
+
+    // Small delay to ensure map is fully initialized
+    const timer = setTimeout(() => {
+      const map = getMapInstance();
+      if (map) {
+        map.on('click', handleClick);
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      const map = getMapInstance();
+      if (map) {
+        map.off('click', handleClick);
+      }
+    };
+  }, [type, onCircleClick, onPolygonClick]);
+
+  return null;
+}
 
 interface GeofenceMapEditorProps {
   initialConfig?: GeofenceConfig;
@@ -62,19 +124,22 @@ export function GeofenceMapEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Fix Leaflet Default Marker Icons in Next.js
+  // Fix Leaflet Default Marker Icons in Next.js (DSGVO-safe inline SVG, no external unpkg requests)
   useEffect(() => {
     import('leaflet').then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
+      const markerSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41"><path fill="%230d9488" stroke="%23ffffff" stroke-width="1.5" d="M12.5 0C5.596 0 0 5.596 0 12.5c0 9.375 12.5 28.5 12.5 28.5S25 21.875 25 12.5C25 5.596 19.404 0 12.5 0zm0 17a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>`;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconRetinaUrl: markerSvg,
+        iconUrl: markerSvg,
+        shadowUrl: '',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
       });
     });
   }, []);
 
-  // Nominatim Address Search (DSGVO-compliant OpenStreetMap)
+  // Address Search via internal server-side proxy (DSGVO compliant, zero client IP leak to OSM)
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -82,20 +147,17 @@ export function GeofenceMapEditor({
     setIsSearching(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          searchQuery
-        )}&limit=5`,
-        {
-          headers: {
-            'Accept-Language': 'de',
-            'User-Agent': 'VibeforceFlowOS/1.0 (contact@vibeforce.internal)',
-          },
-        }
+        `/api/craft/geocoding?q=${encodeURIComponent(searchQuery.trim())}`
       );
-      const data = await res.json();
-      setSearchResults(data);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(Array.isArray(data) ? data : []);
+      } else {
+        setSearchResults([]);
+      }
     } catch (err) {
-      console.error('Nominatim search failed:', err);
+      console.error('Geocoding search failed:', err);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -310,7 +372,14 @@ export function GeofenceMapEditor({
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url="/api/craft/tiles/{z}/{x}/{y}"
+            />
+
+            {/* Map Click Handler for setting center / polygon points */}
+            <MapClickHandler
+              type={type}
+              onCircleClick={(latlng) => setCenter(latlng)}
+              onPolygonClick={(latlng) => setPolygon((prev) => [...prev, latlng])}
             />
 
             {/* Circle Geofence Rendering */}

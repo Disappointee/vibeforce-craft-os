@@ -325,3 +325,81 @@
 | `created` | **autodate** | - |
 | `updated` | **autodate** | - |
 
+## Collection: `site_reports` (Typ: base)
+| Feldname | Typ | Details / Relationen |
+| :--- | :--- | :--- |
+| `id` | **text** | Required |
+| `project` | **relation** | Required -> `projects` |
+| `author` | **relation** | Required -> `users` |
+| `report_date` | **text** | Required (YYYY-MM-DD) |
+| `status` | **text** | `draft`, `signed`, `invoiced` |
+| `weather` | **text** | - |
+| `temperature` | **number** | - |
+| `work_performed` | **text** | GoBD Append-Only Nachtrag |
+| `special_events` | **text** | - |
+| `qualification_hours` | **json** | Record<QualificationLevel, number> |
+| `client_name` | **text** | - |
+| `client_signature` | **text** | PNG DataURL |
+| `client_signed_at` | **text** | ISO Timestamp |
+| `contractor_signature` | **text** | PNG DataURL |
+| `contractor_signed_at` | **text** | ISO Timestamp |
+| `signature_manifest` | **text** | JSON Manifest SHA-256 |
+| `signature_strokes` | **json** | Biometrische Vektordaten number[][][] |
+| `gps_lat` | **number** | Geokoordinate Latitude |
+| `gps_lon` | **number** | Geokoordinate Longitude |
+| `gps_accuracy` | **number** | Genauigkeit in Metern |
+| `created` | **autodate** | - |
+| `updated` | **autodate** | - |
+
+## Collection: `measurements` (Typ: base)
+| Feldname | Typ | Details / Relationen |
+| :--- | :--- | :--- |
+| `id` | **text** | Required |
+| `site_report` | **relation** | Required -> `site_reports` |
+| `position_nr` | **text** | z.B. "01" |
+| `title` | **text** | Required |
+| `formula` | **text** | VOB Aufmaßformel z.B. "2.50 * 4.20 * 0.15" |
+| `quantity` | **number** | Berechnete Menge |
+| `unit` | **text** | m, m2, m3, h, stk, kg, psch |
+| `unit_price` | **number** | Einzelpreis |
+| `total_price` | **number** | Gesamtpreis |
+| `tax_rate_type` | **text** | standard_19, reverse_charge_13b |
+| `notes` | **text** | - |
+| `created` | **autodate** | - |
+| `updated` | **autodate** | - |
+
+## Collection: `evidence_items` (Typ: base)
+| Feldname | Typ | Details / Relationen |
+| :--- | :--- | :--- |
+| `id` | **text** | Required |
+| `site_report` | **relation** | Required -> `site_reports` |
+| `image` | **file** | JPG/PNG/WebP max 10MB |
+| `caption` | **text** | - |
+| `sha256_hash` | **text** | GoBD-Fingerprint |
+| `taken_at` | **text** | ISO Timestamp |
+| `gps_lat` | **number** | - |
+| `gps_lon` | **number** | - |
+| `created` | **autodate** | - |
+| `updated` | **autodate** | - |
+
+## Collection: `invoices_zugferd` (Typ: base)
+| Feldname | Typ | Details / Relationen |
+| :--- | :--- | :--- |
+| `id` | **text** | Required |
+| `site_report` | **relation** | Optional -> `site_reports` |
+| `project` | **relation** | Required -> `projects` |
+| `invoice_number` | **text** | Required |
+| `invoice_type` | **text** | standard, abschlag, schluss |
+| `net_total` | **number** | Netto-Rechnungsbetrag |
+| `tax_rate` | **number** | Steuersatz |
+| `tax_total` | **number** | Steuerbetrag |
+| `gross_total` | **number** | Bruttobetrag |
+| `prepaid_amount` | **number** | Kumulierte VOB-Abschläge BT-113 |
+| `zugferd_xml` | **text** | ZUGFeRD 2.1.1 BASIC WL XML |
+| `pdf_file` | **file** | PDF/A Rechnung |
+| `datev_exported` | **bool** | - |
+| `datev_export_date` | **text** | - |
+| `created` | **autodate** | - |
+| `updated` | **autodate** | - |
+
+

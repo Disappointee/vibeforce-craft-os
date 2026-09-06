@@ -38,6 +38,8 @@ export interface ZugferdInvoiceData {
   paymentTerms?: string;
   isReverseCharge?: boolean; // § 13b UStG Bauleistungen
   exemptionReason?: string;
+  totalPrepaidAmount?: number;
+  prepaidInvoiceReferences?: string[];
 }
 
 function esc(text?: string | null): string {
@@ -51,13 +53,22 @@ function esc(text?: string | null): string {
 }
 
 export function generateZugferdXml(data: ZugferdInvoiceData): string {
-  const isRevCharge = Boolean(data.isReverseCharge || data.taxRate === 0);
-  const taxCategory = isRevCharge ? 'AE' : 'S';
-  const appliedRate = isRevCharge ? 0 : Math.round((data.taxRate || 0) * 100);
-  const calculatedTax = isRevCharge ? 0 : (data.taxAmount || 0);
-  const subtotal = data.subtotal || 0;
-  const grandTotal = isRevCharge ? subtotal : (subtotal + calculatedTax);
   const exemptReason = data.exemptionReason || 'Steuerschuldnerschaft des Leistungsempfängers gemäß § 13b UStG (Reverse Charge)';
+
+  const hasReverseChargeItems = Boolean(
+    data.isReverseCharge === true ||
+    (data.lineItems && data.lineItems.some(it => it.taxPercent === 0))
+  );
+
+  if (hasReverseChargeItems) {
+    const buyerVatId = (data.buyerVatId || '').trim();
+    if (!buyerVatId) {
+      throw new Error('§ 14a Abs. 5 UStG: Reverse-Charge-Rechnung erfordert die USt-IdNr. (buyerVatId) des Leistungsempfängers (B2B-Schranke).');
+    }
+    if (!/^[A-Za-z]{2}/.test(buyerVatId) || buyerVatId.length < 8) {
+      throw new Error('§ 14a Abs. 5 UStG: Reverse-Charge-Rechnung erfordert eine gültige USt-IdNr. mit Länderpräfix und mindestens 8 Zeichen (buyerVatId).');
+    }
+  }
 
   // Safe 8-digit date formatting (YYYYMMDD) even if ISO timestamp is provided
   const cleanInvoiceDate = (data.invoiceDate || new Date().toISOString())
@@ -67,6 +78,9 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
     .slice(0, 10)
     .replace(/-/g, '');
 
+  const standardRate = typeof data.taxRate === 'number' && data.taxRate > 0 ? data.taxRate : 0.19;
+  const standardRatePercent = (standardRate * 100).toFixed(2);
+
   const lineItems = (data.lineItems && data.lineItems.length > 0)
     ? data.lineItems
     : [{
@@ -74,12 +88,26 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
         description: 'Pauschale Abrechnung nach VOB/B',
         quantity: 1,
         unitCode: 'C62',
-        netAmount: subtotal,
-        taxPercent: isRevCharge ? 0 : (data.taxRate || 0.19),
+        netAmount: data.subtotal || 0,
+        taxPercent: data.isReverseCharge ? 0 : standardRate,
       }];
+
+  // Track tax buckets for EN 16931 multi-tax settlement
+  let sumBasis13b = 0;
+  let sumBasis19 = 0;
 
   const itemsXml = lineItems.map((item, i) => {
     const itemTotal = Math.round(item.quantity * item.netAmount * 100) / 100;
+    const isItemRevCharge = Boolean(data.isReverseCharge || item.taxPercent === 0);
+    const itemTaxCategory = isItemRevCharge ? 'AE' : 'S';
+    const itemTaxRatePercent = isItemRevCharge ? 0 : Math.round((item.taxPercent || standardRate) * 100);
+
+    if (isItemRevCharge) {
+      sumBasis13b += itemTotal;
+    } else {
+      sumBasis19 += itemTotal;
+    }
+
     return `
     <ram:IncludedSupplyChainTradeLineItem>
       <ram:AssociatedDocumentLineDocument>
@@ -91,7 +119,7 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
       </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:NetPriceProductTradePrice>
-          <ram:ChargeAmount>${item.netAmount.toFixed(2)}</ram:ChargeAmount>
+          <ram:ChargeAmount>${(Math.round(item.netAmount*100)/100).toFixed(2)}</ram:ChargeAmount>
           <ram:BasisQuantity unitCode="${item.unitCode || 'C62'}">1</ram:BasisQuantity>
         </ram:NetPriceProductTradePrice>
       </ram:SpecifiedLineTradeAgreement>
@@ -101,9 +129,8 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
-          <ram:CategoryCode>${taxCategory}</ram:CategoryCode>
-          <ram:RateApplicablePercent>${appliedRate.toFixed(2)}</ram:RateApplicablePercent>
-          ${isRevCharge ? `<ram:ExemptionReason>${esc(exemptReason)}</ram:ExemptionReason>` : ''}
+          <ram:CategoryCode>${itemTaxCategory}</ram:CategoryCode>
+          <ram:RateApplicablePercent>${itemTaxRatePercent.toFixed(2)}</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementMonetarySummation>
           <ram:LineTotalAmount>${itemTotal.toFixed(2)}</ram:LineTotalAmount>
@@ -112,34 +139,74 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
     </ram:IncludedSupplyChainTradeLineItem>`;
   }).join('');
 
+  const taxCalculatedS = Math.round(sumBasis19 * standardRate * 100) / 100;
+  const grandSubtotal = Math.round((sumBasis13b + sumBasis19) * 100) / 100;
+  const grandTaxTotal = taxCalculatedS;
+  const grandTotal = Math.round((grandSubtotal + grandTaxTotal) * 100) / 100;
+
+  // Build ApplicableTradeTax header blocks
+  const headerTaxesXml: string[] = [];
+  if (sumBasis13b > 0 || (sumBasis13b === 0 && sumBasis19 === 0)) {
+    headerTaxesXml.push(`
+      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>0.00</ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount>${(Math.round(sumBasis13b*100)/100).toFixed(2)}</ram:BasisAmount>
+        <ram:CategoryCode>AE</ram:CategoryCode>
+        <ram:RateApplicablePercent>0.00</ram:RateApplicablePercent>
+        <ram:ExemptionReason>${esc(exemptReason)}</ram:ExemptionReason>
+      </ram:ApplicableTradeTax>`);
+  }
+  if (sumBasis19 > 0) {
+    headerTaxesXml.push(`
+      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>${taxCalculatedS.toFixed(2)}</ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount>${(Math.round(sumBasis19*100)/100).toFixed(2)}</ram:BasisAmount>
+        <ram:CategoryCode>S</ram:CategoryCode>
+        <ram:RateApplicablePercent>${standardRatePercent}</ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>`);
+  }
+
+  const advancePaymentsXml = (data.prepaidInvoiceReferences && data.prepaidInvoiceReferences.length > 0)
+    ? data.prepaidInvoiceReferences.map(ref => `
+      <ram:SpecifiedAdvancePayment>
+        <ram:ReferencedDocument>
+          <ram:IssuerAssignedID>${esc(ref)}</ram:IssuerAssignedID>
+          <ram:TypeCode>386</ram:TypeCode>
+        </ram:ReferencedDocument>
+      </ram:SpecifiedAdvancePayment>`).join('')
+    : '';
+
+  const totalPrepaid = Math.round((data.totalPrepaidAmount || 0) * 100) / 100;
+  const duePayable = Math.max(0, Math.round((grandTotal - totalPrepaid) * 100) / 100);
+
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rsm:CrossIndustryDocument invoiceTypeCode="380" xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
   xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
   xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
-  <rsm:SpecifiedExchangedDocumentContext>
-    <ram:TestIndicator>false</ram:TestIndicator>
+  <rsm:ExchangedDocumentContext>
     <ram:GuidelineSpecifiedDocumentContextParameter>
       <ram:ID>urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic</ram:ID>
     </ram:GuidelineSpecifiedDocumentContextParameter>
-  </rsm:SpecifiedExchangedDocumentContext>
-  <rsm:HeaderExchangedDocument>
+  </rsm:ExchangedDocumentContext>
+  <rsm:ExchangedDocument>
     <ram:ID>${esc(data.invoiceNumber)}</ram:ID>
-    <ram:Name>INVOICE</ram:Name>
     <ram:TypeCode>380</ram:TypeCode>
     <ram:IssueDateTime>
       <udt:DateTimeString format="102">${cleanInvoiceDate}</udt:DateTimeString>
     </ram:IssueDateTime>
-    ${isRevCharge ? `<ram:IncludedNote>
+    ${sumBasis13b > 0 ? `<ram:IncludedNote>
       <ram:Content>Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge) gemäß § 13b Abs. 2 Nr. 4 UStG bei Bauleistungen.</ram:Content>
       <ram:SubjectCode>AAI</ram:SubjectCode>
     </ram:IncludedNote>` : ''}
-  </rsm:HeaderExchangedDocument>
-  <rsm:SpecifiedSupplyChainTradeTransaction>${itemsXml}
+  </rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
     <ram:ApplicableHeaderTradeAgreement>
       <ram:SellerTradeParty>
         <ram:Name>${esc(data.sellerName)}</ram:Name>
         <ram:PostalTradeAddress>
-          <ram:StreetName>${esc(data.sellerStreet)}</ram:StreetName>
+          <ram:LineOne>${esc(data.sellerStreet)}</ram:LineOne>
           <ram:CityName>${esc(data.sellerCity)}</ram:CityName>
           <ram:CountryID>${data.sellerCountry || 'DE'}</ram:CountryID>
         </ram:PostalTradeAddress>
@@ -148,11 +215,11 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
       <ram:BuyerTradeParty>
         <ram:Name>${esc(data.buyerName)}</ram:Name>
         <ram:PostalTradeAddress>
-          <ram:StreetName>${esc(data.buyerStreet)}</ram:StreetName>
+          <ram:LineOne>${esc(data.buyerStreet)}</ram:LineOne>
           <ram:CityName>${esc(data.buyerCity)}</ram:CityName>
           <ram:CountryID>${data.buyerCountry || 'DE'}</ram:CountryID>
         </ram:PostalTradeAddress>
-        ${data.buyerVatId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">${esc(data.buyerVatId)}</ram:ID></ram:SpecifiedTaxRegistration>` : (data.buyerTaxId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="FC">${esc(data.buyerTaxId)}</ram:ID></ram:SpecifiedTaxRegistration>` : '')}
+        ${data.buyerVatId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">${esc(data.buyerVatId.trim())}</ram:ID></ram:SpecifiedTaxRegistration>` : (data.buyerTaxId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="FC">${esc(data.buyerTaxId.trim())}</ram:ID></ram:SpecifiedTaxRegistration>` : '')}
       </ram:BuyerTradeParty>
     </ram:ApplicableHeaderTradeAgreement>
     <ram:ApplicableHeaderTradeDelivery>
@@ -163,24 +230,18 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
       </ram:ActualDeliverySupplyChainEvent>
     </ram:ApplicableHeaderTradeDelivery>
     <ram:ApplicableHeaderTradeSettlement>
-      <ram:InvoiceCurrencyCode>${data.currency || 'EUR'}</ram:InvoiceCurrencyCode>
-      <ram:ApplicableTradeTax>
-        <ram:CalculatedAmount>${calculatedTax.toFixed(2)}</ram:CalculatedAmount>
-        <ram:TypeCode>VAT</ram:TypeCode>
-        <ram:CategoryCode>${taxCategory}</ram:CategoryCode>
-        <ram:RateApplicablePercent>${appliedRate.toFixed(2)}</ram:RateApplicablePercent>
-        ${isRevCharge ? `<ram:ExemptionReason>${esc(exemptReason)}</ram:ExemptionReason>` : ''}
-      </ram:ApplicableTradeTax>
+      <ram:InvoiceCurrencyCode>${data.currency || 'EUR'}</ram:InvoiceCurrencyCode>${headerTaxesXml.join('')}
       <ram:SpecifiedTradeSettlementMonetarySummation>
-        <ram:LineTotalAmount>${data.subtotal.toFixed(2)}</ram:LineTotalAmount>
-        <ram:TaxBasisTotalAmount>${data.subtotal.toFixed(2)}</ram:TaxBasisTotalAmount>
-        <ram:TaxTotalAmount currencyID="${data.currency || 'EUR'}">${calculatedTax.toFixed(2)}</ram:TaxTotalAmount>
-        <ram:GrandTotalAmount>${grandTotal.toFixed(2)}</ram:GrandTotalAmount>
-        <ram:DuePayableAmount>${grandTotal.toFixed(2)}</ram:DuePayableAmount>
-      </ram:SpecifiedTradeSettlementMonetarySummation>
-    </ram:ApplicableHeaderTradeSettlement>
-  </rsm:SpecifiedSupplyChainTradeTransaction>
-</rsm:CrossIndustryDocument>`;
+        <ram:LineTotalAmount>${(Math.round(grandSubtotal*100)/100).toFixed(2)}</ram:LineTotalAmount>
+        <ram:TaxBasisTotalAmount>${(Math.round(grandSubtotal*100)/100).toFixed(2)}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="${data.currency || 'EUR'}">${(Math.round(grandTaxTotal*100)/100).toFixed(2)}</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>${(Math.round(grandTotal*100)/100).toFixed(2)}</ram:GrandTotalAmount>
+        <ram:TotalPrepaidAmount>${totalPrepaid.toFixed(2)}</ram:TotalPrepaidAmount>
+        <ram:DuePayableAmount>${duePayable.toFixed(2)}</ram:DuePayableAmount>
+      </ram:SpecifiedTradeSettlementMonetarySummation>${advancePaymentsXml}
+    </ram:ApplicableHeaderTradeSettlement>${itemsXml}
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>`;
 }
 
 export function downloadZugferdXml(data: ZugferdInvoiceData, filename?: string): void {

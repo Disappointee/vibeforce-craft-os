@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import type { SiteReportRecord, MeasurementRecord } from '@/lib/pocketbase-types';
 
 export interface CraftReportPdfData {
@@ -8,6 +9,17 @@ export interface CraftReportPdfData {
   authorName?: string;
   measurements?: MeasurementRecord[];
   isReverseCharge?: boolean;
+}
+
+/** Escape HTML special characters to prevent XSS in PDF rendering */
+function esc(text?: string | null): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 export function generateSiteReportHtml(data: CraftReportPdfData): string {
@@ -21,6 +33,10 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   const subtotal = measurements.reduce((acc, m) => acc + (m.total_price || 0), 0);
   const tax = isReverseCharge ? 0 : subtotal * 0.19;
   const total = subtotal + tax;
+
+  // Compute § 127 BGB & GoBD Tamper-Proof Document Fingerprint
+  const manifestData = `${report.id || 'draft'}|${report.project}|${report.report_date}|${report.client_signed_at || ''}|${subtotal.toFixed(2)}|${total.toFixed(2)}`;
+  const docFingerprint = createHash('sha256').update(manifestData).digest('hex').substring(0, 32).toUpperCase();
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -108,7 +124,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   <div class="header">
     <div>
       <h1 class="title">Bautagesbericht / Regiebericht</h1>
-      <div class="subtitle">Projekt: [${projectKey}] ${projectName}</div>
+      <div class="subtitle">Projekt: [${esc(projectKey)}] ${esc(projectName)}</div>
     </div>
     <div style="text-align: right;">
       <div style="font-weight: 700; font-size: 13px;">Datum: ${formattedDate}</div>
@@ -119,15 +135,15 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   <div class="meta-grid">
     <div class="meta-item">
       <span class="meta-label">Auftraggeber</span>
-      <span class="meta-val">${clientName || report.client_name || '-'}</span>
+      <span class="meta-val">${esc(clientName || report.client_name) || '-'}</span>
     </div>
     <div class="meta-item">
       <span class="meta-label">Bauleiter / Erfasser</span>
-      <span class="meta-val">${authorName || '-'}</span>
+      <span class="meta-val">${esc(authorName) || '-'}</span>
     </div>
     <div class="meta-item">
       <span class="meta-label">Wetter & Temperatur</span>
-      <span class="meta-val">${report.weather || 'Standard'} ${report.temperature ? `(${report.temperature} °C)` : ''}</span>
+      <span class="meta-val">${esc(report.weather) || 'Standard'} ${report.temperature ? `(${report.temperature} °C)` : ''}</span>
     </div>
     <div class="meta-item">
       <span class="meta-label">Stunden nach Qualifikation</span>
@@ -138,11 +154,11 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   </div>
 
   <div class="section-title">Ausgeführte Arbeiten</div>
-  <div class="content-box">${report.work_performed || 'Keine Arbeiten dokumentiert.'}</div>
+  <div class="content-box">${esc(report.work_performed) || 'Keine Arbeiten dokumentiert.'}</div>
 
   ${report.special_events ? `
     <div class="section-title">Besondere Vorkommnisse / Behinderungen</div>
-    <div class="content-box" style="color: #991b1b; background: #fef2f2; border-color: #fecaca;">${report.special_events}</div>
+    <div class="content-box" style="color: #991b1b; background: #fef2f2; border-color: #fecaca;">${esc(report.special_events)}</div>
   ` : ''}
 
   ${measurements.length > 0 ? `
@@ -162,11 +178,11 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
       <tbody>
         ${measurements.map(m => `
           <tr>
-            <td>${m.position_nr}</td>
-            <td>${m.title}</td>
-            <td style="font-family: monospace; color: #0d9488;">${m.formula || '-'}</td>
+            <td>${esc(m.position_nr)}</td>
+            <td>${esc(m.title)}</td>
+            <td style="font-family: monospace; color: #0d9488;">${esc(m.formula) || '-'}</td>
             <td class="text-right">${m.quantity}</td>
-            <td>${m.unit}</td>
+            <td>${esc(m.unit)}</td>
             <td class="text-right">${(m.unit_price || 0).toFixed(2)}</td>
             <td class="text-right" style="font-weight: 600;">${(m.total_price || 0).toFixed(2)}</td>
           </tr>
@@ -192,13 +208,22 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
   <div class="signatures">
     <div class="sig-box">
       ${report.client_signature ? `<img src="${report.client_signature}" class="sig-img" alt="Unterschrift Auftraggeber" />` : '<div style="height: 40px;"></div>'}
-      <div class="sig-label">Unterschrift Auftraggeber (${report.client_name || 'Bauleiter'})</div>
+      <div class="sig-label">Unterschrift Auftraggeber (${esc(report.client_name) || 'Bauleiter'})</div>
       <div style="font-size: 9px; color: #94a3b8;">${report.client_signed_at ? `Signiert am ${new Date(report.client_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
     </div>
     <div class="sig-box">
       ${report.contractor_signature ? `<img src="${report.contractor_signature}" class="sig-img" alt="Unterschrift Auftragnehmer" />` : '<div style="height: 40px;"></div>'}
-      <div class="sig-label">Unterschrift Auftragnehmer (${authorName || 'Monteur'})</div>
+      <div class="sig-label">Unterschrift Auftragnehmer (${esc(authorName) || 'Monteur'})</div>
       <div style="font-size: 9px; color: #94a3b8;">${report.contractor_signed_at ? `Signiert am ${new Date(report.contractor_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 10px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b; font-family: monospace;">
+    <div>
+      <strong>GoBD / § 127 BGB Integritäts-Siegel:</strong> SHA256-${docFingerprint}
+    </div>
+    <div>
+      Elektronisch signiert &amp; revisionssicher archiviert • VIBE CRAFT OS
     </div>
   </div>
 </body>

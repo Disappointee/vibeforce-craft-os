@@ -43,14 +43,16 @@ export function isInsideRadius(
   }
 
   const R = 6371e3; // Earth radius in meters
-  const dLat = ((centerLat - lat) * Math.PI) / 180;
-  const dLon = ((centerLon - lon) * Math.PI) / 180;
+  const eps = 1e-9;
+  const dLat = ((centerLat - (lat + eps)) * Math.PI) / 180;
+  const dLon = ((centerLon - (lon + eps)) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat * Math.PI) / 180) *
+    Math.cos(((lat + eps) * Math.PI) / 180) *
       Math.cos((centerLat * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
   const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  if (distance <= 1.0) return true;
   return distance <= radiusMeters;
 }
 
@@ -93,17 +95,34 @@ export function isInsideGeofence(pos: GeoPosition, config: GeofenceConfig): bool
  * 3. DwellTimeTracker & Anti-Drift Engine
  * Prevents false positives caused by drive-bys (speed gate > 15 km/h ≈ 4.16 m/s)
  * and GPS jitter in cellars (requires continuous stable dwell time, default 120s).
+ * Extended with asymmetric hysteresis (T_in=120s, T_out=900s), speed-gate override (>25km/h → 60s),
+ * and dead-reckoning freeze on GPS loss.
  */
 export class DwellTimeTracker {
   private thresholdMs: number;
   private maxSpeedMps: number;
+  private highSpeedMps: number;
+  private highSpeedThresholdMs: number;
+  private exitThresholdMs: number;
+
   private isInside: boolean = false;
   private stableSince: number | null = null;
   private hasTriggered: boolean = false;
+  private exitSince: number | null = null;
+  private lastGoodTimestamp: number | null = null;
 
-  constructor(thresholdMs: number = 120_000, maxSpeedMps: number = 4.16) {
+  constructor(
+    thresholdMs: number = 120_000,
+    maxSpeedMps: number = 4.16,
+    highSpeedMps: number = 6.94,
+    highSpeedThresholdMs: number = 60_000,
+    exitThresholdMs: number = 900_000
+  ) {
     this.thresholdMs = thresholdMs;
     this.maxSpeedMps = maxSpeedMps;
+    this.highSpeedMps = highSpeedMps;
+    this.highSpeedThresholdMs = highSpeedThresholdMs;
+    this.exitThresholdMs = exitThresholdMs;
   }
 
   /**
@@ -119,17 +138,27 @@ export class DwellTimeTracker {
     config: GeofenceConfig,
     now: number = Date.now()
   ): 'entered' | 'exited' | 'dwelling' | null {
-    // Speed-Gate: Ignore fast movements (e.g. driving past at > 15 km/h)
-    if (pos.speed !== undefined && pos.speed !== null && pos.speed > this.maxSpeedMps) {
+    const gpsLoss =
+      (pos.accuracy !== undefined && pos.accuracy > 50) ||
+      (pos.speed === null || pos.speed === undefined) ||
+      (this.lastGoodTimestamp !== null &&
+        pos.timestamp !== undefined &&
+        Math.abs(pos.timestamp - this.lastGoodTimestamp) > 30_000);
+
+    if (gpsLoss) {
+      return null;
+    }
+
+    this.lastGoodTimestamp = pos.timestamp ?? now;
+
+    let effectiveThreshold = this.thresholdMs;
+    if (pos.speed !== undefined && pos.speed !== null && pos.speed > this.highSpeedMps) {
+      effectiveThreshold = this.highSpeedThresholdMs;
+    } else if (pos.speed !== undefined && pos.speed !== null && pos.speed > this.maxSpeedMps) {
       if (this.isInside) {
         this.reset();
         return 'exited';
       }
-      return null;
-    }
-
-    // Accuracy filter: Ignore fixes with > 50m uncertainty
-    if (pos.accuracy !== undefined && pos.accuracy > 50) {
       return null;
     }
 
@@ -139,17 +168,25 @@ export class DwellTimeTracker {
       this.isInside = true;
       this.stableSince = now;
       this.hasTriggered = false;
+      this.exitSince = null;
       return 'dwelling';
     }
 
     if (!insideNow && this.isInside) {
-      this.reset();
-      return 'exited';
+      if (this.exitSince === null) {
+        this.exitSince = now;
+      }
+      const exitElapsed = now - this.exitSince;
+      if (exitElapsed >= this.exitThresholdMs) {
+        this.reset();
+        return 'exited';
+      }
+      return 'dwelling';
     }
 
     if (insideNow && this.isInside && !this.hasTriggered) {
       const elapsed = now - (this.stableSince ?? now);
-      if (elapsed >= this.thresholdMs) {
+      if (elapsed >= effectiveThreshold) {
         this.hasTriggered = true;
         return 'entered';
       }
@@ -163,6 +200,8 @@ export class DwellTimeTracker {
     this.isInside = false;
     this.stableSince = null;
     this.hasTriggered = false;
+    this.exitSince = null;
+    this.lastGoodTimestamp = null;
   }
 
   public getStatus(): { isInside: boolean; stableSince: number | null; hasTriggered: boolean } {

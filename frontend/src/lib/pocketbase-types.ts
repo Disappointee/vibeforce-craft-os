@@ -367,6 +367,11 @@ export interface SiteReportRecord extends BaseRecord {
     client_signed_at?: string;
     contractor_signature?: string;
     contractor_signed_at?: string;
+    signature_manifest?: string;
+    signature_strokes?: number[][][];
+    gps_lat?: number;
+    gps_lon?: number;
+    gps_accuracy?: number;
     expand?: {
         project?: ProjectRecord;
         author?: UserRecord;
@@ -415,6 +420,7 @@ export interface InvoiceZugferdRecord extends BaseRecord {
     tax_rate: number;
     tax_total: number;
     gross_total: number;
+    prepaid_amount?: number;
     zugferd_xml: string;
     pdf_file?: string;
     datev_exported?: boolean;
@@ -424,5 +430,4 @@ export interface InvoiceZugferdRecord extends BaseRecord {
         project?: ProjectRecord;
     };
 }
-
 

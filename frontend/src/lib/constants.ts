@@ -46,6 +46,20 @@ export type ViewMode = (typeof VIEW_MODES)[number];
 export const NOTIFICATION_TYPES = ['task_assigned', 'task_completed', 'comment_added', 'deadline_reminder', 'mention'] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+// ── VIBE Craft (M007) Enums ──
+
+export const QUALIFICATION_LEVELS = ['meister', 'geselle', 'helfer', 'azubi'] as const;
+export type QualificationLevel = (typeof QUALIFICATION_LEVELS)[number];
+
+export const MEASUREMENT_UNITS = ['m', 'm2', 'm3', 'h', 'stk', 'kg', 'psch'] as const;
+export type MeasurementUnit = (typeof MEASUREMENT_UNITS)[number];
+
+export const SITE_REPORT_STATUSES = ['draft', 'signed', 'invoiced'] as const;
+export type SiteReportStatus = (typeof SITE_REPORT_STATUSES)[number];
+
+export const GEOFENCE_TYPES = ['none', 'circle', 'polygon'] as const;
+export type GeofenceType = (typeof GEOFENCE_TYPES)[number];
+
 // ── Label-Maps (nutzen i18n-Keys aus i18n.ts) ──
 
 import { t } from './i18n';
@@ -85,6 +99,37 @@ export const USER_ROLE_LABEL_MAP: Record<UserRole, TranslationKey> = {
   client: 'role.client',
 };
 
+// ── VIBE Craft (M007) Label-Maps ──
+
+export const QUALIFICATION_LEVEL_LABEL_MAP: Record<QualificationLevel, TranslationKey> = {
+  meister: 'craft.site_report.hours_meister',
+  geselle: 'craft.site_report.hours_geselle',
+  helfer: 'craft.site_report.hours_helfer',
+  azubi: 'craft.site_report.hours_azubi',
+};
+
+export const MEASUREMENT_UNIT_LABEL_MAP: Record<MeasurementUnit, TranslationKey> = {
+  m: 'craft.measurement.unit_m',
+  m2: 'craft.measurement.unit_m2',
+  m3: 'craft.measurement.unit_m3',
+  h: 'craft.measurement.unit_h',
+  stk: 'craft.measurement.unit_stk',
+  kg: 'craft.measurement.unit_kg',
+  psch: 'craft.measurement.unit_psch',
+};
+
+export const SITE_REPORT_STATUS_LABEL_MAP: Record<SiteReportStatus, TranslationKey> = {
+  draft: 'craft.site_report.status_draft',
+  signed: 'craft.site_report.status_signed',
+  invoiced: 'craft.site_report.status_invoiced',
+};
+
+export const GEOFENCE_TYPE_LABEL_MAP: Record<GeofenceType, TranslationKey> = {
+  none: 'craft.geofence.type_none',
+  circle: 'craft.geofence.type_circle',
+  polygon: 'craft.geofence.type_polygon',
+};
+
 // ── Hilfsfunktion: Wert → Deutsches Label ──
 export function labelFor<T extends string>(map: Record<T, TranslationKey>, value: T): string {
   return t(map[value]);
@@ -97,6 +142,10 @@ export const ALL_LABEL_MAPS = {
   projectBudgetType: PROJECT_BUDGET_TYPE_LABEL_MAP,
   clientStatus: CLIENT_STATUS_LABEL_MAP,
   userRole: USER_ROLE_LABEL_MAP,
+  qualificationLevel: QUALIFICATION_LEVEL_LABEL_MAP,
+  measurementUnit: MEASUREMENT_UNIT_LABEL_MAP,
+  siteReportStatus: SITE_REPORT_STATUS_LABEL_MAP,
+  geofenceType: GEOFENCE_TYPE_LABEL_MAP,
 } as const;
 
 export const PRIORITY_LABELS: Record<string, string> = {
@@ -117,47 +166,3 @@ export const TASK_TYPE_LABELS: Record<string, string> = {
   consulting: 'Beratung',
   other: 'Sonstiges',
 };
-
-// ── VIBE Craft (M007) Konstanten ──
-
-export const GEOFENCE_TYPES = ['none', 'circle', 'polygon'] as const;
-export type GeofenceType = (typeof GEOFENCE_TYPES)[number];
-
-export const GEOFENCE_TYPE_LABEL_MAP: Record<GeofenceType, TranslationKey> = {
-  none: 'craft.geofence.type_none',
-  circle: 'craft.geofence.type_circle',
-  polygon: 'craft.geofence.type_polygon',
-};
-
-export const SITE_REPORT_STATUSES = ['draft', 'signed', 'invoiced'] as const;
-export type SiteReportStatus = (typeof SITE_REPORT_STATUSES)[number];
-
-export const SITE_REPORT_STATUS_LABEL_MAP: Record<SiteReportStatus, TranslationKey> = {
-  draft: 'craft.site_report.status_draft',
-  signed: 'craft.site_report.status_signed',
-  invoiced: 'craft.site_report.status_invoiced',
-};
-
-export const MEASUREMENT_UNITS = ['m', 'm2', 'm3', 'h', 'stk', 'kg', 'psch'] as const;
-export type MeasurementUnit = (typeof MEASUREMENT_UNITS)[number];
-
-export const MEASUREMENT_UNIT_LABEL_MAP: Record<MeasurementUnit, TranslationKey> = {
-  m: 'craft.measurement.unit_m',
-  m2: 'craft.measurement.unit_m2',
-  m3: 'craft.measurement.unit_m3',
-  h: 'craft.measurement.unit_h',
-  stk: 'craft.measurement.unit_stk',
-  kg: 'craft.measurement.unit_kg',
-  psch: 'craft.measurement.unit_psch',
-};
-
-export const QUALIFICATION_LEVELS = ['meister', 'geselle', 'helfer', 'azubi'] as const;
-export type QualificationLevel = (typeof QUALIFICATION_LEVELS)[number];
-
-export const QUALIFICATION_LEVEL_LABEL_MAP: Record<QualificationLevel, TranslationKey> = {
-  meister: 'craft.site_report.hours_meister',
-  geselle: 'craft.site_report.hours_geselle',
-  helfer: 'craft.site_report.hours_helfer',
-  azubi: 'craft.site_report.hours_azubi',
-};
-

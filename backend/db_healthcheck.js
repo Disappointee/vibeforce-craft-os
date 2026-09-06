@@ -62,6 +62,19 @@ async function runHealthcheck() {
       
       if (checkResult === 'ok') {
         console.log(`[HEALTHCHECK] ✅ SQLite Database is healthy (PRAGMA quick_check = ok).`);
+
+        // 3. Apply High-Concurrency PRAGMAs
+        try {
+          console.log(`[HEALTHCHECK] Applying SQLite Concurrency & WAL PRAGMAs...`);
+          execSync(
+            `sqlite3 "${DB_FILE}" "PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 10000; PRAGMA synchronous = NORMAL; PRAGMA cache_size = -64000; PRAGMA temp_store = MEMORY; PRAGMA wal_autocheckpoint = 1000;"`,
+            { stdio: 'inherit' }
+          );
+          console.log(`[HEALTHCHECK] ✅ Concurrency PRAGMAs applied (WAL, busy_timeout=10000, synchronous=NORMAL, cache=64MB).`);
+        } catch (pragmaErr) {
+          console.warn(`[HEALTHCHECK] ⚠️ Warning: Failed to tune PRAGMAs:`, pragmaErr.message);
+        }
+
         process.exit(0);
       } else {
         console.error(`[HEALTHCHECK] ❌ Corruption detected: ${checkResult}`);

@@ -159,6 +159,31 @@ migrate((app) => {
                         "name": "contractor_signed_at",
                         "type": "text",
                         "required": false
+                    },
+                    {
+                        "name": "signature_manifest",
+                        "type": "text",
+                        "required": false
+                    },
+                    {
+                        "name": "signature_strokes",
+                        "type": "json",
+                        "required": false
+                    },
+                    {
+                        "name": "gps_lat",
+                        "type": "number",
+                        "required": false
+                    },
+                    {
+                        "name": "gps_lon",
+                        "type": "number",
+                        "required": false
+                    },
+                    {
+                        "name": "gps_accuracy",
+                        "type": "number",
+                        "required": false
                     }
                 ],
                 "indexes": [
@@ -405,6 +430,11 @@ migrate((app) => {
                     },
                     {
                         "name": "gross_total",
+                        "type": "number",
+                        "required": false
+                    },
+                    {
+                        "name": "prepaid_amount",
                         "type": "number",
                         "required": false
                     },

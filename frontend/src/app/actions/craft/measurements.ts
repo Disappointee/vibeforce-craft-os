@@ -14,13 +14,14 @@ const CreateMeasurementSchema = z.object({
   unit: z.enum(['m', 'm2', 'm3', 'h', 'stk', 'kg', 'psch']).default('m2'),
   unit_price: z.number().min(0).optional().default(0),
   total_price: z.number().min(0).optional().default(0),
+  tax_rate_type: z.enum(['standard_19', 'reverse_charge_13b', 'reduced_7', 'zero_0']).optional().default('reverse_charge_13b'),
   notes: z.string().optional(),
 });
 
 const UpdateMeasurementSchema = CreateMeasurementSchema.partial();
 
-export type CreateMeasurementInput = z.infer<typeof CreateMeasurementSchema>;
-export type UpdateMeasurementInput = z.infer<typeof UpdateMeasurementSchema>;
+export type CreateMeasurementInput = z.input<typeof CreateMeasurementSchema>;
+export type UpdateMeasurementInput = z.input<typeof UpdateMeasurementSchema>;
 
 export async function createMeasurementAction(data: CreateMeasurementInput) {
   const user = await verifyUserSession();
@@ -32,6 +33,12 @@ export async function createMeasurementAction(data: CreateMeasurementInput) {
   const calculatedTotal = Math.round(qty * price * 100) / 100;
 
   return withAdminPB(async (pb) => {
+    // GoBD Protection: Parent site_report must not be signed or invoiced
+    const parentReport = await pb.collection('site_reports').getOne(validated.site_report);
+    if (parentReport.status === 'signed' || parentReport.status === 'invoiced') {
+      throw new Error('Mutation von Aufmaßzeilen auf signierten oder abgerechneten Bautagesberichten ist unzulässig (GoBD-Sperre).');
+    }
+
     const record = await pb.collection('measurements').create({
       ...validated,
       total_price: calculatedTotal,
@@ -49,9 +56,17 @@ export async function updateMeasurementAction(measurementId: string, data: Updat
   const validated = UpdateMeasurementSchema.parse(data);
 
   return withAdminPB(async (pb) => {
+    const existing = await pb.collection('measurements').getOne(measurementId);
+    // GoBD Protection: Parent site_report must not be signed or invoiced
+    if (existing.site_report) {
+      const parentReport = await pb.collection('site_reports').getOne(existing.site_report);
+      if (parentReport.status === 'signed' || parentReport.status === 'invoiced') {
+        throw new Error('Mutation von Aufmaßzeilen auf signierten oder abgerechneten Bautagesberichten ist unzulässig (GoBD-Sperre).');
+      }
+    }
+
     let updateData = { ...validated };
     if (validated.quantity !== undefined || validated.unit_price !== undefined) {
-      const existing = await pb.collection('measurements').getOne(measurementId);
       const qty = validated.quantity ?? existing.quantity ?? 0;
       const price = validated.unit_price ?? existing.unit_price ?? 0;
       updateData.total_price = Math.round(qty * price * 100) / 100;
@@ -68,6 +83,14 @@ export async function deleteMeasurementAction(measurementId: string) {
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   return withAdminPB(async (pb) => {
+    const existing = await pb.collection('measurements').getOne(measurementId);
+    if (existing.site_report) {
+      const parentReport = await pb.collection('site_reports').getOne(existing.site_report);
+      if (parentReport.status === 'signed' || parentReport.status === 'invoiced') {
+        throw new Error('Löschen von Aufmaßzeilen auf signierten oder abgerechneten Bautagesberichten ist unzulässig (GoBD-Sperre).');
+      }
+    }
+
     await pb.collection('measurements').delete(measurementId);
     return { success: true };
   });

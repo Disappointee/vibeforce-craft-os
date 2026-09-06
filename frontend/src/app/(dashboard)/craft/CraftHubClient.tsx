@@ -136,29 +136,63 @@ export function CraftHubClient({
     });
   }, [reports, reportFilterStatus, reportSearch]);
 
-  // Measurement Totals
+  // Measurement Totals with per-item tax breakdown
+  const isSelectedProject13b = Boolean((selectedProject as any)?.reverse_charge_13b);
+  const defaultTaxType = isSelectedProject13b ? 'reverse_charge_13b' : 'standard_19';
   const measurementNetTotal = useMemo(
     () => measurementItems.reduce((sum, item) => sum + (item.total_price || 0), 0),
     [measurementItems]
   );
-  const isSelectedProject13b = Boolean((selectedProject as any)?.reverse_charge_13b);
-  const measurementVatTotal = isSelectedProject13b ? 0 : measurementNetTotal * 0.19;
-  const measurementGrossTotal = measurementNetTotal + measurementVatTotal;
+  const net19Total = useMemo(
+    () => measurementItems.filter(i => (i.tax_rate_type || defaultTaxType) === 'standard_19').reduce((sum, item) => sum + (item.total_price || 0), 0),
+    [measurementItems, defaultTaxType]
+  );
+  const net13bTotal = useMemo(
+    () => measurementItems.filter(i => (i.tax_rate_type || defaultTaxType) === 'reverse_charge_13b').reduce((sum, item) => sum + (item.total_price || 0), 0),
+    [measurementItems, defaultTaxType]
+  );
+  const measurementVatTotal = useMemo(() => Math.round(net19Total * 0.19 * 100) / 100, [net19Total]);
+  const measurementGrossTotal = useMemo(() => Math.round((measurementNetTotal + measurementVatTotal) * 100) / 100, [measurementNetTotal, measurementVatTotal]);
 
-  // Handlers for Exports
+  // Handlers for Exports with Mixed § 13b / 19% Tax Split Support
   const handleDownloadDatevCsv = () => {
-    const bookingItems: DatevBookingItem[] = [
-      {
+    const bookingItems: DatevBookingItem[] = [];
+    const invNum = 'RE-2026-0042';
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const costCenter = selectedProject?.key || 'CRAFT-01';
+
+    // Split booking: Line 1 for § 13b (Konto 8337 / SKR03)
+    if (net13bTotal > 0 || (net13bTotal === 0 && net19Total === 0)) {
+      bookingItems.push({
         bookingId: 'BK-001',
-        date: new Date().toISOString().slice(0, 10),
-        amount: measurementGrossTotal > 0 ? measurementGrossTotal : 14535.96,
-        invoiceNumber: 'RE-2026-0042',
-        accountNumber: isSelectedProject13b ? '8337' : '8400',
+        date: dateStr,
+        amount: net13bTotal > 0 ? net13bTotal : measurementGrossTotal,
+        invoiceNumber: invNum,
+        accountNumber: '8337',
         contraAccount: '10000',
-        costCenter: selectedProject?.key || 'CRAFT-01',
-        bookingText: `Abschlagsrechnung VOB ${selectedProject?.name || 'Baustelle'}`,
-      },
-    ];
+        costCenter,
+        bookingText: `VOB § 13b ${selectedProject?.name || 'Baustelle'}`,
+        isReverseCharge: true,
+        buKey: '68',
+      });
+    }
+
+    // Split booking: Line 2 for 19% Material / Leistung (Konto 8400 / SKR03)
+    if (net19Total > 0) {
+      const gross19 = Math.round((net19Total + measurementVatTotal) * 100) / 100;
+      bookingItems.push({
+        bookingId: 'BK-002',
+        date: dateStr,
+        amount: gross19,
+        invoiceNumber: invNum,
+        accountNumber: '8400',
+        contraAccount: '10000',
+        costCenter,
+        bookingText: `19% Material ${selectedProject?.name || 'Baustelle'}`,
+        taxRate: 0.19,
+        isReverseCharge: false,
+      });
+    }
 
     const csvContent = generateDatevCsv(bookingItems, {
       beraterNummer: 10001,
@@ -196,18 +230,21 @@ export function CraftHubClient({
       buyerCity: 'Berlin',
       buyerCountry: 'DE',
       buyerVatId: isSelectedProject13b ? 'DE888888888' : undefined,
-      lineItems: measurementItems.map((item) => ({
-        name: item.title,
-        quantity: item.quantity,
-        unitCode: item.unit === 'm2' ? 'MTK' : item.unit === 'm3' ? 'MTQ' : item.unit === 'h' ? 'HUR' : 'C62',
-        netAmount: item.total_price,
-        taxPercent: isSelectedProject13b ? 0 : 0.19,
-      })),
+      lineItems: measurementItems.map((item) => {
+        const isItem19 = (item.tax_rate_type || defaultTaxType) === 'standard_19';
+        return {
+          name: item.title,
+          quantity: item.quantity,
+          unitCode: item.unit === 'm2' ? 'MTK' : item.unit === 'm3' ? 'MTQ' : item.unit === 'h' ? 'HUR' : 'C62',
+          netAmount: item.unit_price,
+          taxPercent: isItem19 ? 0.19 : 0.00,
+        };
+      }),
       subtotal: measurementNetTotal,
       taxRate: isSelectedProject13b ? 0 : 0.19,
       taxAmount: measurementVatTotal,
       total: measurementGrossTotal,
-      isReverseCharge: isSelectedProject13b,
+      isReverseCharge: isSelectedProject13b && net19Total === 0,
       paymentTerms: 'Zahlbar innerhalb von 14 Tagen nach VOB/B § 16 Abs. 1',
     };
 
@@ -287,9 +324,7 @@ export function CraftHubClient({
           <div>
             <div className="text-xs text-muted-foreground">E-Rechnungen</div>
             <div className="text-xl font-bold text-foreground mt-0.5">
-              {totalInvoicedGross > 0
-                ? totalInvoicedGross.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
-                : '14.535,96 €'}
+              {totalInvoicedGross.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
             </div>
             <div className="text-[11px] text-muted-foreground">ZUGFeRD 2.1.1 & § 13b</div>
           </div>
@@ -609,7 +644,11 @@ export function CraftHubClient({
 
                 <div className="text-right">
                   <span className="text-xs text-muted-foreground">
-                    {isSelectedProject13b ? 'USt. (§ 13b Reverse Charge 0%):' : 'USt. (19%):'}
+                    {net19Total > 0 && net13bTotal > 0
+                      ? `USt. (Split: 19% + 0% § 13b):`
+                      : isSelectedProject13b
+                      ? 'USt. (§ 13b Reverse Charge 0%):'
+                      : 'USt. (19%):'}
                   </span>
                   <div className="text-lg font-bold text-foreground">
                     {measurementVatTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
@@ -840,9 +879,7 @@ export function CraftHubClient({
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="text-base font-black text-foreground">
-                        {measurementGrossTotal > 0
-                          ? measurementGrossTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
-                          : '14.535,96 €'}
+                        {measurementGrossTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                       </div>
                       <span className="text-[10px] text-emerald-500 font-semibold">SKR03 Kto. 8337</span>
                     </div>
