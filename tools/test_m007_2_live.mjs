@@ -15,15 +15,12 @@ async function verifyGrillMeLive() {
 
   console.log('1. Logging in with craftsman account (Daniel)...');
   await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('input[type="email"]');
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
   await page.fill('input[type="password"]', '***REMOVED***');
   await page.click('button[type="submit"]');
   
-  try {
-    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 8000 });
-  } catch {
-    await page.waitForTimeout(4000);
-  }
+  await page.waitForTimeout(5000);
 
   console.log('2. Navigating to /craft...');
   await page.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
@@ -32,7 +29,7 @@ async function verifyGrillMeLive() {
 
   // Check if GAEB tab exists
   console.log('3. Testing GAEB Tab...');
-  const screenshotDir = 'C:/Users/kasan/.gemini/antigravity/brain/e7644d7d-42f4-4717-8f31-4bde1dcf3a6b';
+  const screenshotDir = 'C:/Users/kasan/.gemini/antigravity/brain/9d4131b7-dd18-4294-9dc0-ab4a9932ffe9';
   const gaebTab = await page.$('#craft-tab-gaeb-btn');
   if (!gaebTab) {
     await page.screenshot({ path: `${screenshotDir}/diagnostic_live_fail.png` });
@@ -71,12 +68,31 @@ async function verifyGrillMeLive() {
 
   // Check if Wholesale & DATANORM tab exists
   console.log('6. Testing Großhandel & DATANORM / IDS-Connect Tab...');
-  const wholesaleTab = await page.$('#craft-tab-wholesale-btn');
-  if (wholesaleTab) {
-    await wholesaleTab.click();
-    await page.waitForTimeout(1500);
-    await page.screenshot({ path: `${screenshotDir}/live_audit_wholesale_datanorm.png` });
-    console.log('Saved Wholesale screenshot: live_audit_wholesale_datanorm.png');
+  const wholesaleTab = await page.waitForSelector('#craft-tab-wholesale-btn', { timeout: 35000 });
+  if (!wholesaleTab) {
+    throw new Error('GRILL ME FAIL: #craft-tab-wholesale-btn not found on live page!');
+  }
+  await wholesaleTab.click();
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${screenshotDir}/live_audit_wholesale_datanorm.png` });
+  console.log('Saved Wholesale screenshot: live_audit_wholesale_datanorm.png');
+
+  // Test Punchout subtab and simulator
+  const idsTabBtn = await page.$('button:has-text("IDS-Connect Punchout")');
+  if (idsTabBtn) {
+    await idsTabBtn.click();
+    await page.waitForTimeout(1000);
+
+    const punchoutBtn = await page.$('button:has-text("Großhandels-Shop öffnen")');
+    if (punchoutBtn) {
+      await punchoutBtn.click();
+      await page.waitForTimeout(1000);
+      await page.screenshot({ path: `${screenshotDir}/live_audit_wholesale_punchout_modal.png` });
+      console.log('Saved Wholesale Punchout Modal screenshot: live_audit_wholesale_punchout_modal.png');
+      const closeBtn = await page.$('button:has-text("Abbrechen")');
+      if (closeBtn) await closeBtn.click();
+      await page.waitForTimeout(500);
+    }
   }
 
   await browser.close();
