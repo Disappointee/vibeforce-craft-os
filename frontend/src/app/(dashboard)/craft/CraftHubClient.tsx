@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/MeasurementGrid';
 import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModal';
+import { GaebManager } from '@/components/craft/GaebManager';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
@@ -52,7 +53,7 @@ interface CraftHubClientProps {
   initialInvoices: any[];
 }
 
-type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices';
+type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb';
 
 export function CraftHubClient({
   initialProjects = [],
@@ -394,6 +395,26 @@ export function CraftHubClient({
           >
             <Receipt size={15} />
             <span>Rechnungen & DATEV</span>
+          </button>
+
+          <button
+            id="craft-tab-gaeb-btn"
+            onClick={() => setActiveTab('gaeb')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'gaeb'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileCode size={15} />
+            <span>GAEB / LV (X83/X84)</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === 'gaeb' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              XML
+            </span>
           </button>
         </div>
       </div>
@@ -909,6 +930,23 @@ export function CraftHubClient({
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* TAB 5: GAEB / LV (X83 IMPORT & X84 ANGEBOTSABGABE) */}
+      {activeTab === 'gaeb' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          <GaebManager
+            projectName={selectedProject?.name}
+            onTransferToAufmass={(newItems) => {
+              setMeasurementItems((prev) => {
+                const existingNrs = new Set(prev.map((p) => p.position_nr));
+                const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
+                return [...prev, ...toAdd];
+              });
+              setActiveTab('measurements');
+            }}
+          />
         </div>
       )}
 
