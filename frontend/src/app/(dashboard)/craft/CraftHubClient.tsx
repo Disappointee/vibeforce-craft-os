@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   AlertCircle,
   FileCode,
+  TrendingUp,
   ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,10 +29,11 @@ import { Input } from '@/components/ui/input';
 import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/MeasurementGrid';
 import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModal';
 import { GaebManager } from '@/components/craft/GaebManager';
+import { CostCockpit } from '@/components/craft/CostCockpit';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
-import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
 // Dynamic import for Leaflet map to prevent SSR window errors
 const GeofenceMapEditor = dynamic(
@@ -51,20 +53,23 @@ interface CraftHubClientProps {
   initialProjects: ProjectRecord[];
   initialReports: SiteReportRecord[];
   initialInvoices: any[];
+  initialTimeEntries?: TimeEntryRecord[];
 }
 
-type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb';
+type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb' | 'margin';
 
 export function CraftHubClient({
   initialProjects = [],
   initialReports = [],
   initialInvoices = [],
+  initialTimeEntries = [],
 }: CraftHubClientProps) {
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<CraftTab>('reports');
   const [projects] = useState<ProjectRecord[]>(initialProjects);
   const [reports, setReports] = useState<SiteReportRecord[]>(initialReports);
   const [invoices] = useState<any[]>(initialInvoices);
+  const [timeEntries] = useState<TimeEntryRecord[]>(initialTimeEntries);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Selected project for scoped tabs
@@ -414,6 +419,26 @@ export function CraftHubClient({
               }`}
             >
               XML
+            </span>
+          </button>
+
+          <button
+            id="craft-tab-margin-btn"
+            onClick={() => setActiveTab('margin')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'margin'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <TrendingUp size={15} />
+            <span>Nachkalkulation & Margen</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === 'margin' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              DB II
             </span>
           </button>
         </div>
@@ -946,6 +971,22 @@ export function CraftHubClient({
               });
               setActiveTab('measurements');
             }}
+          />
+        </div>
+      )}
+
+      {/* TAB 6: SOLL/IST-NACHKALKULATION & MARGEN-COCKPIT */}
+      {activeTab === 'margin' && selectedProject && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          <CostCockpit
+            project={selectedProject}
+            timeEntries={timeEntries.filter((te: any) => {
+              const pId = te.expand?.task?.project || (te as any).project;
+              return !pId || pId === selectedProject.id;
+            })}
+            siteReports={reports.filter((r) => r.project === selectedProject.id)}
+            invoices={invoices.filter((inv) => inv.project === selectedProject.id)}
+            plannedBoqNetTotal={selectedProject.budget_money}
           />
         </div>
       )}

@@ -1,6 +1,6 @@
 import { getAdminPB } from '@/lib/pocketbase-server';
 import { CraftHubClient } from './CraftHubClient';
-import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +8,7 @@ export default async function CraftPage() {
   let projects: ProjectRecord[] = [];
   let reports: SiteReportRecord[] = [];
   let invoices: any[] = [];
+  let timeEntries: TimeEntryRecord[] = [];
 
   try {
     const pb = await getAdminPB();
@@ -40,6 +41,17 @@ export default async function CraftPage() {
     } catch {
       invoices = [];
     }
+
+    // Fetch time entries
+    try {
+      const timeRes = await pb.collection('time_entries').getList(1, 100, {
+        sort: '-start_time',
+        expand: 'task,user',
+      });
+      timeEntries = timeRes.items as unknown as TimeEntryRecord[];
+    } catch {
+      timeEntries = [];
+    }
   } catch (error) {
     console.warn('[CraftPage] Failed to fetch craft data:', error);
   }
@@ -49,6 +61,7 @@ export default async function CraftPage() {
       initialProjects={projects}
       initialReports={reports}
       initialInvoices={invoices}
+      initialTimeEntries={timeEntries}
     />
   );
 }
