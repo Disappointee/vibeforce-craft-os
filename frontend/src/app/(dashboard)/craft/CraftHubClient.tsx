@@ -22,6 +22,9 @@ import {
   TrendingUp,
   ShoppingBag,
   ChevronRight,
+  Lock,
+  Sliders,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +35,9 @@ import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModa
 import { GaebManager } from '@/components/craft/GaebManager';
 import { CostCockpit } from '@/components/craft/CostCockpit';
 import { WholesaleManager } from '@/components/craft/WholesaleManager';
+import { CraftFeatureUpsell } from '@/components/craft/CraftFeatureUpsell';
+import { CraftEntitlementsModal } from '@/components/craft/CraftEntitlementsModal';
+import { useCraftEntitlementsStore } from '@/lib/craft-entitlements';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
@@ -73,6 +79,8 @@ export function CraftHubClient({
   const [invoices] = useState<any[]>(initialInvoices);
   const [timeEntries] = useState<TimeEntryRecord[]>(initialTimeEntries);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState<boolean>(false);
+  const { isFeatureEnabled, activeTier } = useCraftEntitlementsStore();
 
   // Selected project for scoped tabs
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -82,6 +90,14 @@ export function CraftHubClient({
     () => projects.find((p) => p.id === selectedProjectId) || projects[0],
     [projects, selectedProjectId]
   );
+
+  const isReportsEnabled = isFeatureEnabled('reports', selectedProject?.id);
+  const isMeasurementsEnabled = isFeatureEnabled('measurements', selectedProject?.id);
+  const isGeofenceEnabled = isFeatureEnabled('geofence', selectedProject?.id);
+  const isInvoicesEnabled = isFeatureEnabled('invoices', selectedProject?.id);
+  const isGaebEnabled = isFeatureEnabled('gaeb', selectedProject?.id);
+  const isMarginEnabled = isFeatureEnabled('margin', selectedProject?.id);
+  const isWholesaleEnabled = isFeatureEnabled('wholesale', selectedProject?.id);
 
   // Fallback sample project for demo & onboarding
   const sampleProject: ProjectRecord = useMemo(
@@ -370,6 +386,18 @@ export function CraftHubClient({
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <Button
+              id="craft-license-btn"
+              variant="outline"
+              onClick={() => setIsLicenseModalOpen(true)}
+              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3.5 flex items-center gap-1.5"
+            >
+              <Sliders size={14} className="text-amber-500" />
+              <span>Module &amp; Lizenzen</span>
+              <Badge variant="secondary" className="text-[10px] font-mono uppercase py-0 ml-1">
+                {activeTier}
+              </Badge>
+            </Button>
+            <Button
               id="craft-create-report-btn"
               onClick={() => setIsCreateModalOpen(true)}
               className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm"
@@ -433,13 +461,19 @@ export function CraftHubClient({
           >
             <FileText size={15} />
             <span>Bautagesberichte</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'reports' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {reports.length}
-            </span>
+            {!isReportsEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'reports' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {reports.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -452,6 +486,11 @@ export function CraftHubClient({
           >
             <FileSpreadsheet size={15} />
             <span>VOB-Aufmaß</span>
+            {!isMeasurementsEnabled && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            )}
           </button>
 
           <button
@@ -464,13 +503,19 @@ export function CraftHubClient({
           >
             <MapPin size={15} />
             <span>GPS-Geofencing</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'geofence' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {geofencedProjectsCount}
-            </span>
+            {!isGeofenceEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'geofence' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {geofencedProjectsCount}
+              </span>
+            )}
           </button>
 
           <button
@@ -483,6 +528,11 @@ export function CraftHubClient({
           >
             <Receipt size={15} />
             <span>Rechnungen & DATEV</span>
+            {!isInvoicesEnabled && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            )}
           </button>
 
           <button
@@ -496,13 +546,19 @@ export function CraftHubClient({
           >
             <FileCode size={15} />
             <span>GAEB / LV (X83/X84)</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'gaeb' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              XML
-            </span>
+            {!isGaebEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'gaeb' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                XML
+              </span>
+            )}
           </button>
 
           <button
@@ -516,13 +572,19 @@ export function CraftHubClient({
           >
             <TrendingUp size={15} />
             <span>Nachkalkulation & Margen</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'margin' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              DB II
-            </span>
+            {!isMarginEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'margin' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                DB II
+              </span>
+            )}
           </button>
 
           <button
@@ -536,13 +598,19 @@ export function CraftHubClient({
           >
             <ShoppingBag size={15} />
             <span>Großhandel & DATANORM</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'wholesale' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              IDS 2.5
-            </span>
+            {!isWholesaleEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'wholesale' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                IDS 2.5
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -550,12 +618,20 @@ export function CraftHubClient({
       {/* TAB 1: BAUTAGESBERICHTE & REGIEBERICHTE */}
       {activeTab === 'reports' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          {/* VOB/B § 6 Legal Compliance Callout */}
-          <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2.5 text-foreground font-medium">
-              <span className="p-1 rounded-lg bg-amber-500/15 text-amber-500">
-                <AlertCircle size={15} />
-              </span>
+          {!isReportsEnabled ? (
+            <CraftFeatureUpsell
+              featureId="reports"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <>
+              {/* VOB/B § 6 Legal Compliance Callout */}
+              <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-2.5 text-foreground font-medium">
+                  <span className="p-1 rounded-lg bg-amber-500/15 text-amber-500">
+                    <AlertCircle size={15} />
+                  </span>
               <span>
                 <strong>VOB/B § 6 Kausalitäts-Dokumentation:</strong> Witterungsbedingte Behinderungen werden mit Temperatur, Wetterlage und direktem Bezug zur Gewerke-Ausführung rechtssicher protokolliert.
               </span>
@@ -692,16 +768,26 @@ export function CraftHubClient({
               </Card>
             )}
           </div>
+          </>
+          )}
         </div>
       )}
 
       {/* TAB 2: VOB TEIL C AUFMAẞ-CENTER */}
       {activeTab === 'measurements' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* DIN 18299 § 4 Übermessungsregel Callout */}
-          <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2.5 text-foreground font-medium">
-              <span className="p-1 rounded-lg bg-indigo-500/15 text-indigo-500">
+          {!isMeasurementsEnabled ? (
+            <CraftFeatureUpsell
+              featureId="measurements"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <>
+              {/* DIN 18299 § 4 Übermessungsregel Callout */}
+              <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-2.5 text-foreground font-medium">
+                  <span className="p-1 rounded-lg bg-indigo-500/15 text-indigo-500">
                 <CheckCircle2 size={15} />
               </span>
               <span>
@@ -813,16 +899,26 @@ export function CraftHubClient({
               </div>
             </CardContent>
           </Card>
+          </>
+          )}
         </div>
       )}
 
       {/* TAB 3: BAUSTELLEN-RADAR & GEOFENCING */}
       {activeTab === 'geofence' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* DSGVO / BetrVG § 87 Compliance Callout */}
-          <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2.5 text-foreground font-medium">
-              <span className="p-1 rounded-lg bg-emerald-500/15 text-emerald-500">
+          {!isGeofenceEnabled ? (
+            <CraftFeatureUpsell
+              featureId="geofence"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <>
+              {/* DSGVO / BetrVG § 87 Compliance Callout */}
+              <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-2.5 text-foreground font-medium">
+                  <span className="p-1 rounded-lg bg-emerald-500/15 text-emerald-500">
                 <CheckCircle2 size={15} />
               </span>
               <span>
@@ -956,16 +1052,26 @@ export function CraftHubClient({
               </Card>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 
       {/* TAB 4: ZUGFERD & DATEV RECHNUNGEN */}
       {activeTab === 'invoices' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* EN 16931 CIUS Prüfpfad Callout */}
-          <div className="p-3.5 rounded-2xl border border-teal-500/30 bg-teal-500/5 flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2.5 text-foreground font-medium">
-              <span className="p-1 rounded-lg bg-teal-500/15 text-teal-500">
+          {!isInvoicesEnabled ? (
+            <CraftFeatureUpsell
+              featureId="invoices"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <>
+              {/* EN 16931 CIUS Prüfpfad Callout */}
+              <div className="p-3.5 rounded-2xl border border-teal-500/30 bg-teal-500/5 flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-2.5 text-foreground font-medium">
+                  <span className="p-1 rounded-lg bg-teal-500/15 text-teal-500">
                 <CheckCircle2 size={15} />
               </span>
               <span>
@@ -1058,90 +1164,118 @@ export function CraftHubClient({
               </div>
             </CardContent>
           </Card>
+          </>
+          )}
         </div>
       )}
 
       {/* TAB 5: GAEB / LV (X83 IMPORT & X84 ANGEBOTSABGABE) */}
       {activeTab === 'gaeb' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <GaebManager
-            projectName={selectedProject?.name}
-            onTransferToAufmass={(newItems) => {
-              setMeasurementItems((prev) => {
-                const existingNrs = new Set(prev.map((p) => p.position_nr));
-                const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
-                return [...prev, ...toAdd];
-              });
-              setActiveTab('measurements');
-            }}
-          />
+          {!isGaebEnabled ? (
+            <CraftFeatureUpsell
+              featureId="gaeb"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <GaebManager
+              projectName={selectedProject?.name}
+              onTransferToAufmass={(newItems) => {
+                setMeasurementItems((prev) => {
+                  const existingNrs = new Set(prev.map((p) => p.position_nr));
+                  const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
+                  return [...prev, ...toAdd];
+                });
+                setActiveTab('measurements');
+              }}
+            />
+          )}
         </div>
       )}
 
       {/* TAB 6: SOLL/IST-NACHKALKULATION & MARGEN-COCKPIT */}
       {activeTab === 'margin' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          {!selectedProject && (
-            <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-4 text-xs">
-              <div className="flex items-center gap-2.5 text-foreground font-medium">
-                <span className="p-1 rounded-lg bg-amber-500/20 text-amber-500">
-                  <AlertCircle size={15} />
-                </span>
-                <span>
-                  <strong>Muster-Baustelle aktiv:</strong> Da noch kein eigenes Bauprojekt angelegt ist, wird das Margen-Cockpit mit realistischen Musterdaten demonstriert.
-                </span>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="text-xs h-7 px-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0"
-              >
-                Eigenes Projekt anlegen
-              </Button>
-            </div>
+          {!isMarginEnabled ? (
+            <CraftFeatureUpsell
+              featureId="margin"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <>
+              {!selectedProject && (
+                <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-4 text-xs">
+                  <div className="flex items-center gap-2.5 text-foreground font-medium">
+                    <span className="p-1 rounded-lg bg-amber-500/20 text-amber-500">
+                      <AlertCircle size={15} />
+                    </span>
+                    <span>
+                      <strong>Muster-Baustelle aktiv:</strong> Da noch kein eigenes Bauprojekt angelegt ist, wird das Margen-Cockpit mit realistischen Musterdaten demonstriert.
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="text-xs h-7 px-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0"
+                  >
+                    Eigenes Projekt anlegen
+                  </Button>
+                </div>
+              )}
+              <CostCockpit
+                project={selectedProject || sampleProject}
+                timeEntries={
+                  selectedProject
+                    ? timeEntries.filter((te: any) => {
+                        const pId = te.expand?.task?.project || (te as any).project;
+                        return !pId || pId === selectedProject.id;
+                      })
+                    : sampleTimeEntries
+                }
+                siteReports={
+                  selectedProject
+                    ? reports.filter((r) => r.project === selectedProject.id)
+                    : sampleSiteReports
+                }
+                invoices={
+                  selectedProject
+                    ? invoices.filter((inv) => inv.project === selectedProject.id)
+                    : [{ net_total: 48000 }]
+                }
+                plannedBoqNetTotal={(selectedProject || sampleProject).budget_money}
+              />
+            </>
           )}
-          <CostCockpit
-            project={selectedProject || sampleProject}
-            timeEntries={
-              selectedProject
-                ? timeEntries.filter((te: any) => {
-                    const pId = te.expand?.task?.project || (te as any).project;
-                    return !pId || pId === selectedProject.id;
-                  })
-                : sampleTimeEntries
-            }
-            siteReports={
-              selectedProject
-                ? reports.filter((r) => r.project === selectedProject.id)
-                : sampleSiteReports
-            }
-            invoices={
-              selectedProject
-                ? invoices.filter((inv) => inv.project === selectedProject.id)
-                : [{ net_total: 48000 }]
-            }
-            plannedBoqNetTotal={(selectedProject || sampleProject).budget_money}
-          />
         </div>
       )}
 
       {/* TAB 7: GROSSHANDELS-KATALOGE & IDS-CONNECT 2.5 */}
       {activeTab === 'wholesale' && (
         <div className="space-y-5 animate-in fade-in duration-200">
-          <WholesaleManager
-            projectName={selectedProject?.name}
-            onTransferToAufmass={(newItems) => {
-              setMeasurementItems((prev) => {
-                const existingNrs = new Set(prev.map((p) => p.position_nr));
-                const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
-                return [...prev, ...toAdd];
-              });
-              setActiveTab('measurements');
-            }}
-            onTransferToGaeb={() => {
-              setActiveTab('gaeb');
-            }}
-          />
+          {!isWholesaleEnabled ? (
+            <CraftFeatureUpsell
+              featureId="wholesale"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <WholesaleManager
+              projectName={selectedProject?.name}
+              onTransferToAufmass={(newItems) => {
+                setMeasurementItems((prev) => {
+                  const existingNrs = new Set(prev.map((p) => p.position_nr));
+                  const toAdd = newItems.filter((it) => !existingNrs.has(it.position_nr));
+                  return [...prev, ...toAdd];
+                });
+                setActiveTab('measurements');
+              }}
+              onTransferToGaeb={() => {
+                setActiveTab('gaeb');
+              }}
+            />
+          )}
         </div>
       )}
 
@@ -1154,6 +1288,14 @@ export function CraftHubClient({
         onSuccess={(savedReport) => {
           setReports((prev) => [savedReport, ...prev]);
         }}
+      />
+
+      {/* CRAFT ENTITLEMENTS & UPSELL MODAL */}
+      <CraftEntitlementsModal
+        isOpen={isLicenseModalOpen}
+        onClose={() => setIsLicenseModalOpen(false)}
+        projects={projects}
+        currentProjectId={selectedProject?.id}
       />
     </div>
   );

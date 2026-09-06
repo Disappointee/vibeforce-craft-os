@@ -23,8 +23,10 @@ import {
     Send,
     Clock,
     ShieldCheck,
+    Hammer,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CraftSettingsSection } from '@/components/craft/CraftSettingsSection';
 import { useSettingsStore } from '@/lib/store';
 import {
     Select,
@@ -227,6 +229,10 @@ export default function AdminSettingsPage() {
                         <TabsTrigger value="smtp" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
                             <Mail size={16} />
                             E-Mail (SMTP)
+                        </TabsTrigger>
+                        <TabsTrigger value="craft" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
+                            <Hammer size={16} />
+                            Craft Lizenzen
                         </TabsTrigger>
                     </TabsList>
 
@@ -642,6 +648,11 @@ export default function AdminSettingsPage() {
                                 </div>
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    {/* Craft Module & License Management */}
+                    <TabsContent value="craft" className="space-y-6">
+                        <CraftSettingsSection />
                     </TabsContent>
                 </Tabs>
             </div>
