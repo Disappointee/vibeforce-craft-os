@@ -28,6 +28,8 @@ import {
   type GaebItem,
   type GaebCategory,
   parseGaebXml,
+  parseGaeb90Bytes,
+  detectGaebFormat,
   generateGaebX84Xml,
   convertGaebItemToMeasurement,
   getSampleGaebBoQ,
@@ -68,22 +70,52 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
     }));
   };
 
-  // Handle file reading
-  const processXmlContent = (content: string, filename: string) => {
+  // Handle file reading (Dualer Parser: GAEB DA XML vs. GAEB 90 Byte-Decoder)
+  const processFileBuffer = (buffer: ArrayBuffer, filename: string) => {
     try {
-      const parsed = parseGaebXml(content);
+      const bytes = new Uint8Array(buffer);
+      // UTF-8-Probe für Formaterkennung (erste 8 KB reichen)
+      let textProbe = '';
+      try {
+        textProbe = new TextDecoder('utf-8', { fatal: false }).decode(bytes.slice(0, 8192));
+      } catch {
+        textProbe = '';
+      }
+
+      const format = detectGaebFormat(textProbe);
+      const isD83Extension = /\.(d8[0-9]|d83|d84|d86)$/i.test(filename);
+      let parsed: GaebBoQ;
+
+      if (format === 'GAEB_XML') {
+        const fullText = new TextDecoder('utf-8').decode(bytes);
+        parsed = parseGaebXml(fullText);
+      } else if (format === 'GAEB_90' || isD83Extension) {
+        // Verlustfreier Byte-Pfad: DOS CP437/CP850 Dekodierung ohne U+FFFD-Verstümmelung
+        parsed = parseGaeb90Bytes(bytes);
+      } else {
+        // Fallback: XML-Prüfung per Heuristik
+        if (textProbe.includes('<') && textProbe.includes('>')) {
+          const fullText = new TextDecoder('utf-8').decode(bytes);
+          parsed = parseGaebXml(fullText);
+        } else {
+          parsed = parseGaeb90Bytes(bytes);
+        }
+      }
+
       if (projectName && parsed.projectName === 'Unbenanntes Bauprojekt') {
         parsed.projectName = projectName;
       }
       setBoq(parsed);
       expandAll(parsed.categories);
-      toast.success('GAEB-Leistungsverzeichnis erfolgreich geladen', {
+      const formatBadge = format === 'GAEB_90' || isD83Extension ? 'GAEB 90' : 'GAEB XML';
+      toast.success(`GAEB-Leistungsverzeichnis geladen (${formatBadge})`, {
         description: `${parsed.allItems.length} Positionen in ${parsed.categories.length} Gewerken aus "${filename}" eingelesen.`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Die Datei entspricht weder dem GAEB DA XML noch dem GAEB 90 Standard.';
       console.error('Fehler beim GAEB-Import:', err);
       toast.error('Fehler beim GAEB-Import', {
-        description: err.message || 'Die Datei entspricht nicht dem GAEB DA XML Standard.',
+        description: message,
       });
     }
   };
@@ -93,12 +125,12 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        processXmlContent(text, file.name);
+      const buffer = event.target?.result as ArrayBuffer;
+      if (buffer) {
+        processFileBuffer(buffer, file.name);
       }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
     e.target.value = '';
   };
 
@@ -109,12 +141,12 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        processXmlContent(text, file.name);
+      const buffer = event.target?.result as ArrayBuffer;
+      if (buffer) {
+        processFileBuffer(buffer, file.name);
       }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -273,13 +305,13 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
               </div>
               <div>
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
-                  GAEB XML-Engine
+                  GAEB-Engine
                   <Badge variant="outline" className="text-xs bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20">
-                    DA XML 3.2 / 3.3
+                    XML &amp; GAEB 90 (.d83)
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                  Ausschreibungen (.x83) importieren, bepreisen, ins VOB-Aufmaß übernehmen und als Angebot (.x84) abgeben
+                  Ausschreibungen (.x83 / .d83) importieren, bepreisen, ins VOB-Aufmaß übernehmen und als Angebot abgeben
                 </CardDescription>
               </div>
             </div>
@@ -293,7 +325,7 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
               className="gap-1.5 text-xs font-medium"
             >
               <Upload size={14} />
-              GAEB (.x83) laden
+              GAEB (.x83 / .d83) laden
             </Button>
             <Button
               variant="outline"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -41,6 +41,9 @@ import { useCraftEntitlementsStore } from '@/lib/craft-entitlements';
 import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
+import { toast } from 'sonner';
+import { getImportedIdsCartAction } from '@/app/actions/craft/ids-carts';
+import type { IdsCart } from '@/lib/ids-connect';
 import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
 // Dynamic import for Leaflet map to prevent SSR window errors
@@ -74,6 +77,48 @@ export function CraftHubClient({
 }: CraftHubClientProps) {
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<CraftTab>('reports');
+  // IDS-Connect 2.5 Return-Flow: vom Webhook persistierter Warenkorb
+  const [idsHookCart, setIdsHookCart] = useState<IdsCart | null>(null);
+  const idsHookParamsHandled = useRef(false);
+
+  // 303-Redirect des IDS-Webhooks auswerten (?ids_imported=1&cart_id=<uuid>)
+  useEffect(() => {
+    if (idsHookParamsHandled.current) return;
+    idsHookParamsHandled.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const imported = params.get('ids_imported');
+    const cartId = params.get('cart_id');
+
+    if (imported === '0') {
+      toast.error('IDS-Warenkorb konnte nicht gespeichert werden. Bitte den Import im Großhandels-Shop erneut ausführen.');
+    } else if (imported === '1' && cartId) {
+      setActiveTab('wholesale');
+      getImportedIdsCartAction(cartId)
+        .then((result) => {
+          if (result.cart) {
+            setIdsHookCart(result.cart);
+            toast.success(
+              `IDS-Warenkorb importiert: ${result.cart.items.length} Positionen (${result.cart.header.wholesalerName}).`
+            );
+          } else {
+            toast.error(result.error || 'IDS-Warenkorb konnte nicht geladen werden.');
+          }
+        })
+        .catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : 'IDS-Warenkorb konnte nicht geladen werden.';
+          toast.error(message);
+        });
+    }
+
+    // Redirect-Parameter entfernen (kein Re-Import bei Reload)
+    if (imported !== null || params.has('ids_error')) {
+      const cleanUrl = new URL(window.location.href);
+      ['ids_imported', 'cart_id', 'ids_error'].forEach((p) => cleanUrl.searchParams.delete(p));
+      window.history.replaceState(null, '', cleanUrl.toString());
+    }
+  }, []);
+
   const [projects] = useState<ProjectRecord[]>(initialProjects);
   const [reports, setReports] = useState<SiteReportRecord[]>(initialReports);
   const [invoices] = useState<any[]>(initialInvoices);
@@ -1263,6 +1308,7 @@ export function CraftHubClient({
           ) : (
             <WholesaleManager
               projectName={selectedProject?.name}
+              importedCart={idsHookCart}
               onTransferToAufmass={(newItems) => {
                 setMeasurementItems((prev) => {
                   const existingNrs = new Set(prev.map((p) => p.position_nr));

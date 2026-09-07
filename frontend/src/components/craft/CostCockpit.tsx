@@ -27,10 +27,30 @@ import { toast } from 'sonner';
 import {
   calculateProjectCostSummary,
   DEFAULT_COST_RATES,
+  DEFAULT_LABOUR_SOURCE,
   type CostRates,
+  type LabourSource,
   type ProjectCostSummary,
 } from '@/lib/cost-calculation';
 import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
+
+const LABOUR_SOURCE_OPTIONS: Array<{ value: LabourSource; label: string; hint: string }> = [
+  {
+    value: 'time_entries',
+    label: 'Zeiterfassung (Stempelzeiten)',
+    hint: 'Nur Stempelzeiten zählen. Bautagesberichte dienen der VOB-Dokumentation.',
+  },
+  {
+    value: 'site_reports',
+    label: 'Bautagesberichte (Polier)',
+    hint: 'Nur Stunden aus Bautagesberichten zählen (Betriebe ohne Monteur-Smartphones).',
+  },
+  {
+    value: 'regie_additive',
+    label: 'Stempelzeiten + Regiestunden (§ 2 Abs. 10 VOB/B)',
+    hint: 'Alle Stempelzeiten plus nur explizit als Regiestunden markierte Berichtsstunden.',
+  },
+];
 
 interface CostCockpitProps {
   project: ProjectRecord;
@@ -47,7 +67,21 @@ export function CostCockpit({
   invoices = [],
   plannedBoqNetTotal,
 }: CostCockpitProps) {
+  const storageKey = project?.id ? `craft_labour_source_${project.id}` : null;
   const [costRates, setCostRates] = useState<CostRates>(DEFAULT_COST_RATES);
+  const [labourSource, setLabourSource] = useState<LabourSource>(() => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved && LABOUR_SOURCE_OPTIONS.some((o) => o.value === saved)) {
+          return saved as LabourSource;
+        }
+      } catch {
+        // Fallback auf Default
+      }
+    }
+    return DEFAULT_LABOUR_SOURCE;
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<'overview' | 'qualification' | 'time_entries'>('overview');
 
@@ -60,8 +94,26 @@ export function CostCockpit({
       invoices,
       customCostRates: costRates,
       plannedBoqNetTotal,
+      labourSource,
     });
-  }, [project, timeEntries, siteReports, invoices, costRates, plannedBoqNetTotal]);
+  }, [project, timeEntries, siteReports, invoices, costRates, plannedBoqNetTotal, labourSource]);
+
+  const handleLabourSourceChange = (value: string) => {
+    const option = LABOUR_SOURCE_OPTIONS.find((o) => o.value === value);
+    if (option) {
+      setLabourSource(option.value);
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          localStorage.setItem(storageKey, option.value);
+        } catch {
+          // localStorage nicht verfügbar
+        }
+      }
+      toast.info(`Stunden-Quelle: ${option.label}`, {
+        description: option.hint,
+      });
+    }
+  };
 
   const handleRateChange = (key: keyof CostRates, valueStr: string) => {
     const val = parseFloat(valueStr.replace(',', '.'));
@@ -114,6 +166,21 @@ export function CostCockpit({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <span className="hidden sm:inline">Stunden-Quelle:</span>
+              <select
+                value={labourSource}
+                onChange={(e) => handleLabourSourceChange(e.target.value)}
+                className="h-8 rounded-md border border-border/60 bg-card px-2 text-xs font-medium text-foreground shadow-sm outline-none focus:ring-2 focus:ring-amber-500/40"
+                title={LABOUR_SOURCE_OPTIONS.find((o) => o.value === labourSource)?.hint}
+              >
+                {LABOUR_SOURCE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <Button
               variant="outline"
               size="sm"
@@ -228,6 +295,28 @@ export function CostCockpit({
               Die geleisteten Stunden ({summary.istHours} h) überschreiten das vereinbarte Budget ({summary.sollHours} h) um mehr als 10%.
               Gemäß <strong>VOB/B § 2 Abs. 3 Nr. 2</strong> hat der Auftragnehmer Anspruch auf Vereinbarung eines neuen Einheitspreises bzw. einer Vergütungsanpassung für die über 10% hinausgehende Leistung.
               <strong> Empfehlung:</strong> Bauherrn umgehend förmlich in Verzug setzen und Nachtragsvereinbarung einreichen.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Labour Source Data Collision Warning (Antidoppelzählung, dezent aber sichtbar) */}
+      {summary.hasDataCollisionWarning && summary.collisionWarningText && (
+        <div className="p-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-foreground flex items-start gap-3.5 shadow-sm animate-in fade-in">
+          <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+            <AlertTriangle size={20} />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-sm text-amber-700 dark:text-amber-300">
+                Stunden-Datenkollision: {summary.ignoredHoursFromOtherSource.toLocaleString('de-DE')} h nicht in der Kostenrechnung
+              </span>
+              <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 font-mono">
+                Quelle: {LABOUR_SOURCE_OPTIONS.find((o) => o.value === summary.labourSourceUsed)?.label || summary.labourSourceUsed}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {summary.collisionWarningText} Die Quelle kann über das Dropdown <strong>„Stunden-Quelle"</strong> oben rechts geändert werden.
             </p>
           </div>
         </div>

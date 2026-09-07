@@ -75,6 +75,8 @@ export interface IdsPunchoutConfig {
   sessionId: string;
   customerNumber: string;
   orderReference?: string;
+  projectId?: string;   // Für hookToken-Signatur (CSRF/Session-Validierung)
+  hookSecret?: string;  // Gemeinsames HMAC-Geheimnis mit dem Webhook-Receiver
 }
 
 /**
@@ -262,15 +264,24 @@ export const IDS_WHOLESALER_PROFILES: IdsWholesalerProfile[] = [
 
 /**
  * Builds the standard IDS 2.5 Punchout redirect URL.
+ * Das hookToken (HMAC-SHA256, max. 4h gültig) wird als Query-Parameter an die
+ * hookurl angehängt, damit der Webhook-Receiver die Rückgabe authentifizieren kann.
  */
 export function generateIdsPunchoutUrl(
   profile: IdsWholesalerProfile,
   config: IdsPunchoutConfig
 ): string {
   const base = profile.shopUrl.replace(/\/$/, '') + profile.punchoutEndpoint;
+
+  const hookUrlWithToken = config.hookSecret && config.projectId
+    ? `${config.hookUrl}${config.hookUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(
+        createIdsHookToken(config.projectId, config.hookSecret)
+      )}`
+    : config.hookUrl;
+
   const params = new URLSearchParams({
     version: '2.5',
-    hookurl: config.hookUrl,
+    hookurl: hookUrlWithToken,
     session_id: config.sessionId,
     customercode: config.customerNumber,
     caller_system: 'VIBE_FLOW_OS',
@@ -281,6 +292,161 @@ export function generateIdsPunchoutUrl(
   }
 
   return `${base}?${params.toString()}`;
+}
+
+// ============================================
+// HMAC-SHA256 hookToken (CSRF/Session-Validierung)
+// Pure TypeScript (Browser, Node & Edge kompatibel, ohne node:crypto)
+// ============================================
+
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+
+function sha256Rotr(x: number, n: number): number {
+  return ((x >>> n) | (x << (32 - n))) >>> 0;
+}
+
+function sha256Digest(data: Uint8Array): Uint8Array {
+  const h = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+  ];
+  const bitLen = data.length * 8;
+  const paddedLength = (((data.length + 8) >> 6) + 1) << 6;
+  const padded = new Uint8Array(paddedLength);
+  padded.set(data);
+  padded[data.length] = 0x80;
+  const view = new DataView(padded.buffer);
+  view.setUint32(paddedLength - 8, Math.floor(bitLen / 0x100000000));
+  view.setUint32(paddedLength - 4, bitLen >>> 0);
+
+  const w = new Uint32Array(64);
+  for (let offset = 0; offset < paddedLength; offset += 64) {
+    for (let i = 0; i < 16; i++) {
+      w[i] = view.getUint32(offset + i * 4);
+    }
+    for (let i = 16; i < 64; i++) {
+      const s0 = sha256Rotr(w[i - 15], 7) ^ sha256Rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = sha256Rotr(w[i - 2], 17) ^ sha256Rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const S1 = sha256Rotr(e, 6) ^ sha256Rotr(e, 11) ^ sha256Rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (hh + S1 + ch + SHA256_K[i] + w[i]) >>> 0;
+      const S0 = sha256Rotr(a, 2) ^ sha256Rotr(a, 13) ^ sha256Rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) >>> 0;
+      hh = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0;
+    h[2] = (h[2] + c) >>> 0; h[3] = (h[3] + d) >>> 0;
+    h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + f) >>> 0;
+    h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
+  }
+
+  const out = new Uint8Array(32);
+  const outView = new DataView(out.buffer);
+  for (let i = 0; i < 8; i++) {
+    outView.setUint32(i * 4, h[i]);
+  }
+  return out;
+}
+
+function hmacSha256Hex(secret: string, message: string): string {
+  const encoder = new TextEncoder();
+  const rawKey = encoder.encode(secret);
+  const keyPadded = new Uint8Array(64);
+  keyPadded.set(rawKey.length > 64 ? sha256Digest(rawKey) : rawKey);
+
+  const inner = new Uint8Array(64);
+  const outer = new Uint8Array(64);
+  for (let i = 0; i < 64; i++) {
+    inner[i] = keyPadded[i] ^ 0x36;
+    outer[i] = keyPadded[i] ^ 0x5c;
+  }
+
+  const msgBytes = encoder.encode(message);
+  const innerData = new Uint8Array(64 + msgBytes.length);
+  innerData.set(inner);
+  innerData.set(msgBytes, 64);
+  const innerHash = sha256Digest(innerData);
+
+  const outerData = new Uint8Array(64 + 32);
+  outerData.set(outer);
+  outerData.set(innerHash, 64);
+  const mac = sha256Digest(outerData);
+
+  return Array.from(mac)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+/**
+ * Erzeugt ein HMAC-SHA256-signiertes hookToken über projectId + Ablaufzeitpunkt.
+ * Standard-Gültigkeit: 4 Stunden (IDS-Connect Webhook-Sicherheit).
+ */
+export function createIdsHookToken(
+  projectId: string,
+  secret: string,
+  expiresInHours: number = 4
+): string {
+  // Endliche Werte (auch <= 0 → sofort abgelaufen) durchreichen: sicherer als Hochklemmen.
+  // Nur nicht-endliche Eingaben fallen auf den 4h-Standard zurück.
+  const safeHours = Number.isFinite(expiresInHours) ? expiresInHours : 4;
+  const expiresAtMs = Date.now() + Math.floor(safeHours * 3600 * 1000);
+  const payload = `${projectId}.${expiresAtMs}`;
+  const signature = hmacSha256Hex(secret, payload);
+  return `${payload}.${signature}`;
+}
+
+/**
+ * Prüft ein hookToken (Signatur via HMAC-SHA256, konstante Zeit, Ablaufzeit max. 4h konfigurierbar).
+ */
+export function verifyIdsHookToken(
+  token: string,
+  secret: string
+): { valid: boolean; projectId?: string; error?: string } {
+  const parts = (token || '').split('.');
+  if (parts.length < 3) {
+    return { valid: false, error: 'Ungültiges hookToken-Format.' };
+  }
+  const signature = parts[parts.length - 1];
+  const expiresAtMs = Number(parts[parts.length - 2]);
+  const projectId = parts.slice(0, -2).join('.');
+
+  if (!Number.isFinite(expiresAtMs) || !projectId) {
+    return { valid: false, error: 'Ungültige hookToken-Payload.' };
+  }
+
+  const payload = `${projectId}.${expiresAtMs}`;
+  const expectedSignature = hmacSha256Hex(secret, payload);
+  if (!timingSafeEqualHex(signature, expectedSignature)) {
+    return { valid: false, error: 'hookToken-Signatur ungültig (CSRF-Verdacht).' };
+  }
+  if (Date.now() > expiresAtMs) {
+    return { valid: false, projectId, error: 'hookToken abgelaufen (max. 4h Gültigkeit überschritten).' };
+  }
+  return { valid: true, projectId };
 }
 
 /**
@@ -391,6 +557,84 @@ export function parseIdsCartXml(xmlString: string): IdsCart {
   const totalGross =
     Math.round(items.reduce((sum, it) => sum + it.priceGross * it.quantity, 0) * 100) / 100;
   const totalVat = Math.round(totalNet * 0.19 * 100) / 100;
+
+  return {
+    version: '2.5',
+    header,
+    items,
+    totalGross,
+    totalNet,
+    totalVat,
+  };
+}
+
+/**
+ * Parses norm-compliant IDS-Connect 2.5 Cart JSON (AJAX-Payload ohne XML-Wrapper).
+ * Strikt typsichere Unknown-Narrowing, keine any-Casts; wirft Error bei fehlendem items-Array.
+ */
+export function parseIdsCartJson(payload: unknown): IdsCart {
+  const isRecord = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v);
+
+  const root = isRecord(payload) ? payload : null;
+  if (!root) {
+    throw new Error('Ungültiges IDS-Connect 2.5 JSON: Erwartet wird ein Cart-Objekt.');
+  }
+
+  const headerRaw = isRecord(root['header']) ? root['header'] : {};
+  const asTrimmedString = (v: unknown): string | undefined =>
+    typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined;
+  const asFiniteNumber = (v: unknown, fallback: number): number =>
+    typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+
+  const itemsRaw = root['items'];
+  if (!Array.isArray(itemsRaw)) {
+    throw new Error('Ungültiges IDS-Connect 2.5 JSON: items-Array fehlt.');
+  }
+
+  const items: IdsCartItem[] = itemsRaw.map((entry, idx) => {
+    const it = isRecord(entry) ? entry : {};
+    const quantity = asFiniteNumber(it['quantity'], 1);
+    const priceGross = asFiniteNumber(it['priceGross'], 0);
+    let priceNet = asFiniteNumber(it['priceNet'], 0);
+    const discountPercent = asFiniteNumber(it['discountPercent'], 0);
+    if (priceNet === 0 && priceGross > 0) {
+      priceNet = Math.round(priceGross * (1 - discountPercent / 100) * 100) / 100;
+    }
+    const totalNet = Math.round(priceNet * quantity * 100) / 100;
+
+    return {
+      id: asTrimmedString(it['id']) || `ids_item_${idx + 1}`,
+      itemNumber: asTrimmedString(it['itemNumber']) || asTrimmedString(it['artNr']) || `ART-${idx + 1}`,
+      description: asTrimmedString(it['description']) || asTrimmedString(it['title']) || 'Großhandels-Artikel',
+      longDescription: asTrimmedString(it['longDescription']),
+      quantity,
+      unit: asTrimmedString(it['unit']) || 'STK',
+      priceGross,
+      priceNet,
+      discountPercent,
+      totalNet,
+      deliveryTimeDays: asFiniteNumber(it['deliveryTimeDays'], 1),
+      manufacturer: asTrimmedString(it['manufacturer']),
+      commodityGroup: asTrimmedString(it['commodityGroup']),
+      ean: asTrimmedString(it['ean']),
+    };
+  });
+
+  const totalNet =
+    Math.round(items.reduce((sum, it) => sum + it.totalNet, 0) * 100) / 100;
+  const totalGross =
+    Math.round(items.reduce((sum, it) => sum + it.priceGross * it.quantity, 0) * 100) / 100;
+  const totalVat = Math.round(totalNet * 0.19 * 100) / 100;
+
+  const header: IdsCartHeader = {
+    wholesalerName: asTrimmedString(headerRaw['wholesalerName']) || asTrimmedString(root['wholesaler']) || 'Großhandel',
+    cartId: asTrimmedString(headerRaw['cartId']) || asTrimmedString(root['cartId']) || `CART-${Date.now()}`,
+    orderDate: asTrimmedString(headerRaw['orderDate']) || new Date().toISOString().slice(0, 10),
+    currency: asTrimmedString(headerRaw['currency']) || 'EUR',
+    customerNumber: asTrimmedString(headerRaw['customerNumber']),
+    orderReference: asTrimmedString(headerRaw['orderReference']),
+  };
 
   return {
     version: '2.5',

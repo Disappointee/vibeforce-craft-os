@@ -338,6 +338,7 @@
 | `work_performed` | **text** | GoBD Append-Only Nachtrag |
 | `special_events` | **text** | - |
 | `qualification_hours` | **json** | Record<QualificationLevel, number> |
+| `is_regie_extra` | **bool** | Regiestunden gem. § 2 Abs. 10 VOB/B (additiv zu Stempelzeiten) |
 | `client_name` | **text** | - |
 | `client_signature` | **text** | PNG DataURL |
 | `client_signed_at` | **text** | ISO Timestamp |
@@ -348,6 +349,20 @@
 | `gps_lat` | **number** | Geokoordinate Latitude |
 | `gps_lon` | **number** | Geokoordinate Longitude |
 | `gps_accuracy` | **number** | Genauigkeit in Metern |
+| `created` | **autodate** | - |
+| `updated` | **autodate** | - |
+
+## Collection: `ids_carts` (Typ: base)
+Persistiert IDS-Connect 2.5 Warenkörbe aus dem Webhook (`/api/craft/ids/hook`). Lesen ausschließlich über Server-Action `getImportedIdsCartAction` (authentifiziert + Projekt-Membership-Check).
+| Feldname | Typ | Details / Relationen |
+| :--- | :--- | :--- |
+| `id` | **text** | Required |
+| `cart_id` | **text** | Required, UUID v4 (Redirect-Identifier `cart_id`) |
+| `project` | **relation** | Optional -> `projects` |
+| `payload_json` | **json** | Vollständiger IdsCart (Header + Items + Totals) |
+| `wholesaler` | **text** | Großhändler-Name aus Cart-Header |
+| `item_count` | **number** | Anzahl Positionen |
+| `source` | **select** | `form_post`, `ajax` |
 | `created` | **autodate** | - |
 | `updated` | **autodate** | - |
 

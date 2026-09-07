@@ -25,6 +25,7 @@ const CreateSiteReportSchema = z.object({
   gps_lat: z.number().optional(),
   gps_lon: z.number().optional(),
   gps_accuracy: z.number().optional(),
+  is_regie_extra: z.boolean().optional(),
 });
 
 const UpdateSiteReportSchema = CreateSiteReportSchema.partial();

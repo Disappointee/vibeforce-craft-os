@@ -40,6 +40,25 @@ export interface ZugferdInvoiceData {
   exemptionReason?: string;
   totalPrepaidAmount?: number;
   prepaidInvoiceReferences?: string[];
+  buyerReference?: string;   // BT-10: Leitweg-ID (Behörden) oder Bestell-/Kundenreferenz (B2B)
+  buyerOrderReference?: string; // BT-13: Bestellnummer des Käufers
+  projectReference?: string; // BT-11: Projektreferenz
+  isPublicSector?: boolean;  // Flag für öffentliche Hand (E-RechV / ZRE-OZG-RE)
+}
+
+/**
+ * BT-10 Leitweg-ID Validator (KoSIT-Standard).
+ * Format: [0-9]{2,12}-[0-9A-Za-z]{1,30}-[0-9]{2}
+ */
+export function validateLeitwegId(id: string): { valid: boolean; error?: string } {
+  const trimmed = (id || '').trim();
+  if (!trimmed) {
+    return { valid: false, error: 'Leitweg-ID (BT-10) ist leer. Rechnungen an öffentliche Auftraggeber werden gemäß E-RechV § 3/§ 4 ohne BT-10 abgewiesen.' };
+  }
+  if (!/^[0-9]{2,12}-[0-9A-Za-z]{1,30}-[0-9]{2}$/.test(trimmed)) {
+    return { valid: false, error: 'Ungültiges Leitweg-ID-Format (KoSIT): Erwartet wird <2-12 Ziffern>-<1-30 alphanumerisch>-<2 Ziffern>, z. B. 04011001-12345-01.' };
+  }
+  return { valid: true };
 }
 
 function esc(text?: string | null): string {
@@ -67,6 +86,18 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
     }
     if (!/^[A-Za-z]{2}/.test(buyerVatId) || buyerVatId.length < 8) {
       throw new Error('§ 14a Abs. 5 UStG: Reverse-Charge-Rechnung erfordert eine gültige USt-IdNr. mit Länderpräfix und mindestens 8 Zeichen (buyerVatId).');
+    }
+  }
+
+  // E-RechV § 3 / § 4 / KoSIT BR-DE-15: Für Rechnungen an die öffentliche Hand ist eine valide Leitweg-ID (BT-10) zwingend
+  if (data.isPublicSector === true) {
+    const buyerRef = (data.buyerReference || '').trim();
+    if (!buyerRef) {
+      throw new Error('E-RechV § 3 / KoSIT BR-DE-15: Bei Rechnungen an die öffentliche Hand (isPublicSector) ist die Leitweg-ID (buyerReference, BT-10) zwingend erforderlich.');
+    }
+    const validation = validateLeitwegId(buyerRef);
+    if (!validation.valid) {
+      throw new Error(`E-RechV § 3 / KoSIT BR-DE-15: Ungültige Leitweg-ID (BT-10): ${validation.error}`);
     }
   }
 
@@ -186,6 +217,9 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
   xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
   xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
   <rsm:ExchangedDocumentContext>
+    <ram:BusinessProcessSpecifiedDocumentContextParameter>
+      <ram:ID>urn:cen.eu:en16931:2017</ram:ID>
+    </ram:BusinessProcessSpecifiedDocumentContextParameter>
     <ram:GuidelineSpecifiedDocumentContextParameter>
       <ram:ID>urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic</ram:ID>
     </ram:GuidelineSpecifiedDocumentContextParameter>
@@ -203,6 +237,7 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
   </rsm:ExchangedDocument>
   <rsm:SupplyChainTradeTransaction>
     <ram:ApplicableHeaderTradeAgreement>
+      ${data.buyerReference ? `<ram:BuyerReference>${esc(data.buyerReference)}</ram:BuyerReference>` : ''}
       <ram:SellerTradeParty>
         <ram:Name>${esc(data.sellerName)}</ram:Name>
         <ram:PostalTradeAddress>
@@ -221,6 +256,12 @@ export function generateZugferdXml(data: ZugferdInvoiceData): string {
         </ram:PostalTradeAddress>
         ${data.buyerVatId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">${esc(data.buyerVatId.trim())}</ram:ID></ram:SpecifiedTaxRegistration>` : (data.buyerTaxId ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="FC">${esc(data.buyerTaxId.trim())}</ram:ID></ram:SpecifiedTaxRegistration>` : '')}
       </ram:BuyerTradeParty>
+      ${data.buyerOrderReference ? `<ram:BuyerOrderReferencedDocument>
+        <ram:IssuerAssignedID>${esc(data.buyerOrderReference)}</ram:IssuerAssignedID>
+      </ram:BuyerOrderReferencedDocument>` : ''}
+      ${data.projectReference ? `<ram:SpecifiedProcuringProject>
+        <ram:ID>${esc(data.projectReference)}</ram:ID>
+      </ram:SpecifiedProcuringProject>` : ''}
     </ram:ApplicableHeaderTradeAgreement>
     <ram:ApplicableHeaderTradeDelivery>
       <ram:ActualDeliverySupplyChainEvent>

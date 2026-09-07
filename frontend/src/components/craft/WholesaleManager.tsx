@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Package,
   Upload,
@@ -42,7 +42,6 @@ import {
 } from '@/lib/datanorm';
 import {
   IDS_WHOLESALER_PROFILES,
-  generateIdsPunchoutUrl,
   generateIdsCartXml,
   parseIdsCartXml,
   convertIdsItemToMeasurement,
@@ -59,6 +58,8 @@ interface WholesaleManagerProps {
   projectName?: string;
   onTransferToAufmass?: (items: MeasurementRowItem[]) => void;
   onTransferToGaeb?: (items: GaebItem[]) => void;
+  /** Vom IDS-Webhook persistierter Warenkorb (303-Return-Flow). */
+  importedCart?: IdsCart | null;
 }
 
 type SubTab = 'datanorm' | 'ids' | 'cart';
@@ -67,6 +68,7 @@ export function WholesaleManager({
   projectName,
   onTransferToAufmass,
   onTransferToGaeb,
+  importedCart: importedCartFromHook,
 }: WholesaleManagerProps) {
   // State for SubTab
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('datanorm');
@@ -255,6 +257,14 @@ export function WholesaleManager({
       setTimeout(() => setTransferFeedback(null), 3000);
     }
   };
+
+  // IDS-Webhook Return-Flow: Persistierter Warenkorb aus dem CraftHub übernehmen
+  useEffect(() => {
+    if (importedCartFromHook && importedCartFromHook.items.length > 0) {
+      setImportedCart(importedCartFromHook);
+      setActiveSubTab('cart');
+    }
+  }, [importedCartFromHook]);
 
   // Bulk Transfer from Imported Cart to Aufmaß
   const handleTransferCartToAufmass = () => {

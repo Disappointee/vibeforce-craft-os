@@ -36,6 +36,19 @@ export interface QualificationHoursSummary {
 
 export type ProfitMarginStatus = 'healthy' | 'warning' | 'critical';
 
+/**
+ * Datenquelle für die Arbeitsstunden-Konsolidierung (Antidoppelzählung).
+ * - 'time_entries' (Default): Nur Stempelzeiten aus der Zeiterfassungs-App zählen
+ *   für die Kostenrechnung. Bautagesberichte dienen der VOB-Baudokumentation.
+ * - 'site_reports': Nur Stunden aus Polier-Bautagesberichten zählen
+ *   (für Betriebe ohne Monteur-Smartphones).
+ * - 'regie_additive': Alle time_entries zählen + nur Bautagesbericht-Stunden,
+ *   die explizit als Regiestunden gem. § 2 Abs. 10 VOB/B markiert sind (is_regie_extra).
+ */
+export type LabourSource = 'time_entries' | 'site_reports' | 'regie_additive';
+
+export const DEFAULT_LABOUR_SOURCE: LabourSource = 'time_entries';
+
 export interface ProjectCostSummary {
   projectId: string;
   projectName: string;
@@ -66,11 +79,17 @@ export interface ProjectCostSummary {
 
   // Detail-Aufschlüsselungen
   qualificationHoursBreakdown: Record<QualificationLevel, QualificationHoursSummary>;
-  monteurHours: number;             // Stunden aus time_entries
-  regieHours: number;               // Stunden aus site_reports
+  monteurHours: number;             // Stunden aus time_entries (roh, unabhängig von der Quelle)
+  regieHours: number;               // Stunden aus site_reports (roh, unabhängig von der Quelle)
   monteurTimeEntriesCount: number;
   siteReportsCount: number;
   costRatesUsed: CostRates;
+
+  // Arbeitsstunden-Konsolidierung (Antidoppelzählung)
+  labourSourceUsed: LabourSource;       // Die für Kostenrechnung verwendete Quelle
+  ignoredHoursFromOtherSource: number;  // Stunden, die durch die Quellenwahl NICHT in Kosten eingehen
+  hasDataCollisionWarning: boolean;     // true, wenn ignorierte Stunden aus der anderen Quelle existieren
+  collisionWarningText?: string;        // Nutzerfreundlicher Warnhinweis zur Kollision
 }
 
 export interface CalculationInput {
@@ -80,7 +99,11 @@ export interface CalculationInput {
   invoices?: Array<{ net_total?: number; gross_total?: number }>;
   customCostRates?: Partial<CostRates>;
   plannedBoqNetTotal?: number;
+  labourSource?: LabourSource;
 }
+
+/** Rückwärtskompatibler Alias gemäß Audit-Spezifikation M007. */
+export type ProjectCostInput = CalculationInput;
 
 /**
  * Berechnet die vollständige kaufmännische Soll/Ist-Nachkalkulation für ein Projekt.
@@ -137,14 +160,25 @@ export function calculateProjectCostSummary(input: CalculationInput): ProjectCos
   };
 
   let regieHours = 0;
+  // Stunden aus Berichten, die explizit als Regiestunden gem. § 2 Abs. 10 VOB/B markiert sind
+  const regieExtraHoursByLevel: Record<QualificationLevel, number> = {
+    meister: 0,
+    geselle: 0,
+    helfer: 0,
+    azubi: 0,
+  };
 
   for (const rep of siteReports) {
+    const isRegieExtra = rep.is_regie_extra === true;
     if (rep.qualification_hours) {
       for (const level of ['meister', 'geselle', 'helfer', 'azubi'] as QualificationLevel[]) {
         const h = rep.qualification_hours[level] || 0;
         if (h > 0) {
           qualificationHoursBreakdown[level].hours += h;
           regieHours += h;
+          if (isRegieExtra) {
+            regieExtraHoursByLevel[level] += h;
+          }
         }
       }
     }
@@ -159,8 +193,59 @@ export function calculateProjectCostSummary(input: CalculationInput): ProjectCos
     regieLaborCost += summary.cost;
   }
 
-  // 5. Konsolidierte Stunden
-  const totalIstHours = Math.round((monteurHours + regieHours) * 100) / 100;
+  // Kostenanteil der explizit markierten Regiestunden (§ 2 Abs. 10 VOB/B)
+  let regieExtraHours = 0;
+  let regieExtraLaborCost = 0;
+  for (const level of ['meister', 'geselle', 'helfer', 'azubi'] as QualificationLevel[]) {
+    const h = regieExtraHoursByLevel[level];
+    regieExtraHours += h;
+    regieExtraLaborCost += h * qualificationHoursBreakdown[level].rate;
+  }
+
+  // 5. Konsolidierte Stunden — strikt an die gewählte Datenquelle gebunden (Antidoppelzählung).
+  // Ohne Konsolidierung würden gestempelte Monteurstunden und dieselben Stunden aus dem
+  // Polier-Bautagesbericht doppelt abgerechnet.
+  const labourSource = input.labourSource ?? DEFAULT_LABOUR_SOURCE;
+
+  let totalIstHours: number;
+  let totalLaborCosts: number;
+  let ignoredHoursFromOtherSource: number;
+
+  switch (labourSource) {
+    case 'site_reports':
+      // Nur Bautagesbericht-Stunden zählen (Betriebe ohne Monteur-Smartphones)
+      totalIstHours = regieHours;
+      totalLaborCosts = regieLaborCost;
+      ignoredHoursFromOtherSource = monteurHours;
+      break;
+    case 'regie_additive':
+      // Alle Stempelzeiten + nur explizit markierte Regiestunden (§ 2 Abs. 10 VOB/B)
+      totalIstHours = monteurHours + regieExtraHours;
+      totalLaborCosts = monteurLaborCost + regieExtraLaborCost;
+      ignoredHoursFromOtherSource = regieHours - regieExtraHours;
+      break;
+    case 'time_entries':
+    default:
+      // Default: Nur Stempelzeiten zählen; Bautagesberichte dienen der VOB-Dokumentation
+      totalIstHours = monteurHours;
+      totalLaborCosts = monteurLaborCost;
+      ignoredHoursFromOtherSource = regieHours;
+      break;
+  }
+
+  totalIstHours = Math.round(totalIstHours * 100) / 100;
+  totalLaborCosts = Math.round(totalLaborCosts * 100) / 100;
+  ignoredHoursFromOtherSource = Math.round(Math.max(0, ignoredHoursFromOtherSource) * 100) / 100;
+
+  const hasDataCollisionWarning = ignoredHoursFromOtherSource > 0;
+  let collisionWarningText: string | undefined;
+  if (hasDataCollisionWarning) {
+    collisionWarningText =
+      labourSource === 'site_reports'
+        ? `${ignoredHoursFromOtherSource.toLocaleString('de-DE')} Stunden aus der Zeiterfassung (Monteur-Stempelungen) werden gemäß Quelleneinstellung nicht in die Kostenrechnung übernommen.`
+        : `${ignoredHoursFromOtherSource.toLocaleString('de-DE')} Stunden aus Bautagesberichten werden gemäß Quelleneinstellung nicht in die Kostenrechnung übernommen.`;
+  }
+
   const hoursDelta = Math.round((sollHours - totalIstHours) * 100) / 100;
   const hoursBurnupPercent = sollHours > 0
     ? Math.round((totalIstHours / sollHours) * 1000) / 10
@@ -172,8 +257,7 @@ export function calculateProjectCostSummary(input: CalculationInput): ProjectCos
     ? Math.round(((totalIstHours - sollHours) / sollHours) * 1000) / 10
     : 0;
 
-  // 6. Personalkosten & Deckungsbeiträge
-  const totalLaborCosts = Math.round((monteurLaborCost + regieLaborCost) * 100) / 100;
+  // 6. Personalkosten & Deckungsbeiträge (totalLaborCosts bereits quellengebunden)
 
   // DB I = Erlöse - Material/Fremdkosten
   const deckungsbeitrag1 = Math.round((effectiveRevenue - materialAndExternalCosts) * 100) / 100;
@@ -221,5 +305,9 @@ export function calculateProjectCostSummary(input: CalculationInput): ProjectCos
     monteurTimeEntriesCount: timeEntries.length,
     siteReportsCount: siteReports.length,
     costRatesUsed: costRates,
+    labourSourceUsed: labourSource,
+    ignoredHoursFromOtherSource,
+    hasDataCollisionWarning,
+    collisionWarningText,
   };
 }

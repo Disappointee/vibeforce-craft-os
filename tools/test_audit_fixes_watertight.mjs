@@ -17,6 +17,7 @@ const multiTaxXml = generateZugferdXml({
   buyerStreet: 'Allee 1',
   buyerCity: 'Berlin',
   buyerCountry: 'DE',
+  buyerVatId: 'DE123456789', // § 14a Abs. 5 UStG: Pflicht bei § 13b Reverse-Charge-Positionen
   currency: 'EUR',
   lineItems: [
     {

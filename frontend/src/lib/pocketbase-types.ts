@@ -362,6 +362,7 @@ export interface SiteReportRecord extends BaseRecord {
     work_performed?: string;
     special_events?: string;
     qualification_hours?: Record<QualificationLevel, number>;
+    is_regie_extra?: boolean; // Regiestunden gem. § 2 Abs. 10 VOB/B (additive Abrechnung neben Stempelzeiten)
     client_signature?: string;
     client_name?: string;
     client_signed_at?: string;

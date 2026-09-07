@@ -61,6 +61,9 @@ export function DailySiteReportForm({
       azubi: 0,
     }
   );
+  const [isRegieExtra, setIsRegieExtra] = useState<boolean>(
+    Boolean(initialReport?.is_regie_extra)
+  );
 
   const [measurements, setMeasurements] = useState<MeasurementRowItem[]>([]);
   const [evidencePhotos, setEvidencePhotos] = useState<EvidencePhotoItem[]>([]);
@@ -98,6 +101,7 @@ export function DailySiteReportForm({
     if (!clientName && d.client_name) setClientName(d.client_name);
     if (!clientSignature && d.client_signature) setClientSignature(d.client_signature);
     if (!contractorSignature && d.contractor_signature) setContractorSignature(d.contractor_signature);
+    if (d.is_regie_extra !== undefined) setIsRegieExtra(Boolean(d.is_regie_extra));
     if (d.qualification_hours) {
       setQualificationHours((prev) => {
         const next = { ...prev };
@@ -124,8 +128,9 @@ export function DailySiteReportForm({
       client_name: clientName,
       client_signature: clientSignature,
       contractor_signature: contractorSignature,
+      is_regie_extra: isRegieExtra,
     });
-  }, [reportDate, weather, temperature, workPerformed, specialEvents, qualificationHours, clientName, clientSignature, contractorSignature, saveDraft]);
+  }, [reportDate, weather, temperature, workPerformed, specialEvents, qualificationHours, clientName, clientSignature, contractorSignature, isRegieExtra, saveDraft]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +150,7 @@ export function DailySiteReportForm({
         special_events: specialEvents,
         client_name: clientName,
         qualification_hours: qualificationHours,
+        is_regie_extra: isRegieExtra,
         client_signature: clientSignature || undefined,
         client_signed_at: clientSignature ? new Date().toISOString() : undefined,
         contractor_signature: contractorSignature || undefined,
@@ -425,6 +431,23 @@ export function DailySiteReportForm({
               className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm font-medium"
             />
           </div>
+        </div>
+
+        {/* VOB/B § 2 Abs. 10 Regie-Zusatzleistung */}
+        <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <input
+            id="is_regie_extra"
+            type="checkbox"
+            checked={isRegieExtra}
+            onChange={(e) => setIsRegieExtra(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+          />
+          <label htmlFor="is_regie_extra" className="text-xs text-foreground cursor-pointer select-none">
+            <span className="font-semibold text-amber-600 dark:text-amber-400 block">
+              Zusatzleistung als Regiestunden gem. § 2 Abs. 10 VOB/B abrechnen
+            </span>
+            Stunden dieses Bautagesberichts gelten als gesondert vergütungspflichtige Regiearbeiten und werden im Margen-Cockpit zusätzlich zu den App-Stempelzeiten der Monteure erfasst.
+          </label>
         </div>
       </div>
 
