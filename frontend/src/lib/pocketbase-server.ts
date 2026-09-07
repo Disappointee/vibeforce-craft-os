@@ -122,12 +122,15 @@ export async function withAdminPB<T>(operation: (pb: PocketBase) => Promise<T>):
   });
 }
 
+import { getAuthCookieName } from '@/config/app-mode';
+
 /**
  * Verifies current user session from request cookies and returns user record.
  */
 export async function verifyUserSession(): Promise<Record<string, unknown> | null> {
   const cookieStore = await cookies();
-  const authCookie = cookieStore.get('pb_auth');
+  const cookieKey = getAuthCookieName();
+  const authCookie = cookieStore.get(cookieKey) || cookieStore.get('pb_auth');
   if (!authCookie?.value) return null;
 
   const pb = new PocketBase(POCKETBASE_URL);
@@ -144,7 +147,7 @@ export async function verifyUserSession(): Promise<Record<string, unknown> | nul
       userRecord = userModel;
     }
   } catch {
-    pb.authStore.loadFromCookie(`pb_auth=${authCookie.value}`, 'pb_auth');
+    pb.authStore.loadFromCookie(`${cookieKey}=${authCookie.value}`, cookieKey);
   }
 
   try {
@@ -184,7 +187,8 @@ export async function requireAuth(redirectUrl = '/login'): Promise<Record<string
  */
 export async function getUserAuthPB(): Promise<PocketBase | null> {
   const cookieStore = await cookies();
-  const authCookie = cookieStore.get('pb_auth');
+  const cookieKey = getAuthCookieName();
+  const authCookie = cookieStore.get(cookieKey) || cookieStore.get('pb_auth');
   if (!authCookie?.value) return null;
 
   const pb = new PocketBase(POCKETBASE_URL);
@@ -198,7 +202,7 @@ export async function getUserAuthPB(): Promise<PocketBase | null> {
       pb.authStore.save(authData.token, userModel);
     }
   } catch {
-    pb.authStore.loadFromCookie(`pb_auth=${authCookie.value}`, 'pb_auth');
+    pb.authStore.loadFromCookie(`${cookieKey}=${authCookie.value}`, cookieKey);
   }
 
   if (pb.authStore.isValid) {

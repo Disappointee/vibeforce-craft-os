@@ -9,29 +9,19 @@ export type AppMode = 'craft' | 'agency';
 /**
  * Returns the active application mode.
  * Evaluates NEXT_PUBLIC_APP_MODE (default: 'agency').
- * In browser development, allows optional localStorage override for quick testing.
+ * Deterministic for SSR and production builds (Zero Hydration Mismatch).
+ * In local development only (NODE_ENV !== 'production'), allows optional localStorage override.
  */
 export function getAppMode(): AppMode {
-  // 1. Browser runtime: Dynamic Subdomain / Hostname detection
-  // e.g. craft.vibeforce-flow-os.vercel.app, craft.meinedomain.de, craft.localhost
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname.toLowerCase();
-    if (
-      hostname.startsWith('craft.') ||
-      hostname.startsWith('handwerk.') ||
-      hostname.includes('craft-os') ||
-      hostname.includes('.craft.')
-    ) {
-      return 'craft';
-    }
-
+  // 1. Local Development Only: Allow developer to toggle modes via console
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     const override = localStorage.getItem('vibeforce_app_mode_override') as AppMode | null;
     if (override === 'craft' || override === 'agency') {
       return override;
     }
   }
 
-  // 2. Build-time or server-side environment variable (Docker, Vercel Env)
+  // 2. Production & SSR: Deterministic build-time / container env variable
   const envMode = process.env.NEXT_PUBLIC_APP_MODE?.toLowerCase().trim();
   if (envMode === 'craft') {
     return 'craft';
@@ -45,6 +35,15 @@ export function isCraftMode(): boolean {
 
 export function isAgencyMode(): boolean {
   return getAppMode() === 'agency';
+}
+
+/**
+ * Isolated Cookie Name per Stack to prevent session collisions on shared domains (e.g. vercel.app).
+ * Flow OS: 'pb_auth_flow'
+ * Craft OS: 'pb_auth_craft'
+ */
+export function getAuthCookieName(): string {
+  return isCraftMode() ? 'pb_auth_craft' : 'pb_auth_flow';
 }
 
 /**

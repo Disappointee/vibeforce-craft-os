@@ -1,6 +1,7 @@
 'use client';
 
 import PocketBase from 'pocketbase';
+import { getAuthCookieName } from '@/config/app-mode';
 
 const rawClientUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL || '';
 export const POCKETBASE_URL =
@@ -38,15 +39,19 @@ function createPocketBase() {
   }
   const instance = new PocketBase(POCKETBASE_URL);
   instance.autoCancellation(false);
+  const cookieKey = getAuthCookieName();
   if (typeof document !== 'undefined') {
-    // Load existing session from cookie (set by server-side /api/auth/login)
-    instance.authStore.loadFromCookie(document.cookie);
+    // Load existing session from isolated cookie (pb_auth_flow vs pb_auth_craft) with legacy fallback
+    instance.authStore.loadFromCookie(document.cookie, cookieKey);
+    if (!instance.authStore.isValid) {
+      instance.authStore.loadFromCookie(document.cookie, 'pb_auth');
+    }
 
     if (instance.authStore.isValid) {
-      document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' });
+      document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' }, cookieKey);
     }
     instance.authStore.onChange(() => {
-      document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' });
+      document.cookie = instance.authStore.exportToCookie({ httpOnly: false, sameSite: 'Lax', path: '/' }, cookieKey);
     });
   }
   return instance;

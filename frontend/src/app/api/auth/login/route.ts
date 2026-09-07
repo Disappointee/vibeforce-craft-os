@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PocketBase from 'pocketbase';
 import { POCKETBASE_URL } from '@/lib/pocketbase-server';
+import { getAuthCookieName } from '@/config/app-mode';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,13 +23,14 @@ export async function POST(request: NextRequest) {
       password,
     );
 
-    // Use SDK's exportToCookie for format-compatible cookie value
+    // Use SDK's exportToCookie with stack-isolated cookie key (pb_auth_flow vs pb_auth_craft)
+    const cookieKey = getAuthCookieName();
     const cookieHeader = pb.authStore.exportToCookie({
       httpOnly: false,   // Client-side SDK needs read access
       sameSite: 'Lax',
       secure: true,
       path: '/',
-    });
+    }, cookieKey);
 
     const response = NextResponse.json({
       success: true,

@@ -5,6 +5,7 @@ import {
   apiRateLimiter,
   createRateLimitResponse,
 } from '@/lib/rate-limiter';
+import { isCraftMode } from '@/config/app-mode';
 
 /**
  * 🛡️ Next.js 16 Security Headers & Rate Limiting Middleware
@@ -46,7 +47,8 @@ export function middleware(request: NextRequest) {
 
   // 2. Protect /admin routes
   if (pathname.startsWith('/admin')) {
-    const authCookie = request.cookies.get('pb_auth');
+    const cookieKey = isCraftHost || isCraftMode() ? 'pb_auth_craft' : 'pb_auth_flow';
+    const authCookie = request.cookies.get(cookieKey) || request.cookies.get('pb_auth');
     if (!authCookie?.value) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
