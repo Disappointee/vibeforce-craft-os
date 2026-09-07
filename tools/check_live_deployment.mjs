@@ -6,14 +6,14 @@ async function check() {
   const page = await context.newPage();
   
   console.log('1. Navigating to login...');
-  await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'load' });
+  await page.goto('https://vibeforce-flow-2b62u54jn-robins-projects-34c3aad5.vercel.app/login', { waitUntil: 'load' });
   await page.fill('#email', '***REMOVED***');
   await page.fill('#password', '***REMOVED***');
   await page.click('button[type="submit"]');
   await page.waitForTimeout(4000);
   
   console.log('2. Navigating to /craft...');
-  await page.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'load' });
+  await page.goto('https://vibeforce-flow-2b62u54jn-robins-projects-34c3aad5.vercel.app/craft', { waitUntil: 'load' });
   await page.waitForTimeout(4000);
   
   const content = await page.content();

@@ -41,11 +41,15 @@ import {
     Pencil,
     Plus,
     Trash2,
+    ShieldCheck,
+    Hammer,
+    HardHat,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
 import { NewTaskDialog } from '@/components/tasks/NewTaskDialog';
 import { revalidateClientPath, deleteClientAction } from '@/app/actions/clients';
+import { isCraftMode } from '@/config/app-mode';
 
 interface ClientDetailsClientProps {
   id: string;
@@ -133,6 +137,7 @@ export function ClientDetailsClient({
   initialFiles,
 }: ClientDetailsClientProps) {
     const router = useRouter();
+    const craft = isCraftMode() || Boolean((initialClient as any)?.client_type || (initialClient as any)?.has_48b_certificate);
 
     const [client, setClient] = useState<Record<string, unknown>>(initialClient);
     const [users] = useState<Record<string, unknown>[]>(initialUsers);
@@ -310,13 +315,13 @@ export function ClientDetailsClient({
     const totalPercent = totalEstimated > 0 ? Math.round((totalBooked / totalEstimated) * 100) : 0;
 
     const handleDeleteClient = async () => {
-        if (!confirm(`Möchtest du den Kunden "${(client as any)?.name}" wirklich löschen?`)) return;
+        if (!confirm(`Möchtest du ${craft ? 'den Bauherrn / Auftraggeber' : 'den Kunden'} "${(client as any)?.name}" wirklich löschen?`)) return;
         try {
             await deleteClientAction(id);
-            toast.success('Kunde gelöscht!');
+            toast.success(craft ? 'Bauherr gelöscht!' : 'Kunde gelöscht!');
             router.push('/clients');
         } catch {
-            toast.error('Fehler beim Löschen des Kunden.');
+            toast.error('Fehler beim Löschen.');
         }
     };
 
@@ -336,8 +341,8 @@ export function ClientDetailsClient({
                         <ArrowLeft size={20} />
                     </button>
                     <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                            <Building2 size={20} />
+                        <div className={`p-2 rounded-xl ${craft ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
+                            {craft ? <HardHat size={20} /> : <Building2 size={20} />}
                         </div>
                         <div>
                             <div className="flex items-center gap-3">
@@ -361,7 +366,7 @@ export function ClientDetailsClient({
                                     className="border-red-500/30 text-red-400 hover:bg-red-500/10 ml-2"
                                 >
                                     <Trash2 size={14} className="mr-1 text-red-400" />
-                                    Löschen
+                                    {craft ? 'Bauherr löschen' : 'Löschen'}
                                 </Button>
                             </div>
                             {(client as any)?.company && (
@@ -375,6 +380,87 @@ export function ClientDetailsClient({
             {/* Main Content */}
             <main className="flex-1 overflow-auto p-8">
                 <div className="max-w-6xl mx-auto space-y-8">
+
+                    {/* § 13b UStG & § 48b EStG Baurecht-Compliance Card */}
+                    {craft && (
+                        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-6 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                    <ShieldCheck size={20} className="text-amber-500" />
+                                    Baurecht &amp; Steuer-Compliance (§ 13b UStG / § 48b EStG)
+                                </h2>
+                                {(client as any)?.client_type && (
+                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-semibold self-start sm:self-auto">
+                                        {(client as any).client_type === 'privat' ? '🔨 Privater Bauherr' :
+                                         (client as any).client_type === 'gewerblich' ? '🏢 Gewerblicher Auftraggeber' :
+                                         (client as any).client_type === 'bautraeger' ? '🏗️ Bauträger' :
+                                         (client as any).client_type === 'gu' ? '🤝 Generalunternehmer (GU)' : '🏛️ Öffentlicher Auftraggeber'}
+                                    </Badge>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* § 48b EStG Bauabzugsteuer */}
+                                <div className="rounded-xl border border-border bg-card/60 p-4 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`p-1.5 rounded-lg ${(client as any)?.has_48b_certificate ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                            <ShieldCheck size={16} />
+                                        </div>
+                                        <h3 className="text-sm font-semibold text-foreground">§ 48b EStG Bauabzugsteuer</h3>
+                                    </div>
+                                    {(client as any)?.has_48b_certificate ? (
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            <p className="text-emerald-400 font-medium">✓ Freistellungsbescheinigung liegt vor</p>
+                                            <p>Kein Steuereinbehalt erforderlich (0% statt 15% Bauabzugsteuer bei Abrechnung von Bauleistungen).</p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            <p className="text-amber-400 font-medium">⚠️ Keine Freistellungsbescheinigung hinterlegt</p>
+                                            <p>Gemäß § 48 Abs. 1 EStG sind ggf. 15% Bauabzugsteuer an das Finanzamt abzuführen.</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* § 13b UStG Steuerschuldnerschaft */}
+                                <div className="rounded-xl border border-border bg-card/60 p-4 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+                                            <Building2 size={16} />
+                                        </div>
+                                        <h3 className="text-sm font-semibold text-foreground">§ 13b UStG Steuerschuldnerschaft</h3>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground space-y-1">
+                                        {(client as any)?.vat_id ? (
+                                            <p className="text-foreground">USt-IdNr.: <span className="font-mono font-medium text-amber-500">{(client as any).vat_id}</span></p>
+                                        ) : (
+                                            <p className="text-muted-foreground">USt-IdNr.: Nicht hinterlegt</p>
+                                        )}
+                                        <p>
+                                            {['gewerblich', 'bautraeger', 'gu'].includes((client as any)?.client_type)
+                                                ? 'Reverse-Charge anwendbar: Rechnungsstellung netto mit Vermerk "Steuerschuldnerschaft des Leistungsempfängers gem. § 13b UStG".'
+                                                : 'Privatkunde / Regelbesteuerung: Ausweisung der gesetzlichen Umsatzsteuer (19%).'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Vor-Ort-Kontakt / Notizen */}
+                            {((client as any)?.contact_person || (client as any)?.notes) && (
+                                <div className="pt-2 border-t border-border/50 text-xs flex flex-col sm:flex-row gap-4 justify-between">
+                                    {(client as any)?.contact_person && (
+                                        <p className="text-muted-foreground">
+                                            <span className="font-medium text-foreground">Bauleiter / Vor-Ort-Kontakt:</span> {(client as any).contact_person}
+                                        </p>
+                                    )}
+                                    {(client as any)?.notes && (
+                                        <p className="text-muted-foreground">
+                                            <span className="font-medium text-foreground">Notiz:</span> {(client as any).notes}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Contact Info + Financial Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -509,8 +595,8 @@ export function ClientDetailsClient({
                     <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
                         <div className="p-6 border-b border-border">
                             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                <FolderKanban size={18} className="text-primary" />
-                                Projekte & Aufgaben
+                                {craft ? <HardHat size={18} className="text-amber-500" /> : <FolderKanban size={18} className="text-primary" />}
+                                {craft ? 'Zugeordnete Baustellen & Bauvorhaben' : 'Projekte & Aufgaben'}
                                 {projects.length > 0 && (
                                     <Badge variant="outline" className="ml-2 text-muted-foreground border-border bg-card">
                                         {projects.length}
@@ -521,10 +607,18 @@ export function ClientDetailsClient({
 
                         {projects.length === 0 ? (
                             <div className="p-12 flex flex-col items-center justify-center text-center">
-                                <FolderKanban size={40} className="text-muted-foreground/30 mb-3" />
-                                <h3 className="text-base font-semibold text-muted-foreground">Keine Projekte zugeordnet</h3>
+                                {craft ? (
+                                    <HardHat size={40} className="text-amber-500/30 mb-3" />
+                                ) : (
+                                    <FolderKanban size={40} className="text-muted-foreground/30 mb-3" />
+                                )}
+                                <h3 className="text-base font-semibold text-muted-foreground">
+                                    {craft ? 'Keine Baustellen zugeordnet' : 'Keine Projekte zugeordnet'}
+                                </h3>
                                 <p className="text-muted-foreground text-sm mt-1">
-                                    Diesem Kunden sind noch keine Projekte zugeordnet.
+                                    {craft
+                                        ? 'Diesem Auftraggeber sind noch keine Baustellen oder Gewerke zugeordnet.'
+                                        : 'Diesem Kunden sind noch keine Projekte zugeordnet.'}
                                 </p>
                             </div>
                         ) : (
@@ -545,14 +639,25 @@ export function ClientDetailsClient({
                                                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 flex-wrap">
                                                         <span className="font-medium text-foreground text-sm">{project.name}</span>
                                                         <Badge variant="outline" className="text-[10px] text-muted-foreground border-border bg-card/50 font-mono shadow-none">
                                                             {project.key}
                                                         </Badge>
                                                         <span className="text-xs text-muted-foreground">
-                                                            ({projectTasks.length} Aufgaben)
+                                                            ({projectTasks.length} {craft ? 'Mängel/Aufgaben' : 'Aufgaben'})
                                                         </span>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className={`text-xs h-6 px-2 ml-auto sm:ml-2 shrink-0 ${craft ? 'text-amber-500 hover:text-amber-400 hover:bg-amber-500/10' : 'text-primary hover:text-primary/80'}`}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.push(`/projects/${project.id}`);
+                                                            }}
+                                                        >
+                                                            {craft ? 'Zur Baustellen-Akte →' : 'Zum Projekt →'}
+                                                        </Button>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 shrink-0">

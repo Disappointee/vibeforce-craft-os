@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 
 import Link from 'next/link';
+import { getAppConfig, isCraftMode } from '@/config/app-mode';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { HeaderTimer } from '@/components/layout/HeaderTimer';
 import { useUiStore, useSettingsStore } from '@/lib/store';
@@ -82,6 +83,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isOffline = useOffline();
   const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
   const { t } = useI18n();
+  const appConfig = getAppConfig();
+  const craftMode = isCraftMode();
 
   const handleOpenTaskDialog = useCallback(() => {
     useUiStore.getState().setTaskDialogOpen(true);
@@ -372,28 +375,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           <div className={`h-16 flex items-center border-b border-border overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'justify-center px-2' : 'px-6'}`}>
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity whitespace-nowrap">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-card p-1 shadow-sm shrink-0">
-                <img src="/icon-vfos.png" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain" />
+            <Link href={appConfig.startRoute} className="flex items-center gap-3 hover:opacity-80 transition-opacity whitespace-nowrap">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg p-1 shadow-sm shrink-0 ${craftMode ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-card'}`}>
+                {craftMode ? (
+                  <Hammer className="h-5 w-5 text-amber-500" />
+                ) : (
+                  <img src="/icon-vfos.png" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain" />
+                )}
               </div>
-              {!sidebarCollapsed && <span className="font-bold text-xl tracking-tight text-foreground transition-all duration-300">Vibeforce Flow OS</span>}
+              {!sidebarCollapsed && (
+                <div className="flex flex-col">
+                  <span className="font-bold text-base tracking-tight text-foreground transition-all duration-300">{appConfig.appName}</span>
+                  {craftMode && <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Handwerk & Bau</span>}
+                </div>
+              )}
             </Link>
           </div>
 
           <nav className={`flex-1 space-y-1 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
-            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
-            <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} collapsed={sidebarCollapsed} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
-            <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-            {craftModuleEnabled && (
-              <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
+            {craftMode ? (
+              <>
+                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft' || pathname.startsWith('/craft/')} collapsed={sidebarCollapsed} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
+                <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} collapsed={sidebarCollapsed} />
+                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} collapsed={sidebarCollapsed} />
+                {user?.role === 'admin' && (
+                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+                )}
+                <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Dokumentation" active={pathname === '/docs'} collapsed={sidebarCollapsed} />
+              </>
+            ) : (
+              <>
+                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
+                <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} collapsed={sidebarCollapsed} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+                {craftModuleEnabled && (
+                  <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
+                )}
+                <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
+                {user?.role === 'admin' && (
+                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+                )}
+                <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} collapsed={sidebarCollapsed} />
+              </>
             )}
-            <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
-            {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
-            )}
-            <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
-            <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} collapsed={sidebarCollapsed} />
           </nav>
 
           <div className={`border-t border-border mt-auto pb-16 transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
@@ -419,11 +449,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Mobile Sidebar */}
         <aside className={`fixed inset-y-0 left-0 w-64 border-r border-border bg-sidebar/95 backdrop-blur-xl flex flex-col z-40 md:hidden transition-transform duration-300 ease-in-out ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity" onClick={() => setMobileSidebarOpen(false)}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-card p-1 shadow-sm">
-                <img src="/icon-vfos.png" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain" />
+            <Link href={appConfig.startRoute} className="flex items-center gap-3 hover:opacity-80 transition-opacity" onClick={() => setMobileSidebarOpen(false)}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg p-1 shadow-sm ${craftMode ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-card'}`}>
+                {craftMode ? (
+                  <Hammer className="h-5 w-5 text-amber-500" />
+                ) : (
+                  <img src="/icon-vfos.png" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain" />
+                )}
               </div>
-              <span className="font-bold text-xl tracking-tight text-foreground">Vibeforce Flow OS</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-base tracking-tight text-foreground">{appConfig.appName}</span>
+                {craftMode && <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Handwerk & Bau</span>}
+              </div>
             </Link>
             <button
               onClick={() => setMobileSidebarOpen(false)}
@@ -435,19 +472,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-            {craftModuleEnabled && (
-              <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
+            {craftMode ? (
+              <>
+                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft' || pathname.startsWith('/craft/')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
+                {user?.role === 'admin' && (
+                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+                )}
+                <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Dokumentation" active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
+              </>
+            ) : (
+              <>
+                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+                {craftModuleEnabled && (
+                  <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
+                )}
+                <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
+                {user?.role === 'admin' && (
+                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+                )}
+                <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
+              </>
             )}
-            <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
-            {user?.role === 'admin' && (
-              <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
-            )}
-            <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
-            <NavItem href="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
           </nav>
 
           <div className="p-4 border-t border-border mt-auto pb-16">
@@ -490,7 +545,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Suchen nach Projekten, Aufgaben…"
+                    placeholder={craftMode ? "Suchen nach Baustellen, Bauherren, Mängeln…" : "Suchen nach Projekten, Aufgaben…"}
                     value={searchQuery}
                     onChange={handleSearchChange}
                     onFocus={handleSearchFocus}

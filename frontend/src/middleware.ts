@@ -18,6 +18,19 @@ export function middleware(request: NextRequest) {
     request.headers.get('x-real-ip') ||
     '127.0.0.1';
 
+  // Subdomain & Hostname Detection (e.g. craft.vibeforce-flow-os.vercel.app)
+  const host = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '').toLowerCase();
+  const isCraftHost =
+    host.startsWith('craft.') ||
+    host.startsWith('handwerk.') ||
+    host.includes('craft-os') ||
+    host.includes('.craft.');
+
+  // Direct root traffic on craft subdomains to /craft
+  if (isCraftHost && pathname === '/') {
+    return NextResponse.redirect(new URL('/craft', request.url));
+  }
+
   // 1. Rate Limiting for sensitive routes
   if (pathname === '/login' && request.method === 'POST') {
     const rateCheck = loginRateLimiter.check(ip);

@@ -9,6 +9,8 @@ import { Loader2, ArrowRight } from 'lucide-react';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { ContactAdminDialog } from '@/components/auth/ContactAdminDialog';
 import { t } from '@/lib/i18n';
+import { getAppConfig, isCraftMode } from '@/config/app-mode';
+import { Hammer } from 'lucide-react';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +18,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [forgotDialogOpen, setForgotDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const appConfig = getAppConfig();
+  const craftMode = isCraftMode();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +42,7 @@ export default function LoginPage() {
       }
 
       toast.success(t('auth.login.submit'));
-      window.location.href = '/';
+      window.location.href = appConfig.startRoute;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('auth.login_error');
       toast.error(message);
@@ -60,11 +64,21 @@ export default function LoginPage() {
       {/* Login Card */}
       <div className="w-full max-w-[420px] z-10 animate-in fade-in zoom-in-95 duration-700">
         <div className="text-center mb-10 space-y-3">
-          <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-white dark:bg-white border border-border shadow-2xl mb-4 p-3 animate-in zoom-in duration-1000">
-            <img src="/logo-vfos.svg" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain invert-0 dark:brightness-0 dark:invert" />
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter text-foreground">{t('auth.login.title')}</h1>
-          <p className="text-muted-foreground font-medium">{t('auth.login.subtitle')}</p>
+          {craftMode ? (
+            <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-amber-500/15 border border-amber-500/30 shadow-2xl mb-4 p-3 animate-in zoom-in duration-1000">
+              <Hammer className="h-12 w-12 text-amber-500" />
+            </div>
+          ) : (
+            <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-white dark:bg-white border border-border shadow-2xl mb-4 p-3 animate-in zoom-in duration-1000">
+              <img src="/logo-vfos.svg" alt="Vibeforce Flow OS Logo" className="h-full w-full object-contain invert-0 dark:brightness-0 dark:invert" />
+            </div>
+          )}
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-foreground">
+            {craftMode ? 'Vibeforce Craft OS' : t('auth.login.title')}
+          </h1>
+          <p className="text-muted-foreground font-medium">
+            {craftMode ? 'Das Handwerks- & Baustellen-Betriebssystem' : t('auth.login.subtitle')}
+          </p>
         </div>
 
         <div className="bg-card/40 backdrop-blur-2xl border border-border p-8 rounded-[2.5rem] shadow-2xl">
@@ -74,7 +88,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@agentur.de"
+                placeholder={appConfig.defaultEmailPlaceholder}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

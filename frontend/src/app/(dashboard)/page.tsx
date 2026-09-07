@@ -48,6 +48,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { t } from '@/lib/i18n';
+import { isCraftMode } from '@/config/app-mode';
 import type {
   TaskRecord,
   TaskLinkRecord,
@@ -247,10 +248,14 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isCraftMode()) {
+      router.replace('/craft');
+      return;
+    }
     if (pb.authStore.isValid && pb.authStore.record) {
       setCurrentUserId(pb.authStore.record.id);
     }
-  }, []);
+  }, [router]);
 
   // A5: Unassigned tasks widget
   const [unassignedTasks, setUnassignedTasks] = useState<MyTask[]>([]);

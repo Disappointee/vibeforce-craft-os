@@ -7,12 +7,13 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
+  const isCraft = process.env.NEXT_PUBLIC_APP_MODE === 'craft';
   try {
     const pb = await getAdminPB();
     const project = await pb.collection('projects').getOne(id);
-    return { title: `Projekt: ${project.name} | Vibeforce Flow OS` };
+    return { title: `${isCraft ? 'Baustelle' : 'Projekt'}: ${project.name} | ${isCraft ? 'Vibeforce Craft OS' : 'Vibeforce Flow OS'}` };
   } catch {
-    return { title: 'Projekt nicht gefunden | Vibeforce Flow OS' };
+    return { title: `${isCraft ? 'Baustelle' : 'Projekt'} nicht gefunden` };
   }
 }
 
@@ -55,6 +56,18 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
     // external_expenses collection might not exist yet
   }
 
+  let siteReports: Record<string, unknown>[] = [];
+  try {
+    const reportsResult = await pb.collection('site_reports').getList(1, 100, {
+      filter: pb.filter('project = {:id}', { id }),
+      sort: '-report_date,-created',
+      expand: 'author',
+    });
+    siteReports = reportsResult.items;
+  } catch {
+    // site_reports collection might not exist yet
+  }
+
   return (
     <ProjectDetailsClient
       id={id}
@@ -62,6 +75,7 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
       initialTasks={JSON.parse(JSON.stringify(tasks))}
       initialTimeEntries={JSON.parse(JSON.stringify(timeEntries))}
       initialExpenses={JSON.parse(JSON.stringify(expenses))}
+      initialSiteReports={JSON.parse(JSON.stringify(siteReports))}
     />
   );
 }

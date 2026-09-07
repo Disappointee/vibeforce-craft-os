@@ -19,6 +19,7 @@ import { EditClientDialog } from '@/components/clients/EditClientDialog';
 import { toast } from 'sonner';
 import type { ClientRecord } from '@/lib/pocketbase-types';
 import { revalidateClientsPath, updateClientAction, deleteClientAction } from '@/app/actions/clients';
+import { isCraftMode } from '@/config/app-mode';
 
 function formatCurrency(value: number): string {
     return new Intl.NumberFormat('de-DE', {
@@ -44,10 +45,11 @@ function getKundenStatusBadge(status?: string) {
 
 export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
     const router = useRouter();
+    const craft = isCraftMode();
     const [clients, setClients] = useState<ClientRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'craft' | 'business'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'craft' | 'business'>(craft ? 'craft' : 'all');
     const [editClient, setEditClient] = useState<ClientRecord | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
 
