@@ -33,6 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { MeasurementGrid, type MeasurementRowItem } from '@/components/craft/MeasurementGrid';
 import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModal';
+import { NewBaustelleDialog } from '@/components/craft/NewBaustelleDialog';
 import { GaebManager } from '@/components/craft/GaebManager';
 import { CostCockpit } from '@/components/craft/CostCockpit';
 import { WholesaleManager } from '@/components/craft/WholesaleManager';
@@ -121,13 +122,19 @@ export function CraftHubClient({
     }
   }, []);
 
-  const [projects] = useState<ProjectRecord[]>(initialProjects);
+  const [projects, setProjects] = useState<ProjectRecord[]>(initialProjects);
   const [reports, setReports] = useState<SiteReportRecord[]>(initialReports);
   const [invoices] = useState<any[]>(initialInvoices);
   const [timeEntries] = useState<TimeEntryRecord[]>(initialTimeEntries);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState<boolean>(false);
+  const [isBaustelleModalOpen, setIsBaustelleModalOpen] = useState<boolean>(false);
   const { isFeatureEnabled, activeTier } = useCraftEntitlementsStore();
+
+  const handleBaustelleCreated = (newBaustelle: ProjectRecord) => {
+    setProjects((prev) => [newBaustelle, ...prev]);
+    setSelectedProjectId(newBaustelle.id);
+  };
 
   // Selected project for scoped tabs
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -446,11 +453,20 @@ export function CraftHubClient({
               </Badge>
             </Button>
             <Button
-              id="craft-create-report-btn"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm"
+              id="craft-create-baustelle-btn"
+              onClick={() => setIsBaustelleModalOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5"
             >
-              <Plus size={16} className="mr-1.5" />
+              <Hammer size={15} />
+              <span>Baustelle anlegen</span>
+            </Button>
+            <Button
+              id="craft-create-report-btn"
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="border-amber-500/40 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs h-9 px-3.5 shadow-sm"
+            >
+              <Plus size={15} className="mr-1.5 text-amber-500" />
               Bericht erfassen
             </Button>
             <Button
@@ -889,6 +905,16 @@ export function CraftHubClient({
                   </option>
                 ))}
               </select>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsBaustelleModalOpen(true)}
+                className="h-8 text-xs font-semibold text-amber-500 hover:bg-amber-500/10 px-2 flex items-center gap-1"
+              >
+                <Plus size={13} />
+                <span>Neue Baustelle</span>
+              </Button>
               {isSelectedProject13b && (
                 <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs">
                   § 13b UStG Bauleistung
@@ -1019,6 +1045,16 @@ export function CraftHubClient({
                   </option>
                 ))}
               </select>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsBaustelleModalOpen(true)}
+                className="h-8 text-xs font-semibold text-amber-500 hover:bg-amber-500/10 px-2 flex items-center gap-1"
+              >
+                <Plus size={13} />
+                <span>Neue Baustelle</span>
+              </Button>
             </div>
             <div className="flex items-center gap-2">
               <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-xs font-bold">
@@ -1382,6 +1418,14 @@ export function CraftHubClient({
         onSuccess={(savedReport) => {
           setReports((prev) => [savedReport, ...prev]);
         }}
+        onBaustelleCreated={handleBaustelleCreated}
+      />
+
+      {/* NEW BAUSTELLE DIALOG */}
+      <NewBaustelleDialog
+        open={isBaustelleModalOpen}
+        onOpenChange={setIsBaustelleModalOpen}
+        onBaustelleCreated={handleBaustelleCreated}
       />
 
       {/* CRAFT ENTITLEMENTS & UPSELL MODAL */}

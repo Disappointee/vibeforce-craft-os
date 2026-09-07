@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Zap, Plus, Clock, Building2, X, Loader2, Search, FolderGit2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Zap, Plus, Clock, Building2, X, Loader2, Search, FolderGit2, Hammer, FileText } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUiStore, useTimerStore } from '@/lib/store';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { NewSimpleTaskDialog } from '@/components/tasks/NewSimpleTaskDialog';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
+import { NewBaustelleDialog } from '@/components/craft/NewBaustelleDialog';
+import { NewCraftClientDialog } from '@/components/craft/NewCraftClientDialog';
 import { Input } from '@/components/ui/input';
 import { revalidateClientsPath } from '@/app/actions/clients';
 import { revalidateProjectsPath } from '@/app/actions/projects';
@@ -26,7 +28,11 @@ export function SimpleActionMenu() {
   const { actionMenuOpen: open, setActionMenuOpen: setOpen, taskDialogOpen, clientDialogOpen, projectDialogOpen, setTaskDialogOpen, setClientDialogOpen, setProjectDialogOpen } = useUiStore();
   const { startTimer } = useTimerStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const isCraftContext = pathname?.startsWith('/craft') || pathname?.includes('/site-reports') || pathname?.includes('/geofence');
 
+  const [baustelleDialogOpen, setBaustelleDialogOpen] = useState(false);
+  const [craftClientDialogOpen, setCraftClientDialogOpen] = useState(false);
   const [showTimerSearch, setShowTimerSearch] = useState(false);
   const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
   const [timerSearchQuery, setTimerSearchQuery] = useState('');
@@ -100,48 +106,91 @@ export function SimpleActionMenu() {
     }
   };
 
-  const actions = [
-    {
-      icon: <Plus size={20} />,
-      iconClass: 'text-indigo-500 bg-indigo-500/10',
-      label: 'Neue Aufgabe erstellen',
-      description: 'Lege eine neue Aufgabe in einem Projekt an',
-      onClick: () => {
-        setOpen(false);
-        setTaskDialogOpen(true);
-      },
-    },
-    {
-      icon: <FolderGit2 size={20} />,
-      iconClass: 'text-rose-500 bg-rose-500/10',
-      label: 'Neues Projekt anlegen',
-      description: 'Erstelle einen neuen Arbeitsbereich',
-      onClick: () => {
-        setOpen(false);
-        setProjectDialogOpen(true);
-      },
-    },
-    {
-      icon: <Clock size={20} />,
-      iconClass: 'text-primary bg-primary/10',
-      label: 'Zeiterfassung starten',
-      description: 'Wähle eine Aufgabe und starte den Timer sofort',
-      onClick: () => {
-        setShowTimerSearch(true);
-        setTimerSearchQuery('');
-      },
-    },
-    {
-      icon: <Building2 size={20} />,
-      iconClass: 'text-blue-500 bg-blue-500/10',
-      label: 'Neuen Kunden anlegen',
-      description: 'Erstelle einen neuen Kunden-Eintrag',
-      onClick: () => {
-        setOpen(false);
-        setClientDialogOpen(true);
-      },
-    },
-  ];
+  const actions = isCraftContext
+    ? [
+        {
+          icon: <Hammer size={20} />,
+          iconClass: 'text-amber-500 bg-amber-500/10',
+          label: 'Neue Baustelle anlegen',
+          description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
+          onClick: () => {
+            setOpen(false);
+            setBaustelleDialogOpen(true);
+          },
+        },
+        {
+          icon: <FileText size={20} />,
+          iconClass: 'text-emerald-500 bg-emerald-500/10',
+          label: 'Bautagesbericht erfassen',
+          description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
+          onClick: () => {
+            setOpen(false);
+            router.push('/craft');
+          },
+        },
+        {
+          icon: <Clock size={20} />,
+          iconClass: 'text-primary bg-primary/10',
+          label: 'Zeiterfassung starten',
+          description: 'Wähle ein Gewerk und starte den Timer sofort',
+          onClick: () => {
+            setShowTimerSearch(true);
+            setTimerSearchQuery('');
+          },
+        },
+        {
+          icon: <Building2 size={20} />,
+          iconClass: 'text-blue-500 bg-blue-500/10',
+          label: 'Neuen Auftraggeber / Bauherr anlegen',
+          description: 'Bauherrn mit Anschrift & § 48b EStG anlegen',
+          onClick: () => {
+            setOpen(false);
+            setCraftClientDialogOpen(true);
+          },
+        },
+      ]
+    : [
+        {
+          icon: <Plus size={20} />,
+          iconClass: 'text-indigo-500 bg-indigo-500/10',
+          label: 'Neue Aufgabe erstellen',
+          description: 'Lege eine neue Aufgabe in einem Projekt an',
+          onClick: () => {
+            setOpen(false);
+            setTaskDialogOpen(true);
+          },
+        },
+        {
+          icon: <FolderGit2 size={20} />,
+          iconClass: 'text-rose-500 bg-rose-500/10',
+          label: 'Neues Projekt anlegen',
+          description: 'Erstelle einen neuen Arbeitsbereich',
+          onClick: () => {
+            setOpen(false);
+            setProjectDialogOpen(true);
+          },
+        },
+        {
+          icon: <Clock size={20} />,
+          iconClass: 'text-primary bg-primary/10',
+          label: 'Zeiterfassung starten',
+          description: 'Wähle eine Aufgabe und starte den Timer sofort',
+          onClick: () => {
+            setShowTimerSearch(true);
+            setTimerSearchQuery('');
+          },
+        },
+        {
+          icon: <Building2 size={20} />,
+          iconClass: 'text-blue-500 bg-blue-500/10',
+          label: 'Neuen Kunden anlegen',
+          description: 'Erstelle einen neuen Kunden-Eintrag',
+          onClick: () => {
+            setOpen(false);
+            setClientDialogOpen(true);
+          },
+        },
+      ];
 
   return (
     <>
@@ -289,6 +338,22 @@ export function SimpleActionMenu() {
         onOpenChange={setProjectDialogOpen}
         onProjectCreated={async () => {
           await revalidateProjectsPath();
+          router.refresh();
+        }}
+      />
+
+      <NewBaustelleDialog
+        open={baustelleDialogOpen}
+        onOpenChange={setBaustelleDialogOpen}
+        onBaustelleCreated={() => {
+          router.refresh();
+        }}
+      />
+
+      <NewCraftClientDialog
+        open={craftClientDialogOpen}
+        onOpenChange={setCraftClientDialogOpen}
+        onClientCreated={() => {
           router.refresh();
         }}
       />

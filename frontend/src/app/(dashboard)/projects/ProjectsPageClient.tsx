@@ -3,7 +3,9 @@
 import { useState, useCallback } from 'react';
 import { ProjectList } from '@/components/projects/ProjectList';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
-import { Columns3, List } from 'lucide-react';
+import { NewBaustelleDialog } from '@/components/craft/NewBaustelleDialog';
+import { Button } from '@/components/ui/button';
+import { Columns3, List, Hammer, Plus } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -19,6 +21,8 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [clientFilter, setClientFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('active');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [isBaustelleModalOpen, setIsBaustelleModalOpen] = useState(false);
 
   const handleProjectCreated = useCallback(() => {
     setRefreshTrigger((prev) => prev + 1);
@@ -26,14 +30,14 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
 
   return (
     <div className="p-6 md:p-8 space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Projekte</h1>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Projekte &amp; Baustellen</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Übersicht aller Projekte mit Budget und Fortschritt
+            Übersicht aller Bauvorhaben und Arbeitsbereiche mit Budget und Fortschritt
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setViewMode('grid')}
             title="Grid-Ansicht"
@@ -48,11 +52,40 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
           >
             <List size={16} />
           </button>
+          <Button
+            onClick={() => setIsBaustelleModalOpen(true)}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 flex items-center gap-1.5 shadow-sm"
+          >
+            <Hammer size={14} />
+            <span>Baustelle anlegen</span>
+          </Button>
           <NewProjectDialog onProjectCreated={handleProjectCreated} />
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 bg-card/20 p-4 rounded-xl border border-border/50">
+        {/* Bereich / Typ Filter (Baustellen vs. Agentur) */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bereich:</span>
+          <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
+            <SelectTrigger className="bg-background border-border h-9 min-w-[180px] text-foreground text-xs font-semibold">
+              <SelectValue placeholder="Alle Bereiche">
+                {(value: string) => {
+                  if (value === 'all') return 'Alle Bereiche';
+                  if (value === 'craft') return '🔨 Nur Baustellen (Handwerk)';
+                  if (value === 'agency') return '💼 Nur Agentur & Tech';
+                  return value;
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-background border-border text-foreground">
+              <SelectItem value="all">Alle Bereiche</SelectItem>
+              <SelectItem value="craft">🔨 Nur Baustellen (Handwerk)</SelectItem>
+              <SelectItem value="agency">💼 Nur Agentur &amp; Tech</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {clients.length > 0 && (
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Kunde:</span>
@@ -102,7 +135,19 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
         </div>
       </div>
 
-      <ProjectList refreshTrigger={refreshTrigger} viewMode={viewMode} clientFilter={clientFilter} statusFilter={statusFilter} />
+      <ProjectList
+        refreshTrigger={refreshTrigger}
+        viewMode={viewMode}
+        clientFilter={clientFilter}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+      />
+
+      <NewBaustelleDialog
+        open={isBaustelleModalOpen}
+        onOpenChange={setIsBaustelleModalOpen}
+        onBaustelleCreated={handleProjectCreated}
+      />
     </div>
   );
 }

@@ -17,7 +17,19 @@ import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
 import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
 
-export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 'all', statusFilter = 'active' }: { refreshTrigger: number; viewMode?: 'grid' | 'list'; clientFilter?: string; statusFilter?: string }) {
+export function ProjectList({
+  refreshTrigger,
+  viewMode = 'grid',
+  clientFilter = 'all',
+  statusFilter = 'active',
+  typeFilter = 'all',
+}: {
+  refreshTrigger: number;
+  viewMode?: 'grid' | 'list';
+  clientFilter?: string;
+  statusFilter?: string;
+  typeFilter?: string;
+}) {
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editProject, setEditProject] = useState<any | null>(null);
@@ -121,7 +133,12 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
   const filteredProjects = projects.filter((p: any) => {
     const matchesClient = clientFilter === 'all' || p.client === clientFilter;
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    return matchesClient && matchesStatus;
+    const isCraft = p.project_type === 'craft' || p.key?.startsWith('BAU') || p.key?.startsWith('CRAFT');
+    const matchesType =
+      typeFilter === 'all' ||
+      (typeFilter === 'craft' && isCraft) ||
+      (typeFilter === 'agency' && !isCraft);
+    return matchesClient && matchesStatus && matchesType;
   });
 
   if (projects.length === 0) {
@@ -253,10 +270,20 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
                 {renderActions(project)}
               </div>
 
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
                   {statusLabel(project.status)}
                 </span>
+                {(project.project_type === 'craft' || project.key?.startsWith('BAU') || project.key?.startsWith('CRAFT')) && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    🔨 Baustelle
+                  </span>
+                )}
+                {project.trade && (
+                  <span className="text-[10px] text-muted-foreground truncate">
+                    {project.trade}
+                  </span>
+                )}
               </div>
 
               {renderBudgetBar(project)}
@@ -277,11 +304,16 @@ export function ProjectList({ refreshTrigger, viewMode = 'grid', clientFilter = 
                 {project.key}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-sm font-semibold text-foreground truncate">{project.name}</h3>
                   <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status)}`}>
                     {statusLabel(project.status)}
                   </span>
+                  {(project.project_type === 'craft' || project.key?.startsWith('BAU') || project.key?.startsWith('CRAFT')) && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                      🔨 Baustelle
+                    </span>
+                  )}
                 </div>
                 {project.expand?.client && (
                   <span className="text-xs text-muted-foreground truncate block mt-0.5">

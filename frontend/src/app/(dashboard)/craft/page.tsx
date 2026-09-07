@@ -13,12 +13,23 @@ export default async function CraftPage() {
   try {
     const pb = await getAdminPB();
     
-    // Fetch projects
-    const projRes = await pb.collection('projects').getList(1, 50, {
-      sort: '-created',
-      expand: 'client',
-    });
-    projects = projRes.items as unknown as ProjectRecord[];
+    // Fetch craft projects (Baustellen) exclusively
+    try {
+      const projRes = await pb.collection('projects').getList(1, 100, {
+        sort: '-created',
+        filter: 'project_type = "craft" || key ~ "BAU" || key ~ "CRAFT"',
+        expand: 'client,site_manager',
+      });
+      projects = projRes.items as unknown as ProjectRecord[];
+    } catch {
+      const projRes = await pb.collection('projects').getList(1, 50, {
+        sort: '-created',
+        expand: 'client',
+      });
+      projects = (projRes.items as unknown as ProjectRecord[]).filter(
+        (p) => p.project_type === 'craft' || p.key?.includes('BAU') || p.key?.includes('CRAFT')
+      );
+    }
 
     // Fetch site reports
     try {

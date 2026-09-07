@@ -92,9 +92,24 @@ export interface ProjectRecord extends BaseRecord {
     geofence_type?: 'none' | 'circle' | 'polygon';
     geofence_data?: { center?: [number, number]; radius?: number; polygon?: Array<[number, number]> };
     geofence_auto_prompt?: boolean;
+    project_type?: 'craft' | 'agency';
+    trade?: string;
+    site_address?: {
+        street?: string;
+        zip?: string;
+        city?: string;
+        country?: string;
+    };
+    site_manager?: string;
+    vob_compliant?: boolean;
+    reverse_charge_13b?: boolean;
+    geofence_lat?: number;
+    geofence_lng?: number;
+    geofence_radius?: number;
     expand?: {
         members?: UserRecord[];
         client?: ClientRecord;
+        site_manager?: UserRecord;
     };
 }
 
