@@ -51,12 +51,15 @@ __pycache__/
 *ANSCHREIBEN*
 *BROSCHUERE*
 *HANDOUT*
+*BRIEFING*
+*Briefing*
 *Anschreiben*
 *Broschuere*
 BROSCHUERE.md
 HANDOUT.md
 VIBEFORCE_FLOW_OS_ANSCHREIBEN_DANIEL.html
 VIBEFORCE_FLOW_OS_BROSCHUERE.html
+VIBEFORCE_FLOW_OS_BRIEFING_DANIEL_CRAFT.html
 tools/render_*.mjs
 tools/generate_*.mjs
 tools/logo_showcase.html
