@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       cookieKey,
+      token: authData.token,
       record: {
         id: authData.record.id,
         email: authData.record.email,

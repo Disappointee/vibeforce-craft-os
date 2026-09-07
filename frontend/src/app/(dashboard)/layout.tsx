@@ -161,11 +161,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const initAuth = async () => {
       try {
         if (pb.authStore.isValid) {
+          const existingUser = pb.authStore.record;
+          if (existingUser && !cancelled) {
+            setUser(existingUser as unknown as UserRecord);
+            useSettingsStore.getState().syncFromUserPreferences(existingUser);
+          }
+
           try {
             await Promise.race([
               pb.collection('users').authRefresh(),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('AUTH_TIMEOUT')), 10_000),
+                setTimeout(() => reject(new Error('AUTH_TIMEOUT')), 5_000),
               ),
             ]);
             if (!cancelled) {
@@ -173,12 +179,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               setUser(currentRecord as unknown as UserRecord);
               useSettingsStore.getState().syncFromUserPreferences(currentRecord);
             }
-          } catch {
-            if (!cancelled) {
-              pb.authStore.clear();
-              router.push('/login');
+          } catch (refreshErr) {
+            console.warn('[layout] authRefresh warning (continuing with cached session):', refreshErr);
+            if (!pb.authStore.isValid || !pb.authStore.record) {
+              if (!cancelled) {
+                pb.authStore.clear();
+                router.push('/login');
+              }
+              return;
             }
-            return;
           }
         } else {
           if (!cancelled) {

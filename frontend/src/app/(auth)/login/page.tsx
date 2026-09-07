@@ -11,6 +11,7 @@ import { ContactAdminDialog } from '@/components/auth/ContactAdminDialog';
 import { t } from '@/lib/i18n';
 import { getAppConfig, isCraftMode } from '@/config/app-mode';
 import { Hammer } from 'lucide-react';
+import { pb } from '@/lib/pocketbase';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +39,10 @@ export default function LoginPage() {
 
       if (!res.ok) {
         throw new Error(data.error || t('auth.login_error'));
+      }
+
+      if (data.token && data.record) {
+        pb.authStore.save(data.token, data.record);
       }
 
       toast.success(
@@ -73,6 +78,10 @@ export default function LoginPage() {
 
       if (!res.ok) {
         throw new Error(data.error || t('auth.login_error'));
+      }
+
+      if (data.token && data.record) {
+        pb.authStore.save(data.token, data.record);
       }
 
       toast.success(t('auth.login.submit'));
