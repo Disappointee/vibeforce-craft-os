@@ -134,16 +134,16 @@ export function CostCockpit({
       <Card className="border-border/60 shadow-sm bg-card/60 backdrop-blur-sm">
         <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl shrink-0">
                 <TrendingUp size={22} />
               </div>
-              <div>
-                <CardTitle className="text-xl font-bold flex flex-wrap items-center gap-2.5">
-                  <span>Soll/Ist-Nachkalkulation &amp; Margen-Cockpit</span>
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="text-xl font-bold text-foreground tracking-tight">Soll/Ist-Nachkalkulation &amp; Margen-Cockpit</span>
                   <Badge
                     variant="outline"
-                    className={`text-xs font-semibold shrink-0 whitespace-nowrap ${
+                    className={`text-xs font-semibold shrink-0 whitespace-nowrap px-2.5 py-0.5 ${
                       summary.profitMarginStatus === 'healthy'
                         ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
                         : summary.profitMarginStatus === 'warning'
@@ -157,7 +157,7 @@ export function CostCockpit({
                       ? 'Mittlere Marge (5-20%)'
                       : 'Kritisch (< 5% DB II)'}
                   </Badge>
-                </CardTitle>
+                </div>
                 <CardDescription className="text-xs text-muted-foreground">
                   Baustelle: <strong className="text-foreground">{project.name}</strong> • Live-Abgleich von Monteur-Stempelungen, Regieberichten und Deckungsbeiträgen
                 </CardDescription>

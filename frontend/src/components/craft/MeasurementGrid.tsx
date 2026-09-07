@@ -301,10 +301,10 @@ export function MeasurementGrid({
           <thead className="bg-muted/40 border-b border-border text-muted-foreground font-semibold uppercase tracking-wider">
             <tr>
               <th className="py-3 px-3 w-16">Pos.</th>
-              <th className="py-3 px-3 min-w-[180px]">Bezeichnung / Leistung</th>
+              <th className="py-3 px-3 min-w-[200px]">Bezeichnung / Leistung</th>
               <th className="py-3 px-3 min-w-[150px]">Formel (L × B × H)</th>
               <th className="py-3 px-3 w-20">Menge</th>
-              <th className="py-3 px-3 w-24">Einheit</th>
+              <th className="py-3 px-3 w-32">Einheit</th>
               <th className="py-3 px-3 w-24">EP (€)</th>
               <th className="py-3 px-3 w-28">Steuersatz</th>
               <th className="py-3 px-3 w-24 text-right">GP (€)</th>
@@ -314,7 +314,7 @@ export function MeasurementGrid({
           <tbody className="divide-y divide-border/40 text-foreground">
             {rows.map((row) => (
               <tr key={row.id} className="hover:bg-muted/20 transition-colors">
-                <td className="py-2.5 px-3 font-mono font-medium text-gray-500">
+                <td className="py-2.5 px-3 font-mono font-medium text-muted-foreground">
                   {row.position_nr}
                 </td>
                 <td className="py-2.5 px-3">
@@ -324,7 +324,7 @@ export function MeasurementGrid({
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { title: e.target.value })}
                     placeholder="z.B. Estrich verlegen"
-                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-teal-500 rounded px-1.5 py-1 text-xs"
+                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-amber-500/50 rounded px-1.5 py-1 text-xs"
                   />
                 </td>
                 <td className="py-2.5 px-3">
@@ -334,7 +334,7 @@ export function MeasurementGrid({
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { formula: e.target.value })}
                     placeholder="z.B. 12.50 * 2.80"
-                    className="w-full bg-transparent font-mono border-0 focus:ring-1 focus:ring-teal-500 rounded px-1.5 py-1 text-xs text-teal-600 dark:text-teal-400 placeholder-gray-400"
+                    className="w-full bg-transparent font-mono border-0 focus:ring-1 focus:ring-amber-500/50 rounded px-1.5 py-1 text-xs text-emerald-600 dark:text-emerald-400 placeholder-muted-foreground"
                   />
                 </td>
                 <td className="py-2.5 px-3">
@@ -344,18 +344,18 @@ export function MeasurementGrid({
                     value={row.quantity || ''}
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { quantity: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-teal-500 rounded px-1.5 py-1 text-xs"
+                    className="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-amber-500/50 rounded px-1.5 py-1 text-xs tabular-nums"
                   />
                 </td>
-                <td className="py-2.5 px-3">
+                <td className="py-2.5 px-3 w-32">
                   <select
                     value={row.unit}
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { unit: e.target.value as MeasurementUnit })}
-                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-teal-500 rounded px-1 py-1 text-xs"
+                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-amber-500/50 rounded px-1 py-1 text-xs text-foreground cursor-pointer"
                   >
                     {MEASUREMENT_UNITS.map((u) => (
-                      <option key={u} value={u} className="dark:bg-gray-900">
+                      <option key={u} value={u} className="bg-popover text-popover-foreground">
                         {labelFor(MEASUREMENT_UNIT_LABEL_MAP, u)}
                       </option>
                     ))}
