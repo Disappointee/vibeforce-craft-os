@@ -420,7 +420,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
-      craftModuleEnabled: true,
+      craftModuleEnabled: false,
       language: 'de' as UserLanguage,
       budgetWarningEnabled: true,
       budgetWarningThreshold: 80,
@@ -462,7 +462,7 @@ export const useSettingsStore = create<SettingsState>()(
         const recordLang = (userRecord.language || prefs?.language) as UserLanguage | undefined;
 
         set((state) => ({
-          craftModuleEnabled: prefs?.craftModuleEnabled !== undefined ? prefs.craftModuleEnabled : (state.craftModuleEnabled ?? true),
+          craftModuleEnabled: prefs?.craftModuleEnabled !== undefined ? prefs.craftModuleEnabled : (state.craftModuleEnabled ?? false),
           language: recordLang || state.language || 'de',
           defaultTaskView: prefs?.defaultTaskView || state.defaultTaskView,
           timeRoundingMinutes: prefs?.timeRoundingMinutes !== undefined ? prefs.timeRoundingMinutes : state.timeRoundingMinutes,

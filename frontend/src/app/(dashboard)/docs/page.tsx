@@ -28,9 +28,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/lib/store';
+import { isCraftMode } from '@/config/app-mode';
 
 export default function DocsPage() {
   const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
+  const showCraft = isCraftMode() || craftModuleEnabled;
   const shortcuts = [
     {
       section: 'Globale Tastenkürzel',
@@ -107,12 +109,14 @@ export default function DocsPage() {
             <TabsTrigger value="projekte" className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <Building2 size={14} /> Kunden, Verträge & Budgets
             </TabsTrigger>
-            <TabsTrigger value="craft" className="flex items-center gap-2 text-xs font-semibold cursor-pointer text-teal-600 dark:text-teal-400">
-              <Hammer size={14} /> Handwerk & Baustelle (M007)
-              <Badge className="ml-1 text-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 px-1.5 py-0">
-                {craftModuleEnabled ? 'Aktiv' : 'Optional'}
-              </Badge>
-            </TabsTrigger>
+            {showCraft && (
+              <TabsTrigger value="craft" className="flex items-center gap-2 text-xs font-semibold cursor-pointer text-teal-600 dark:text-teal-400">
+                <Hammer size={14} /> Handwerk & Baustelle (M007)
+                <Badge className="ml-1 text-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 px-1.5 py-0">
+                  {craftModuleEnabled ? 'Aktiv' : 'Optional'}
+                </Badge>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="shortcuts" className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <Keyboard size={14} /> Shortcuts
             </TabsTrigger>
@@ -488,7 +492,8 @@ export default function DocsPage() {
           </TabsContent>
 
           {/* 7. Modul M007: VIBE Craft (Handwerk, VOB & Geofencing) */}
-          <TabsContent value="craft" className="space-y-6 mt-6">
+          {showCraft && (
+            <TabsContent value="craft" className="space-y-6 mt-6">
             <Card className="border-teal-500/20 bg-teal-500/[0.02]">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -605,7 +610,8 @@ export default function DocsPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
+          )}
 
           {/* 8. Shortcuts */}
           <TabsContent value="shortcuts" className="space-y-6 mt-6">

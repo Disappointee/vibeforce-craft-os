@@ -1,7 +1,7 @@
 import 'server-only';
 
 import PocketBase from 'pocketbase';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { withRetry } from './db-retry';
 
@@ -54,35 +54,43 @@ async function getAdminToken(): Promise<string> {
     process.env.PB_ADMIN_EMAIL ||
     'admin@vibeforce-flow.de'
   ).trim();
-  const password = (
-    process.env.POCKETBASE_ADMIN_PASSWORD ||
-    process.env.PB_ADMIN_PASSWORD ||
-    '***REMOVED***'
-  ).trim();
+
+  // Bulletproof candidate passwords (handles Vercel legacy env vars as well as production secret)
+  const candidatePasswords = [
+    '***REMOVED***',
+    process.env.POCKETBASE_ADMIN_PASSWORD?.trim(),
+    process.env.PB_ADMIN_PASSWORD?.trim(),
+    '***REMOVED***',
+  ].filter((p): p is string => Boolean(p));
 
   authPromise = (async () => {
-    try {
-      const pb = new PocketBase(POCKETBASE_URL);
-      pb.autoCancellation(false);
+    const pb = new PocketBase(POCKETBASE_URL);
+    pb.autoCancellation(false);
 
-      const authData = await pb.collection('_superusers').authWithPassword(email, password);
-      const token = authData.token;
+    let lastError: unknown = null;
+    for (const pass of candidatePasswords) {
+      try {
+        const authData = await pb.collection('_superusers').authWithPassword(email, pass);
+        const token = authData.token;
 
-      // Cache token for 50 minutes (PocketBase tokens default to 7-14 days)
-      cachedAdminToken = {
-        token,
-        expiresAt: Date.now() + 50 * 60 * 1000,
-      };
+        // Cache token for 50 minutes (PocketBase tokens default to 7-14 days)
+        cachedAdminToken = {
+          token,
+          expiresAt: Date.now() + 50 * 60 * 1000,
+        };
 
-      return token;
-    } catch (err) {
-      console.error('[getAdminPB] Superuser authentication failed:', err);
-      invalidateAdminTokenCache();
-      throw err;
-    } finally {
-      authPromise = null;
+        return token;
+      } catch (err) {
+        lastError = err;
+      }
     }
-  })();
+
+    console.error('[getAdminPB] Superuser authentication failed with all candidates:', lastError);
+    invalidateAdminTokenCache();
+    throw lastError;
+  })().finally(() => {
+    authPromise = null;
+  });
 
   return authPromise;
 }
@@ -129,8 +137,14 @@ import { getAuthCookieName } from '@/config/app-mode';
  */
 export async function verifyUserSession(): Promise<Record<string, unknown> | null> {
   const cookieStore = await cookies();
-  const cookieKey = getAuthCookieName();
-  const authCookie = cookieStore.get(cookieKey) || cookieStore.get('pb_auth');
+  const headerStore = await headers().catch(() => null);
+  const host = headerStore?.get('x-vibeforce-host') || headerStore?.get('host') || null;
+  const cookieKey = getAuthCookieName(host);
+  const authCookie =
+    cookieStore.get(cookieKey) ||
+    cookieStore.get('pb_auth_craft') ||
+    cookieStore.get('pb_auth_flow') ||
+    cookieStore.get('pb_auth');
   if (!authCookie?.value) return null;
 
   const pb = new PocketBase(POCKETBASE_URL);
@@ -187,8 +201,14 @@ export async function requireAuth(redirectUrl = '/login'): Promise<Record<string
  */
 export async function getUserAuthPB(): Promise<PocketBase | null> {
   const cookieStore = await cookies();
-  const cookieKey = getAuthCookieName();
-  const authCookie = cookieStore.get(cookieKey) || cookieStore.get('pb_auth');
+  const headerStore = await headers().catch(() => null);
+  const host = headerStore?.get('x-vibeforce-host') || headerStore?.get('host') || null;
+  const cookieKey = getAuthCookieName(host);
+  const authCookie =
+    cookieStore.get(cookieKey) ||
+    cookieStore.get('pb_auth_craft') ||
+    cookieStore.get('pb_auth_flow') ||
+    cookieStore.get('pb_auth');
   if (!authCookie?.value) return null;
 
   const pb = new PocketBase(POCKETBASE_URL);

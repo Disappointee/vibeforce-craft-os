@@ -903,7 +903,7 @@ export function ProjectDetailsClient({
                 <BarChart3 size={16} />
               </button>
             </div>
-            {craftModuleEnabled && (
+            {(craftModuleEnabled && (project as any)?.project_type === 'craft') && (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

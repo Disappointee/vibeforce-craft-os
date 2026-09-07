@@ -5,7 +5,7 @@ import {
   apiRateLimiter,
   createRateLimitResponse,
 } from '@/lib/rate-limiter';
-import { isCraftMode } from '@/config/app-mode';
+import { detectModeFromHostname, isCraftMode, getAuthCookieName } from '@/config/app-mode';
 
 /**
  * 🛡️ Next.js 16 Security Headers & Rate Limiting Middleware
@@ -20,12 +20,8 @@ export function middleware(request: NextRequest) {
     '127.0.0.1';
 
   // Subdomain & Hostname Detection (e.g. craft.vibeforce-flow-os.vercel.app)
-  const host = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '').toLowerCase();
-  const isCraftHost =
-    host.startsWith('craft.') ||
-    host.startsWith('handwerk.') ||
-    host.includes('craft-os') ||
-    host.includes('.craft.');
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const isCraftHost = detectModeFromHostname(host) === 'craft' || isCraftMode();
 
   // Direct root traffic on craft subdomains to /craft
   if (isCraftHost && pathname === '/') {
@@ -47,7 +43,7 @@ export function middleware(request: NextRequest) {
 
   // 2. Protect /admin routes
   if (pathname.startsWith('/admin')) {
-    const cookieKey = isCraftHost || isCraftMode() ? 'pb_auth_craft' : 'pb_auth_flow';
+    const cookieKey = isCraftHost ? 'pb_auth_craft' : 'pb_auth_flow';
     const authCookie = request.cookies.get(cookieKey) || request.cookies.get('pb_auth');
     if (!authCookie?.value) {
       const loginUrl = new URL('/login', request.url);
@@ -74,7 +70,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-vibeforce-app-mode', isCraftHost ? 'craft' : 'agency');
+  requestHeaders.set('x-vibeforce-host', host);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+  response.headers.set('x-vibeforce-app-mode', isCraftHost ? 'craft' : 'agency');
 
   // 3. Apply Hardened Security Headers
   response.headers.set('X-Frame-Options', 'DENY');

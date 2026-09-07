@@ -7,13 +7,50 @@
 export type AppMode = 'craft' | 'agency';
 
 /**
- * Returns the active application mode.
- * Evaluates NEXT_PUBLIC_APP_MODE (default: 'agency').
- * Deterministic for SSR and production builds (Zero Hydration Mismatch).
- * In local development only (NODE_ENV !== 'production'), allows optional localStorage override.
+ * Detects whether a given hostname belongs to Craft OS.
+ * Matches craft.*, handwerk.*, craft-os.*, or custom preview hostnames.
  */
-export function getAppMode(): AppMode {
-  // 1. Local Development Only: Allow developer to toggle modes via console
+export function detectModeFromHostname(host?: string | null): AppMode {
+  if (!host) return 'agency';
+  const h = host.toLowerCase().trim();
+  if (
+    h.startsWith('craft.') ||
+    h.startsWith('handwerk.') ||
+    h.includes('craft-os') ||
+    h.includes('.craft.') ||
+    h.includes('craft-') ||
+    h === 'craft'
+  ) {
+    return 'craft';
+  }
+  return 'agency';
+}
+
+/**
+ * Returns the active application mode.
+ * Evaluates:
+ * 1. Explicit host argument (SSR headers)
+ * 2. Client-side window.location.hostname (craft.* / handwerk.* -> 'craft')
+ * 3. Local development override (localStorage)
+ * 4. NEXT_PUBLIC_APP_MODE env variable (default: 'agency')
+ * Deterministic for SSR and production builds (Zero Hydration Mismatch).
+ */
+export function getAppMode(explicitHost?: string | null): AppMode {
+  // 1. Explicit Host (e.g. from SSR headers or server caller)
+  if (explicitHost) {
+    const hostMode = detectModeFromHostname(explicitHost);
+    if (hostMode === 'craft') return 'craft';
+  }
+
+  // 2. Client-side Hostname Detection in Browser
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const hostMode = detectModeFromHostname(window.location.hostname);
+    if (hostMode === 'craft') {
+      return 'craft';
+    }
+  }
+
+  // 3. Local Development Only: Allow developer to toggle modes via console
   if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     const override = localStorage.getItem('vibeforce_app_mode_override') as AppMode | null;
     if (override === 'craft' || override === 'agency') {
@@ -21,7 +58,7 @@ export function getAppMode(): AppMode {
     }
   }
 
-  // 2. Production & SSR: Deterministic build-time / container env variable
+  // 4. Production & SSR: Deterministic build-time / container env variable
   const envMode = process.env.NEXT_PUBLIC_APP_MODE?.toLowerCase().trim();
   if (envMode === 'craft') {
     return 'craft';
@@ -29,12 +66,12 @@ export function getAppMode(): AppMode {
   return 'agency';
 }
 
-export function isCraftMode(): boolean {
-  return getAppMode() === 'craft';
+export function isCraftMode(explicitHost?: string | null): boolean {
+  return getAppMode(explicitHost) === 'craft';
 }
 
-export function isAgencyMode(): boolean {
-  return getAppMode() === 'agency';
+export function isAgencyMode(explicitHost?: string | null): boolean {
+  return getAppMode(explicitHost) === 'agency';
 }
 
 /**
@@ -42,8 +79,8 @@ export function isAgencyMode(): boolean {
  * Flow OS: 'pb_auth_flow'
  * Craft OS: 'pb_auth_craft'
  */
-export function getAuthCookieName(): string {
-  return isCraftMode() ? 'pb_auth_craft' : 'pb_auth_flow';
+export function getAuthCookieName(explicitHost?: string | null): string {
+  return isCraftMode(explicitHost) ? 'pb_auth_craft' : 'pb_auth_flow';
 }
 
 /**
@@ -72,8 +109,8 @@ export interface AppConfig {
   };
 }
 
-export function getAppConfig(): AppConfig {
-  const mode = getAppMode();
+export function getAppConfig(explicitHost?: string | null): AppConfig {
+  const mode = getAppMode(explicitHost);
 
   if (mode === 'craft') {
     return {

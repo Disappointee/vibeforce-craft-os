@@ -137,7 +137,7 @@ export function ClientDetailsClient({
   initialFiles,
 }: ClientDetailsClientProps) {
     const router = useRouter();
-    const craft = isCraftMode() || Boolean((initialClient as any)?.client_type || (initialClient as any)?.has_48b_certificate);
+    const craft = isCraftMode();
 
     const [client, setClient] = useState<Record<string, unknown>>(initialClient);
     const [users] = useState<Record<string, unknown>[]>(initialUsers);

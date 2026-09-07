@@ -27,6 +27,8 @@ import {
   Zap,
   BookOpen,
   Hammer,
+  LayoutDashboard,
+  TrendingUp,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -345,7 +347,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-muted-foreground font-medium tracking-wide">Vibeforce Flow wird geladen...</p>
+          <p className="text-muted-foreground font-medium tracking-wide">
+            {craftMode ? 'Vibeforce Craft wird geladen...' : 'Vibeforce Flow wird geladen...'}
+          </p>
         </div>
       </div>
     );
@@ -409,13 +413,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </>
             ) : (
               <>
+                <NavItem href="/" icon={<LayoutDashboard size={18} />} label={appConfig.navigation.dashboard || 'Dashboard'} active={pathname === '/'} collapsed={sidebarCollapsed} />
                 <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
                 <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} collapsed={sidebarCollapsed} />
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-                {craftModuleEnabled && (
-                  <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} collapsed={sidebarCollapsed} />
-                )}
+                <NavItem href="/reports" icon={<TrendingUp size={18} />} label="Finanzen & Berichte" active={pathname.startsWith('/reports')} collapsed={sidebarCollapsed} />
                 <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
                 {user?.role === 'admin' && (
                   <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
@@ -488,13 +491,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </>
             ) : (
               <>
+                <NavItem href="/" icon={<LayoutDashboard size={18} />} label={appConfig.navigation.dashboard || 'Dashboard'} active={pathname === '/'} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/tasks" icon={<CheckSquare size={18} />} label={t('nav.my_tasks')} active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/time" icon={<Timer size={18} />} label={t('nav.my_times')} active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label={t('nav.projekte')} active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-                {craftModuleEnabled && (
-                  <NavItem href="/craft" icon={<Hammer size={18} />} label={t('nav.craft')} active={pathname.startsWith('/craft') || pathname.includes('/site-reports') || pathname.includes('/geofence')} onClick={() => setMobileSidebarOpen(false)} />
-                )}
+                <NavItem href="/reports" icon={<TrendingUp size={18} />} label="Finanzen & Berichte" active={pathname.startsWith('/reports')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
                 {user?.role === 'admin' && (
                   <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />

@@ -5,6 +5,7 @@ import { getAuthCookieName } from '@/config/app-mode';
 
 export async function POST(request: NextRequest) {
   try {
+    const host = request.headers.get('x-vibeforce-host') || request.headers.get('host');
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Use SDK's exportToCookie with stack-isolated cookie key (pb_auth_flow vs pb_auth_craft)
-    const cookieKey = getAuthCookieName();
+    const cookieKey = getAuthCookieName(host);
     const cookieHeader = pb.authStore.exportToCookie({
       httpOnly: false,   // Client-side SDK needs read access
       sameSite: 'Lax',
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
+      cookieKey,
       record: {
         id: authData.record.id,
         email: authData.record.email,
@@ -43,6 +45,17 @@ export async function POST(request: NextRequest) {
     });
 
     response.headers.append('Set-Cookie', cookieHeader);
+
+    // Set fallback standard cookie to ensure universal backward compatibility
+    if (cookieKey !== 'pb_auth') {
+      const fallbackHeader = pb.authStore.exportToCookie({
+        httpOnly: false,
+        sameSite: 'Lax',
+        secure: true,
+        path: '/',
+      }, 'pb_auth');
+      response.headers.append('Set-Cookie', fallbackHeader);
+    }
     return response;
   } catch (err: unknown) {
     const pbErr = err as { status?: number; message?: string };

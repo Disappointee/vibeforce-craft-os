@@ -19,53 +19,69 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const pb = await getAdminPB();
 
   let project: Record<string, unknown>;
-  try {
-    project = await pb.collection('projects').getOne(id);
-  } catch {
-    notFound();
-  }
-
-  const tasksResult = await pb.collection('tasks').getList(1, 50, {
-    filter: pb.filter('project = {:id}', { id }),
-    sort: '-created',
-    expand: 'assignees',
-  });
-  const tasks = tasksResult.items;
-
-  const taskIds = tasks.map((t: Record<string, unknown>) => t.id as string);
+  let tasks: Record<string, unknown>[] = [];
   let timeEntries: Record<string, unknown>[] = [];
-  if (taskIds.length > 0) {
-    const timeResult = await pb.collection('time_entries').getList(1, 200, {
-      filter: taskIds.map((tid: string) => pb.filter('task = {:id}', { id: tid })).join(' || '),
-      sort: '-created',
-    });
-    timeEntries = timeResult.items;
-  }
-
   let expenses: Record<string, unknown>[] = [];
-  try {
-    const expensesResult = await pb.collection('external_expenses').getList(1, 100, {
-      filter: pb.filter('project = {:id}', { id }),
-      sort: '-created',
-    });
-    expenses = expensesResult.items;
-  } catch {
-    // external_expenses collection might not exist yet
-  }
-
   let siteReports: Record<string, unknown>[] = [];
+
   try {
-    const reportsResult = await pb.collection('site_reports').getList(1, 100, {
-      filter: pb.filter('project = {:id}', { id }),
-      sort: '-report_date,-created',
-      expand: 'author',
-    });
-    siteReports = reportsResult.items;
-  } catch {
-    // site_reports collection might not exist yet
+    const pb = await getAdminPB();
+
+    try {
+      project = await pb.collection('projects').getOne(id);
+    } catch {
+      notFound();
+    }
+
+    try {
+      const tasksResult = await pb.collection('tasks').getList(1, 50, {
+        filter: pb.filter('project = {:id}', { id }),
+        sort: '-created',
+        expand: 'assignees',
+      });
+      tasks = tasksResult.items;
+    } catch (err) {
+      console.warn('[ProjectDetailsPage] Failed to fetch tasks:', err);
+    }
+
+    const taskIds = tasks.map((t: Record<string, unknown>) => t.id as string);
+    if (taskIds.length > 0) {
+      try {
+        const timeResult = await pb.collection('time_entries').getList(1, 200, {
+          filter: taskIds.map((tid: string) => pb.filter('task = {:id}', { id: tid })).join(' || '),
+          sort: '-created',
+        });
+        timeEntries = timeResult.items;
+      } catch (err) {
+        console.warn('[ProjectDetailsPage] Failed to fetch time entries:', err);
+      }
+    }
+
+    try {
+      const expensesResult = await pb.collection('external_expenses').getList(1, 100, {
+        filter: pb.filter('project = {:id}', { id }),
+        sort: '-created',
+      });
+      expenses = expensesResult.items;
+    } catch {
+      // external_expenses collection might not exist yet
+    }
+
+    try {
+      const reportsResult = await pb.collection('site_reports').getList(1, 100, {
+        filter: pb.filter('project = {:id}', { id }),
+        sort: '-report_date',
+        expand: 'author',
+      });
+      siteReports = reportsResult.items;
+    } catch (err) {
+      console.warn('[ProjectDetailsPage] Failed to fetch site reports:', err);
+    }
+  } catch (outerErr) {
+    console.error('[ProjectDetailsPage] Critical error initializing project page:', outerErr);
+    notFound();
   }
 
   return (

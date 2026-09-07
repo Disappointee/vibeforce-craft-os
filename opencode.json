@@ -1,5 +1,5 @@
 {
-  "": "https://opencode.ai/config.json",
+  "$schema": "https://opencode.ai/config.json",
   "model": "openrouter/z-ai/glm-5.3-flash",
   "small_model": "openrouter/z-ai/glm-5.3-flash",
   "default_agent": "general",

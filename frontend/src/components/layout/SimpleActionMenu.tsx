@@ -14,6 +14,7 @@ import { NewCraftClientDialog } from '@/components/craft/NewCraftClientDialog';
 import { Input } from '@/components/ui/input';
 import { revalidateClientsPath } from '@/app/actions/clients';
 import { revalidateProjectsPath } from '@/app/actions/projects';
+import { isCraftMode } from '@/config/app-mode';
 
 interface TaskOption {
   id: string;
@@ -29,7 +30,7 @@ export function SimpleActionMenu() {
   const { startTimer } = useTimerStore();
   const router = useRouter();
   const pathname = usePathname();
-  const isCraftContext = pathname?.startsWith('/craft') || pathname?.includes('/site-reports') || pathname?.includes('/geofence');
+  const isCraftContext = isCraftMode() || pathname?.startsWith('/craft') || pathname?.includes('/site-reports') || pathname?.includes('/geofence');
 
   const [baustelleDialogOpen, setBaustelleDialogOpen] = useState(false);
   const [craftClientDialogOpen, setCraftClientDialogOpen] = useState(false);

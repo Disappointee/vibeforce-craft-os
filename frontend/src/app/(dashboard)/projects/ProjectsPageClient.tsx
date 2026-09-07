@@ -7,6 +7,7 @@ import { NewBaustelleDialog } from '@/components/craft/NewBaustelleDialog';
 import { Button } from '@/components/ui/button';
 import { Columns3, List, Hammer, Plus, FolderGit2 } from 'lucide-react';
 import { isCraftMode } from '@/config/app-mode';
+import { useSettingsStore } from '@/lib/store';
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ import type { ClientRecord } from '@/lib/pocketbase-types';
 
 export function ProjectsPageClient({ initialClients }: { initialClients: ClientRecord[] }) {
   const craftMode = isCraftMode();
+  const craftModuleEnabled = useSettingsStore((s) => s.craftModuleEnabled);
   const [clients] = useState(initialClients);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -83,7 +85,7 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
       </div>
 
       <div className="flex flex-wrap items-center gap-4 bg-card/20 p-4 rounded-xl border border-border/50">
-        {!craftMode && (
+        {!craftMode && craftModuleEnabled && (
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bereich:</span>
             <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>

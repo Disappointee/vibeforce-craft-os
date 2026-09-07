@@ -7,6 +7,7 @@ import {
   Timer,
   FolderGit2,
   Hammer,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useTimerStore } from '@/lib/store';
 import { isCraftMode } from '@/config/app-mode';
@@ -24,6 +25,7 @@ export function MobileTabBar() {
         { id: 'timer', href: '/time', icon: Timer, label: 'Stempeluhr' },
       ]
     : [
+        { id: 'dashboard', href: '/', icon: LayoutDashboard, label: 'Dashboard' },
         { id: 'tasks', href: '/tasks', icon: CheckSquare, label: 'Aufgaben' },
         { id: 'timer', href: '/time', icon: Timer, label: 'Zeiten' },
         { id: 'projects', href: '/projects', icon: FolderGit2, label: 'Projekte' },
@@ -33,7 +35,7 @@ export function MobileTabBar() {
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border safe-area-pb">
       <ul className="flex items-center justify-around h-16">
         {tabs.map((tab) => {
-          const isActive = pathname.startsWith(tab.href);
+          const isActive = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
           
           return (
             <li key={tab.id} className="flex-1">
