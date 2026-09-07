@@ -273,3 +273,55 @@ Um maximale Daten- und Betriebssicherheit zu gewährleisten, laufen beide Module
 3. **Single Source of Truth:** Da beide Vercel-Projekte auf das selbe Git-Repository hören, deployt ein einziger `git push origin main` stets beide Systeme vollautomatisch – bugfixes am Core stehen sofort beiden Branchen zur Verfügung.
 4. **Fallback Subdomain-Routing:** Selbst bei einem gemeinsamen Deployment schaltet die integrierte Hostname-Erkennung in [`middleware.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/middleware.ts) und [`app-mode.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/config/app-mode.ts) bei Aufruf von `craft.*` automatisch auf das Handwerks-Betriebssystem um.
 
+---
+
+## 9. Phase 2 Audit: Handwerk-Compliance & Baustellen-Akte
+*(DIN 18299 Bautagebuch, VOB/B § 6 Behinderungsanzeige, BGB § 650g Abnahme, GoBD-Sperre & § 13b / § 48b EStG)*
+
+### 9.1 VOB/B § 6 & BGB § 642 Verzögerungsanzeige-Assistent
+- **Herausforderung:** Unstrukturierte Notizen führen vor Gericht zum Verlust von Ansprüchen auf Bauzeitverlängerung. Ein bürokratisches 10-Felder-Monster wird jedoch auf dem Gerüst verweigert.
+- **Implementierung:** 1-Klick-Assistent in [`DailySiteReportForm.tsx`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/components/craft/DailySiteReportForm.tsx) mit Dropdown-Gründen (*Witterung*, *Vorunternehmer-Verzug*, *Fehlende Freigabe/Pläne*, *Bauherrenwunsch*) und automatischer Textgenerierung direkt in `special_events`.
+- **Rechtliche Wirkung:** Neutral formuliert, sodass die Dokumentation sowohl unter VOB/B § 6 als auch unter BGB § 642 gerichtsfest greift.
+
+### 9.2 Ehrlicher Dual-Timestamp bei digitaler Unterschrift (BGB § 650g)
+- **Herausforderung:** Funklöcher auf der Baustelle führen zu Diskrepanzen zwischen Unterschriftszeitpunkt vor Ort und späterer Server-Synchronisation.
+- **Implementierung:** Im Signatur-Manifest ([`site-reports.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/actions/craft/site-reports.ts)) werden `clientRecordedAt`, `serverReceivedAt` und Satelliten-`gpsTimestamp` manipulationssicher im SHA-256 Hash versiegelt.
+- **Transparenz:** Das generierte PDF weist beide Zeitpunkte transparent aus (*„Signiert vor Ort um 16:30 Uhr | Synchronisiert um 17:15 Uhr“*), was vor Gericht unanfechtbar ist.
+
+### 9.3 § 48b EStG Bauabzugsteuer-Wächter (Ampel)
+- **Herausforderung:** Bei abgelaufener Freistellungsbescheinigung droht dem Auftraggeber persönliche Haftung und 15 % Steuerabzug.
+- **Implementierung:** In [`invoices.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/actions/craft/invoices.ts) werden Firmenstammdaten dynamisch aufgelöst. Die Freistellungsbescheinigung wird tagesaktuell gegen das Rechnungsdatum geprüft:
+  - *Gültig:* Vermerk wird automatisch auf Rechnung und ZUGFeRD-XML gedruckt.
+  - *Abgelaufen:* Vermerk wird unterdrückt und eine Warnung protokolliert.
+
+---
+
+## 10. Phase 3 Audit: Großhandel & Ausschreibungen
+*(IDS-Connect 2.5 Schnittstelle & GAEB 90/XML Leistungsverzeichnisse)*
+
+### 10.1 GAEB-Leistungsverzeichnisse (Autosave & Wiederherstellung)
+- **Herausforderung:** Umfangreiche Ausschreibungen (D83/X83 mit hunderten Positionen) werden im Browser kalkuliert; bei Tab-Schließen drohte Datenverlust.
+- **Implementierung:** [`GaebManager.tsx`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/components/craft/GaebManager.tsx) speichert den aktuellen Bearbeitungsstand debounced in `localStorage`. Beim erneuten Öffnen erscheint ein dezenter Wiederherstellungs-Banner (*„Ungespeichertes Leistungsverzeichnis gefunden: [Wiederherstellen] [Verwerfen]“*).
+
+### 10.2 IDS-Connect 2.5 Resilienz (`/api/craft/ids/hook`)
+- **Herausforderung:** Ältere Großhändlersysteme schneiden beim Punchout teilweise URL-Token ab oder Admins vergessen `IDS_HOOK_SECRET`.
+- **Implementierung:** Stabiler Fallback auf interne Server-Secrets verhindert abrupte 503-Fehler. Das Sicherheitsmodell bleibt vollständig gewahrt, da gespeicherte Warenkörbe (`ids_carts`) ausschließlich über [`getImportedIdsCartAction`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/actions/craft/ids-carts.ts) durch authentifizierte Mitglieder des jeweiligen Projekts abgerufen werden können.
+
+---
+
+## 11. Phase 4 Audit: Security, RBAC & Multi-Tenant-Isolation
+
+### 11.1 Physische Datenbank-Trennung (Zero Data Contamination)
+- Flow OS und Craft OS nutzen getrennte SQLite-Dateien (`pb-data-flow` vs. `pb-data-craft`).
+- Vollständige Immunität gegen mandantenübergreifende Datenlecks auf Datenbankebene.
+
+### 11.2 Isolierte Session-Cookies (`pb_auth_flow` vs. `pb_auth_craft`)
+- Parallele Tabs auf derselben Root-Domain (`*.vercel.app`) überschreiben sich nicht gegenseitig.
+- Server-Actions und Middleware isolieren Sessions deterministisch.
+
+### 11.3 Audit-Trail & Nicht-Abstreitbarkeit (Non-Repudiation Impersonation)
+- `/api/custom/impersonate` erzwingt die synchrone Protokollierung in `audit_logs` mit Client-IP, User-Agent, Admin-ID, Target-User und Begründung, **bevor** ein zeitlich begrenzter 1-Stunden-Token ausgestellt wird.
+
+### 11.4 Serverseitige Lizenz- und Entitlement-Schranken
+- Handwerker-Module (Wholesale, Invoices, Measurements, Pinning) werden autoritativ über [`server-entitlements.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/server-entitlements.ts) mit Hard Gate (403 Forbidden) abgesichert. Lizenzänderungen sind ausschließlich echten Administratoren vorbehalten.
+
