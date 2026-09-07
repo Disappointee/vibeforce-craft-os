@@ -48,6 +48,52 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [cachedDraft, setCachedDraft] = useState<GaebBoQ | null>(null);
+  const DRAFT_STORAGE_KEY = `vibeforce_gaeb_draft_${projectName.replace(/\s+/g, '_')}`;
+
+  // Check for existing draft on mount
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as GaebBoQ;
+        if (parsed?.allItems?.length > 0) {
+          setCachedDraft(parsed);
+        }
+      }
+    } catch {}
+  }, [DRAFT_STORAGE_KEY]);
+
+  // Debounced autosave whenever boq changes
+  React.useEffect(() => {
+    if (!boq || boq.allItems.length === 0) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(boq));
+      } catch {}
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [boq, DRAFT_STORAGE_KEY]);
+
+  const restoreDraft = () => {
+    if (cachedDraft) {
+      setBoq(cachedDraft);
+      expandAll(cachedDraft.categories);
+      setCachedDraft(null);
+      toast.success('Entwurf wiederhergestellt', {
+        description: `${cachedDraft.allItems.length} Positionen geladen.`,
+      });
+    }
+  };
+
+  const discardDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {}
+    setCachedDraft(null);
+    toast.info('Entwurf verworfen');
+  };
+
   // Auto-expand all categories when a new BOQ is loaded
   const expandAll = (categories: GaebCategory[]) => {
     const map: Record<string, boolean> = {};
@@ -294,6 +340,27 @@ export function GaebManager({ projectName = 'Aktuelles Bauprojekt', onTransferTo
         className="hidden"
         onChange={handleFileUpload}
       />
+
+      {/* Autosaved Draft Recovery Banner */}
+      {cachedDraft && !boq && (
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5 text-sm text-amber-900 dark:text-amber-200">
+            <Sparkles className="w-5 h-5 text-amber-500 shrink-0" />
+            <div>
+              <span className="font-semibold">Ungespeichertes Leistungsverzeichnis gefunden: </span>
+              <span>"{cachedDraft.projectName}" ({cachedDraft.allItems.length} Positionen)</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={restoreDraft} className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold">
+              Wiederherstellen
+            </Button>
+            <Button size="sm" variant="ghost" onClick={discardDraft} className="text-xs text-muted-foreground hover:text-foreground">
+              Verwerfen
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Top Header Card */}
       <Card className="border-border/60 shadow-sm bg-card/60 backdrop-blur-sm">
