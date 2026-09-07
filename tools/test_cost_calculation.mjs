@@ -72,12 +72,12 @@ console.log(`Lohnkosten gesamt: ${summary1.laborCosts.toFixed(2)} €`);
 console.log(`Deckungsbeitrag II: ${summary1.deckungsbeitrag2.toFixed(2)} € (Marge: ${summary1.deckungsbeitrag2MarginPercent}%)`);
 console.log(`Margenstatus: ${summary1.profitMarginStatus}`);
 
-// Prüfungen
-if (summary1.sollHours !== 250 || summary1.istHours !== 226) {
-  throw new Error(`Test 1 Failed: Stundenberechnung fehlerhaft (${summary1.istHours} !== 226)`);
+// Prüfungen (gemäß gehärteter Antidoppelzählung: Default ist time_entries = 140h)
+if (summary1.sollHours !== 250 || summary1.istHours !== 140) {
+  throw new Error(`Test 1 Failed: Stundenberechnung fehlerhaft (${summary1.istHours} !== 140)`);
 }
-if (summary1.hoursDelta !== 24 || summary1.hoursBurnupPercent !== 90.4) {
-  throw new Error(`Test 1 Failed: HoursDelta oder Burnup fehlerhaft`);
+if (summary1.hoursDelta !== 110 || summary1.hoursBurnupPercent !== 56.0) {
+  throw new Error(`Test 1 Failed: HoursDelta oder Burnup fehlerhaft (${summary1.hoursDelta}, ${summary1.hoursBurnupPercent})`);
 }
 if (summary1.isOverrun || summary1.isVobOverrun) {
   throw new Error(`Test 1 Failed: Fälschlicherweise Überhang gemeldet`);
@@ -85,11 +85,11 @@ if (summary1.isOverrun || summary1.isVobOverrun) {
 if (summary1.deckungsbeitrag1 !== 33500.00) {
   throw new Error(`Test 1 Failed: DB I ${summary1.deckungsbeitrag1} !== 33500.00`);
 }
-if (summary1.laborCosts !== 11578.00) {
-  throw new Error(`Test 1 Failed: Lohnkosten ${summary1.laborCosts} !== 11578.00`);
+if (summary1.laborCosts !== 7400.00) {
+  throw new Error(`Test 1 Failed: Lohnkosten ${summary1.laborCosts} !== 7400.00`);
 }
-if (summary1.deckungsbeitrag2 !== 21922.00) {
-  throw new Error(`Test 1 Failed: DB II ${summary1.deckungsbeitrag2} !== 21922.00`);
+if (summary1.deckungsbeitrag2 !== 26100.00) {
+  throw new Error(`Test 1 Failed: DB II ${summary1.deckungsbeitrag2} !== 26100.00`);
 }
 if (summary1.profitMarginStatus !== 'healthy') {
   throw new Error(`Test 1 Failed: Margenstatus sollte 'healthy' sein`);
@@ -178,6 +178,7 @@ const summary4 = calculateProjectCostSummary({
   siteReports: siteReports1,
   invoices: invoices1,
   customCostRates: customRates,
+  labourSource: 'site_reports',
 });
 
 // 16h * 75€ = 1200€
