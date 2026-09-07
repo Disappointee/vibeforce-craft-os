@@ -128,6 +128,30 @@ export function NewBaustelleDialog({
     loadData();
   }, [open, formData.site_manager]);
 
+  // Ensure at least the currently logged-in user is listed if users fetch is still pending
+  const effectiveUsers = React.useMemo(() => {
+    if (users.length > 0) return users;
+    if (pb.authStore.record) {
+      return [
+        {
+          id: pb.authStore.record.id,
+          name: pb.authStore.record.name || 'Admin',
+          email: pb.authStore.record.email,
+        } as unknown as UserRecord,
+      ];
+    }
+    return [];
+  }, [users]);
+
+  const currentSiteManagerName = React.useMemo(() => {
+    const found = effectiveUsers.find((u) => u.id === formData.site_manager);
+    if (found) return found.name ? `${found.name} (${found.email})` : (found.email || 'Bauleiter');
+    if (pb.authStore.record?.id === formData.site_manager) {
+      return pb.authStore.record.name || pb.authStore.record.email || 'Aktueller Benutzer (Bauleiter)';
+    }
+    return '';
+  }, [effectiveUsers, formData.site_manager]);
+
   // Geocoding helper to detect coordinates from address
   const handleGeocodeAddress = async () => {
     const addressStr = [formData.street, formData.zip, formData.city].filter(Boolean).join(', ');
@@ -388,12 +412,14 @@ export function NewBaustelleDialog({
                     onValueChange={(val) => setFormData({ ...formData, site_manager: val })}
                   >
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Bauleiter wählen..." />
+                      <SelectValue placeholder="Bauleiter wählen...">
+                        {currentSiteManagerName || undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {users.map((u) => (
+                      {effectiveUsers.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
-                          {u.name || u.email}
+                          {u.name ? `${u.name} (${u.email})` : (u.email || u.id)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -439,75 +439,88 @@ export function CraftHubClient({
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-start sm:justify-end">
             <Button
               id="craft-license-btn"
               variant="outline"
               onClick={() => setIsLicenseModalOpen(true)}
-              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3.5 flex items-center gap-1.5"
+              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3 flex items-center gap-1.5 shrink-0"
             >
-              <Sliders size={14} className="text-amber-500" />
-              <span>Module &amp; Lizenzen</span>
-              <Badge variant="secondary" className="text-[10px] font-mono uppercase py-0 ml-1">
+              <Sliders size={13} className="text-amber-500" />
+              <span className="hidden md:inline">Module &amp; Lizenzen</span>
+              <span className="md:hidden">Lizenzen</span>
+              <Badge variant="secondary" className="text-[10px] font-mono uppercase py-0 px-1.5 ml-0.5">
                 {activeTier}
               </Badge>
-            </Button>
-            <Button
-              id="craft-create-baustelle-btn"
-              onClick={() => setIsBaustelleModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5"
-            >
-              <Hammer size={15} />
-              <span>Baustelle anlegen</span>
-            </Button>
-            <Button
-              id="craft-create-report-btn"
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="border-amber-500/40 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs h-9 px-3.5 shadow-sm"
-            >
-              <Plus size={15} className="mr-1.5 text-amber-500" />
-              Bericht erfassen
             </Button>
             <Button
               id="craft-datev-export-btn"
               variant="outline"
               onClick={handleDownloadDatevCsv}
-              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3.5"
+              className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3 shrink-0 flex items-center gap-1.5"
             >
-              <Download size={14} className="mr-1.5 text-amber-500" />
-              DATEV Export
+              <Download size={13} className="text-amber-500" />
+              <span>DATEV</span>
+            </Button>
+            <Button
+              id="craft-create-report-btn"
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="border-amber-500/40 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs h-9 px-3.5 shadow-sm shrink-0 flex items-center gap-1.5"
+            >
+              <Plus size={14} className="text-amber-500" />
+              <span>Bericht erfassen</span>
+            </Button>
+            <Button
+              id="craft-create-baustelle-btn"
+              onClick={() => setIsBaustelleModalOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm flex items-center gap-1.5 shrink-0"
+            >
+              <Hammer size={14} />
+              <span>Baustelle anlegen</span>
             </Button>
           </div>
         </div>
 
-        {/* 4 Clean Sober KPIs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t border-border/60">
-          <div>
-            <div className="text-xs text-muted-foreground">Aktive Baustellen</div>
-            <div className="text-xl font-bold text-foreground mt-0.5">{activeProjectsCount}</div>
-            <div className="text-[11px] text-muted-foreground">{geofencedProjectsCount} mit GPS</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Bautagesberichte</div>
-            <div className="text-xl font-bold text-foreground mt-0.5">{reports.length}</div>
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              {signedReportsCount} signiert
+        {/* 4 Clean Sober KPIs with OpenDesign Card Posture */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t border-border/60">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+            <div className="text-xs font-medium text-muted-foreground">Aktive Baustellen</div>
+            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+              {activeProjectsCount}
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              {geofencedProjectsCount} mit GPS-Radius
             </div>
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground">VOB-Aufmaß Netto</div>
-            <div className="text-xl font-bold text-foreground mt-0.5">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+            <div className="text-xs font-medium text-muted-foreground">Bautagesberichte</div>
+            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+              {reports.length}
+            </div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
+              <CheckCircle2 size={11} />
+              {signedReportsCount} rechtssicher signiert
+            </div>
+          </div>
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+            <div className="text-xs font-medium text-muted-foreground">VOB-Aufmaß Netto</div>
+            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
               {measurementNetTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
             </div>
-            <div className="text-[11px] text-muted-foreground">{measurementItems.length} Positionen</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              {measurementItems.length} erfasste Positionen
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground">E-Rechnungen</div>
-            <div className="text-xl font-bold text-foreground mt-0.5">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
+            <div className="text-xs font-medium text-muted-foreground">E-Rechnungen</div>
+            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
               {totalInvoicedGross.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
             </div>
-            <div className="text-[11px] text-muted-foreground">ZUGFeRD 2.1.1 & § 13b</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              ZUGFeRD 2.1.1 &amp; § 13b
+            </div>
           </div>
         </div>
       </div>
@@ -737,7 +750,7 @@ export function CraftHubClient({
                 placeholder="Nach Baustelle oder Bericht suchen..."
                 value={reportSearch}
                 onChange={(e) => setReportSearch(e.target.value)}
-                className="max-w-xs h-9 text-sm"
+                className="w-full sm:w-80 h-9 text-xs"
               />
               <div className="flex items-center gap-1">
                 {['all', 'signed', 'draft'].map((status) => (
@@ -757,10 +770,10 @@ export function CraftHubClient({
             <Button
               size="sm"
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5"
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shrink-0"
             >
               <Plus size={15} className="mr-1.5" />
-              Bautagesbericht anlegen
+              Bautagesbericht erfassen
             </Button>
           </div>
 
@@ -841,20 +854,41 @@ export function CraftHubClient({
                   </Card>
                 );
               })
+            ) : projects.length === 0 ? (
+              <Card className="border-dashed border-border/80 p-10 text-center bg-card/40">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-3.5">
+                  <Hammer size={24} />
+                </div>
+                <h3 className="font-bold text-base text-foreground">Noch keine Baustelle angelegt</h3>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
+                  Lege zuerst dein erstes Bauvorhaben mit Adresse und Bauherr an, um Bautagesberichte und VOB-Aufmaße zu erfassen.
+                </p>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => setIsBaustelleModalOpen(true)}
+                    className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm inline-flex items-center gap-1.5"
+                  >
+                    <Plus size={14} />
+                    Erste Baustelle anlegen
+                  </Button>
+                </div>
+              </Card>
             ) : (
-              <Card className="border-dashed border-border/80 p-12 text-center">
+              <Card className="border-dashed border-border/80 p-10 text-center bg-card/40">
                 <FileText size={40} className="mx-auto text-muted-foreground/40 mb-3" />
                 <h3 className="font-bold text-base text-foreground">Keine Bautagesberichte gefunden</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-                  Erfasse den täglichen Baufortschritt, Arbeitsstunden nach Qualifikation und Wetterbedingungen nach VOB/B § 8.
+                  Erfasse den täglichen Baufortschritt, Arbeitsstunden nach Qualifikation und Wetterbedingungen nach VOB/B § 6 &amp; § 8.
                 </p>
-                <Button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4"
-                >
-                  <Plus size={15} className="mr-1.5" />
-                  Ersten Bericht anlegen
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm inline-flex items-center gap-1.5"
+                  >
+                    <Plus size={14} />
+                    Bautagesbericht erfassen
+                  </Button>
+                </div>
               </Card>
             )}
           </div>
@@ -874,21 +908,6 @@ export function CraftHubClient({
             />
           ) : (
             <>
-              {/* DIN 18299 § 4 Übermessungsregel Callout */}
-              <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 flex items-center justify-between gap-4 text-xs">
-                <div className="flex items-center gap-2.5 text-foreground font-medium">
-                  <span className="p-1 rounded-lg bg-indigo-500/15 text-indigo-500">
-                <CheckCircle2 size={15} />
-              </span>
-              <span>
-                <strong>DIN 18299 § 4 Übermessungsregel aktiv:</strong> Aussparungen, Einzelfenster und Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug).
-              </span>
-            </div>
-            <Badge variant="outline" className="text-[10px] shrink-0 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 font-mono">
-              DIN 18299 § 4.2
-            </Badge>
-          </div>
-
           {/* Project Selector Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border/70">
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -1327,10 +1346,11 @@ export function CraftHubClient({
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="text-xs h-7 px-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0"
+                    onClick={() => setIsBaustelleModalOpen(true)}
+                    className="text-xs h-7 px-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0 flex items-center gap-1"
                   >
-                    Eigenes Projekt anlegen
+                    <Hammer size={12} />
+                    <span>Eigene Baustelle anlegen</span>
                   </Button>
                 </div>
               )}

@@ -274,7 +274,7 @@ export function MeasurementGrid({
           <button
             type="button"
             onClick={addRow}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] px-3.5 py-1.5 text-xs font-semibold text-black shadow-sm transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             Position hinzufügen
@@ -283,22 +283,22 @@ export function MeasurementGrid({
       </div>
 
       {/* DIN 18299 § 4 Übermessungsregel Banner */}
-      <div className="p-2.5 sm:p-3 rounded-xl border border-teal-500/25 bg-teal-500/5 flex items-center justify-between gap-3 text-xs text-gray-700 dark:text-gray-300">
+      <div className="p-2.5 sm:p-3 rounded-xl border border-border/80 bg-muted/40 flex items-center justify-between gap-3 text-xs text-foreground">
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+          <Info className="w-4 h-4 text-amber-500 shrink-0" />
           <span className="leading-snug">
-            <strong>DIN 18299 § 4 Übermessungsregel:</strong> Aussparungen, Einzelfenster & Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug in der Formel).
+            <strong>DIN 18299 § 4 Übermessungsregel:</strong> Aussparungen, Einzelfenster &amp; Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug in der Formel).
           </span>
         </div>
-        <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shrink-0">
+        <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
           DIN 18299 § 4.2
         </span>
       </div>
 
       {/* 1. DESKTOP / TABLET TABLE VIEW (>= 768px) */}
-      <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121824] shadow-sm">
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
         <table className="w-full text-left text-xs">
-          <thead className="bg-gray-50/75 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
+          <thead className="bg-muted/40 border-b border-border text-muted-foreground font-semibold uppercase tracking-wider">
             <tr>
               <th className="py-3 px-3 w-16">Pos.</th>
               <th className="py-3 px-3 min-w-[180px]">Bezeichnung / Leistung</th>
@@ -311,9 +311,9 @@ export function MeasurementGrid({
               {!readOnly && <th className="py-3 px-2 w-10 text-center"></th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-gray-900 dark:text-gray-200">
+          <tbody className="divide-y divide-border/40 text-foreground">
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors">
+              <tr key={row.id} className="hover:bg-muted/20 transition-colors">
                 <td className="py-2.5 px-3 font-mono font-medium text-gray-500">
                   {row.position_nr}
                 </td>
@@ -401,22 +401,22 @@ export function MeasurementGrid({
               </tr>
             ))}
           </tbody>
-          <tfoot className="bg-gray-50/75 dark:bg-white/[0.02] border-t border-gray-200 dark:border-white/10 font-medium">
+          <tfoot className="bg-muted/40 border-t border-border font-medium text-foreground">
             <tr>
-              <td colSpan={7} className="py-2 px-3 text-right text-gray-500">
+              <td colSpan={7} className="py-2 px-3 text-right text-muted-foreground">
                 Zwischensumme Netto:
               </td>
-              <td className="py-2 px-3 text-right font-mono font-semibold text-gray-900 dark:text-white">
+              <td className="py-2 px-3 text-right font-mono font-semibold text-foreground tabular-nums">
                 {subtotal.toFixed(2)} €
               </td>
               {!readOnly && <td></td>}
             </tr>
             {subtotal13b > 0 && (
               <tr>
-                <td colSpan={7} className="py-1.5 px-3 text-right text-gray-500 text-[11px]">
+                <td colSpan={7} className="py-1.5 px-3 text-right text-muted-foreground text-[11px]">
                   USt. (§ 13b Reverse Charge 0% auf {subtotal13b.toFixed(2)} €):
                 </td>
-                <td className="py-1.5 px-3 text-right font-mono text-gray-600 dark:text-gray-300 text-[11px]">
+                <td className="py-1.5 px-3 text-right font-mono text-muted-foreground text-[11px] tabular-nums">
                   0,00 €
                 </td>
                 {!readOnly && <td></td>}
@@ -424,20 +424,20 @@ export function MeasurementGrid({
             )}
             {subtotal19 > 0 && (
               <tr>
-                <td colSpan={7} className="py-1.5 px-3 text-right text-gray-500 text-[11px]">
+                <td colSpan={7} className="py-1.5 px-3 text-right text-muted-foreground text-[11px]">
                   MwSt. (19% auf {subtotal19.toFixed(2)} €):
                 </td>
-                <td className="py-1.5 px-3 text-right font-mono text-gray-600 dark:text-gray-300 text-[11px]">
+                <td className="py-1.5 px-3 text-right font-mono text-muted-foreground text-[11px] tabular-nums">
                   {tax19.toFixed(2)} €
                 </td>
                 {!readOnly && <td></td>}
               </tr>
             )}
-            <tr className="text-sm font-bold text-teal-600 dark:text-teal-400">
+            <tr className="text-sm font-bold text-amber-600 dark:text-amber-400">
               <td colSpan={7} className="py-2.5 px-3 text-right">
                 Gesamtbetrag Brutto:
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-base">
+              <td className="py-2.5 px-3 text-right font-mono text-base tabular-nums">
                 {total.toFixed(2)} €
               </td>
               {!readOnly && <td></td>}

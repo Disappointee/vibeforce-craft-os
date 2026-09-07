@@ -139,11 +139,11 @@ export function CostCockpit({
                 <TrendingUp size={22} />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold flex items-center gap-2">
-                  Soll/Ist-Nachkalkulation & Margen-Cockpit
+                <CardTitle className="text-xl font-bold flex flex-wrap items-center gap-2.5">
+                  <span>Soll/Ist-Nachkalkulation &amp; Margen-Cockpit</span>
                   <Badge
                     variant="outline"
-                    className={`text-xs font-semibold ${
+                    className={`text-xs font-semibold shrink-0 whitespace-nowrap ${
                       summary.profitMarginStatus === 'healthy'
                         ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
                         : summary.profitMarginStatus === 'warning'

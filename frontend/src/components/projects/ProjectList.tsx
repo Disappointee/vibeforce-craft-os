@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, FolderGit2, MoreVertical } from 'lucide-react';
+import { Clock, FolderGit2, MoreVertical, MapPin, Hammer } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -154,6 +154,19 @@ export function ProjectList({
   }
 
   if (filteredProjects.length === 0) {
+    if (typeFilter === 'craft') {
+      return (
+        <div className="rounded-2xl border border-dashed border-border bg-card/20 p-12 flex flex-col items-center justify-center text-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-3.5">
+            <Hammer size={24} />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">Keine Baustellen gefunden</h3>
+          <p className="text-muted-foreground text-sm mt-2 max-w-md">
+            Für diesen Filter wurden keine Handwerks-Baustellen gefunden. Lege oben rechts über &quot;Baustelle anlegen&quot; deine nächste Baustelle an.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/20 p-12 flex flex-col items-center justify-center text-center">
         <FolderGit2 size={48} className="text-muted-foreground mb-4" />
@@ -286,6 +299,13 @@ export function ProjectList({
                 )}
               </div>
 
+              {project.site_address && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
+                  <MapPin size={11} className="text-amber-500 shrink-0" />
+                  <span className="truncate">{project.site_address}</span>
+                </div>
+              )}
+
               {renderBudgetBar(project)}
             </div>
           ))}
@@ -318,6 +338,12 @@ export function ProjectList({
                 {project.expand?.client && (
                   <span className="text-xs text-muted-foreground truncate block mt-0.5">
                     {project.expand.client.company || project.expand.client.name}
+                  </span>
+                )}
+                {project.site_address && (
+                  <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                    <MapPin size={10} className="text-amber-500 shrink-0" />
+                    {project.site_address}
                   </span>
                 )}
               </div>

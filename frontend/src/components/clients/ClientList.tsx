@@ -47,6 +47,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
     const [clients, setClients] = useState<ClientRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'craft' | 'business'>('all');
     const [editClient, setEditClient] = useState<ClientRecord | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -88,6 +89,14 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
     };
 
     const filteredClients = clients.filter(client => {
+        if (categoryFilter === 'craft') {
+            const isCraft = Boolean((client as any).client_type || (client as any).has_48b_certificate || (client as any).vat_id);
+            if (!isCraft) return false;
+        } else if (categoryFilter === 'business') {
+            const isCraft = Boolean((client as any).client_type || (client as any).has_48b_certificate);
+            if (isCraft) return false;
+        }
+
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -130,17 +139,46 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
 
     return (
         <>
-            {/* Search */}
-            <div className="relative mb-6">
-                <div className="flex items-center rounded-full bg-card border border-border px-4 py-2 focus-within:border-indigo-500/50 transition-colors">
-                    <Search size={16} className="text-muted-foreground" />
+            {/* Search and Category Filter */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
+                <div className="flex items-center rounded-full bg-card border border-border px-4 py-2 focus-within:border-amber-500/50 transition-colors w-full sm:max-w-md">
+                    <Search size={16} className="text-muted-foreground shrink-0" />
                     <input
                         type="text"
-                        placeholder="Kunden suchen nach Name, Firma oder E-Mail..."
+                        placeholder="Kunden oder Bauherren suchen..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="bg-transparent border-none outline-none w-full ml-3 text-sm text-foreground placeholder:text-muted-foreground focus:ring-0"
                     />
+                </div>
+                <div className="flex items-center gap-1.5 self-start sm:self-auto overflow-x-auto">
+                    <Button
+                        type="button"
+                        variant={categoryFilter === 'all' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('all')}
+                        className="text-xs h-8 px-3"
+                    >
+                        Alle Kontakte
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={categoryFilter === 'craft' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('craft')}
+                        className={`text-xs h-8 px-3 ${categoryFilter === 'craft' ? 'border-amber-500/40 text-amber-500 font-semibold' : ''}`}
+                    >
+                        🔨 Bauherren (Handwerk)
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={categoryFilter === 'business' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('business')}
+                        className="text-xs h-8 px-3"
+                    >
+                        Unternehmen &amp; Agentur
+                    </Button>
                 </div>
             </div>
 
@@ -200,7 +238,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                         </CardHeader>
 
                         <CardContent>
-                            <div className="flex items-center gap-2 mb-4">
+                            <div className="flex items-center gap-1.5 mb-4 flex-wrap">
                                 {getKundenStatusBadge(client.kundenstatus) || (
                                     <Badge
                                         variant="outline"
@@ -210,6 +248,22 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                             } uppercase tracking-wider text-[10px] font-bold`}
                                     >
                                         {client.status === 'active' ? 'Aktiv' : 'Inaktiv'}
+                                    </Badge>
+                                )}
+                                {(client as any).client_type && (
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-bold"
+                                    >
+                                        🔨 {(client as any).client_type === 'privat' ? 'Bauherr' : (client as any).client_type === 'bautraeger' ? 'Bauträger' : (client as any).client_type === 'gu' ? 'GU' : 'Auftraggeber'}
+                                    </Badge>
+                                )}
+                                {(client as any).has_48b_certificate && (
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-bold"
+                                    >
+                                        § 48b EStG
                                     </Badge>
                                 )}
                             </div>
