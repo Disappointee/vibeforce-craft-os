@@ -444,3 +444,30 @@ export interface CraftLicenseRecord extends BaseRecord {
     notes?: string;
 }
 
+// ============================================
+// 2D-Plan-Pinning & VOB/B § 13 Mängelmanagement
+// ============================================
+
+export type DefectSeverity = 'minor' | 'major' | 'critical';
+export type DefectStatus = 'draft' | 'notified' | 'in_progress' | 'resolved' | 'accepted';
+
+export interface DefectPinRecord extends BaseRecord {
+    collectionName: 'defect_pins';
+    project: string;
+    title: string;
+    description: string;
+    trade: string; // Gewerk (z.B. 'Trockenbau', 'Elektro', 'Estrich')
+    location_note: string; // Raum / Achse / Etage
+    pin_x: number; // 0–100 Prozent
+    pin_y: number; // 0–100 Prozent
+    severity: DefectSeverity;
+    status: DefectStatus;
+    due_date: string; // Kalender-Fristdatum nach VOB/B § 13 Abs. 5
+    contractor_name: string;
+    evidence_photo_url?: string;
+    evidence_sha256?: string;
+    notice_text?: string;
+    resolved_at?: string;
+    accepted_at?: string;
+}
+

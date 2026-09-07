@@ -25,6 +25,7 @@ import {
   Lock,
   Sliders,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ import { QuickCreateReportModal } from '@/components/craft/QuickCreateReportModa
 import { GaebManager } from '@/components/craft/GaebManager';
 import { CostCockpit } from '@/components/craft/CostCockpit';
 import { WholesaleManager } from '@/components/craft/WholesaleManager';
+import { PlanPinningManager } from '@/components/craft/PlanPinningManager';
 import { CraftFeatureUpsell } from '@/components/craft/CraftFeatureUpsell';
 import { CraftEntitlementsModal } from '@/components/craft/CraftEntitlementsModal';
 import { useCraftEntitlementsStore } from '@/lib/craft-entitlements';
@@ -67,7 +69,7 @@ interface CraftHubClientProps {
   initialTimeEntries?: TimeEntryRecord[];
 }
 
-type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb' | 'margin' | 'wholesale';
+type CraftTab = 'reports' | 'measurements' | 'geofence' | 'invoices' | 'gaeb' | 'margin' | 'wholesale' | 'pinning';
 
 export function CraftHubClient({
   initialProjects = [],
@@ -143,6 +145,7 @@ export function CraftHubClient({
   const isGaebEnabled = isFeatureEnabled('gaeb', selectedProject?.id);
   const isMarginEnabled = isFeatureEnabled('margin', selectedProject?.id);
   const isWholesaleEnabled = isFeatureEnabled('wholesale', selectedProject?.id);
+  const isPinningEnabled = isFeatureEnabled('pinning', selectedProject?.id);
 
   // Fallback sample project for demo & onboarding
   const sampleProject: ProjectRecord = useMemo(
@@ -654,6 +657,32 @@ export function CraftHubClient({
                 }`}
               >
                 IDS 2.5
+              </span>
+            )}
+          </button>
+
+          <button
+            id="craft-tab-pinning-btn"
+            onClick={() => setActiveTab('pinning')}
+            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'pinning'
+                ? 'bg-amber-500 text-black shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Layers size={15} />
+            <span>Plan-Pinning & Mängel</span>
+            {!isPinningEnabled ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'pinning' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                VOB/B
               </span>
             )}
           </button>
@@ -1320,6 +1349,25 @@ export function CraftHubClient({
               onTransferToGaeb={() => {
                 setActiveTab('gaeb');
               }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* TAB 8: 2D-PLAN-PINNING & VOB/B § 13 MÄNGELMANAGEMENT */}
+      {activeTab === 'pinning' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {!isPinningEnabled ? (
+            <CraftFeatureUpsell
+              featureId="pinning"
+              projectId={selectedProject?.id}
+              onOpenLicenseManager={() => setIsLicenseModalOpen(true)}
+            />
+          ) : (
+            <PlanPinningManager
+              projectId={selectedProject?.id}
+              projectName={selectedProject?.name}
+              projectKey={selectedProject?.key}
             />
           )}
         </div>

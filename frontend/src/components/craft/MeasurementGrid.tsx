@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Trash2, Plus, Calculator } from 'lucide-react';
+import { Trash2, Plus, Calculator, Info, CheckCircle2 } from 'lucide-react';
 import { MEASUREMENT_UNITS, MEASUREMENT_UNIT_LABEL_MAP, labelFor } from '@/lib/constants';
-import type { MeasurementRecord, MeasurementUnit } from '@/lib/pocketbase-types';
+import type { MeasurementUnit } from '@/lib/pocketbase-types';
 
 export interface MeasurementRowItem {
   id: string;
@@ -71,7 +71,7 @@ function tokenize(expr: string): Token[] {
         // Unary minus: read the following number
         i++;
         let numStr = '';
-        while (i < expr.length && (expr[i] >= '0' && expr[i] <= '9' || expr[i] === '.')) {
+        while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || expr[i] === '.')) {
           numStr += expr[i]; i++;
         }
         if (numStr) {
@@ -87,7 +87,7 @@ function tokenize(expr: string): Token[] {
     }
     if ((ch >= '0' && ch <= '9') || ch === '.') {
       let numStr = '';
-      while (i < expr.length && (expr[i] >= '0' && expr[i] <= '9' || expr[i] === '.')) {
+      while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || expr[i] === '.')) {
         numStr += expr[i]; i++;
       }
       tokens.push({ type: 'num', value: parseFloat(numStr) });
@@ -262,11 +262,12 @@ export function MeasurementGrid({
 
   return (
     <div className="w-full space-y-4">
+      {/* HEADER BAR */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calculator className="w-5 h-5 text-teal-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-            VOB-Aufmaß & Leistungspositionen
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+            Aufmaß & Leistungspositionen (DIN 18299)
           </h3>
         </div>
         {!readOnly && (
@@ -281,7 +282,21 @@ export function MeasurementGrid({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121824] shadow-sm">
+      {/* DIN 18299 § 4 Übermessungsregel Banner */}
+      <div className="p-2.5 sm:p-3 rounded-xl border border-teal-500/25 bg-teal-500/5 flex items-center justify-between gap-3 text-xs text-gray-700 dark:text-gray-300">
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+          <span className="leading-snug">
+            <strong>DIN 18299 § 4 Übermessungsregel:</strong> Aussparungen, Einzelfenster & Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug in der Formel).
+          </span>
+        </div>
+        <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shrink-0">
+          DIN 18299 § 4.2
+        </span>
+      </div>
+
+      {/* 1. DESKTOP / TABLET TABLE VIEW (>= 768px) */}
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121824] shadow-sm">
         <table className="w-full text-left text-xs">
           <thead className="bg-gray-50/75 dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
             <tr>
@@ -318,7 +333,7 @@ export function MeasurementGrid({
                     value={row.formula}
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { formula: e.target.value })}
-                    placeholder="z.B. 4.5 * 3.2 * 0.1"
+                    placeholder="z.B. 12.50 * 2.80"
                     className="w-full bg-transparent font-mono border-0 focus:ring-1 focus:ring-teal-500 rounded px-1.5 py-1 text-xs text-teal-600 dark:text-teal-400 placeholder-gray-400"
                   />
                 </td>
@@ -377,6 +392,7 @@ export function MeasurementGrid({
                       type="button"
                       onClick={() => removeRow(row.id)}
                       className="p-1 rounded text-gray-400 hover:text-rose-500 transition-colors"
+                      title="Position löschen"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -428,6 +444,186 @@ export function MeasurementGrid({
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      {/* 2. ADAPTIVE MOBILE TOUCH-CARDS VIEW (< 768px, 100% ZERO-HORIZONTAL-SCROLL) */}
+      <div className="block md:hidden space-y-3 w-full min-w-0">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className="p-3.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121824] shadow-xs flex flex-col gap-3 min-w-0"
+          >
+            {/* Top Row: Pos. & GP & Action */}
+            <div className="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-white/5 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                  Pos. {row.position_nr}
+                </span>
+                <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                  {row.tax_rate_type === 'reverse_charge_13b' ? '§ 13b (0%)' : '19% USt'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">
+                  {row.total_price.toFixed(2)} €
+                </span>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.id)}
+                    className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center transition-colors active:scale-95"
+                    aria-label={`Position ${row.position_nr} löschen`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Field: Bezeichnung / Leistung */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                Bezeichnung / Leistung
+              </label>
+              <input
+                type="text"
+                value={row.title}
+                disabled={readOnly}
+                onChange={(e) => updateRow(row.id, { title: e.target.value })}
+                placeholder="z.B. Trockenbau Gipskarton 2-lagig"
+                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Field: Formel (L × B × H) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[11px]">
+                <label className="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                  <Calculator className="w-3.5 h-3.5 text-teal-500" />
+                  Formel (L × B × H)
+                </label>
+                <span className="text-[10px] text-gray-400 font-mono">Shunting-Yard</span>
+              </div>
+              <input
+                type="text"
+                value={row.formula}
+                disabled={readOnly}
+                onChange={(e) => updateRow(row.id, { formula: e.target.value })}
+                placeholder="z.B. 12.50 * 2.80 oder (8.4 + 2) * 3"
+                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium text-teal-600 dark:text-teal-400 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* 2-Col Grid: Menge & Einheit */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                  Menge
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={row.quantity || ''}
+                  disabled={readOnly}
+                  onChange={(e) => updateRow(row.id, { quantity: parseFloat(e.target.value) || 0 })}
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                  Einheit
+                </label>
+                <select
+                  value={row.unit}
+                  disabled={readOnly}
+                  onChange={(e) => updateRow(row.id, { unit: e.target.value as MeasurementUnit })}
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                >
+                  {MEASUREMENT_UNITS.map((u) => (
+                    <option key={u} value={u} className="dark:bg-gray-900">
+                      {labelFor(MEASUREMENT_UNIT_LABEL_MAP, u)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 2-Col Grid: EP (€) & Steuersatz */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                  Einheitspreis (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={row.unit_price || ''}
+                  disabled={readOnly}
+                  onChange={(e) => updateRow(row.id, { unit_price: parseFloat(e.target.value) || 0 })}
+                  placeholder="0,00"
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                  Steuersatz
+                </label>
+                <select
+                  value={row.tax_rate_type || defaultTaxType}
+                  disabled={readOnly}
+                  onChange={(e) => updateRow(row.id, { tax_rate_type: e.target.value as 'reverse_charge_13b' | 'standard_19' })}
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                >
+                  <option value="reverse_charge_13b" className="dark:bg-gray-900">0% (§ 13b)</option>
+                  <option value="standard_19" className="dark:bg-gray-900">19% USt</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Mobile Add Position Button */}
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={addRow}
+            className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-teal-500/40 hover:border-teal-500 bg-teal-500/5 hover:bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-bold transition-all active:scale-[0.99]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Position hinzufügen</span>
+          </button>
+        )}
+
+        {/* Mobile Totals Summary Card (DIN 18299 / Tax-Split) */}
+        <div className="p-4 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-[#121824] space-y-2 text-xs shadow-xs">
+          <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
+            <span>Zwischensumme Netto:</span>
+            <span className="font-mono font-semibold text-gray-900 dark:text-white">
+              {subtotal.toFixed(2)} €
+            </span>
+          </div>
+
+          {subtotal13b > 0 && (
+            <div className="flex justify-between items-center text-[11px] text-gray-500">
+              <span>USt. (§ 13b Reverse Charge 0% auf {subtotal13b.toFixed(2)} €):</span>
+              <span className="font-mono">0,00 €</span>
+            </div>
+          )}
+
+          {subtotal19 > 0 && (
+            <div className="flex justify-between items-center text-[11px] text-gray-500">
+              <span>MwSt. (19% auf {subtotal19.toFixed(2)} €):</span>
+              <span className="font-mono text-gray-700 dark:text-gray-300">
+                {tax19.toFixed(2)} €
+              </span>
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 dark:border-white/10 pt-2.5 mt-1 flex justify-between items-center font-bold text-teal-600 dark:text-teal-400">
+            <span className="text-sm">Gesamtbetrag Brutto:</span>
+            <span className="font-mono text-base">{total.toFixed(2)} €</span>
+          </div>
+        </div>
       </div>
     </div>
   );

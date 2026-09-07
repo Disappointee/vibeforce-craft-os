@@ -209,6 +209,7 @@ export const CRAFT_TIERS: CraftTier[] = [
       'gaeb',
       'margin',
       'wholesale',
+      'pinning',
     ],
   },
 ];
@@ -243,7 +244,7 @@ const DEFAULT_ENABLED_FEATURES: Record<CraftFeatureId, boolean> = {
   gaeb: true,
   margin: true,
   wholesale: true,
-  pinning: false, // Phase 4
+  pinning: true,
 };
 
 export const useCraftEntitlementsStore = create<CraftEntitlementsState>()(
