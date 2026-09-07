@@ -9,6 +9,7 @@ export interface CraftReportPdfData {
   authorName?: string;
   measurements?: MeasurementRecord[];
   isReverseCharge?: boolean;
+  freistellungNotice?: string;
 }
 
 /** Escape HTML special characters to prevent XSS in PDF rendering */
@@ -23,7 +24,7 @@ function esc(text?: string | null): string {
 }
 
 export function generateSiteReportHtml(data: CraftReportPdfData): string {
-  const { report, projectName, projectKey, clientName, authorName, measurements = [], isReverseCharge = false } = data;
+  const { report, projectName, projectKey, clientName, authorName, measurements = [], isReverseCharge = false, freistellungNotice } = data;
   const formattedDate = new Date(report.report_date).toLocaleDateString('de-DE', {
     day: '2-digit',
     month: '2-digit',
@@ -205,11 +206,31 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
     </table>
   ` : ''}
 
+  ${freistellungNotice ? `
+    <div style="margin-top: 15px; padding: 8px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 10px; color: #166534;">
+      <strong>Steuerlicher Hinweis (§ 48b EStG Bauabzugsteuer):</strong> ${esc(freistellungNotice)}
+    </div>
+  ` : ''}
+
   <div class="signatures">
     <div class="sig-box">
       ${report.client_signature ? `<img src="${report.client_signature}" class="sig-img" alt="Unterschrift Auftraggeber" />` : '<div style="height: 40px;"></div>'}
       <div class="sig-label">Unterschrift Auftraggeber (${esc(report.client_name) || 'Bauleiter'})</div>
-      <div style="font-size: 9px; color: #94a3b8;">${report.client_signed_at ? `Signiert am ${new Date(report.client_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
+      <div style="font-size: 9px; color: #94a3b8;">
+        ${(() => {
+          if (!report.client_signed_at) return 'Ausstehend';
+          let timeText = `Signiert am ${new Date(report.client_signed_at).toLocaleString('de-DE')}`;
+          if (report.signature_manifest) {
+            try {
+              const m = JSON.parse(report.signature_manifest);
+              if (m.clientRecordedAt && m.serverReceivedAt && m.clientRecordedAt !== m.serverReceivedAt) {
+                timeText += ` (Vor Ort: ${new Date(m.clientRecordedAt).toLocaleTimeString('de-DE')} | Sync: ${new Date(m.serverReceivedAt).toLocaleTimeString('de-DE')})`;
+              }
+            } catch {}
+          }
+          return timeText;
+        })()}
+      </div>
     </div>
     <div class="sig-box">
       ${report.contractor_signature ? `<img src="${report.contractor_signature}" class="sig-img" alt="Unterschrift Auftragnehmer" />` : '<div style="height: 40px;"></div>'}

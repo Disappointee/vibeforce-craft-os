@@ -10,7 +10,7 @@ interface SignaturePadProps {
   initialSignature?: string;
   onSave?: (dataUrl: string) => void;
   onClear?: () => void;
-  onTelemetry?: (telemetry: { dataUrl: string; strokes: number[][][] }) => void;
+  onTelemetry?: (telemetry: { dataUrl: string; strokes: number[][][]; recordedAt?: string }) => void;
   readOnly?: boolean;
 }
 
@@ -181,9 +181,10 @@ export function SignaturePad({
       ])
     );
 
+    const recordedAt = new Date().toISOString();
     setCurrentSignature(dataUrl);
     onSaveRef.current?.(dataUrl);
-    onTelemetryRef.current?.({ dataUrl, strokes });
+    onTelemetryRef.current?.({ dataUrl, strokes, recordedAt });
     setIsModalOpen(false);
   };
 

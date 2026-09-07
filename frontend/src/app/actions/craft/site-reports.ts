@@ -138,7 +138,14 @@ export async function signSiteReportAction(
   reportId: string,
   clientName: string,
   clientSignatureDataUrl: string,
-  telemetry?: { strokes?: number[][][]; gpsLat?: number; gpsLon?: number; gpsAccuracy?: number }
+  telemetry?: {
+    strokes?: number[][][];
+    gpsLat?: number;
+    gpsLon?: number;
+    gpsAccuracy?: number;
+    clientRecordedAt?: string;
+    gpsTimestamp?: number;
+  }
 ) {
   const user = await verifyUserSession();
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
@@ -152,11 +159,13 @@ export async function signSiteReportAction(
       throw new Error('Dieser Bautagesbericht wurde bereits signiert und ist schreibgeschützt (GoBD-Sperre / VOB/B § 15). Ein Nachtrag muss als neuer Bericht angelegt werden.');
     }
 
-    const signedAt = new Date().toISOString();
+    const serverReceivedAt = new Date().toISOString();
+    const clientRecordedAt = telemetry?.clientRecordedAt || serverReceivedAt;
     const strokes = telemetry?.strokes ?? [];
     const gpsLat = telemetry?.gpsLat ?? null;
     const gpsLon = telemetry?.gpsLon ?? null;
     const gpsAccuracy = telemetry?.gpsAccuracy ?? null;
+    const gpsTimestamp = telemetry?.gpsTimestamp ?? null;
 
     // Cryptographic sealing of report content (GoBD tamper evidence)
     const contentPayload = JSON.stringify({
@@ -175,10 +184,12 @@ export async function signSiteReportAction(
       clientName,
       clientSignatureDataUrl,
       strokes,
-      signedAt,
+      clientRecordedAt,
+      serverReceivedAt,
       gpsLat,
       gpsLon,
       gpsAccuracy,
+      gpsTimestamp,
     });
     const hash = createHash('sha256').update(manifestPayload).digest('hex');
 
@@ -186,10 +197,13 @@ export async function signSiteReportAction(
       algorithm: 'SHA-256',
       hash,
       contentHash,
-      signedAt,
+      clientRecordedAt,
+      serverReceivedAt,
+      signedAt: clientRecordedAt,
       gpsLat,
       gpsLon,
       gpsAccuracy,
+      gpsTimestamp,
       strokesCount: strokes.length,
     });
 
@@ -197,7 +211,7 @@ export async function signSiteReportAction(
       status: 'signed',
       client_name: clientName,
       client_signature: clientSignatureDataUrl,
-      client_signed_at: signedAt,
+      client_signed_at: clientRecordedAt,
       signature_manifest,
       gps_lat: gpsLat,
       gps_lon: gpsLon,

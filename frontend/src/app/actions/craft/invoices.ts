@@ -75,18 +75,63 @@ export async function generateCraftInvoiceAction(
       ? rawBuyerVatId.trim()
       : (isReverseCharge ? 'DE888888888' : undefined);
 
-    // 3. Generate ZUGFeRD 2.1.1 XML (EN16931 Compliant)
+    // 3. Resolve Seller Master Data & Optional § 48b EStG Notice
+    let sellerName = process.env.CRAFT_SELLER_NAME || 'Vibeforce One Handwerk GmbH';
+    let sellerStreet = process.env.CRAFT_SELLER_STREET || 'Baustellenring 1';
+    let sellerCity = process.env.CRAFT_SELLER_CITY || '10115 Berlin';
+    let sellerCountry = process.env.CRAFT_SELLER_COUNTRY || 'DE';
+    let sellerTaxId = process.env.CRAFT_SELLER_TAX_ID || '12/345/67890';
+    let sellerVatId = process.env.CRAFT_SELLER_VAT_ID || 'DE123456789';
+    let freistellungAktenzeichen = process.env.CRAFT_FREISTELLUNG_AKTENZEICHEN || '';
+    let freistellungGueltigBis = process.env.CRAFT_FREISTELLUNG_GUELTIG_BIS || '';
+
+    try {
+      const settings = await pb.collection('app_settings').getFirstListItem('');
+      if (settings) {
+        if (settings.app_name) sellerName = settings.app_name;
+        if ((settings as any).company_name) sellerName = (settings as any).company_name;
+        if ((settings as any).company_street) sellerStreet = (settings as any).company_street;
+        if ((settings as any).company_city) sellerCity = (settings as any).company_city;
+        if ((settings as any).company_country) sellerCountry = (settings as any).company_country;
+        if ((settings as any).tax_id) sellerTaxId = (settings as any).tax_id;
+        if ((settings as any).vat_id) sellerVatId = (settings as any).vat_id;
+        if ((settings as any).freistellung_aktenzeichen) freistellungAktenzeichen = (settings as any).freistellung_aktenzeichen;
+        if ((settings as any).freistellung_gueltig_bis) freistellungGueltigBis = (settings as any).freistellung_gueltig_bis;
+      }
+    } catch {
+      // app_settings record may be empty, fallback used
+    }
+
+    // § 48b EStG Bauabzugsteuer Check (Ampel: nur aktiv, wenn nicht abgelaufen)
+    let freistellungNotice: string | undefined;
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (freistellungAktenzeichen && freistellungGueltigBis) {
+      if (freistellungGueltigBis >= todayStr) {
+        freistellungNotice = `Freistellungsbescheinigung nach § 48b Abs. 1 Satz 1 EStG (${freistellungAktenzeichen}, gültig bis ${freistellungGueltigBis}) liegt vor.`;
+      } else {
+        console.warn(`[Craft Invoice] Freistellungsbescheinigung ${freistellungAktenzeichen} ist seit ${freistellungGueltigBis} abgelaufen!`);
+      }
+    }
+
+    const paymentTerms = [
+      isReverseCharge
+        ? 'Steuerschuldnerschaft des Leistungsempfängers gemäß § 13b UStG (Reverse Charge). Zahlbar innerhalb von 14 Tagen nach VOB/B.'
+        : 'Zahlbar innerhalb von 14 Tagen nach VOB/B.',
+      freistellungNotice,
+    ].filter(Boolean).join(' ');
+
+    // 4. Generate ZUGFeRD 2.1.1 XML (EN16931 Compliant)
     const zugferdData: ZugferdInvoiceData = {
       invoiceNumber,
       invoiceDate: new Date().toISOString().split('T')[0],
       periodFrom: report.report_date,
       periodTo: report.report_date,
-      sellerName: 'Vibeforce One Handwerk GmbH',
-      sellerStreet: 'Baustellenring 1',
-      sellerCity: '10115 Berlin',
-      sellerCountry: 'DE',
-      sellerTaxId: '12/345/67890',
-      sellerVatId: 'DE123456789',
+      sellerName,
+      sellerStreet,
+      sellerCity,
+      sellerCountry,
+      sellerTaxId,
+      sellerVatId,
       buyerName: report.client_name || project.name,
       buyerStreet: 'Musterstraße 42',
       buyerCity: '10115 Berlin',
@@ -99,14 +144,12 @@ export async function generateCraftInvoiceAction(
       total: grossTotal,
       currency: 'EUR',
       isReverseCharge,
-      paymentTerms: isReverseCharge
-        ? 'Steuerschuldnerschaft des Leistungsempfängers gemäß § 13b UStG. Zahlbar innerhalb von 14 Tagen nach VOB/B.'
-        : 'Zahlbar innerhalb von 14 Tagen nach VOB/B.',
+      paymentTerms,
     };
 
     const zugferdXml = generateZugferdXml(zugferdData);
 
-    // 4. Generate PDF/A rendering in ~400ms
+    // 5. Generate PDF/A rendering in ~400ms
     const html = generateSiteReportHtml({
       report,
       projectName: project.name,
@@ -115,6 +158,7 @@ export async function generateCraftInvoiceAction(
       authorName: typeof user.name === 'string' ? user.name : 'Monteur',
       measurements,
       isReverseCharge,
+      freistellungNotice,
     });
 
     const pdfBuffer = await pdfService.renderHtmlToPdf(html, {

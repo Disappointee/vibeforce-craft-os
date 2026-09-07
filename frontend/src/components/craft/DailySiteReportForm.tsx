@@ -82,8 +82,18 @@ export function DailySiteReportForm({
 
   const reportKey = initialReport?.id ?? `draft_${projectId}`;
   const { saveDraft, draft, clearDraft } = useDraftAutosave(reportKey, true);
-  const signatureTelemetryRef = useRef<{ dataUrl: string; strokes: number[][][] } | null>(null);
+  const signatureTelemetryRef = useRef<{ dataUrl: string; strokes: number[][][]; recordedAt?: string } | null>(null);
   const initialMergeDone = useRef(false);
+
+  const [showHindranceHelper, setShowHindranceHelper] = useState(false);
+  const [hindranceReason, setHindranceReason] = useState('Witterungseinflüsse (Frost / Starkregen / Sturm)');
+  const [hindranceDays, setHindranceDays] = useState<number>(1);
+
+  const handleApplyHindranceNotice = () => {
+    const notice = `[BEHINDERUNGSHINWEIS / VERZÖGERUNGSANZEIGE (VOB/B § 6 / BGB § 642)]:\nAufgrund von "${hindranceReason}" ruhen bzw. verzögern sich die Arbeiten in den betroffenen Bauabschnitten ab dem ${new Date(reportDate).toLocaleDateString('de-DE')}. Geschätzte Behinderungsdauer: ca. ${hindranceDays} Werktag(e).`;
+    setSpecialEvents((prev) => prev ? `${prev}\n\n${notice}` : notice);
+    setShowHindranceHelper(false);
+  };
 
   const handleHourChange = (level: QualificationLevel, val: number) => {
     setQualificationHours((prev) => ({ ...prev, [level]: Math.max(0, val) }));
@@ -212,9 +222,11 @@ export function DailySiteReportForm({
           const telemetry = signatureTelemetryRef.current
             ? {
                 strokes: signatureTelemetryRef.current.strokes,
+                clientRecordedAt: signatureTelemetryRef.current.recordedAt,
                 gpsLat: undefined as number | undefined,
                 gpsLon: undefined as number | undefined,
                 gpsAccuracy: undefined as number | undefined,
+                gpsTimestamp: undefined as number | undefined,
               }
             : undefined;
 
@@ -229,6 +241,7 @@ export function DailySiteReportForm({
               telemetry.gpsLat = position.coords.latitude;
               telemetry.gpsLon = position.coords.longitude;
               telemetry.gpsAccuracy = position.coords.accuracy;
+              telemetry.gpsTimestamp = position.timestamp;
             } catch {
               // GPS-Fehler → Werte bleiben undefined
             }
@@ -362,6 +375,62 @@ export function DailySiteReportForm({
               placeholder="Witterungsbedingte Unterbrechungen, bauseitige Verzögerungen..."
               className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm placeholder-gray-400"
             />
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowHindranceHelper(!showHindranceHelper)}
+                className="text-xs text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1 font-medium"
+              >
+                <span>⚠️</span>
+                <span>{showHindranceHelper ? 'Verzögerungs-Assistent schließen' : '+ Leistungsverzögerung / Behinderung erfassen (optional)'}</span>
+              </button>
+
+              {showHindranceHelper && (
+                <div className="mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2.5">
+                  <div className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    Rechtssicherer Behinderungshinweis (VOB/B § 6 / BGB § 642)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Ursache / Behinderungsgrund
+                      </label>
+                      <select
+                        value={hindranceReason}
+                        onChange={(e) => setHindranceReason(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-black/40 border border-amber-500/30 text-xs text-gray-900 dark:text-white"
+                      >
+                        <option value="Witterungseinflüsse (Frost / Starkregen / Sturm)">Witterung (Frost / Starkregen / Sturm)</option>
+                        <option value="Vorunternehmer-Verzug (Gewerke vor Ort noch nicht fertig)">Vorunternehmer-Verzug (Baustelle blockiert)</option>
+                        <option value="Fehlende Baufreigabe / Pläne / Schnittstellendetails">Fehlende Pläne / Baufreigabe</option>
+                        <option value="Bauseitige Änderungswünsche / Zusatzauftrag">Bauseitige Änderung / Zusatzauftrag</option>
+                        <option value="Fehlende Vorleistungen (Baustrom, Bauwasser, Gerüst)">Fehlende Vorleistungen (Strom/Wasser/Gerüst)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Geschätzte Verzögerung (Werktage)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={hindranceDays}
+                        onChange={(e) => setHindranceDays(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-black/40 border border-amber-500/30 text-xs text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApplyHindranceNotice}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm transition"
+                  >
+                    Text in Bericht übernehmen
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
