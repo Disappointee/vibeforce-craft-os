@@ -1,0 +1,467 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Vibeforce Craft OS — Handout</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 9.5pt;
+      line-height: 1.45;
+    }
+
+    .page {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #f59e0b;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: #f59e0b;
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 16pt;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .brand-text h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16pt;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0 0;
+      font-size: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #d97706;
+    }
+
+    .meta-badge {
+      text-align: right;
+      font-size: 8pt;
+      color: #64748b;
+    }
+
+    .meta-badge .version {
+      display: inline-block;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    /* Hero Claim */
+    .hero-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11.5pt;
+      font-weight: 800;
+      color: #92400e;
+      margin: 0 0 4px 0;
+    }
+
+    .hero-desc {
+      font-size: 9pt;
+      color: #78350f;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* Feature Grid (4 Säulen) */
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card-num {
+      background: #0f172a;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8pt;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .card-body {
+      font-size: 8.5pt;
+      color: #475569;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .card-body ul {
+      margin: 6px 0 0 0;
+      padding-left: 16px;
+    }
+
+    .card-body li {
+      margin-bottom: 3px;
+    }
+
+    .badge-vob {
+      display: inline-block;
+      background: #f1f5f9;
+      color: #334155;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Comparison Table */
+    .table-container {
+      margin-bottom: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background: #0f172a;
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 10px;
+      font-size: 8pt;
+    }
+
+    th:first-child { border-top-left-radius: 6px; }
+    th:last-child { border-top-right-radius: 6px; }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .pro-check {
+      color: #16a34a;
+      font-weight: 700;
+    }
+
+    .con-cross {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    /* Live Preview Banner & Access */
+    .access-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .access-info h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10.5pt;
+      font-weight: 800;
+      margin: 0 0 3px 0;
+      color: #f59e0b;
+    }
+
+    .access-info p {
+      margin: 0;
+      font-size: 8pt;
+      color: #cbd5e1;
+    }
+
+    .access-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt;
+      font-weight: 700;
+      color: #38bdf8;
+      background: #1e293b;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div>
+      <!-- Header -->
+      <div class="header">
+        <div class="brand">
+          <div class="logo-badge">🔨</div>
+          <div class="brand-text">
+            <h1>Vibeforce Craft OS</h1>
+            <p>Das Handwerks- & Baustellen-Betriebssystem</p>
+          </div>
+        </div>
+        <div class="meta-badge">
+          <div class="version">VIBE-CRAFT v2.5 ENTERPRISE</div>
+          <div>VOB/B • VOB/C • DIN 18299 • ZUGFeRD 2.1.1</div>
+        </div>
+      </div>
+
+      <!-- Hero Box -->
+      <div class="hero-box">
+        <div class="hero-title">Verlässliche Bauleitung & lückenlose Abrechnung ohne Bürokratie-Stau</div>
+        <p class="hero-desc">
+          Vibeforce Craft OS digitalisiert Baustellenabläufe direkt vor Ort auf dem Smartphone oder Tablet des Vorarbeiters. 
+          Vom rechtssicheren Bautagesbericht über formelbasierte DIN 18299 Aufmaße bis zum 1-Klick DATEV- und ZUGFeRD-Rechnungsexport – ohne Medienbrüche.
+        </p>
+      </div>
+
+      <!-- 4 Kern-Module -->
+      <div class="section-title">Die 4 Kern-Säulen des Handwerks-Betriebssystems</div>
+      <div class="grid-2x2">
+        
+        <!-- Säule 1 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-num">01</div>
+            <h2 class="card-title">Digitales Bautagebuch & VOB/B § 6</h2>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Echtzeit-Wettererfassung:</strong> Automatische Protokollierung von Temperatur, Witterung und Windlast für verlässliche Nachweise.</li>
+              <li><strong>Behinderungsanzeigen (VOB/B § 6):</strong> Kausale Dokumentation bauseitiger Verzögerungen zur Absicherung gegen Verzugsstrafen.</li>
+              <li><strong>SHA-256 Signatur:</strong> Digitale Bauherren-Unterschrift vor Ort mit kryptografischem Integritäts-Stempel.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Säule 2 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-num">02</div>
+            <h2 class="card-title">VOB-Aufmaßblatt (DIN 18299)</h2>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Mathematischer Formel-Parser:</strong> Rechnen direkt in der Tabelle (z. B. <code>12.40 * 6.50 - 1.20 * 0.80</code>).</li>
+              <li><strong>DIN 18299 § 4 Übermessungsregel:</strong> Automatische Berücksichtigung von Aussparungen unter 2,5 m² (kein manueller Abzug).</li>
+              <li><strong>Steuer-Split nach § 13b UStG:</strong> Saubere Trennung von Bauleistungen (Reverse-Charge) und 19% Materiallieferungen.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Säule 3 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-num">03</div>
+            <h2 class="card-title">ZUGFeRD 2.1.1 E-Rechnung & DATEV</h2>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>1-Klick XML Generierung:</strong> Vollständig XRechnung- & ZUGFeRD 2.1.1-konforme Rechnungsdaten für öffentliche & gewerbliche Bauherren.</li>
+              <li><strong>DATEV EXTF700 Buchungsexport:</strong> Direkte Übergabe an das Steuerbüro mit SKR03-Kontenzuordnung (Konto 8337 / 8400).</li>
+              <li><strong>Kein Abtippen mehr:</strong> Fertige Buchungsstapel mit Rechnungsnummer, Leistungszeitraum und Buchungsschlüssel.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Säule 4 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-num">04</div>
+            <h2 class="card-title">GPS-Stempeluhr & IDS 2.5 Großhandel</h2>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>GPS-Geofencing Stempeluhr:</strong> Präzise Monteurs-Zeiterfassung mit automatischem Baustellen-Check-in bei Betreten des Radius.</li>
+              <li><strong>Soll/Ist-Nachkalkulation:</strong> Margen-Cockpit mit Deckungsbeitrag I & II und Live-Stundenburnup gegen das Budget.</li>
+              <li><strong>IDS-Connect 2.5 Großhandel:</strong> Direkte Warenkorb-Übernahme von GC-Gruppe, Gienger, Cordes & Graefe per Knopfdruck.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Vergleichstabelle -->
+      <div class="section-title">Systemvergleich: Standard-Software vs. Vibeforce Craft OS</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 35%;">Funktion / Anforderung</th>
+              <th style="width: 30%;">Klassische Handwerkerprogramme</th>
+              <th style="width: 35%;">Vibeforce Craft OS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Geräte-Unabhängigkeit</strong></td>
+              <td><span class="con-cross">✕</span> Oft veraltete Windows-Desktop-Clients</td>
+              <td><span class="pro-check">✓</span> 100% Responsive: Smartphone, Tablet & Desktop</td>
+            </tr>
+            <tr>
+              <td><strong>Bautagebuch-Signatur</strong></td>
+              <td><span class="con-cross">✕</span> Papierausdruck & nachträgliches Einscannen</td>
+              <td><span class="pro-check">✓</span> Digitale Vor-Ort-Signatur mit SHA-256 Hash</td>
+            </tr>
+            <tr>
+              <td><strong>Aufmaßberechnung</strong></td>
+              <td><span class="con-cross">✕</span> Fehleranfällige Excel-Tabellen ohne VOB-Prüfung</td>
+              <td><span class="pro-check">✓</span> Live-Formelparser inkl. DIN 18299 Übermessung</td>
+            </tr>
+            <tr>
+              <td><strong>E-Rechnung & DATEV</strong></td>
+              <td><span class="con-cross">✕</span> Teure Zusatzmodule oder manuelle Konvertierung</td>
+              <td><span class="pro-check">✓</span> Nativ integriert: ZUGFeRD 2.1.1 XML & DATEV CSV</td>
+            </tr>
+            <tr>
+              <td><strong>Einführungsaufwand</strong></td>
+              <td><span class="con-cross">✕</span> Mehrwöchige Schulung, Server-Installation</td>
+              <td><span class="pro-check">✓</span> 0 Minuten Setup: Direkt im Webbrowser loslegen</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live Access Box -->
+      <div class="access-box">
+        <div class="access-info">
+          <h3>⚡ Live-Demo & Interaktive Vorschau</h3>
+          <p>Testen Sie die vollständige Meister-Zentrale mit 2 vorkonfigurierten Muster-Baustellen:</p>
+          <p style="margin-top: 4px; font-weight: 600; color: #fde68a;">
+            • BAU-01: Neubau EFH Familie Huber (Dachstuhl & Holzbau)<br>
+            • BAU-02: Sanierung Gewerbehalle Schmidt (Brandschutz & Trockenbau)
+          </p>
+        </div>
+        <div>
+          <a href="https://craft-vibeforce.vercel.app" class="access-link">
+            craft-vibeforce.vercel.app<br>
+            <span style="font-size: 7.5pt; color: #94a3b8; font-weight: normal;">[1-Klick Meisterzugang]</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>Vibeforce One • Craft OS Module • Vertrauliche Produktübersicht</div>
+      <div>Stand: September 2026 • DIN 18299 / VOB/B Konform</div>
+    </div>
+  </div>
+</body>
+</html>
