@@ -13,10 +13,12 @@ import { withRetry } from './db-retry';
  * instances per request while safely reusing immutable admin JWT tokens.
  */
 
+const cleanUrl = (raw: string | undefined): string =>
+  raw ? raw.trim().replace(/[\r\n\t]+/g, '') : '';
+
 const rawServerUrl =
-  process.env.POCKETBASE_URL ||
-  process.env.NEXT_PUBLIC_POCKETBASE_URL ||
-  '';
+  cleanUrl(process.env.POCKETBASE_URL) ||
+  cleanUrl(process.env.NEXT_PUBLIC_POCKETBASE_URL);
 
 export const POCKETBASE_URL =
   (!rawServerUrl || rawServerUrl.includes('railway.app'))
@@ -49,17 +51,21 @@ async function getAdminToken(): Promise<string> {
     return authPromise;
   }
 
-  const email = (
+  const rawEmail = (
     process.env.POCKETBASE_ADMIN_EMAIL ||
     process.env.PB_ADMIN_EMAIL ||
-    'admin@vibeforce-flow.de'
-  ).trim();
+    ''
+  ).trim().replace(/[\r\n\t]+/g, '');
+
+  const email = (rawEmail && rawEmail.includes('@'))
+    ? rawEmail
+    : 'admin@vibeforce-flow.de';
 
   // Bulletproof candidate passwords (handles Vercel legacy env vars as well as production secret)
   const candidatePasswords = [
     '***REMOVED***',
-    process.env.POCKETBASE_ADMIN_PASSWORD?.trim(),
-    process.env.PB_ADMIN_PASSWORD?.trim(),
+    process.env.POCKETBASE_ADMIN_PASSWORD?.trim().replace(/[\r\n\t]+/g, ''),
+    process.env.PB_ADMIN_PASSWORD?.trim().replace(/[\r\n\t]+/g, ''),
     '***REMOVED***',
   ].filter((p): p is string => Boolean(p));
 
