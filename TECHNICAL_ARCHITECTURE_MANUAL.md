@@ -219,5 +219,28 @@ Alle Module sind mandanten- und brand-agnostisch konzipiert. Um eine neue Instan
 
 ### 6.5 DATEV Buchungsstapel Engine (`frontend/src/lib/datev-export.ts`)
 * **Format:** DATEV EXTF Version 700 / ASCII 510 Standard.
-* **Kontierung:** Erlöskonto `8400` (SKR03) / `4400` (SKR04) mit 19% USt, Gegenkonto/Debitor `10000`, Kostenstelle = Baustellen-/Projekt-Key.
+* **Kontierung:** 
+  - Erlöskonto `8337` (SKR03) für Bauleistungen nach § 13b UStG (Reverse-Charge) mit BU-Schlüssel `68`.
+  - Erlöskonto `8400` (SKR03) für steuerpflichtige Materiallieferungen mit 19% USt.
+  - Gegenkonto / Debitor `10000`, Kostenstelle = Baustellen-/Projekt-Key (z. B. `BAU-01`).
+
+### 6.6 Dual-Stack Single Engine & Zero-Mismatch SSR Routing (`frontend/src/config/app-mode.ts`)
+* **Architektur:** Single-Engine Dual-Stack ohne Code-Fork.
+* **Host-Erkennung:** `detectModeFromHostname(host)` erkennt `craft.*`, `handwerk.*`, `craft-os.*` sowie Preview-Hostnames deterministisch.
+* **Cookie-Isolation:** `pb_auth_craft` vs. `pb_auth_flow` verhindert Session-Interferenzen bei parallelem Betrieb auf Shared Domains (`*.vercel.app`).
+* **Server-Component SSR Wrapper:** `login/page.tsx` liest per `await headers()` serverseitig `x-vibeforce-host` / `host` aus und injiziert `initialCraftMode` an `LoginClient.tsx` (0 ms Flash, Zero Hydration Mismatch).
+
+### 6.7 Multi-Candidate Superuser & URL Sanitization Engine (`frontend/src/lib/pocketbase-server.ts`)
+* **URL-Sanitization:** Die Hilfsfunktion `cleanUrl` filtert verborgene Newline- und Carriage-Return-Bytes (`\r\n\t`) aus Vercel-Environment-Variablen heraus, um Node.js `fetch` Malformed-URL Exceptions zu verhindern.
+* **Superuser-Fallback:** Authentifiziert über `_superusers` oder `pb.admins` mit deterministischer Multi-Candidate Passwortprüfung und 50-Minuten In-Memory Token Cache.
+
+### 6.8 IDS-Connect 2.5 Großhandels-Schnittstelle (`frontend/src/lib/ids-connect.ts`)
+* **Protokoll:** IDS-Connect Version 2.5 XML Punchout.
+* **Return-Hook:** Der Endpunkt `/api/craft/ids/hook` empfängt den signierten Warenkorb-POST des Großhändlers (GC-Gruppe, Gienger, Cordes & Graefe), persistiert ihn in der Session und leitet per HTTP 303 Redirect in den Wholesale-Tab der Baustellen-Zentrale weiter.
+
+### 6.9 DIN 18299 Formel-Parser & § 13b UStG Steuer-Split (`frontend/src/components/craft/MeasurementGrid.tsx`)
+* **Formel-Parser:** Sichere mathematische Auswertung von Aufmaß-Ketten (z. B. `12.40 * 6.50 - 1.20 * 0.80`) ohne `eval()`.
+* **VOB/C Übermessungslogik:** Berücksichtigung von Aussparungen und Einzelflächen unter 2,5 m² nach DIN 18299 § 4.2.
+* **Split-Rechnung:** Automatische Aufteilung der Positionen in Netto-Bauleistungen (§ 13b) und bruttoversteuerte Materiallieferungen für den ZUGFeRD 2.1.1 XML-Export.
+
 
