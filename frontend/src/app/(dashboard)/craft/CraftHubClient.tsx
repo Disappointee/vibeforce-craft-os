@@ -525,27 +525,30 @@ export function CraftHubClient({
         </div>
       </div>
 
-      {/* HORIZONTALLY SCROLLABLE TOUCH-FRIENDLY TABS */}
-      <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1">
+      {/* RESPONSIVE STRUCTURED CRAFT HUB TABS (ZERO HORIZONTAL SCROLL) */}
+      <div className="w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5">
           <button
+            id="craft-tab-reports-btn"
             onClick={() => setActiveTab('reports')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'reports'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <FileText size={15} />
-            <span>Bautagesberichte</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText size={15} className="shrink-0" />
+              <span className="truncate">Bautagesberichte</span>
+            </div>
             {!isReportsEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'reports' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'reports' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {reports.length}
@@ -554,40 +557,54 @@ export function CraftHubClient({
           </button>
 
           <button
+            id="craft-tab-measurements-btn"
             onClick={() => setActiveTab('measurements')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'measurements'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <FileSpreadsheet size={15} />
-            <span>VOB-Aufmaß</span>
-            {!isMeasurementsEnabled && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileSpreadsheet size={15} className="shrink-0" />
+              <span className="truncate">VOB-Aufmaß</span>
+            </div>
+            {!isMeasurementsEnabled ? (
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'measurements' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                DIN
               </span>
             )}
           </button>
 
           <button
+            id="craft-tab-geofence-btn"
             onClick={() => setActiveTab('geofence')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'geofence'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <MapPin size={15} />
-            <span>GPS-Geofencing</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin size={15} className="shrink-0" />
+              <span className="truncate">GPS-Geofencing</span>
+            </div>
             {!isGeofenceEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'geofence' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'geofence' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {geofencedProjectsCount}
@@ -596,18 +613,29 @@ export function CraftHubClient({
           </button>
 
           <button
+            id="craft-tab-invoices-btn"
             onClick={() => setActiveTab('invoices')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'invoices'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <Receipt size={15} />
-            <span>Rechnungen & DATEV</span>
-            {!isInvoicesEnabled && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <Receipt size={15} className="shrink-0" />
+              <span className="truncate">Rechnungen & DATEV</span>
+            </div>
+            {!isInvoicesEnabled ? (
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
+              </span>
+            ) : (
+              <span
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'invoices' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                eRechnung
               </span>
             )}
           </button>
@@ -615,22 +643,24 @@ export function CraftHubClient({
           <button
             id="craft-tab-gaeb-btn"
             onClick={() => setActiveTab('gaeb')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'gaeb'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <FileCode size={15} />
-            <span>GAEB / LV (X83/X84)</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <FileCode size={15} className="shrink-0" />
+              <span className="truncate">GAEB / LV (X83/X84)</span>
+            </div>
             {!isGaebEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'gaeb' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'gaeb' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 XML
@@ -641,22 +671,24 @@ export function CraftHubClient({
           <button
             id="craft-tab-margin-btn"
             onClick={() => setActiveTab('margin')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'margin'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <TrendingUp size={15} />
-            <span>Nachkalkulation & Margen</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <TrendingUp size={15} className="shrink-0" />
+              <span className="truncate">Nachkalkulation & Margen</span>
+            </div>
             {!isMarginEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'margin' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'margin' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 DB II
@@ -667,22 +699,24 @@ export function CraftHubClient({
           <button
             id="craft-tab-wholesale-btn"
             onClick={() => setActiveTab('wholesale')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'wholesale'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <ShoppingBag size={15} />
-            <span>Großhandel & DATANORM</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <ShoppingBag size={15} className="shrink-0" />
+              <span className="truncate">Großhandel & DATANORM</span>
+            </div>
             {!isWholesaleEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'wholesale' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'wholesale' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 IDS 2.5
@@ -693,22 +727,24 @@ export function CraftHubClient({
           <button
             id="craft-tab-pinning-btn"
             onClick={() => setActiveTab('pinning')}
-            className={`snap-start shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
               activeTab === 'pinning'
                 ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
             }`}
           >
-            <Layers size={15} />
-            <span>Plan-Pinning & Mängel</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Layers size={15} className="shrink-0" />
+              <span className="truncate">Plan-Pinning & Mängel</span>
+            </div>
             {!isPinningEnabled ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                 <Lock size={10} /> Add-on
               </span>
             ) : (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'pinning' ? 'bg-black/20 text-black' : 'bg-muted text-muted-foreground'
+                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'pinning' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 VOB/B
