@@ -47,12 +47,12 @@ export function QuickCreateReportModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-card border-border">
-          <DialogHeader className="pb-3 border-b border-border">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Hammer size={18} className="text-amber-500" />
-                Bautagesbericht erfassen
+        <DialogContent className="w-[96vw] sm:w-[94vw] md:w-[92vw] lg:w-[90vw] max-w-[calc(100vw-1rem)] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-5 md:p-6 bg-card border-border">
+          <DialogHeader className="pb-3 border-b border-border pr-8 sm:pr-10">
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+              <DialogTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+                <Hammer size={18} className="text-amber-500 shrink-0" />
+                <span>Bautagesbericht erfassen</span>
               </DialogTitle>
               {availableProjects.length > 0 && (
                 <Button
@@ -60,7 +60,7 @@ export function QuickCreateReportModal({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsBaustelleModalOpen(true)}
-                  className="h-8 text-xs font-semibold border-amber-500/30 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  className="h-8 text-xs font-semibold border-amber-500/30 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0"
                 >
                   <Plus size={13} className="mr-1" />
                   Neue Baustelle
@@ -108,7 +108,7 @@ export function QuickCreateReportModal({
               </Button>
             </div>
           ) : projectId ? (
-            <div className="pt-3">
+            <div className="pt-2 sm:pt-3">
               <DailySiteReportForm
                 key={projectId}
                 projectId={projectId}
@@ -117,6 +117,7 @@ export function QuickCreateReportModal({
                   onSuccess(report);
                   onClose();
                 }}
+                onCancel={onClose}
               />
             </div>
           ) : null}

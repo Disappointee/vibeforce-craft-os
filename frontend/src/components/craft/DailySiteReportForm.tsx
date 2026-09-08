@@ -27,6 +27,7 @@ interface DailySiteReportFormProps {
   projectId: string;
   initialReport?: Partial<SiteReportRecord>;
   onSaved?: (report: SiteReportRecord) => void;
+  onCancel?: () => void;
   redirectTo?: string | false;
 }
 
@@ -34,6 +35,7 @@ export function DailySiteReportForm({
   projectId,
   initialReport,
   onSaved,
+  onCancel,
   redirectTo,
 }: DailySiteReportFormProps) {
   const router = useRouter();
@@ -288,17 +290,17 @@ export function DailySiteReportForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       {/* 1. Basis-Daten & Wetter */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-5">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-4 sm:space-y-5 min-w-0">
         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-3">
-          <Calendar className="w-5 h-5 text-teal-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+          <Calendar className="w-5 h-5 text-teal-500 shrink-0" />
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             Rahmendaten & Wetterbedingungen
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
               {t('craft.site_report.date')}
@@ -308,7 +310,7 @@ export function DailySiteReportForm({
               value={reportDate}
               onChange={(e) => setReportDate(e.target.value)}
               required
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm"
             />
           </div>
 
@@ -322,7 +324,7 @@ export function DailySiteReportForm({
               value={weather}
               onChange={(e) => setWeather(e.target.value)}
               placeholder="z.B. Sonnig / Trocken"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm"
             />
           </div>
 
@@ -335,17 +337,17 @@ export function DailySiteReportForm({
               value={temperature ?? ''}
               onChange={(e) => { const val = parseFloat(e.target.value); setTemperature(isNaN(val) ? undefined : val); }}
               placeholder="18"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm"
             />
           </div>
         </div>
       </div>
 
       {/* 2. Ausgeführte Arbeiten & Behinderungen */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-5">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-4 sm:space-y-5 min-w-0">
         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-3">
-          <FileText className="w-5 h-5 text-teal-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+          <FileText className="w-5 h-5 text-teal-500 shrink-0" />
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             Tätigkeitsbericht & Vorkommnisse
           </h3>
         </div>
@@ -360,7 +362,7 @@ export function DailySiteReportForm({
               value={workPerformed}
               onChange={(e) => setWorkPerformed(e.target.value)}
               placeholder="Detaillierte Beschreibung der ausgeführten Arbeiten..."
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm placeholder-gray-400"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm placeholder-gray-400"
             />
           </div>
 
@@ -373,7 +375,7 @@ export function DailySiteReportForm({
               value={specialEvents}
               onChange={(e) => setSpecialEvents(e.target.value)}
               placeholder="Witterungsbedingte Unterbrechungen, bauseitige Verzögerungen..."
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm placeholder-gray-400"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm placeholder-gray-400"
             />
             <div className="mt-2">
               <button
@@ -436,17 +438,17 @@ export function DailySiteReportForm({
       </div>
 
       {/* 3. Stunden nach Qualifikation */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-5">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-4 sm:space-y-5 min-w-0">
         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-3">
-          <Clock className="w-5 h-5 text-teal-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+          <Clock className="w-5 h-5 text-teal-500 shrink-0" />
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             {t('craft.site_report.qualification_hours')}
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
               {t('craft.site_report.hours_meister')}
             </label>
             <input
@@ -455,12 +457,12 @@ export function DailySiteReportForm({
               value={qualificationHours.meister || ''}
               onChange={(e) => handleHourChange('meister', parseFloat(e.target.value) || 0)}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
               {t('craft.site_report.hours_geselle')}
             </label>
             <input
@@ -469,12 +471,12 @@ export function DailySiteReportForm({
               value={qualificationHours.geselle || ''}
               onChange={(e) => handleHourChange('geselle', parseFloat(e.target.value) || 0)}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
               {t('craft.site_report.hours_helfer')}
             </label>
             <input
@@ -483,12 +485,12 @@ export function DailySiteReportForm({
               value={qualificationHours.helfer || ''}
               onChange={(e) => handleHourChange('helfer', parseFloat(e.target.value) || 0)}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
               {t('craft.site_report.hours_azubi')}
             </label>
             <input
@@ -497,22 +499,22 @@ export function DailySiteReportForm({
               value={qualificationHours.azubi || ''}
               onChange={(e) => handleHourChange('azubi', parseFloat(e.target.value) || 0)}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm font-medium"
             />
           </div>
         </div>
 
         {/* VOB/B § 2 Abs. 10 Regie-Zusatzleistung */}
-        <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <div className="flex items-start gap-3 p-3 sm:p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <input
             id="is_regie_extra"
             type="checkbox"
             checked={isRegieExtra}
             onChange={(e) => setIsRegieExtra(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 shrink-0"
           />
-          <label htmlFor="is_regie_extra" className="text-xs text-foreground cursor-pointer select-none">
-            <span className="font-semibold text-amber-600 dark:text-amber-400 block">
+          <label htmlFor="is_regie_extra" className="text-xs text-foreground cursor-pointer select-none leading-relaxed">
+            <span className="font-semibold text-amber-600 dark:text-amber-400 block mb-0.5">
               Zusatzleistung als Regiestunden gem. § 2 Abs. 10 VOB/B abrechnen
             </span>
             Stunden dieses Bautagesberichts gelten als gesondert vergütungspflichtige Regiearbeiten und werden im Margen-Cockpit zusätzlich zu den App-Stempelzeiten der Monteure erfasst.
@@ -521,17 +523,17 @@ export function DailySiteReportForm({
       </div>
 
       {/* 4. VOB-Aufmaß Grid */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm min-w-0">
         <MeasurementGrid onChange={setMeasurements} />
       </div>
 
       {/* 5. Fotodokumentation */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm min-w-0">
         <EvidencePhotoUpload onChange={setEvidencePhotos} />
       </div>
 
       {/* 6. Signaturen */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
+      <div className="p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 shadow-sm space-y-5 sm:space-y-6 min-w-0">
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
             {t('craft.site_report.client_name')}
@@ -541,11 +543,11 @@ export function DailySiteReportForm({
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder="Name des Bauleiters / Auftraggebers"
-            className="w-full max-w-md px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-sm"
+            className="w-full sm:max-w-md px-3 py-2 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-xs sm:text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <SignaturePad
             label={t('craft.site_report.sign_client')}
             initialSignature={clientSignature}
@@ -584,11 +586,17 @@ export function DailySiteReportForm({
       )}
 
       {/* Action Bar */}
-      <div className="flex items-center justify-end gap-4 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-2">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          onClick={() => {
+            if (onCancel) {
+              onCancel();
+            } else if (redirectTo !== false) {
+              router.back();
+            }
+          }}
+          className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-xs sm:text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-center"
         >
           Abbrechen
         </button>
@@ -596,7 +604,7 @@ export function DailySiteReportForm({
         <button
           type="submit"
           disabled={isSaving}
-          className="inline-flex items-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all disabled:opacity-50"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all disabled:opacity-50"
         >
           {isSaving ? (
             <Loader2 className="w-4 h-4 animate-spin" />

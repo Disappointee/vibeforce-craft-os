@@ -261,11 +261,11 @@ export function MeasurementGrid({
   const total = useMemo(() => Math.round((subtotal + tax19) * 100) / 100, [subtotal, tax19]);
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 min-w-0">
       {/* HEADER BAR */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-teal-500" />
+          <Calculator className="w-5 h-5 text-teal-500 shrink-0" />
           <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             Aufmaß & Leistungspositionen (DIN 18299)
           </h3>
@@ -274,7 +274,7 @@ export function MeasurementGrid({
           <button
             type="button"
             onClick={addRow}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] px-3.5 py-1.5 text-xs font-semibold text-black shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] px-3.5 py-1.5 text-xs font-semibold text-black shadow-sm transition-all shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             Position hinzufügen
@@ -283,10 +283,10 @@ export function MeasurementGrid({
       </div>
 
       {/* DIN 18299 § 4 Übermessungsregel Banner */}
-      <div className="p-2.5 sm:p-3 rounded-xl border border-border/80 bg-muted/40 flex items-center justify-between gap-3 text-xs text-foreground">
-        <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-amber-500 shrink-0" />
-          <span className="leading-snug">
+      <div className="p-2.5 sm:p-3 rounded-xl border border-border/80 bg-muted/40 flex items-start sm:items-center justify-between gap-2.5 text-xs text-foreground">
+        <div className="flex items-start sm:items-center gap-2">
+          <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
+          <span className="leading-snug text-[11px] sm:text-xs">
             <strong>DIN 18299 § 4 Übermessungsregel:</strong> Aussparungen, Einzelfenster &amp; Türen unter 2,5 m² Einzelfläche werden nach VOB/C voll übermessen (kein Abzug in der Formel).
           </span>
         </div>
@@ -296,19 +296,19 @@ export function MeasurementGrid({
       </div>
 
       {/* 1. DESKTOP / TABLET TABLE VIEW (>= 768px) */}
-      <div className="hidden md:block overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-        <table className="w-full text-left text-xs">
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-border bg-card shadow-sm min-w-0">
+        <table className="w-full text-left text-xs min-w-[700px]">
           <thead className="bg-muted/40 border-b border-border text-muted-foreground font-semibold uppercase tracking-wider">
             <tr>
-              <th className="py-3 px-3 w-16">Pos.</th>
-              <th className="py-3 px-3 min-w-[200px]">Bezeichnung / Leistung</th>
-              <th className="py-3 px-3 min-w-[150px]">Formel (L × B × H)</th>
-              <th className="py-3 px-3 w-20">Menge</th>
-              <th className="py-3 px-3 w-32">Einheit</th>
-              <th className="py-3 px-3 w-24">EP (€)</th>
-              <th className="py-3 px-3 w-28">Steuersatz</th>
-              <th className="py-3 px-3 w-24 text-right">GP (€)</th>
-              {!readOnly && <th className="py-3 px-2 w-10 text-center"></th>}
+              <th className="py-3 px-3 w-14">Pos.</th>
+              <th className="py-3 px-3 min-w-[160px] sm:min-w-[190px]">Bezeichnung / Leistung</th>
+              <th className="py-3 px-3 min-w-[120px] sm:min-w-[140px]">Formel (L × B × H)</th>
+              <th className="py-3 px-3 w-16 sm:w-20">Menge</th>
+              <th className="py-3 px-3 w-28 sm:w-32">Einheit</th>
+              <th className="py-3 px-3 w-20 sm:w-24">EP (€)</th>
+              <th className="py-3 px-3 w-24 sm:w-28">Steuersatz</th>
+              <th className="py-3 px-3 w-20 sm:w-24 text-right">GP (€)</th>
+              {!readOnly && <th className="py-3 px-2 w-8 sm:w-10 text-center"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40 text-foreground">
