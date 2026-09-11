@@ -16,6 +16,8 @@ import { useRouter } from 'next/navigation';
 import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
 import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
+import { isCraftMode } from '@/config/app-mode';
+import { filterProjectsByMode, isCraftProject } from '@/lib/data-isolation';
 
 export function ProjectList({
   refreshTrigger,
@@ -42,7 +44,7 @@ export function ProjectList({
         const result = await pb.collection('projects').getList(1, 50, {
           expand: 'client',
         });
-        const projectsData = result.items;
+        const projectsData = filterProjectsByMode(result.items);
 
         const projectIds = projectsData.map((p: any) => p.id);
         if (projectIds.length > 0) {
@@ -130,10 +132,13 @@ export function ProjectList({
     );
   }
 
+  const craft = isCraftMode();
   const filteredProjects = projects.filter((p: any) => {
+    if (craft ? !isCraftProject(p) : isCraftProject(p)) return false;
+
     const matchesClient = clientFilter === 'all' || p.client === clientFilter;
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    const isCraft = p.project_type === 'craft' || p.key?.startsWith('BAU') || p.key?.startsWith('CRAFT');
+    const isCraft = isCraftProject(p);
     const matchesType =
       typeFilter === 'all' ||
       (typeFilter === 'craft' && isCraft) ||
@@ -287,19 +292,19 @@ export function ProjectList({
                 <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
                   {statusLabel(project.status)}
                 </span>
-                {(project.project_type === 'craft' || project.key?.startsWith('BAU') || project.key?.startsWith('CRAFT')) && (
+                {craft && isCraftProject(project) && (
                   <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                     🔨 Baustelle
                   </span>
                 )}
-                {project.trade && (
+                {craft && project.trade && (
                   <span className="text-[10px] text-muted-foreground truncate">
                     {project.trade}
                   </span>
                 )}
               </div>
 
-              {project.site_address && (
+              {craft && project.site_address && (
                 <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
                   <MapPin size={11} className="text-amber-500 shrink-0" />
                   <span className="truncate">{project.site_address}</span>

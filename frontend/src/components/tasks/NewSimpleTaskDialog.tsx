@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import type { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { DatePicker } from '@/components/ui/date-picker';
+import { filterProjectsByMode, filterClientsByMode } from '@/lib/data-isolation';
 
 export function NewSimpleTaskDialog({
   open,
@@ -69,9 +70,9 @@ export function NewSimpleTaskDialog({
           pb.collection('users').getFullList({ sort: 'name' }),
           pb.collection('clients').getFullList({ sort: 'name' }),
         ]);
-        setProjects(projectsResult as ProjectRecord[]);
+        setProjects(filterProjectsByMode(projectsResult as ProjectRecord[]));
         setUsers(usersResult as UserRecord[]);
-        setClients(clientsResult as ClientRecord[]);
+        setClients(filterClientsByMode(clientsResult as ClientRecord[]));
       } catch {
         toast.error('Fehler beim Laden der Daten');
       } finally {

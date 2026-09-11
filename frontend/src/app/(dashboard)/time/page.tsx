@@ -30,6 +30,11 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+    filterProjectsByMode,
+    filterClientsByMode,
+    filterTimeEntriesByMode,
+} from '@/lib/data-isolation';
 
 type ViewMode = 'week' | 'month';
 
@@ -67,7 +72,7 @@ export default function TimePage() {
                     sort: 'key',
                     fields: 'id,key,name,client',
                 });
-                setProjects(result.items as unknown as ProjectOption[]);
+                setProjects(filterProjectsByMode(result.items as unknown as ProjectOption[]));
             } catch (error) {
                 console.error('Failed to fetch projects:', error);
             }
@@ -78,7 +83,7 @@ export default function TimePage() {
     // Fetch clients for filter
     useEffect(() => {
         pb.collection('clients').getList(1, 100, { sort: 'name' })
-            .then(res => setClients(res.items as ClientRecord[]))
+            .then(res => setClients(filterClientsByMode(res.items as ClientRecord[])))
             .catch(() => {});
     }, []);
 
@@ -106,7 +111,7 @@ export default function TimePage() {
                 expand: 'task,task.project,task.project.client,user',
                 filter: pb.filter('user = {:uid}', { uid: pb.authStore.record?.id }),
             });
-            setEntries(result.items as TimeEntryRecord[]);
+            setEntries(filterTimeEntriesByMode(result.items as TimeEntryRecord[]));
         } catch (error) {
             console.error('Failed to fetch time entries:', error);
             toast.error('Fehler beim Laden der Zeiteinträge');

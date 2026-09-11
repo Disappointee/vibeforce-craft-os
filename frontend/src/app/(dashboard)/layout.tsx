@@ -33,6 +33,7 @@ import {
 
 import Link from 'next/link';
 import { getAppConfig, isCraftMode } from '@/config/app-mode';
+import { filterProjectsByMode, filterTasksByMode, filterClientsByMode } from '@/lib/data-isolation';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { HeaderTimer } from '@/components/layout/HeaderTimer';
 import { useUiStore, useSettingsStore } from '@/lib/store';
@@ -255,7 +256,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const results: SearchResult[] = [];
 
       if (projectResult.status === 'fulfilled') {
-        results.push(...projectResult.value.items.map((p: any) => ({
+        const isolatedProjects = filterProjectsByMode(projectResult.value.items);
+        results.push(...isolatedProjects.map((p: any) => ({
           type: 'project' as const,
           id: p.id,
           title: p.name,
@@ -267,7 +269,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (taskResult.status === 'fulfilled') {
-        results.push(...taskResult.value.items.map((t: any) => ({
+        const isolatedTasks = filterTasksByMode(taskResult.value.items);
+        results.push(...isolatedTasks.map((t: any) => ({
           type: 'task' as const,
           id: t.id,
           title: t.title,
@@ -279,7 +282,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (clientResult.status === 'fulfilled') {
-        results.push(...clientResult.value.items.map((c: any) => ({
+        const isolatedClients = filterClientsByMode(clientResult.value.items);
+        results.push(...isolatedClients.map((c: any) => ({
           type: 'client' as const,
           id: c.id,
           title: c.name,

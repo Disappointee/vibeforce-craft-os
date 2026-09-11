@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
 import type { TaskRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { formatGanttDate as formatDate, statusToProgress, buildCustomClass, type GanttTask, type GanttProjectGroup } from '@/lib/gantt-utils';
+import { filterClientsByMode } from '@/lib/data-isolation';
 
 export type { GanttTask, GanttProjectGroup };
 
@@ -40,7 +41,8 @@ export function useProjectGanttData(projectId: string): ProjectGanttData {
             ]);
 
             const cMap: Record<string, ClientRecord> = {};
-            for (const c of clientsResult as ClientRecord[]) {
+            const filteredClients = filterClientsByMode(clientsResult as ClientRecord[]);
+            for (const c of filteredClients) {
                 cMap[c.id] = c;
             }
             setClientMap(cMap);

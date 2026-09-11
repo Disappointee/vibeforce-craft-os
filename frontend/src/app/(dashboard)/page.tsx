@@ -49,6 +49,13 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { t } from '@/lib/i18n';
 import { isCraftMode } from '@/config/app-mode';
+import {
+  filterProjectsByMode,
+  filterTasksByMode,
+  filterTimeEntriesByMode,
+  isCraftProject,
+  isCraftTask,
+} from '@/lib/data-isolation';
 import type {
   TaskRecord,
   TaskLinkRecord,
@@ -267,23 +274,29 @@ export default function DashboardPage() {
 
 
 
-  // ── Stats (existing) ──
+  // ── Stats (Flow OS: Strictly agency data) ──
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const projects = await pb.collection('projects').getList(1, 50);
-        const tasks = await pb.collection('tasks').getList(1, 50, {
+        const projectsRes = await pb.collection('projects').getList(1, 100);
+        const agencyProjects = filterProjectsByMode(projectsRes.items as ProjectRecord[]);
+        const tasksRes = await pb.collection('tasks').getList(1, 200, {
           filter: 'status != "done"',
+          expand: 'project',
         });
-        const timeEntries = await pb.collection('time_entries').getList(1, 200);
-        const totalMinutes = timeEntries.items.reduce(
-          (sum, entry) => sum + (entry.duration_minutes || 0),
+        const agencyTasks = filterTasksByMode(tasksRes.items as TaskRecord[]);
+        const timeEntries = await pb.collection('time_entries').getList(1, 200, {
+          expand: 'task,task.project',
+        });
+        const agencyTimeEntries = filterTimeEntriesByMode(timeEntries.items);
+        const totalMinutes = agencyTimeEntries.reduce(
+          (sum, entry) => sum + ((entry as any).duration_minutes || 0),
           0,
         );
 
         setStats({
-          projects: projects.totalItems,
-          tasks: tasks.totalItems,
+          projects: agencyProjects.length,
+          tasks: agencyTasks.length,
           hours: Math.round(totalMinutes / 60),
         });
       } catch (error) {
@@ -305,17 +318,18 @@ export default function DashboardPage() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  // ── A1: Fetch my tasks ──
+  // ── A1: Fetch my tasks (Agency only) ──
   const fetchMyTasks = useCallback(async () => {
     if (!currentUserId) return;
     setMyTasksLoading(true);
     try {
-      const result = await pb.collection('tasks').getList(1, 10, {
+      const result = await pb.collection('tasks').getList(1, 20, {
         filter: pb.filter('assignees ~ {:uid} && status != "done"', { uid: currentUserId }),
         sort: 'due_date,created',
         expand: 'project.client,assignees',
       });
-      setMyTasks(result.items as MyTask[]);
+      const agencyTasks = filterTasksByMode(result.items as MyTask[]);
+      setMyTasks(agencyTasks.slice(0, 10));
     } catch (error) {
       console.error('Failed to fetch my tasks:', error);
     } finally {
@@ -342,9 +356,11 @@ export default function DashboardPage() {
           'user = {:uid} && start_time >= {:start} && start_time <= {:end}',
           { uid: currentUserId, start: startOfDay, end: endOfDay }
         ),
+        expand: 'task,task.project',
       });
-      const total = result.items.reduce(
-        (sum, entry) => sum + (entry.duration_minutes || 0),
+      const agencyTimeEntries = filterTimeEntriesByMode(result.items);
+      const total = agencyTimeEntries.reduce(
+        (sum, entry) => sum + ((entry as any).duration_minutes || 0),
         0,
       );
       setTodayMinutes(total);
@@ -388,7 +404,12 @@ export default function DashboardPage() {
         sort: '-created',
         expand: 'source_task,source_task.project,target_task,target_task.project',
       });
-      setMyLinks(result.items as TaskLinkWithExpand[]);
+      const agencyLinks = (result.items as TaskLinkWithExpand[]).filter((l) => {
+        const sourceCraft = isCraftTask(l.expand?.source_task);
+        const targetCraft = isCraftTask(l.expand?.target_task);
+        return !sourceCraft && !targetCraft;
+      });
+      setMyLinks(agencyLinks);
     } catch (error) {
       console.error('Failed to fetch task links:', error);
     } finally {
@@ -418,11 +439,11 @@ export default function DashboardPage() {
   const fetchProjectAlerts = useCallback(async () => {
     setAlertsLoading(true);
     try {
-      // Get active projects
-      const projectsResult = await pb.collection('projects').getList(1, 50, {
+      // Get active agency projects
+      const projectsResult = await pb.collection('projects').getList(1, 100, {
         filter: 'status = "active"',
       });
-      const projects = projectsResult.items as ProjectRecord[];
+      const projects = filterProjectsByMode(projectsResult.items as ProjectRecord[]);
       const projectIds = projects.map((p) => p.id);
 
       if (projectIds.length === 0) {
@@ -530,13 +551,13 @@ export default function DashboardPage() {
   const fetchUnassignedTasks = useCallback(async () => {
     setUnassignedLoading(true);
     try {
-      const result = await pb.collection('tasks').getList(1, 50, {
+      const result = await pb.collection('tasks').getList(1, 100, {
         filter: 'status != "done"',
         sort: '-created',
         expand: 'project.client,assignees',
       });
-      const tasks = result.items as MyTask[];
-      const unassigned = tasks.filter(t => !t.assignees || t.assignees.length === 0);
+      const agencyTasks = filterTasksByMode(result.items as MyTask[]);
+      const unassigned = agencyTasks.filter(t => !t.assignees || t.assignees.length === 0);
       setUnassignedTasks(unassigned);
     } catch (error) {
       console.error('Failed to fetch unassigned tasks:', error);

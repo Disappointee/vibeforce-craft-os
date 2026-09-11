@@ -28,6 +28,12 @@ import { ReportTable, ReportRow } from '@/components/reports/ReportTable';
 import { SaveTemplateDialog } from '@/components/reports/SaveTemplateDialog';
 import { printServiceRecord, printInvoice, BillingLineItem, downloadReportPDF } from '@/lib/pdf-generator';
 import { buildStundenreportInput, formatHoursHM } from '@/lib/stundenreport-utils';
+import {
+    filterProjectsByMode,
+    filterClientsByMode,
+    filterTasksByMode,
+    filterTimeEntriesByMode,
+} from '@/lib/data-isolation';
 
 type ReportTab = 'hours' | 'billing';
 
@@ -343,11 +349,11 @@ export default function ReportsPage() {
                     pb.collection('external_expenses').getList(1, 200, { sort: '-created' }).catch(() => ({ items: [] })),
                 ]);
 
-                setProjects(projResult.items as ProjectRecord[]);
+                setProjects(filterProjectsByMode(projResult.items as ProjectRecord[]));
                 setUsers(usersResult.items as UserRecord[]);
-                setClients(clientsResult.items as ClientRecord[]);
-                setTimeEntries(timeResult.items as TimeEntryRecord[]);
-                setTasks(tasksResult.items as TaskRecord[]);
+                setClients(filterClientsByMode(clientsResult.items as ClientRecord[]));
+                setTimeEntries(filterTimeEntriesByMode(timeResult.items as TimeEntryRecord[]));
+                setTasks(filterTasksByMode(tasksResult.items as TaskRecord[]));
                 setExternalExpenses(expensesResult.items as ExternalExpenseRecord[]);
             } catch (error) {
                 console.error('Failed to fetch report data:', error);

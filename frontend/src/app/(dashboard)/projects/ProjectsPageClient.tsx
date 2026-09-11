@@ -25,7 +25,7 @@ export function ProjectsPageClient({ initialClients }: { initialClients: ClientR
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [clientFilter, setClientFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('active');
-  const [typeFilter, setTypeFilter] = useState<string>(craftMode ? 'craft' : 'all');
+  const [typeFilter, setTypeFilter] = useState<string>(craftMode ? 'craft' : 'agency');
   const [isBaustelleModalOpen, setIsBaustelleModalOpen] = useState(false);
 
   const handleProjectCreated = useCallback(() => {

@@ -1,6 +1,7 @@
 import { getAdminPB } from '@/lib/pocketbase-server';
 import { TasksPageClient } from './TasksPageClient';
 import type { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
+import { filterProjectsByMode, filterClientsByMode } from '@/lib/data-isolation';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +17,9 @@ export default async function TasksPage() {
       pb.collection('users').getList(1, 50, { sort: 'name' }),
       pb.collection('clients').getList(1, 50, { sort: 'name' }),
     ]);
-    projects = projResult.items as ProjectRecord[];
+    projects = filterProjectsByMode(projResult.items as ProjectRecord[]);
     users = usersResult.items as UserRecord[];
-    clients = clientsResult.items as ClientRecord[];
+    clients = filterClientsByMode(clientsResult.items as ClientRecord[]);
   } catch (error) {
     console.warn('[TasksPage] Failed to prefetch filter options:', error);
   }

@@ -49,7 +49,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
     const [clients, setClients] = useState<ClientRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'craft' | 'business'>(craft ? 'craft' : 'all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'craft' | 'business'>(craft ? 'craft' : 'business');
     const [editClient, setEditClient] = useState<ClientRecord | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -91,13 +91,21 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
     };
 
     const filteredClients = clients.filter(client => {
-        if (categoryFilter === 'craft') {
-            const isCraft = Boolean((client as any).client_type || (client as any).has_48b_certificate || (client as any).vat_id);
-            if (!isCraft) return false;
-        } else if (categoryFilter === 'business') {
-            const isCraft = Boolean((client as any).client_type || (client as any).has_48b_certificate);
-            if (isCraft) return false;
-        }
+        const isCraft = Boolean(
+            (client as any).client_type ||
+            (client as any).has_48b_certificate ||
+            (client as any).vat_id ||
+            client.notes?.includes('§ 48b') ||
+            client.notes?.includes('§ 13b') ||
+            client.notes?.toLowerCase().includes('bau') ||
+            client.company?.toLowerCase().includes('bauvorhaben') ||
+            client.company?.toLowerCase().includes('gewerbebau') ||
+            client.id === 'vlde9jwt008siwf' ||
+            client.id === 'ijdp3yagl2sd5ex'
+        );
+
+        if (categoryFilter === 'craft' && !isCraft) return false;
+        if (categoryFilter === 'business' && isCraft) return false;
 
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();

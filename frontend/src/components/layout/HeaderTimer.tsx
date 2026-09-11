@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTimerStore, useSettingsStore } from '@/lib/store';
 import { pb } from '@/lib/pocketbase';
-import { Square, Play, Pause, Clock, Loader2, FileText, ArrowUp, ChevronDown, AlertCircle } from 'lucide-react';
+import { Square, Play, Pause, Clock, Loader2, FileText, ArrowUp, ChevronDown, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { t } from '@/lib/i18n';
+import { isCraftMode } from '@/config/app-mode';
 
 interface TaskOption {
   id: string;
@@ -34,6 +35,7 @@ export function HeaderTimer() {
     totalPausedSeconds,
     selectedTaskId,
     startTimer,
+    stopTimer,
     stopAndSaveTimer,
     pauseTimer,
     resumeTimer,
@@ -68,12 +70,21 @@ export function HeaderTimer() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
+        const craft = isCraftMode();
         const result = await pb.collection('tasks').getList(1, 500, {
           sort: '-created',
           expand: 'project',
           filter: pb.filter("status != {:status}", { status: 'done' }),
         });
-        setTasks(result.items.map((task: any) => {
+        
+        // Strict Data Isolation: Exclude craft projects in agency mode; exclude agency projects in craft mode
+        const filtered = result.items.filter((task: any) => {
+          const project = task.expand?.project;
+          const isCraftProject = project?.key?.startsWith('BAU') || project?.key?.startsWith('CRAFT') || project?.project_type === 'craft';
+          return craft ? isCraftProject : !isCraftProject;
+        });
+
+        setTasks(filtered.map((task: any) => {
           const project = task.expand?.project;
           return {
             id: task.id,
@@ -116,17 +127,49 @@ export function HeaderTimer() {
       } else {
         toast.success(`Zeit erfasst für "${savedTitle}"`);
       }
-    } catch {
-      toast.error('Fehler beim Speichern der Zeit');
+    } catch (err) {
+      console.error('stopAndSaveTimer error, forcing local reset:', err);
+      // Hardening fallback: immer lokalen Zustand freigeben, damit der Timer nie stecken bleibt
+      stopTimer();
+      toast.warning('Timer wurde lokal zurückgesetzt.');
     } finally {
       setIsStopping(false);
       setHeartbeatOpen(false);
     }
-  }, [runningTaskId, startTime, taskTitle, stopAndSaveTimer, maxTimerHoursContinuous]);
+  }, [runningTaskId, startTime, taskTitle, stopAndSaveTimer, stopTimer, maxTimerHoursContinuous]);
+
+  const handleDiscardTimer = useCallback(async () => {
+    const timeEntryId = useTimerStore.getState().runningTimeEntryId;
+    if (timeEntryId) {
+      try {
+        await pb.collection('time_entries').delete(timeEntryId);
+      } catch (err) {
+        console.warn('Could not delete time entry during discard:', err);
+      }
+    }
+    stopTimer();
+    toast.info('Timer verworfen (nicht gespeichert).');
+  }, [stopTimer]);
 
   // Elapsed time tracker & Live Auto-Cap & Heartbeat trigger
   useEffect(() => {
-    if (!runningTaskId || !startTime || isPaused) return;
+    if (!runningTaskId || !startTime) return;
+
+    // Emergency sanitization: If elapsed > 12 hours on mount, auto-reset immediately
+    const initialElapsedSeconds = differenceInSeconds(new Date(), parseISO(startTime)) - totalPausedSeconds;
+    if (isNaN(initialElapsedSeconds) || initialElapsedSeconds > 12 * 3600) {
+      console.warn('Excessive timer detected (>12h). Resetting local timer store...');
+      const timeEntryId = useTimerStore.getState().runningTimeEntryId;
+      if (timeEntryId) {
+        pb.collection('time_entries').delete(timeEntryId).catch(() => {});
+      }
+      stopTimer();
+      toast.warning('Alter Geistertimer (>12h) wurde automatisch bereinigt.');
+      return;
+    }
+
+    if (isPaused) return;
+
     const interval = setInterval(() => {
       const seconds = differenceInSeconds(new Date(), parseISO(startTime)) - totalPausedSeconds;
       const currentElapsed = Math.max(0, seconds);
@@ -373,6 +416,17 @@ export function HeaderTimer() {
             title="Timer stoppen und Zeit erfassen"
           >
             {isStopping ? <Loader2 size={14} className="animate-spin" /> : <Square size={12} fill="currentColor" />}
+          </Button>
+
+          <Button
+            onClick={handleDiscardTimer}
+            disabled={isStopping}
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Timer verwerfen (ohne zu speichern)"
+          >
+            <Trash2 size={13} />
           </Button>
 
           <span className={`font-mono font-bold tabular-nums text-sm whitespace-nowrap ${isPaused ? 'text-amber-400 opacity-80' : 'text-emerald-400'}`}>

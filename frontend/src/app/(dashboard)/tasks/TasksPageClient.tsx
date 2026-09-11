@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/select";
 
 import { useSettingsStore } from '@/lib/store';
+import { isCraftMode } from '@/config/app-mode';
+import { filterProjectsByMode, filterTasksByMode, filterClientsByMode } from '@/lib/data-isolation';
 
 export function TasksPageClient({
   initialProjects,
@@ -43,6 +45,7 @@ export function TasksPageClient({
   initialClients: ClientRecord[];
 }) {
   const searchParams = useSearchParams();
+  const craft = isCraftMode();
   const { defaultTaskView } = useSettingsStore();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +68,14 @@ export function TasksPageClient({
   const currentUserId = pb.authStore.record?.id;
   const isAdmin = pb.authStore.record?.role === 'admin';
 
+  const visibleProjects = useMemo(() => {
+    return filterProjectsByMode(projects);
+  }, [projects]);
+
+  const visibleClients = useMemo(() => {
+    return filterClientsByMode(clients);
+  }, [clients]);
+
   useEffect(() => {
     const fetchAllTasks = async () => {
       setIsLoading(true);
@@ -72,12 +83,13 @@ export function TasksPageClient({
         const filterStr = (!showAllTasks && currentUserId)
           ? pb.filter("status != 'done' && assignees ?= {:userId}", { userId: currentUserId })
           : "status != 'done'";
-        const result = await pb.collection('tasks').getList(1, 100, {
+        const result = await pb.collection('tasks').getList(1, 200, {
           sort: '-created',
           expand: 'project,assignees',
           filter: filterStr,
         });
-        setTasks(result.items as TaskRecord[]);
+        const modeFiltered = filterTasksByMode(result.items as TaskRecord[]);
+        setTasks(modeFiltered);
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
         toast.error('Fehler beim Laden der Aufgaben');
@@ -87,7 +99,7 @@ export function TasksPageClient({
     };
 
     fetchAllTasks();
-  }, [refreshTrigger, showAllTasks, currentUserId]);
+  }, [refreshTrigger, showAllTasks, currentUserId, craft]);
 
   useEffect(() => {
     const handleUpdate = () => setRefreshTrigger(prev => prev + 1);
@@ -424,14 +436,14 @@ export function TasksPageClient({
                   <SelectValue>
                     {(value: string) => {
                       if (value === 'all') return 'Alle Projekte';
-                      const project = projects.find(p => p.id === value);
+                      const project = visibleProjects.find(p => p.id === value);
                       return project ? `${project.key} — ${project.name}` : value;
                     }}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background border-border text-foreground">
                   <SelectItem value="all">Alle Projekte</SelectItem>
-                  {projects.map((p) => (
+                  {visibleProjects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.key} — {p.name}
                     </SelectItem>

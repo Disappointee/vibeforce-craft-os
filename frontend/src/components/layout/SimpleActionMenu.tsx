@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { revalidateClientsPath } from '@/app/actions/clients';
 import { revalidateProjectsPath } from '@/app/actions/projects';
 import { isCraftMode } from '@/config/app-mode';
+import { filterTasksByMode } from '@/lib/data-isolation';
 
 interface TaskOption {
   id: string;
@@ -49,7 +50,8 @@ export function SimpleActionMenu() {
           expand: 'project,project.client',
           filter: pb.filter("status != {:status}", { status: 'done' }),
         });
-        setTimerTasks(result.items.map((task: any) => {
+        const filteredItems = filterTasksByMode(result.items);
+        setTimerTasks(filteredItems.map((task: any) => {
           const project = task.expand?.project;
           const client = project?.expand?.client;
           return {

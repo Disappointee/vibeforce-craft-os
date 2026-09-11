@@ -129,7 +129,12 @@ export const useTimerStore = create<TimerState>()(
           const durationSeconds = Math.max(0, Math.round(
             (new Date(endTime).getTime() - new Date(state.startTime).getTime()) / 1000
           ) - effectivePausedSeconds);
-          const rawDurationMinutes = Math.max(1, Math.round(durationSeconds / 60));
+
+          // Maximum cap safety: Never record more than max hours (default 8h = 480 min) for a single session
+          const maxHours = useSettingsStore.getState().maxTimerHoursContinuous || 8;
+          const maxCapSeconds = maxHours * 3600;
+          const safeDurationSeconds = Math.min(durationSeconds, maxCapSeconds);
+          const rawDurationMinutes = Math.max(1, Math.round(safeDurationSeconds / 60));
 
           // Resolve contractual rounding from project/client or fallback to global settings
           let roundingInterval: BillingRoundingInterval = (useSettingsStore.getState().globalRoundingInterval as BillingRoundingInterval) ?? 6;
@@ -174,19 +179,32 @@ export const useTimerStore = create<TimerState>()(
                 is_billable: state.isBillable,
               });
             } else {
-              await pb.collection('time_entries').create({
-                task: state.runningTaskId,
-                user: pb.authStore.record?.id,
-                start_time: state.startTime,
-                end_time: endTime,
-                duration_minutes: rawDurationMinutes,
-                billable_minutes: billableMinutes,
-                description: state.description || undefined,
-                is_billable: state.isBillable,
-              });
-            }
+              // Task existence validation: Prüfe vorab, ob die Task überhaupt noch in der DB existiert
+              let taskExists = true;
+              try {
+                await pb.collection('tasks').getOne(state.runningTaskId);
+              } catch {
+                console.warn('Running task no longer exists in DB, omitting time_entries.create to prevent relation constraint failure.');
+                taskExists = false;
+              }
 
-            // Nur bei Erfolg Store clearen
+              if (taskExists) {
+                await pb.collection('time_entries').create({
+                  task: state.runningTaskId,
+                  user: pb.authStore.record?.id,
+                  start_time: state.startTime,
+                  end_time: endTime,
+                  duration_minutes: rawDurationMinutes,
+                  billable_minutes: billableMinutes,
+                  description: state.description || undefined,
+                  is_billable: state.isBillable,
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Failed to update/create time_entry in DB, clearing local store safely:', error);
+          } finally {
+            // Unbedingt Store immer clearen, damit kein un-stoppbarer Ghost-Timer hängen bleibt
             set({
               runningTaskId: null,
               startTime: null,
@@ -199,9 +217,6 @@ export const useTimerStore = create<TimerState>()(
               isBillable: true,
               runningTimeEntryId: null,
             });
-          } catch (error) {
-            console.error('Failed to stop timer:', error);
-            throw error; // UI kann Fehler anzeigen
           }
         },
         saveRunningNote: async () => {
@@ -244,6 +259,62 @@ export const useTimerStore = create<TimerState>()(
             if (typeof window === 'undefined') return;
             if (!pb.authStore.isValid || !pb.authStore.record) return;
 
+            const state = get();
+
+            // 1. Ghost Timer Sanitizer: Wenn der lokale Timer ungültig oder älter als 12 Stunden ist, sofort resetten
+            if (state.startTime) {
+              const startMs = new Date(state.startTime).getTime();
+              const elapsedHours = (Date.now() - startMs) / (1000 * 3600);
+              if (isNaN(elapsedHours) || elapsedHours > 12) {
+                console.warn('Ghost timer detected in local store (>12h). Clearing...');
+                if (state.runningTimeEntryId) {
+                  pb.collection('time_entries').delete(state.runningTimeEntryId).catch(() => {});
+                }
+                set({
+                  runningTaskId: null,
+                  startTime: null,
+                  taskTitle: null,
+                  description: '',
+                  isPaused: false,
+                  pauseStartTime: null,
+                  totalPausedSeconds: 0,
+                  selectedTaskId: '',
+                  isBillable: true,
+                  runningTimeEntryId: null,
+                });
+                return;
+              }
+            }
+
+            // 2. Task Existance Check: Wenn runningTaskId im Store ist, existiert die Aufgabe überhaupt noch in PB?
+            if (state.runningTaskId) {
+              try {
+                await pb.collection('tasks').getOne(state.runningTaskId);
+              } catch {
+                console.warn('Active timer references a deleted task. Resetting local store...');
+                set({
+                  runningTaskId: null,
+                  startTime: null,
+                  taskTitle: null,
+                  description: '',
+                  isPaused: false,
+                  pauseStartTime: null,
+                  totalPausedSeconds: 0,
+                  selectedTaskId: '',
+                  isBillable: true,
+                  runningTimeEntryId: null,
+                });
+                if (typeof window !== 'undefined') {
+                  const { toast } = await import('sonner');
+                  toast.info('Geisteraufgabe bereinigt', {
+                    description: 'Die zugehörige Aufgabe existiert nicht mehr in der Datenbank und wurde zurückgesetzt.',
+                  });
+                }
+                return;
+              }
+            }
+
+            // 3. Check open time entries in DB for this user
             const records = await pb.collection('time_entries').getList(1, 1, {
               filter: pb.filter('user = {:userId} && (end_time = "" || end_time = null)', {
                 userId: pb.authStore.record.id,
@@ -251,81 +322,97 @@ export const useTimerStore = create<TimerState>()(
               sort: '-created',
             });
 
-            if (records.items.length > 0) {
-              const entry = records.items[0];
-              const state = get();
-
-              const maxHours = useSettingsStore.getState().maxTimerHoursContinuous || 8;
-              const maxDurationSeconds = maxHours * 3600;
-              const startTimeMs = new Date((entry.start_time as string) || entry.created).getTime();
-              const nowMs = Date.now();
-              const diffSeconds = (nowMs - startTimeMs) / 1000;
-
-              // Auto-Cap check: If open time entry exceeds configured max continuous runtime (e.g. 8h)
-              if (diffSeconds > maxDurationSeconds) {
-                const cappedEndTime = new Date(startTimeMs + maxDurationSeconds * 1000).toISOString();
-                const cappedDurationMinutes = Math.round(maxDurationSeconds / 60);
-
-                try {
-                  await pb.collection('time_entries').update(entry.id, {
-                    end_time: cappedEndTime,
-                    duration_minutes: cappedDurationMinutes,
-                  });
-
-                  // Clear store state if it was tracking this ghost timer
-                  if (state.runningTimeEntryId === entry.id || state.runningTaskId === entry.task) {
-                    set({
-                      runningTaskId: null,
-                      startTime: null,
-                      taskTitle: null,
-                      description: '',
-                      isPaused: false,
-                      pauseStartTime: null,
-                      totalPausedSeconds: 0,
-                      selectedTaskId: '',
-                      isBillable: true,
-                      runningTimeEntryId: null,
-                    });
-                  }
-
-                  if (typeof window !== 'undefined') {
-                    const { toast } = await import('sonner');
-                    toast.warning(`Geistertimer bereinigt: Timer wurde nach ${maxHours} Stunden automatisch beendet.`, {
-                      description: `Der Zeiteintrag wurde auf ${maxHours}h begrenzt und in der Datenbank gespeichert.`,
-                      duration: 8000,
-                    });
-                  }
-                } catch (capError) {
-                  console.error('Failed to auto-cap ghost timer:', capError);
-                }
-                return;
+            if (records.items.length === 0) {
+              // Orphan Timer Sanitizer: Wenn DB keinen offenen Eintrag hat, aber im lokalen Speicher noch ein Timer aktiv ist
+              if (state.runningTaskId || state.runningTimeEntryId) {
+                console.warn('DB has no active timer for user, clearing orphan local running timer...');
+                set({
+                  runningTaskId: null,
+                  startTime: null,
+                  taskTitle: null,
+                  description: '',
+                  isPaused: false,
+                  pauseStartTime: null,
+                  totalPausedSeconds: 0,
+                  selectedTaskId: '',
+                  isBillable: true,
+                  runningTimeEntryId: null,
+                });
               }
-
-              if (state.runningTimeEntryId === entry.id) return;
-
-              let title = 'Aktuelle Aufgabe';
-              try {
-                if (entry.task) {
-                  const task = await pb.collection('tasks').getOne(entry.task as string);
-                  if (task?.title) title = task.title;
-                }
-              } catch {
-                // Task fallback
-              }
-
-              set({
-                runningTaskId: (entry.task as string) || null,
-                startTime: (entry.start_time as string) || new Date().toISOString(),
-                taskTitle: title,
-                description: entry.description || '',
-                selectedTaskId: (entry.task as string) || '',
-                isPaused: false,
-                pauseStartTime: null,
-                totalPausedSeconds: 0,
-                isBillable: (entry.is_billable as boolean) ?? true,
-                runningTimeEntryId: entry.id,
-              });
+              return;
             }
+            const entry = records.items[0];
+
+            const maxHours = useSettingsStore.getState().maxTimerHoursContinuous || 8;
+            const maxDurationSeconds = maxHours * 3600;
+            const startTimeMs = new Date((entry.start_time as string) || entry.created).getTime();
+            const nowMs = Date.now();
+            const diffSeconds = (nowMs - startTimeMs) / 1000;
+
+            // Auto-Cap check: If open time entry exceeds configured max continuous runtime (e.g. 8h)
+            if (diffSeconds > maxDurationSeconds) {
+              const cappedEndTime = new Date(startTimeMs + maxDurationSeconds * 1000).toISOString();
+              const cappedDurationMinutes = Math.round(maxDurationSeconds / 60);
+
+              try {
+                await pb.collection('time_entries').update(entry.id, {
+                  end_time: cappedEndTime,
+                  duration_minutes: cappedDurationMinutes,
+                });
+
+                // Clear store state if it was tracking this ghost timer
+                if (state.runningTimeEntryId === entry.id || state.runningTaskId === entry.task) {
+                  set({
+                    runningTaskId: null,
+                    startTime: null,
+                    taskTitle: null,
+                    description: '',
+                    isPaused: false,
+                    pauseStartTime: null,
+                    totalPausedSeconds: 0,
+                    selectedTaskId: '',
+                    isBillable: true,
+                    runningTimeEntryId: null,
+                  });
+                }
+
+                if (typeof window !== 'undefined') {
+                  const { toast } = await import('sonner');
+                  toast.warning(`Geistertimer bereinigt: Timer wurde nach ${maxHours} Stunden automatisch beendet.`, {
+                    description: `Der Zeiteintrag wurde auf ${maxHours}h begrenzt und in der Datenbank gespeichert.`,
+                    duration: 8000,
+                  });
+                }
+              } catch (capError) {
+                console.error('Failed to auto-cap ghost timer:', capError);
+              }
+              return;
+            }
+
+            if (state.runningTimeEntryId === entry.id) return;
+
+            let title = 'Aktuelle Aufgabe';
+            try {
+              if (entry.task) {
+                const task = await pb.collection('tasks').getOne(entry.task as string);
+                if (task?.title) title = task.title;
+              }
+            } catch {
+              // Task fallback
+            }
+
+            set({
+              runningTaskId: (entry.task as string) || null,
+              startTime: (entry.start_time as string) || new Date().toISOString(),
+              taskTitle: title,
+              description: entry.description || '',
+              selectedTaskId: (entry.task as string) || '',
+              isPaused: false,
+              pauseStartTime: null,
+              totalPausedSeconds: 0,
+              isBillable: (entry.is_billable as boolean) ?? true,
+              runningTimeEntryId: entry.id,
+            });
           } catch (error) {
             console.warn('Timer DB-Sync optional fallback:', error);
           }
