@@ -21,6 +21,7 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   Hammer
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -34,6 +35,7 @@ export default function AdminOverviewPage() {
   const router = useRouter();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [settings, setSettings] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
 
   const currentUser = pb.authStore.record as unknown as UserRecord | null;
@@ -41,12 +43,14 @@ export default function AdminOverviewPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [usersRes, projectsRes] = await Promise.all([
+        const [usersRes, projectsRes, settingsRes] = await Promise.all([
           pb.collection('users').getFullList<UserRecord>({ sort: '-created' }),
           pb.collection('projects').getFullList<ProjectRecord>({ sort: '-created' }),
+          pb.collection('app_settings').getFullList().then(r => r[0] || null).catch(() => null),
         ]);
         setUsers(usersRes);
         setProjects(projectsRes);
+        setSettings(settingsRes);
       } catch (err) {
         console.error('Error loading admin overview data:', err);
       } finally {
@@ -247,65 +251,138 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Card 2: Handwerksbetrieb-Stammdaten */}
-        <Card className="border-border/60 bg-card/40 flex flex-col justify-between">
-          <div>
-            <CardHeader className="pb-3 border-b border-border/30">
-              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                <Shield size={16} className="text-amber-500" />
-                Betriebs- & Kammer-Status
-              </CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Rechts- & Steuerstatus für Bau-Compliance
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4 text-xs">
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-foreground">Handwerkskammer (HWK)</span>
-                  <p className="text-muted-foreground text-[11px]">Eingetragen in Handwerksrolle (Anlage A/B1 HwO)</p>
-                </div>
+        {/* Card 2: Handwerksbetrieb-Stammdaten & Compliance */}
+        {(() => {
+          const hwkRegistered = settings?.hwk_registered !== false;
+          const hasHwkData = Boolean(settings?.hwk_name || settings?.hwk_number);
+          const hwkLabel = hasHwkData
+            ? `${settings?.hwk_name || 'HWK'} ${settings?.hwk_number ? `· Nr. ${settings.hwk_number}` : ''}`
+            : 'Eingetragen in Handwerksrolle (Anlage A/B1 HwO)';
+
+          let freistellungState: 'success' | 'warning' | 'danger' = 'success';
+          let freistellungText = 'Gültig hinterlegt (0% Bauabzugsteuer)';
+
+          if (settings) {
+            if (!settings.freistellung_status || !settings.freistellung_gueltig_bis) {
+              freistellungState = 'warning';
+              freistellungText = 'Noch nicht hinterlegt (15% Einbehalt droht)';
+            } else {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const validUntil = new Date(settings.freistellung_gueltig_bis);
+              const diffDays = Math.ceil((validUntil.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays < 0) {
+                freistellungState = 'danger';
+                freistellungText = `Seit ${Math.abs(diffDays)} Tagen abgelaufen!`;
+              } else if (diffDays <= 30) {
+                freistellungState = 'warning';
+                freistellungText = `Läuft am ${settings.freistellung_gueltig_bis} ab (noch ${diffDays} Tage)`;
+              } else {
+                freistellungState = 'success';
+                freistellungText = `Gültig bis ${settings.freistellung_gueltig_bis} (0% Bauabzugsteuer)`;
+              }
+            }
+          }
+
+          const reverseChargeActive = settings?.reverse_charge_active !== false;
+          const vobDinActive = settings?.vob_din18299_active !== false;
+
+          return (
+            <Card className="border-border/60 bg-card/40 flex flex-col justify-between">
+              <div>
+                <CardHeader className="pb-3 border-b border-border/30">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                      <Shield size={16} className="text-amber-500" />
+                      Betriebs- & Kammer-Status
+                    </CardTitle>
+                    {settings?.company_name && (
+                      <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/30 max-w-[140px] truncate">
+                        {settings.company_name}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-xs mt-0.5">
+                    Rechts- & Steuerstatus für Bau-Compliance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4 text-xs">
+                  {/* HWK Status */}
+                  <div className="flex items-start gap-2.5">
+                    {hwkRegistered ? (
+                      <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <span className="font-semibold text-foreground">Handwerkskammer (HWK)</span>
+                      <p className="text-muted-foreground text-[11px]">{hwkLabel}</p>
+                    </div>
+                  </div>
+
+                  {/* § 48b EStG Freistellung */}
+                  <div className="flex items-start gap-2.5">
+                    {freistellungState === 'success' && <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />}
+                    {freistellungState === 'warning' && <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />}
+                    {freistellungState === 'danger' && <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />}
+                    <div>
+                      <span className="font-semibold text-foreground">§ 48b EStG Freistellungsbescheinigung</span>
+                      <p className={`text-[11px] ${
+                        freistellungState === 'danger' ? 'text-rose-400 font-semibold' :
+                        freistellungState === 'warning' ? 'text-amber-400 font-medium' :
+                        'text-muted-foreground'
+                      }`}>
+                        {freistellungText}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* § 13b UStG Reverse Charge */}
+                  <div className="flex items-start gap-2.5">
+                    {reverseChargeActive ? (
+                      <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <span className="font-semibold text-foreground">§ 13b UStG Reverse Charge Engine</span>
+                      <p className="text-muted-foreground text-[11px]">
+                        {reverseChargeActive ? 'Automatische Netto-Rechnungen bei Bauleistern' : 'Deaktiviert (Regelbesteuerung)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* VOB/B & DIN 18299 Aufmaß */}
+                  <div className="flex items-start gap-2.5">
+                    {vobDinActive ? (
+                      <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <span className="font-semibold text-foreground">VOB/B & DIN 18299 Aufmaß</span>
+                      <p className="text-muted-foreground text-[11px]">
+                        {vobDinActive ? `Konforme Formeln & ${settings?.vob_payment_term_days || 14}-Tage Zahlungsziel aktiv` : 'Individueller Abrechnungsmodus'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
               </div>
 
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-foreground">§ 48b EStG Freistellungsbescheinigung</span>
-                  <p className="text-muted-foreground text-[11px]">Gültig hinterlegt (0% Bauabzugsteuer)</p>
-                </div>
+              <div className="p-4 border-t border-border/30 bg-muted/10 rounded-b-xl">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push('/admin/settings?tab=company')}
+                  className="w-full text-xs border-border flex items-center justify-center gap-1.5 cursor-pointer hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+                >
+                  <Settings size={14} />
+                  Betriebsdaten bearbeiten
+                </Button>
               </div>
-
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-foreground">§ 13b UStG Reverse Charge Engine</span>
-                  <p className="text-muted-foreground text-[11px]">Automatische Netto-Rechnungen bei Bauleistern</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-foreground">VOB/B & DIN 18299 Aufmaß</span>
-                  <p className="text-muted-foreground text-[11px]">Konforme Formeln & Mengenprüfung aktiv</p>
-                </div>
-              </div>
-            </CardContent>
-          </div>
-
-          <div className="p-4 border-t border-border/30 bg-muted/10 rounded-b-xl">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/admin/settings')}
-              className="w-full text-xs border-border flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Settings size={14} />
-              Betriebsdaten bearbeiten
-            </Button>
-          </div>
-        </Card>
+            </Card>
+          );
+        })()}
 
         {/* Card 3: Standard-Kalkulationssätze */}
         <Card className="border-border/60 bg-card/40 lg:col-span-3">

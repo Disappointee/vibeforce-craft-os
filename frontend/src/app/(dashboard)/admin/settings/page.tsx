@@ -24,9 +24,11 @@ import {
     Clock,
     ShieldCheck,
     Hammer,
+    Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CraftSettingsSection } from '@/components/craft/CraftSettingsSection';
+import { CompanySettingsTab, type CompanySettingsData } from '@/components/admin/CompanySettingsTab';
 import { useSettingsStore } from '@/lib/store';
 import { isCraftMode } from '@/config/app-mode';
 import {
@@ -37,7 +39,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-interface AppSettings {
+interface AppSettings extends CompanySettingsData {
     app_name: string;
     app_logo_url: string;
     smtp_host: string;
@@ -50,7 +52,7 @@ interface AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-    app_name: 'Vibeforce Flow OS',
+    app_name: 'Vibeforce Craft OS',
     app_logo_url: '',
     smtp_host: '',
     smtp_port: 587,
@@ -59,6 +61,35 @@ const DEFAULT_SETTINGS: AppSettings = {
     smtp_from_address: '',
     smtp_from_name: '',
     smtp_tls: true,
+    company_name: '',
+    company_legal_form: '',
+    company_owner: '',
+    company_street: '',
+    company_zip: '',
+    company_city: '',
+    company_country: 'Deutschland',
+    company_phone: '',
+    company_emergency_phone: '',
+    company_email: '',
+    company_website: '',
+    bank_name: '',
+    bank_iban: '',
+    bank_bic: '',
+    creditor_id: '',
+    hwk_name: '',
+    hwk_number: '',
+    hwk_trade: '',
+    hwk_registered: true,
+    master_qualification: '',
+    tax_id: '',
+    vat_id: '',
+    freistellung_status: true,
+    freistellung_aktenzeichen: '',
+    freistellung_gueltig_bis: '',
+    freistellung_issuer: '',
+    reverse_charge_active: true,
+    vob_din18299_active: true,
+    vob_payment_term_days: 14,
 };
 
 const POCKETBASE_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8090' : 'https://pb-vibeforce.46-225-178-235.sslip.io');
@@ -71,8 +102,18 @@ export default function AdminSettingsPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
     const [showPassword, setShowPassword] = useState(false);
-    const [activeTab, setActiveTab] = useState('general');
     const craftMode = isCraftMode();
+    const [activeTab, setActiveTab] = useState(craftMode ? 'company' : 'general');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab && ['company', 'general', 'timer', 'smtp', 'craft'].includes(tab)) {
+                setActiveTab(tab);
+            }
+        }
+    }, []);
 
     const {
         maxTimerHoursContinuous,
@@ -222,6 +263,12 @@ export default function AdminSettingsPage() {
                 {/* Settings Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="bg-card border border-border">
+                        {craftMode && (
+                            <TabsTrigger value="company" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-400 gap-2 font-semibold">
+                                <Building2 size={16} />
+                                Betriebsdaten & Kammer
+                            </TabsTrigger>
+                        )}
                         <TabsTrigger value="general" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
                             <Globe size={16} />
                             Allgemein
@@ -241,6 +288,16 @@ export default function AdminSettingsPage() {
                             </TabsTrigger>
                         )}
                     </TabsList>
+
+                    {/* Handwerksbetrieb & Kammer Settings */}
+                    {craftMode && (
+                        <TabsContent value="company" className="space-y-6">
+                            <CompanySettingsTab
+                                data={settings}
+                                onChange={(field, val) => updateField(field as keyof AppSettings, val)}
+                            />
+                        </TabsContent>
+                    )}
 
                     {/* General Settings */}
                     <TabsContent value="general" className="space-y-6">

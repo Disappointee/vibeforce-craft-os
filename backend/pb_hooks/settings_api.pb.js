@@ -61,6 +61,36 @@ function getSettings(app) {
                 smtp_from_name: record.get('smtp_from_name') || '',
                 smtp_tls: record.get('smtp_tls') || false,
                 updated: record.get('updated') || '',
+                // Company & Craft fields
+                company_name: record.get('company_name') || '',
+                company_legal_form: record.get('company_legal_form') || '',
+                company_owner: record.get('company_owner') || '',
+                company_street: record.get('company_street') || '',
+                company_zip: record.get('company_zip') || '',
+                company_city: record.get('company_city') || '',
+                company_country: record.get('company_country') || 'Deutschland',
+                company_phone: record.get('company_phone') || '',
+                company_emergency_phone: record.get('company_emergency_phone') || '',
+                company_email: record.get('company_email') || '',
+                company_website: record.get('company_website') || '',
+                bank_name: record.get('bank_name') || '',
+                bank_iban: record.get('bank_iban') || '',
+                bank_bic: record.get('bank_bic') || '',
+                creditor_id: record.get('creditor_id') || '',
+                hwk_name: record.get('hwk_name') || '',
+                hwk_number: record.get('hwk_number') || '',
+                hwk_trade: record.get('hwk_trade') || '',
+                hwk_registered: record.get('hwk_registered') !== false,
+                master_qualification: record.get('master_qualification') || '',
+                tax_id: record.get('tax_id') || '',
+                vat_id: record.get('vat_id') || '',
+                freistellung_status: record.get('freistellung_status') !== false,
+                freistellung_aktenzeichen: record.get('freistellung_aktenzeichen') || '',
+                freistellung_gueltig_bis: record.get('freistellung_gueltig_bis') || '',
+                freistellung_issuer: record.get('freistellung_issuer') || '',
+                reverse_charge_active: record.get('reverse_charge_active') !== false,
+                vob_din18299_active: record.get('vob_din18299_active') !== false,
+                vob_payment_term_days: record.get('vob_payment_term_days') || 14,
             };
         }
     } catch (e) {
@@ -99,6 +129,35 @@ routerAdd('GET', '/api/custom/settings', (c) => {
                 smtp_from_address: '',
                 smtp_from_name: '',
                 smtp_tls: false,
+                company_name: '',
+                company_legal_form: '',
+                company_owner: '',
+                company_street: '',
+                company_zip: '',
+                company_city: '',
+                company_country: 'Deutschland',
+                company_phone: '',
+                company_emergency_phone: '',
+                company_email: '',
+                company_website: '',
+                bank_name: '',
+                bank_iban: '',
+                bank_bic: '',
+                creditor_id: '',
+                hwk_name: '',
+                hwk_number: '',
+                hwk_trade: '',
+                hwk_registered: true,
+                master_qualification: '',
+                tax_id: '',
+                vat_id: '',
+                freistellung_status: true,
+                freistellung_aktenzeichen: '',
+                freistellung_gueltig_bis: '',
+                freistellung_issuer: '',
+                reverse_charge_active: true,
+                vob_din18299_active: true,
+                vob_payment_term_days: 14,
             }
         }, headers);
     }
@@ -147,8 +206,18 @@ routerAdd('POST', '/api/custom/settings', (c) => {
         }
 
         // Felder aktualisieren
-        const fields = ['app_name', 'app_logo_url', 'smtp_host', 'smtp_port', 'smtp_username',
-            'smtp_password', 'smtp_from_address', 'smtp_from_name', 'smtp_tls'];
+        const fields = [
+            'app_name', 'app_logo_url', 'smtp_host', 'smtp_port', 'smtp_username',
+            'smtp_password', 'smtp_from_address', 'smtp_from_name', 'smtp_tls',
+            'company_name', 'company_legal_form', 'company_owner',
+            'company_street', 'company_zip', 'company_city', 'company_country',
+            'company_phone', 'company_emergency_phone', 'company_email', 'company_website',
+            'bank_name', 'bank_iban', 'bank_bic', 'creditor_id',
+            'hwk_name', 'hwk_number', 'hwk_trade', 'hwk_registered', 'master_qualification',
+            'tax_id', 'vat_id',
+            'freistellung_status', 'freistellung_aktenzeichen', 'freistellung_gueltig_bis', 'freistellung_issuer',
+            'reverse_charge_active', 'vob_din18299_active', 'vob_payment_term_days'
+        ];
 
         fields.forEach((field) => {
             if (body[field] !== undefined) {

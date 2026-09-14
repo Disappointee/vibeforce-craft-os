@@ -91,7 +91,8 @@ export async function generateCraftInvoiceAction(
         if (settings.app_name) sellerName = settings.app_name;
         if ((settings as any).company_name) sellerName = (settings as any).company_name;
         if ((settings as any).company_street) sellerStreet = (settings as any).company_street;
-        if ((settings as any).company_city) sellerCity = (settings as any).company_city;
+        const zip = (settings as any).company_zip ? `${(settings as any).company_zip} ` : '';
+        if ((settings as any).company_city) sellerCity = `${zip}${(settings as any).company_city}`;
         if ((settings as any).company_country) sellerCountry = (settings as any).company_country;
         if ((settings as any).tax_id) sellerTaxId = (settings as any).tax_id;
         if ((settings as any).vat_id) sellerVatId = (settings as any).vat_id;
