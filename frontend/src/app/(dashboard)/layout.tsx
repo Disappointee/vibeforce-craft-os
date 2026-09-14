@@ -412,7 +412,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
                 <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
-                <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} collapsed={sidebarCollapsed} />
                 <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} collapsed={sidebarCollapsed} />
                 {user?.role === 'admin' && (
                   <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
@@ -490,7 +490,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
                 {user?.role === 'admin' && (
                   <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />

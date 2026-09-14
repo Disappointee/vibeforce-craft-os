@@ -22,7 +22,7 @@ export function MobileTabBar() {
         { id: 'craft', href: '/craft', icon: Hammer, label: 'Zentrale' },
         { id: 'projects', href: '/projects', icon: FolderGit2, label: 'Baustellen' },
         { id: 'tasks', href: '/craft/defects', icon: CheckSquare, label: 'Mängel' },
-        { id: 'timer', href: '/time', icon: Timer, label: 'Stempeluhr' },
+        { id: 'timer', href: '/craft/time', icon: Timer, label: 'Stempeluhr' },
       ]
     : [
         { id: 'dashboard', href: '/', icon: LayoutDashboard, label: 'Dashboard' },
