@@ -27,13 +27,16 @@
   * Vollständig automatisiert verifiziert via Playwright E2E-Test (`tools/test_craft_defects.mjs`) über Desktop & Mobile (390px iPhone 14, 0px Überhang).
   * Commit: `6992d50`.
 
-### Schritt 3: Monteur-Stempeluhr (`/craft/time`)
-* **Problem:** Menüpunkt „Monteur-Stempeluhr“ führt auf die generische Agentur-Zeiterfassung `/time`.
-* **Ziel:** Großflächiges, glove-ready Baustellen-Terminal (`MonteurTimeClock`):
-  * Große Touch-Buttons (>= 64px) für Kommen, Gehen und Pause.
-  * Schnellauswahl: Baustelle, Einsatztyp (Baustelle, Fahrtzeit/Rüstzeit, Werkstatt, Regiestunden gem. § 2 Abs. 10 VOB/B).
-  * GPS-Geofencing Verifikation vor Ort.
-  * Tagesstundenzettel mit Schichtabschluss.
+### Schritt 3: Monteur-Stempeluhr (`/craft/time`) (✅ ABGESCHLOSSEN)
+* **Ergebnis:**
+  * Großflächiges, handschuhtaugliches Baustellen-Terminal (`MonteurTimeClock`) unter `/craft/time` (`page.tsx` & `MonteurTimeClockClient.tsx`) implementiert.
+  * Große Touch-Targets (KOMMEN $\ge 80\,\text{px}$, PAUSE $\ge 90\,\text{px}$, GEHEN $\ge 90\,\text{px}$) erfüllen die Anforderung $\ge 64\,\text{px}$ mit Leichtigkeit.
+  * 4 VOB-Einsatztypen: *Baustelle & Montage*, *Fahrtzeit & Rüstzeit*, *Werkstatt & Vorfertigung*, *Regiestunden gem. § 2 Abs. 10 VOB/B*.
+  * GPS-Geofencing mit Koordinaten-Verifikation gegen aktive Baustelle.
+  * Schichtabschluss- und Tagesstundenzettel-Modal mit rechtskonformem Nachweis gem. VOB/B § 2 Abs. 10 und ArbZG sowie Druckfunktion.
+  * Navigation in Desktop-Sidebar (`layout.tsx`) und Mobile-TabBar (`MobileTabBar.tsx`) im Craft-Modus auf `/craft/time` umgestellt.
+  * Vollautomatisiert via Playwright E2E-Test (`tools/test_craft_time.mjs`) auf Desktop und Mobile (390px iPhone 14, 0px Überhang) erfolgreich getestet.
+  * Commit: `4fd82fd`.
 
 ### Schritt 4: Eigenes Vercel-Projekt für Craft OS
 * Verknüpfung eines eigenständigen Vercel-Projekts `vibeforce-craft-os` und Zuweisung der Domain `craft-vibeforce.vercel.app`.
