@@ -17,12 +17,15 @@
   * Automatisierter Multi-Viewport Playwright-Test (`tools/test_craft_ergonomics.mjs`) über 5 Viewports (Mobile 390px, Tablet 768px, Small Laptop 1024px, Desktop 1280px, Full HD 1920px) verifiziert: **Exakt 0px horizontaler Überhang** auf allen Geräten!
   * Commit: `d06c94e`.
 
-### Schritt 2: Mängelmanagement vor Ort (`/craft/defects`)
-* **Problem:** Sidebar-Menüpunkt „Mängel & Baustellen-Aufgaben“ führt bisher auf die generische Aufgabenverwaltung `/tasks` („Meine Aufgaben“).
-* **Ziel:** Dedizierte Handwerks-Zentrale unter `/craft/defects`:
-  * Schnellerfassungs-Dialog für Mängel vor Ort (`NewDefectDialog`) mit Kamera-/Fotoupload, SHA-256 Integritätsprüfung, Gewerk und VOB/B § 13 Fristsetzung.
-  * Umschaltbar zwischen Mängelliste und 2D-Bauplan (`PlanPinningManager`).
-  * Generierung formaler VOB/B § 13 Abs. 5 Mängelrügen an Nachunternehmer.
+### Schritt 2: Mängelmanagement vor Ort (`/craft/defects`) (✅ ABGESCHLOSSEN)
+* **Ergebnis:**
+  * Dedizierte Handwerks-Zentrale unter `/craft/defects` (`page.tsx` & `DefectsPageClient.tsx`) mit Baustellen-Umschalter, VOB-KPI-Kacheln, Mängelsuche und Gewerk-/Schweregrad-/Status-Filtern implementiert.
+  * Schnellerfassungs-Dialog für Vor-Ort-Mängel (`NewDefectDialog`) mit Direktauslöser für Handykamera / Fotoupload, kryptografischer SHA-256 Integritätsprüfung (GoBD-konform), GPS-Erfassung, VOB/C-Gewerkeliste und VOB/B § 13 Fristsetzung (+7, +14, +21 Tage Schnellwahltasten).
+  * Nahtlos umschaltbar zwischen interaktiver Mängelliste und 2D-Bauplan (`PlanPinningManager`).
+  * Vollautomatischer Generator für formelle Nachunternehmer-Mängelrügen gem. VOB/B § 13 Abs. 5 mit Fristsetzung, Androhung der Ersatzvornahme auf Kosten des Verursachers, 1-Klick-Kopieren & Druckfunktion.
+  * Navigation in Desktop-Sidebar (`layout.tsx`) und Mobile-TabBar (`MobileTabBar.tsx`) im Craft-Modus direkt auf `/craft/defects` umgestellt.
+  * Vollständig automatisiert verifiziert via Playwright E2E-Test (`tools/test_craft_defects.mjs`) über Desktop & Mobile (390px iPhone 14, 0px Überhang).
+  * Commit: `6992d50`.
 
 ### Schritt 3: Monteur-Stempeluhr (`/craft/time`)
 * **Problem:** Menüpunkt „Monteur-Stempeluhr“ führt auf die generische Agentur-Zeiterfassung `/time`.
