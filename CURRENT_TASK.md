@@ -9,15 +9,13 @@
 
 ## 🎯 Unmittelbare Aufgaben in dieser Session (Schritt für Schritt)
 
-### Schritt 1: Craft Hub Ergonomie & Zero-Scroll Navigation
-* **Problem:** Auf Standard-Laptops & Tablets (< 1.450px) zwingt der Craft Hub (`/craft`) zu horizontalem Scrollen:
-  * Die 8 Modul-Tabs liegen in einer einzelnen horizontalen Endloszeile; beim Scrollen nach rechts verschwindet `Bautagesberichte` links.
-  * Header-Aktionsbuttons schneiden rechts `+ Baustelle anlegen` ab (`Baustelle anleg...`).
-  * Globaler Breiten-Überhang erzeugt einen horizontalen Scrollbalken am Fensterrand.
-* **Ziel:** 
-  * Responsive Navigation nach Option A (2-Cluster Arbeitsbereich: *Baustelle & Doku* vs. *Kaufmännisch & Abrechnung*) oder adaptive Pill-Bar mit Kurzformen.
-  * `flex-wrap` im Header, damit kein Button abgeschnitten wird.
-  * 0px horizontaler Überhang (`scrollWidth === innerWidth`).
+### Schritt 1: Craft Hub Ergonomie & Zero-Scroll Navigation (✅ ABGESCHLOSSEN)
+* **Ergebnis:** 
+  * Responsive 2-Cluster Navigation implementiert (*Baustelle & Doku* vs. *Kaufmännisch & Abrechnung*).
+  * 4 touch-ergonomische Primärkarten (`lg:grid-cols-4`, adaptive Bezeichnungen) + persistente Sekundär-Schnellzugriff-Pills.
+  * `flex-wrap` im Header, sodass Aktionsbuttons (`+ Baustelle anlegen`, `+ Bericht erfassen`, `Module & Lizenzen`) auf allen Bildschirmbreiten vollständig sichtbar bleiben.
+  * Automatisierter Multi-Viewport Playwright-Test (`tools/test_craft_ergonomics.mjs`) über 5 Viewports (Mobile 390px, Tablet 768px, Small Laptop 1024px, Desktop 1280px, Full HD 1920px) verifiziert: **Exakt 0px horizontaler Überhang** auf allen Geräten!
+  * Commit: `d06c94e`.
 
 ### Schritt 2: Mängelmanagement vor Ort (`/craft/defects`)
 * **Problem:** Sidebar-Menüpunkt „Mängel & Baustellen-Aufgaben“ führt bisher auf die generische Aufgabenverwaltung `/tasks` („Meine Aufgaben“).
