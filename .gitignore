@@ -69,3 +69,5 @@ tools/create_transparent_logo.mjs
 backend/create_admin_*.mjs
 backend/create_user.js
 backend/demo_credentials.json
+
+.vercel
