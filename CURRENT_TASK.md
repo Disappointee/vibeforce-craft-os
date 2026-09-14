@@ -47,3 +47,12 @@
     - **Zweit-Domain:** `https://vibeforce-craft-os.vercel.app`
   * Alle Routen (`/craft`, `/craft/defects`, `/craft/time`) sind live und voll funktionsfähig.
 
+### Schritt 5: Handwerksrollen, Gewerke, Kolonnen & Admin-Cockpit (✅ ABGESCHLOSSEN)
+* **Ergebnis:**
+  * PocketBase Live-Datenbank: Handwerksrollen (`meister`, `bauleiter`, `vorarbeiter`, `geselle`, `monteur`, `azubi`, `helfer`, `subunternehmer`, `buero`, `auftraggeber`) und 21 Gewerke live freigeschaltet.
+  * Neues Betriebs-Cockpit unter `/admin` mit Handwerks-KPIs, Stundensätzen und Nachweisen (§ 48b / § 13b).
+  * Monteur- & Personalverwaltung (`/admin/users`) und Kolonnen-Organisation (`/team`, `/team/teams/[id]`) umgestellt.
+  * Erfolgreich auf Vercel Produktions-Deployment bereitgestellt (`craft-vibeforce.vercel.app` & `vibeforce-craft-os.vercel.app`).
+  * Commit: `5f7047d`.
+
+
