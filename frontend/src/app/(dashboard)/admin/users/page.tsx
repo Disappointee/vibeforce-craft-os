@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,9 +31,18 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle } from 'lucide-react';
+import { Users, UserPlus, Shield, Loader2, Ban, CheckCircle, Mail, Trash2, KeyRound, Copy, AlertTriangle, Hammer } from 'lucide-react';
 import { toast } from 'sonner';
-import { USER_ROLES, USER_ROLE_LABEL_MAP, labelFor } from '@/lib/constants';
+import {
+    USER_ROLES,
+    USER_ROLE_LABEL_MAP,
+    labelFor,
+    CRAFT_ROLE_OPTIONS,
+    CRAFT_TRADES,
+    getCraftRoleLabel,
+    getCraftRoleBadgeClasses,
+    type CraftRole,
+} from '@/lib/constants';
 import {
     updateUserRoleAction,
     toggleUserActiveAction,
@@ -54,6 +63,8 @@ interface UserItem {
     deactivated?: boolean;
     created: string;
     language?: string;
+    expertise?: string[];
+    hourly_rate?: number;
     expand?: {
         supervisor?: {
             id: string;
@@ -65,6 +76,7 @@ interface UserItem {
 
 export default function AdminUsersPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [users, setUsers] = useState<UserItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -73,9 +85,10 @@ export default function AdminUsersPage() {
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
-    const [inviteRole, setInviteRole] = useState('employee');
+    const [inviteRole, setInviteRole] = useState<string>('geselle');
+    const [inviteTrade, setInviteTrade] = useState<string>('none');
     const [inviteSupervisor, setInviteSupervisor] = useState<string>('none');
-    const [inviteHourlyRate, setInviteHourlyRate] = useState('');
+    const [inviteHourlyRate, setInviteHourlyRate] = useState('64');
     const [inviting, setInviting] = useState(false);
 
     // Fallback dialog when SMTP is not configured
@@ -95,6 +108,12 @@ export default function AdminUsersPage() {
         checkAuth();
     }, []);
 
+    useEffect(() => {
+        if (searchParams.get('invite') === 'true') {
+            setInviteOpen(true);
+        }
+    }, [searchParams]);
+
     const checkAuth = async () => {
         if (!pb.authStore.isValid) {
             router.push('/login');
@@ -103,9 +122,9 @@ export default function AdminUsersPage() {
         try {
             const record = await pb.collection('users').authRefresh();
             const userRole = record.record?.role;
-            if (userRole !== 'admin') {
-                toast.error('Zugriff verweigert. Nur Administratoren können diese Seite aufrufen.');
-                router.push('/');
+            if (userRole !== 'admin' && userRole !== 'meister') {
+                toast.error('Zugriff verweigert. Nur Administratoren und Meister können diese Seite aufrufen.');
+                router.push('/craft');
                 return;
             }
             setIsAdmin(true);
@@ -307,41 +326,18 @@ export default function AdminUsersPage() {
         }
     };
 
-    const ROLE_LABELS_FALLBACK: Record<string, string> = {
-        freelancer: 'Freelancer',
-    };
-
     const getRoleBadge = (role?: string) => {
-        let label: string;
-        if (!role) {
-            label = '—';
-        } else if ((USER_ROLES as readonly string[]).includes(role)) {
-            label = labelFor(USER_ROLE_LABEL_MAP, role as (typeof USER_ROLES)[number]);
-        } else {
-            label = ROLE_LABELS_FALLBACK[role] || role;
-        }
-        switch (role) {
-            case 'admin':
-                return <Badge variant="default" className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30">{label}</Badge>;
-            case 'manager':
-                return <Badge variant="default" className="bg-amber-500/10 text-amber-400 border-amber-500/30">{label}</Badge>;
-            case 'employee':
-                return <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{label}</Badge>;
-            case 'freelancer':
-                return <Badge variant="outline" className="text-orange-400 border-orange-500/20">{label}</Badge>;
-            case 'client':
-                return <Badge variant="ghost" className="text-muted-foreground">{label}</Badge>;
-            default:
-                return <Badge variant="outline">{label}</Badge>;
-        }
+        const label = getCraftRoleLabel(role, 'craft');
+        const badgeClasses = getCraftRoleBadgeClasses(role);
+        return <Badge variant="outline" className={badgeClasses}>{label}</Badge>;
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-                    <p className="text-muted-foreground font-medium tracking-wide">Lade Benutzer...</p>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+                    <p className="text-muted-foreground font-medium tracking-wide">Lade Monteure & Benutzer...</p>
                 </div>
             </div>
         );
@@ -356,90 +352,75 @@ export default function AdminUsersPage() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                            <Shield size={24} className="text-indigo-400" />
-                            Benutzerverwaltung
+                            <Shield size={24} className="text-amber-500" />
+                            Personal- & Monteurverwaltung
                         </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Benutzer einladen, verwalten und deaktivieren</p>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Handwerker-Rollen, Kalkulationsstundensätze und Zugangsdaten verwalten
+                        </p>
                     </div>
-                    <Button onClick={() => setInviteOpen(true)}>
+                    <Button onClick={() => setInviteOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center gap-2 cursor-pointer shadow-md shadow-primary/20">
                         <UserPlus size={16} />
-                        Mitarbeiter anlegen
+                        Monteur anlegen
                     </Button>
                 </div>
 
                 {/* Users Table */}
                 <Card className="border-border bg-card/40">
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
-                                <Users size={18} />
-                            </div>
-                            <div>
-                                <CardTitle>Alle Benutzer ({users.length})</CardTitle>
-                                <CardDescription>Verwalte Rollen und Status der Benutzer</CardDescription>
-                            </div>
-                        </div>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Alle Monteure & Mitarbeiter</CardTitle>
+                        <CardDescription>
+                            {users.length} {users.length === 1 ? 'Benutzer' : 'Benutzer'} im System registriert
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-border">
-                                    <TableHead className="text-muted-foreground">Benutzer</TableHead>
-                                    <TableHead className="text-muted-foreground">Rolle</TableHead>
-                                    <TableHead className="text-muted-foreground">Zuständiger Admin</TableHead>
-                                    <TableHead className="text-muted-foreground">Status</TableHead>
-                                    <TableHead className="text-muted-foreground">Erstellt</TableHead>
-                                    <TableHead className="text-muted-foreground text-right">Aktionen</TableHead>
+                                <TableRow className="border-border hover:bg-transparent">
+                                    <TableHead className="w-[280px]">Handwerker / Benutzer</TableHead>
+                                    <TableHead>Rolle & Funktion</TableHead>
+                                    <TableHead>Zuständiger Lead</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Registriert am</TableHead>
+                                    <TableHead className="text-right">Aktionen</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                                            <Users size={32} className="mx-auto mb-2 opacity-30" />
-                                            Keine Benutzer gefunden
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    users.map((user) => (
-                                        <TableRow key={user.id} className="border-border/50 hover:bg-muted/20">
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                                                        {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            {user.name || 'Kein Name'}
-                                                            {user.id === pb.authStore.record?.id && (
-                                                                <span className="ml-2 text-xs text-indigo-400">(Du)</span>
-                                                            )}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                                                    </div>
+                                {users.map((user) => (
+                                    <TableRow key={user.id} className="border-border">
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-9 w-9 rounded-full bg-muted/60 border border-border flex items-center justify-center font-bold text-xs shrink-0 text-foreground">
+                                                    {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Select
-                                                    value={user.role || 'employee'}
-                                                    onValueChange={(val) => val && handleRoleChange(user.id, val)}
-                                                >
-                                                    <SelectTrigger className="w-32 h-7 text-xs bg-background border-border">
-                                                        <span>
-                                                            {ROLE_LABELS_FALLBACK[user.role || 'employee'] || 
-                                                                ((USER_ROLES as readonly string[]).includes(user.role || 'employee') 
-                                                                    ? labelFor(USER_ROLE_LABEL_MAP, (user.role || 'employee') as any) 
-                                                                    : (user.role || 'employee'))
-                                                            }
-                                                        </span>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {(USER_ROLES as readonly string[]).map(r => (
-                                                            <SelectItem key={r} value={r}>{labelFor(USER_ROLE_LABEL_MAP, r as (typeof USER_ROLES)[number])}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {user.name || 'Kein Name'}
+                                                        {user.id === pb.authStore.record?.id && (
+                                                            <span className="ml-2 text-xs text-amber-500">(Du)</span>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select
+                                                value={user.role || 'employee'}
+                                                onValueChange={(val) => val && handleRoleChange(user.id, val)}
+                                            >
+                                                <SelectTrigger className="w-44 h-7 text-xs bg-background border-border">
+                                                    <span>{getCraftRoleLabel(user.role, 'craft')}</span>
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-background border-border">
+                                                    {CRAFT_ROLE_OPTIONS.map(opt => (
+                                                        <SelectItem key={opt.value} value={opt.value} className="cursor-pointer text-xs">
+                                                            {opt.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
                                             <TableCell>
                                                 <Select
                                                     value={user.supervisor || 'none'}
@@ -522,10 +503,9 @@ export default function AdminUsersPage() {
                                                      </Button>
                                                  </div>
                                              </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
+                                         </TableRow>
+                                     ))}
+                             </TableBody>
                         </Table>
                       </CardContent>
                 </Card>
@@ -578,16 +558,49 @@ export default function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="invite-role">Rolle</Label>
-                            <Select value={inviteRole} onValueChange={(val) => val && setInviteRole(val)}>
+                            <Label htmlFor="invite-role">Handwerkliche Rolle</Label>
+                            <Select
+                                value={inviteRole}
+                                onValueChange={(val) => {
+                                    if (!val) return;
+                                    setInviteRole(val);
+                                    const opt = CRAFT_ROLE_OPTIONS.find(o => o.value === val);
+                                    if (opt && opt.defaultHourlyRate > 0) {
+                                        setInviteHourlyRate(String(opt.defaultHourlyRate));
+                                    }
+                                }}
+                            >
                                 <SelectTrigger className="bg-card border-border">
-                                    <span>{ROLE_LABELS_FALLBACK[inviteRole || 'employee']}</span>
+                                    <span>{getCraftRoleLabel(inviteRole, 'craft')}</span>
                                 </SelectTrigger>
-                                <SelectContent>
-                                    {(USER_ROLES as readonly string[]).map(r => (
-                                        <SelectItem key={r} value={r}>{labelFor(USER_ROLE_LABEL_MAP, r as (typeof USER_ROLES)[number])}</SelectItem>
+                                <SelectContent className="bg-background border-border max-h-60">
+                                    {CRAFT_ROLE_OPTIONS.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
+                                            <div className="flex flex-col">
+                                                <span className="font-semibold text-xs text-foreground">{opt.label}</span>
+                                                <span className="text-[10px] text-muted-foreground">{opt.description}</span>
+                                            </div>
+                                        </SelectItem>
                                     ))}
-                                    <SelectItem value="freelancer">Freelancer</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="invite-trade">Gewerk / Fachbereich (Optional)</Label>
+                            <Select value={inviteTrade} onValueChange={setInviteTrade}>
+                                <SelectTrigger id="invite-trade" className="bg-card border-border">
+                                    <SelectValue placeholder="Gewerk auswählen">
+                                        {inviteTrade === 'none' ? 'Kein spezifisches Gewerk' : CRAFT_TRADES.find(t => t.value === inviteTrade)?.label || inviteTrade}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-border max-h-60">
+                                    <SelectItem value="none">Kein spezifisches Gewerk</SelectItem>
+                                    {CRAFT_TRADES.map(trade => (
+                                        <SelectItem key={trade.value} value={trade.value} className="cursor-pointer">
+                                            {trade.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

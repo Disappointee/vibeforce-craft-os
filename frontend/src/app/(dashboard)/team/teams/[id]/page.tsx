@@ -28,6 +28,7 @@ import {
   Edit3,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCraftRoleLabel, getCraftRoleBadgeClasses } from '@/lib/constants';
 
 interface TeamRecord {
   id: string;
@@ -112,10 +113,10 @@ export default function TeamDetailPage() {
       const usersRes = await pb.collection('users').getFullList<UserItem>({
         sort: 'name',
       });
-      setAllUsers(usersRes);
+      setAllUsers(usersRes.filter(u => u.role !== 'client'));
     } catch (err: any) {
       console.error('Error loading team details:', err);
-      toast.error('Team konnte nicht geladen werden');
+      toast.error('Kolonne konnte nicht geladen werden');
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +131,7 @@ export default function TeamDetailPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error('Teamname ist erforderlich');
+      toast.error('Kolonnenname ist erforderlich');
       return;
     }
 
@@ -169,18 +170,18 @@ export default function TeamDetailPage() {
         membersToRemove.map((m) => pb.collection('team_members').delete(m.id))
       );
 
-      toast.success('Team erfolgreich gespeichert');
+      toast.success('Kolonne erfolgreich gespeichert');
       await loadTeamData();
     } catch (err: any) {
       console.error('Error saving team:', err);
-      toast.error(err?.message || 'Fehler beim Speichern des Teams');
+      toast.error(err?.message || 'Fehler beim Speichern der Kolonne');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteTeam = async () => {
-    if (!confirm(`Möchtest du das Team "${name}" wirklich löschen?`)) return;
+    if (!confirm(`Möchtest du die Kolonne "${name}" wirklich auflösen?`)) return;
 
     try {
       // Delete team members first
@@ -188,18 +189,18 @@ export default function TeamDetailPage() {
       // Delete team
       await pb.collection('teams').delete(teamId);
 
-      toast.success(`Team "${name}" gelöscht`);
+      toast.success(`Kolonne "${name}" aufgelöst`);
       router.push('/team?tab=teams');
     } catch (err: any) {
       console.error('Error deleting team:', err);
-      toast.error('Fehler beim Löschen des Teams');
+      toast.error('Fehler beim Löschen der Kolonne');
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
       </div>
     );
   }
@@ -207,9 +208,9 @@ export default function TeamDetailPage() {
   if (!team) {
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Team nicht gefunden.</p>
+        <p className="text-muted-foreground">Kolonne nicht gefunden.</p>
         <Button onClick={() => router.push('/team?tab=teams')} className="mt-4">
-          Zurück zur Team-Übersicht
+          Zurück zur Kolonnen-Übersicht
         </Button>
       </div>
     );
@@ -231,12 +232,12 @@ export default function TeamDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">{team.name}</h1>
-              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
-                Team
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20">
+                Kolonne / Bautrupp
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Verwalte Details, Leiter und Mitglieder dieses Teams.
+              Verwalte Details, Vorarbeiter und zugeteilte Monteure dieser Kolonne.
             </p>
           </div>
         </div>
@@ -246,7 +247,7 @@ export default function TeamDetailPage() {
           onClick={handleDeleteTeam}
           className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
         >
-          <Trash2 className="h-4 w-4 mr-2" /> Team löschen
+          <Trash2 className="h-4 w-4 mr-2" /> Kolonne auflösen
         </Button>
       </div>
 
@@ -257,57 +258,57 @@ export default function TeamDetailPage() {
           <Card className="border-border bg-card/40">
             <CardHeader>
               <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Edit3 className="h-5 w-5 text-indigo-400" /> Allgemeine Informationen
+                <Edit3 className="h-5 w-5 text-amber-400" /> Kolonnen-Stammdaten
               </CardTitle>
-              <CardDescription>Name, Beschreibung und Teamleiter anpassen</CardDescription>
+              <CardDescription>Name, Einsatzbereich und Vorarbeiter festlegen</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="teamName" className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                  Teamname
+                  Kolonnenname
                 </Label>
                 <Input
                   id="teamName"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="z.B. Marketing & Growth"
+                  placeholder="z.B. Bautrupp Süd, Kolonne Montage SHK"
                   className="bg-background border-border"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="teamDesc" className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                  Beschreibung
+                  Einsatzgebiet & Beschreibung
                 </Label>
                 <textarea
                   id="teamDesc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="Aufgabenbereich und Fokus dieses Teams..."
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Fokus, Spezialisierungen oder feste Baustellen dieser Kolonne..."
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="teamLead" className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                  Teamleiter
+                  Vorarbeiter / Kolonnenführer
                 </Label>
                 <Select value={leadId || 'none'} onValueChange={setLeadId}>
                   <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Wähle einen Teamleiter...">
+                    <SelectValue placeholder="Wähle einen Vorarbeiter...">
                       {(() => {
-                        if (!leadId || leadId === 'none') return 'Kein Teamleiter';
+                        if (!leadId || leadId === 'none') return 'Kein Vorarbeiter';
                         const u = allUsers.find((x) => x.id === leadId);
-                        return u ? (u.name || u.email) : leadId;
+                        return u ? `${u.name || u.email} (${getCraftRoleLabel(u.role, 'craft')})` : leadId;
                       })()}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border text-foreground">
-                    <SelectItem value="none">Kein Teamleiter</SelectItem>
+                    <SelectItem value="none">Kein Vorarbeiter</SelectItem>
                     {allUsers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
-                        {u.name || u.email}
+                        {u.name || u.email} ({getCraftRoleLabel(u.role, 'craft')})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -320,9 +321,9 @@ export default function TeamDetailPage() {
           <Card className="border-border bg-card/40">
             <CardHeader>
               <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Users className="h-5 w-5 text-indigo-400" /> Team-Mitglieder ({selectedMemberIds.length})
+                <Users className="h-5 w-5 text-amber-400" /> Kolonnen-Mitglieder ({selectedMemberIds.length})
               </CardTitle>
-              <CardDescription>Mitglieder zum Team hinzufügen oder entfernen</CardDescription>
+              <CardDescription>Monteure und Handwerker zur Kolonne zuweisen</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2">
@@ -334,20 +335,24 @@ export default function TeamDetailPage() {
                       onClick={() => handleToggleMember(u.id)}
                       className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
                         isMember
-                          ? 'border-indigo-500/50 bg-indigo-500/10 text-foreground'
+                          ? 'border-amber-500/50 bg-amber-500/10 text-foreground'
                           : 'border-border/50 bg-background/50 hover:bg-muted/30 text-muted-foreground'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 overflow-hidden">
-                        <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                           {u.name?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
                         </div>
                         <div className="truncate">
                           <p className="text-xs font-medium text-foreground truncate">{u.name || u.email}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={`text-[9px] px-1.5 py-0.2 rounded border font-semibold ${getCraftRoleBadgeClasses(u.role)}`}>
+                              {getCraftRoleLabel(u.role, 'craft')}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      {isMember && <CheckCircle className="h-4 w-4 text-indigo-400 shrink-0" />}
+                      {isMember && <CheckCircle className="h-4 w-4 text-amber-400 shrink-0" />}
                     </div>
                   );
                 })}
@@ -361,16 +366,16 @@ export default function TeamDetailPage() {
           <Card className="border-border bg-card/40">
             <CardHeader>
               <CardTitle className="text-base font-bold">Speichern & Übernehmen</CardTitle>
-              <CardDescription>Änderungen auf das Team anwenden</CardDescription>
+              <CardDescription>Änderungen auf die Kolonne anwenden</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-10 flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-10 flex items-center justify-center gap-2"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Änderungen speichern
+                Kolonne speichern
               </Button>
 
               <Button
@@ -388,18 +393,18 @@ export default function TeamDetailPage() {
           <Card className="border-border/50 bg-muted/20">
             <CardContent className="p-4 space-y-3 text-xs">
               <div className="flex justify-between items-center text-muted-foreground">
-                <span>Team ID</span>
+                <span>Kolonnen-ID</span>
                 <span className="font-mono text-foreground">{team.id}</span>
               </div>
               <div className="flex justify-between items-center text-muted-foreground">
-                <span>Teamleiter</span>
-                <span className="font-medium text-indigo-400">
+                <span>Vorarbeiter</span>
+                <span className="font-medium text-amber-400">
                   {allUsers.find((u) => u.id === leadId)?.name || 'Keiner'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-muted-foreground">
-                <span>Mitgliederanzahl</span>
-                <span className="font-bold text-foreground">{selectedMemberIds.length}</span>
+                <span>Monteur-Stärke</span>
+                <span className="font-bold text-foreground">{selectedMemberIds.length} Handwerker</span>
               </div>
             </CardContent>
           </Card>

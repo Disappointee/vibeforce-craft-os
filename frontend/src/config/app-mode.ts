@@ -105,6 +105,7 @@ export interface AppConfig {
     taskSingular: string;
     time: string;
     team: string;
+    admin: string;
     docs: string;
   };
 }
@@ -131,7 +132,8 @@ export function getAppConfig(explicitHost?: string | null): AppConfig {
         tasks: 'Mängel & Baustellen-Aufgaben',
         taskSingular: 'Baustellen-Aufgabe',
         time: 'Monteur-Stempeluhr',
-        team: 'Monteure & Personal',
+        team: 'Monteure & Kolonnen',
+        admin: 'Admin-Übersicht',
         docs: 'VOB-Wissen & Dokumentation',
       },
     };
@@ -156,6 +158,7 @@ export function getAppConfig(explicitHost?: string | null): AppConfig {
       taskSingular: 'Aufgabe',
       time: 'Meine Zeiten',
       team: 'Team & Ressourcen',
+      admin: 'Admin',
       docs: 'Dokumentation',
     },
   };

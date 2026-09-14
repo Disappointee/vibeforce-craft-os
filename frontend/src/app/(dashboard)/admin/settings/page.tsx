@@ -118,9 +118,9 @@ export default function AdminSettingsPage() {
         try {
             const record = await pb.collection('users').authRefresh();
             const userRole = record.record?.role;
-            if (userRole !== 'admin') {
-                toast.error('Zugriff verweigert. Nur Administratoren können diese Seite aufrufen.');
-                router.push('/');
+            if (userRole !== 'admin' && userRole !== 'meister') {
+                toast.error('Zugriff verweigert. Nur Administratoren und Meister können diese Seite aufrufen.');
+                router.push('/craft');
                 return;
             }
             setIsAdmin(true);
@@ -207,9 +207,11 @@ export default function AdminSettingsPage() {
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
                             <Settings size={24} className="text-primary" />
-                            System-Einstellungen
+                            {craftMode ? 'Betriebs- & System-Einstellungen' : 'System-Einstellungen'}
                         </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Globale Einstellungen für Vibeforce Flow OS verwalten</p>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            {craftMode ? 'Betriebliche Stammdaten, Lizenzen und Systemeinstellungen für Vibeforce Craft OS' : 'Globale Einstellungen für Vibeforce Flow OS verwalten'}
+                        </p>
                     </div>
                     <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}

@@ -6,12 +6,12 @@ import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 export async function updateUserRoleAction(userId: string, role: string) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Rollen ändern.' };
     }
 
-    if (userId === sessionUser.id && role !== 'admin') {
-      return { error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
+    if (userId === sessionUser.id && role !== 'admin' && role !== 'meister') {
+      return { error: 'Du kannst dir selbst nicht die Betriebsleiter-Rolle entziehen.' };
     }
 
     const pb = await getAdminPB();
@@ -27,8 +27,8 @@ export async function updateUserRoleAction(userId: string, role: string) {
 export async function toggleUserActiveAction(userId: string, targetActiveState: boolean) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer aktivieren/deaktivieren.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Mitarbeiter aktivieren/deaktivieren.' };
     }
 
     if (userId === sessionUser.id) {
@@ -49,8 +49,8 @@ export async function toggleUserActiveAction(userId: string, targetActiveState: 
 export async function deleteUserAdminAction(userId: string) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer löschen.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Benutzer löschen.' };
     }
 
     if (userId === sessionUser.id) {
@@ -70,8 +70,8 @@ export async function deleteUserAdminAction(userId: string) {
 export async function createUserAction(data: Record<string, any>) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer anlegen.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Benutzer anlegen.' };
     }
 
     const pb = await getAdminPB();
@@ -98,8 +98,8 @@ export async function createUserAction(data: Record<string, any>) {
 export async function resetUserPasswordAction(userId: string, data: Record<string, any>) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Passwörter zurücksetzen.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Passwörter zurücksetzen.' };
     }
 
     const pb = await getAdminPB();
@@ -117,8 +117,8 @@ export async function resetUserPasswordAction(userId: string, data: Record<strin
 export async function updateUserSupervisorAction(userId: string, supervisorId: string | null) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      return { error: 'Zugriff verweigert. Nur Administratoren dürfen Vorgesetzte zuweisen.' };
+    if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+      return { error: 'Zugriff verweigert. Nur Administratoren und Meister dürfen Vorgesetzte zuweisen.' };
     }
 
     const pb = await getAdminPB();
@@ -141,6 +141,7 @@ export async function updateUserProfileAdminAction(
     expertise?: string[];
     role?: string;
     supervisor?: string | null;
+    hourly_rate?: number;
   }
 ) {
   try {
@@ -149,31 +150,32 @@ export async function updateUserProfileAdminAction(
       return { error: '403 - Nicht autorisiert. Bitte erneut anmelden.' };
     }
 
-    const isAdmin = sessionUser.role === 'admin';
+    const isAdmin = sessionUser.role === 'admin' || sessionUser.role === 'meister';
     const isSelf = sessionUser.id === userId;
 
     if (!isAdmin && !isSelf) {
-      return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen andere Profile bearbeiten.' };
+      return { error: '403 - Zugriff verweigert. Nur Betriebsleiter dürfen andere Profile bearbeiten.' };
     }
 
     const payload: Record<string, any> = {};
     if (data.name !== undefined) payload.name = data.name;
     if (data.weekly_hours_target !== undefined) payload.weekly_hours_target = data.weekly_hours_target;
     if (data.expertise !== undefined) payload.expertise = data.expertise;
+    if (data.hourly_rate !== undefined) payload.hourly_rate = data.hourly_rate;
 
     if (data.role !== undefined) {
       if (!isAdmin) {
-        return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };
+        return { error: '403 - Zugriff verweigert. Nur Betriebsleiter dürfen Rollen ändern.' };
       }
-      if (isSelf && data.role !== 'admin') {
-        return { error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
+      if (isSelf && data.role !== 'admin' && data.role !== 'meister') {
+        return { error: 'Du kannst dir selbst nicht die Betriebsleiter-Rolle entziehen.' };
       }
       payload.role = data.role;
     }
 
     if (data.supervisor !== undefined) {
       if (!isAdmin) {
-        return { error: '403 - Zugriff verweigert. Nur Administratoren dürfen Vorgesetzte zuweisen.' };
+        return { error: '403 - Zugriff verweigert. Nur Betriebsleiter dürfen Vorgesetzte zuweisen.' };
       }
       payload.supervisor = data.supervisor || null;
     }

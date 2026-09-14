@@ -40,18 +40,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  CRAFT_ROLE_OPTIONS,
+  CRAFT_TRADES,
+  getCraftRoleLabel,
+  getCraftRoleBadgeClasses,
+  type CraftRole,
+} from '@/lib/constants';
 
-const EXPERTISE_OPTIONS = [
-  { value: 'sea', label: 'SEA' },
-  { value: 'social_ads', label: 'Social Ads' },
-  { value: 'tracking', label: 'Tracking' },
-  { value: 'seo', label: 'SEO' },
-  { value: 'content', label: 'Content' },
-  { value: 'design', label: 'Design' },
-  { value: 'development', label: 'Entwicklung' },
-  { value: 'consulting', label: 'Beratung' },
-  { value: 'other', label: 'Sonstiges' },
-];
+const TRADE_OPTIONS = CRAFT_TRADES;
 
 interface UserWorkload {
   user: UserRecord;
@@ -105,17 +102,24 @@ export default function TeamPage() {
   const [editName, setEditName] = useState('');
   const [editWeeklyHours, setEditWeeklyHours] = useState(40);
   const [editExpertise, setEditExpertise] = useState<string[]>([]);
-  const [editRole, setEditRole] = useState('employee');
+  const [editRole, setEditRole] = useState('geselle');
+  const [editHourlyRate, setEditHourlyRate] = useState<number | ''>('');
   const [isSaving, setIsSaving] = useState(false);
 
   const currentUser = pb.authStore.record as unknown as UserRecord | null;
+  const isMeisterOrAdmin = currentUser?.role === 'admin' || currentUser?.role === 'meister';
 
   useEffect(() => {
     if (selectedUser) {
       setEditName(selectedUser.user.name || '');
       setEditWeeklyHours(Number(selectedUser.user.weekly_hours_target) || 40);
       setEditExpertise(selectedUser.user.expertise || []);
-      setEditRole(selectedUser.user.role || 'employee');
+      setEditRole(selectedUser.user.role || 'geselle');
+      setEditHourlyRate(
+        selectedUser.user.hourly_rate !== undefined && selectedUser.user.hourly_rate !== null
+          ? Number(selectedUser.user.hourly_rate)
+          : ''
+      );
     }
   }, [selectedUser]);
 
@@ -128,7 +132,8 @@ export default function TeamPage() {
         name: editName,
         weekly_hours_target: editWeeklyHours,
         expertise: editExpertise,
-        role: currentUser?.role === 'admin' ? editRole : undefined,
+        role: isMeisterOrAdmin ? editRole : undefined,
+        hourly_rate: editHourlyRate === '' ? 0 : Number(editHourlyRate),
       });
 
       if (res?.error) {
@@ -144,7 +149,8 @@ export default function TeamPage() {
               name: editName,
               weekly_hours_target: editWeeklyHours,
               expertise: editExpertise,
-              role: currentUser?.role === 'admin' ? (editRole as any) : w.user.role,
+              role: isMeisterOrAdmin ? (editRole as any) : w.user.role,
+              hourly_rate: editHourlyRate === '' ? 0 : Number(editHourlyRate),
             }
           };
         }
@@ -159,11 +165,12 @@ export default function TeamPage() {
           name: editName,
           weekly_hours_target: editWeeklyHours,
           expertise: editExpertise,
-          role: currentUser?.role === 'admin' ? (editRole as any) : prev.user.role,
+          role: isMeisterOrAdmin ? (editRole as any) : prev.user.role,
+          hourly_rate: editHourlyRate === '' ? 0 : Number(editHourlyRate),
         }
       } : null);
 
-      toast.success('Profil erfolgreich aktualisiert');
+      toast.success('Monteur-Profil erfolgreich aktualisiert');
     } catch (error: any) {
       console.error('Failed to update user profile:', error);
       toast.error(error?.message || 'Profil konnte nicht aktualisiert werden');
@@ -505,18 +512,18 @@ export default function TeamPage() {
         <div className="flex items-center justify-between border-b border-border/40 pb-6">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Users size={24} className="text-indigo-400" />
-              Team & Ressourcen
+              <Users size={24} className="text-amber-400" />
+              Monteure, Personal & Kolonnen
             </h2>
-            <p className="text-muted-foreground mt-1 text-sm">Verwalte dein Team und überprüfe den aktuellen Workload.</p>
+            <p className="text-muted-foreground mt-1 text-sm">Handwerker-Kartei, Gewerke, Kolonnen & Bautrupps sowie Stundensätze verwalten.</p>
           </div>
-          {currentUser?.role === 'admin' && (
+          {isMeisterOrAdmin && (
             <button
               onClick={() => router.push('/admin/users')}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-full text-sm shadow-md shadow-primary/25 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus size={16} />
-              Mitglied einladen
+              Monteur anlegen
             </button>
           )}
         </div>
@@ -525,14 +532,14 @@ export default function TeamPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <TabsList className="bg-muted/50 border border-border/30 rounded-lg p-1">
               <TabsTrigger value="workloads" className="cursor-pointer">
-                Mitarbeiter & Auslastung
+                Monteure & Gesellen
               </TabsTrigger>
               <TabsTrigger value="teams" className="cursor-pointer">
-                Teams
+                Kolonnen & Bautrupps
               </TabsTrigger>
             </TabsList>
 
-            {activeTab === 'workloads' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+            {activeTab === 'workloads' && (isMeisterOrAdmin || currentUser?.role === 'manager' || currentUser?.role === 'vorarbeiter' || currentUser?.role === 'bauleiter') && (
               <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-lg border border-border/30">
                 <button
                   type="button"
@@ -543,18 +550,18 @@ export default function TeamPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Alle Mitarbeiter ({workloads.length})
+                  Alle Monteure ({workloads.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setTeamScope('my_team')}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer ${
                     teamScope === 'my_team'
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'bg-amber-600 text-white shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Mein Team ({workloads.filter(w => w.user.supervisor === currentUser?.id || w.user.id === currentUser?.id).length})
+                  Meine Kolonne ({workloads.filter(w => w.user.supervisor === currentUser?.id || w.user.id === currentUser?.id).length})
                 </button>
               </div>
             )}
@@ -571,19 +578,21 @@ export default function TeamPage() {
                 })
                 .map((workloadItem) => {
                 const { user, totalBudgetedHours, totalLoggedHours, workloadPercentage, taskCount } = workloadItem;
+                const userTeamMemberships = teamMembers.filter(m => m.user === user.id);
+                const userTeams = teams.filter(t => userTeamMemberships.some(m => m.team === t.id));
                 return (
                   <Card
                     key={user.id}
-                    className="border-border bg-card/40 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition-all duration-300"
+                    className="border-border bg-card/40 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition-all duration-300"
                     onClick={() => setSelectedUser(workloadItem)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-500"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-transparent to-orange-500/0 group-hover:from-amber-500/5 group-hover:to-orange-500/5 transition-all duration-500"></div>
 
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg shadow-lg">
-                            {user.email ? user.email.charAt(0).toUpperCase() : '?'}
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center font-bold text-lg text-white shadow-lg">
+                            {user.name ? user.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}
                           </div>
                           <div>
                             <CardTitle className="text-lg text-foreground">{user.name || (user.email ? user.email.split('@')[0] : 'Unbekannt')}</CardTitle>
@@ -601,10 +610,10 @@ export default function TeamPage() {
                           <DropdownMenuContent align="end" className="w-56 bg-background border-border text-foreground">
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger className="cursor-pointer">
-                                Expertise bearbeiten
+                                Gewerke zuweisen
                               </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent className="bg-background border border-border text-foreground w-48">
-                                {EXPERTISE_OPTIONS.map((opt) => {
+                              <DropdownMenuSubContent className="bg-background border border-border text-foreground w-56 max-h-72 overflow-y-auto">
+                                {TRADE_OPTIONS.map((opt) => {
                                   const isSelected = (user.expertise || []).includes(opt.value);
                                   return (
                                     <DropdownMenuCheckboxItem
@@ -612,7 +621,7 @@ export default function TeamPage() {
                                       checked={isSelected}
                                       onCheckedChange={() => handleToggleExpertise(user.id, opt.value, user.expertise || [])}
                                       onSelect={(e) => e.preventDefault()}
-                                      className="cursor-pointer"
+                                      className="cursor-pointer text-xs"
                                     >
                                       {opt.label}
                                     </DropdownMenuCheckboxItem>
@@ -650,28 +659,38 @@ export default function TeamPage() {
                       <div className="flex flex-col gap-4">
                         <div>
                           <div className="flex flex-wrap gap-2 items-center">
-                            <Badge variant="outline" className="bg-background border-border text-muted-foreground uppercase tracking-wider text-[10px]">
-                              {ROLE_LABELS[(user as any).role] || (user as any).role || 'Mitglied'}
-                            </Badge>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-md border font-semibold ${getCraftRoleBadgeClasses(user.role)}`}>
+                              {getCraftRoleLabel(user.role, 'craft')}
+                            </span>
+                            {user.hourly_rate !== undefined && user.hourly_rate !== null && Number(user.hourly_rate) > 0 && (
+                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-mono">
+                                {Number(user.hourly_rate).toFixed(2)} €/h
+                              </Badge>
+                            )}
                             {user.weekly_hours_target && (
-                              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[10px]">
+                              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
                                 Ziel: {user.weekly_hours_target}h/Woche
                               </Badge>
                             )}
                             {taskCount > 0 && (
                               <Badge variant="outline" className="bg-background border-border text-muted-foreground text-[10px]">
-                                {taskCount} {taskCount === 1 ? 'Aufgabe' : 'Aufgaben'}
+                                {taskCount} {taskCount === 1 ? 'Einsatz' : 'Einsätze'}
                               </Badge>
                             )}
                           </div>
+                          {userTeams.length > 0 && (
+                            <div className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1.5">
+                              <span className="text-zinc-400 font-medium">Kolonne:</span>
+                              <span className="text-amber-400 font-medium">{userTeams.map(t => t.name).join(', ')}</span>
+                            </div>
+                          )}
                           {user.expertise && user.expertise.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2.5">
                               {user.expertise.map((val: string) => {
-                                const opt = EXPERTISE_OPTIONS.find(o => o.value === val);
-                                if (!opt) return null;
+                                const opt = TRADE_OPTIONS.find(o => o.value === val);
                                 return (
                                   <span key={val} className="text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/80 px-2 py-0.5 rounded-md">
-                                    {opt.label}
+                                    {opt ? opt.label : val}
                                   </span>
                                 );
                               })}
@@ -714,18 +733,18 @@ export default function TeamPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                  Teams & Abteilungen
+                  Kolonnen & Bautrupps
                 </h3>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Verwalte Projekt-Teams, weise Leiter zu und verwalte die Mitglieder.
+                  Verwalte Bautrupps, weise Vorarbeiter / Kolonnenführer zu und plane die Teamstärke auf der Baustelle.
                 </p>
               </div>
-              {((currentUser?.role as string) === 'admin' || (currentUser?.role as string) === 'manager') && (
+              {(isMeisterOrAdmin || (currentUser?.role as string) === 'manager') && (
                 <Button
                   onClick={handleOpenCreateTeam}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all flex items-center gap-1.5 font-semibold py-1.5 px-4 rounded-full text-xs shadow-md shadow-primary/25 border-0"
                 >
-                  <Plus size={14} /> Team erstellen
+                  <Plus size={14} /> Kolonne anlegen
                 </Button>
               )}
             </div>
@@ -733,49 +752,49 @@ export default function TeamPage() {
             {teams.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl text-muted-foreground">
                 <Users size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-                <p className="text-sm font-medium">Keine Teams gefunden.</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Erstelle ein neues Team, um loszulegen.</p>
+                <p className="text-sm font-medium">Keine Kolonnen gefunden.</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Erstelle eine neue Kolonne, um Handwerker und Monteure zusammenzufassen.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {teams.map((team) => {
                   const members = teamMembers.filter(m => m.team === team.id);
                   const leadUser = team.expand?.lead;
-                  const leadName = leadUser?.name || leadUser?.email || 'Kein Teamleiter';
-                  const canEdit = currentUser?.role === 'admin' || team.lead === currentUser?.id;
+                  const leadName = leadUser?.name || leadUser?.email || 'Kein Vorarbeiter';
+                  const canEdit = isMeisterOrAdmin || team.lead === currentUser?.id;
                   
                   return (
                     <Card
                       key={team.id}
-                      className="border-border bg-card/40 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300 cursor-pointer"
+                      className="border-border bg-card/40 relative overflow-hidden group hover:border-amber-500/30 transition-all duration-300 cursor-pointer"
                       onClick={() => router.push(`/team/teams/${team.id}`)}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-500"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-transparent to-orange-500/0 group-hover:from-amber-500/5 group-hover:to-orange-500/5 transition-all duration-500"></div>
                       
                       <CardHeader className="pb-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <CardTitle className="text-lg text-foreground font-bold hover:text-indigo-400 transition-colors flex items-center gap-2">
+                            <CardTitle className="text-lg text-foreground font-bold hover:text-amber-400 transition-colors flex items-center gap-2">
                               {team.name}
                             </CardTitle>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Leiter: <span className="text-indigo-400 font-medium">{leadName}</span>
+                              Vorarbeiter: <span className="text-amber-400 font-medium">{leadName}</span>
                             </p>
                           </div>
                           <div onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger
                                 className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-border/50 cursor-pointer"
-                                title="Team-Optionen"
+                                title="Kolonnen-Optionen"
                               >
                                 <MoreVertical size={16} />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48 bg-background border-border text-foreground">
                                 <DropdownMenuItem
                                   onSelect={() => router.push(`/team/teams/${team.id}`)}
-                                  className="cursor-pointer flex items-center gap-2 text-xs text-indigo-400 font-medium hover:text-indigo-300"
+                                  className="cursor-pointer flex items-center gap-2 text-xs text-amber-400 font-medium hover:text-amber-300"
                                 >
-                                  <Edit3 size={14} /> Team Bearbeiten (URL)
+                                  <Edit3 size={14} /> Kolonne verwalten
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onSelect={(e) => {
@@ -784,17 +803,19 @@ export default function TeamPage() {
                                   }}
                                   className="cursor-pointer flex items-center gap-2 text-xs"
                                 >
-                                  <Edit3 size={14} /> Modal Bearbeiten
+                                  <Edit3 size={14} /> Schnellbearbeitung
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onSelect={(e) => {
-                                    e.preventDefault();
-                                    setTimeout(() => setTeamToDelete(team), 50);
-                                  }}
-                                  className="cursor-pointer flex items-center gap-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                >
-                                  <Trash2 size={14} /> Löschen
-                                </DropdownMenuItem>
+                                {canEdit && (
+                                  <DropdownMenuItem
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      setTimeout(() => setTeamToDelete(team), 50);
+                                    }}
+                                    className="cursor-pointer flex items-center gap-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                  >
+                                    <Trash2 size={14} /> Löschen
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -809,7 +830,7 @@ export default function TeamPage() {
                           
                           <div className="pt-4 border-t border-border/50 flex flex-col gap-2">
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground font-medium">Mitglieder ({members.length})</span>
+                              <span className="text-muted-foreground font-medium">Monteure ({members.length})</span>
                             </div>
                             
                             {members.length > 0 ? (
@@ -836,7 +857,7 @@ export default function TeamPage() {
                                 )}
                               </div>
                             ) : (
-                              <p className="text-xs text-muted-foreground italic mt-1">Keine Mitglieder zugewiesen.</p>
+                              <p className="text-xs text-muted-foreground italic mt-1">Keine Monteure zugewiesen.</p>
                             )}
                           </div>
                         </div>
@@ -856,12 +877,15 @@ export default function TeamPage() {
           <DialogContent className="sm:max-w-2xl border-border bg-background/95 backdrop-blur-xl text-foreground">
             <DialogHeader className="pb-2 border-b border-border/50">
               <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-xl shadow-lg border border-indigo-500/20">
-                  {selectedUser.user.email ? selectedUser.user.email.charAt(0).toUpperCase() : '?'}
+                <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center font-bold text-xl text-white shadow-lg border border-amber-500/20">
+                  {selectedUser.user.name ? selectedUser.user.name.charAt(0).toUpperCase() : (selectedUser.user.email ? selectedUser.user.email.charAt(0).toUpperCase() : '?')}
                 </div>
                 <div>
                   <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2.5">
-                    {selectedUser.user.name || (selectedUser.user.email ? selectedUser.user.email.split('@')[0] : 'Mitglied')}
+                    {selectedUser.user.name || (selectedUser.user.email ? selectedUser.user.email.split('@')[0] : 'Monteur')}
+                    <span className={`text-xs px-2 py-0.5 rounded border font-semibold ${getCraftRoleBadgeClasses(selectedUser.user.role)}`}>
+                      {getCraftRoleLabel(selectedUser.user.role, 'craft')}
+                    </span>
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                     <Mail size={12} /> {selectedUser.user.email}
@@ -871,15 +895,15 @@ export default function TeamPage() {
             </DialogHeader>
 
             <Tabs defaultValue="workload" className="mt-4">
-              <TabsList className={`grid ${currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id ? 'grid-cols-2' : 'grid-cols-1'} bg-muted/50 border border-border/30 rounded-lg p-1`}>
+              <TabsList className={`grid ${isMeisterOrAdmin || currentUser?.id === selectedUser.user.id ? 'grid-cols-2' : 'grid-cols-1'} bg-muted/50 border border-border/30 rounded-lg p-1`}>
                 <TabsTrigger value="workload" className="flex items-center gap-2 py-2 cursor-pointer">
                   <Activity size={14} />
-                  Auslastung & Aufgaben
+                  Auslastung & Einsätze
                 </TabsTrigger>
-                {(currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id) && (
+                {(isMeisterOrAdmin || currentUser?.id === selectedUser.user.id) && (
                   <TabsTrigger value="edit" className="flex items-center gap-2 py-2 cursor-pointer">
                     <Edit3 size={14} />
-                    Profil bearbeiten
+                    Profil & Stundensatz
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -900,23 +924,28 @@ export default function TeamPage() {
                     </span>
                   </div>
                   <div className="bg-muted/30 border border-border/40 rounded-xl p-4 flex flex-col justify-between">
-                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Wochenstundenziel</span>
-                    <span className="text-xl font-bold mt-2 text-indigo-400">
-                      {selectedUser.user.weekly_hours_target ? `${selectedUser.user.weekly_hours_target}h` : 'Nicht definiert'}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Stundensatz & Soll</span>
+                    <div className="mt-1">
+                      <div className="text-lg font-bold text-amber-400 font-mono">
+                        {selectedUser.user.hourly_rate ? `${Number(selectedUser.user.hourly_rate).toFixed(2)} €/h` : 'Kein Satz'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {selectedUser.user.weekly_hours_target ? `${selectedUser.user.weekly_hours_target}h / Woche` : '40h / Woche'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <ListTodo size={15} className="text-indigo-400" />
-                    Aktive Aufgaben ({allTasks.filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id)).length})
+                    <ListTodo size={15} className="text-amber-400" />
+                    Aktive Einsätze & Aufgaben ({allTasks.filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id)).length})
                   </h4>
 
                   <div className="max-h-[220px] overflow-y-auto pr-1 space-y-2.5">
                     {allTasks.filter(t => t.status !== 'done' && Array.isArray(t.assignees) && t.assignees.includes(selectedUser.user.id)).length === 0 ? (
                       <div className="text-center py-8 border border-dashed border-border/40 rounded-xl text-muted-foreground text-xs">
-                        Keine aktiven Aufgaben zugewiesen.
+                        Keine aktiven Baustellen-Aufgaben zugewiesen.
                       </div>
                     ) : (
                       allTasks
@@ -928,17 +957,17 @@ export default function TeamPage() {
                               <div>
                                 <p className="text-xs font-semibold text-foreground">{task.title}</p>
                                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  {project ? `[${project.key}] ${project.name}` : 'Kein Projekt'}
+                                  {project ? `[${project.key || 'BAU'}] ${project.name}` : 'Keine Baustelle'}
                                 </p>
                               </div>
                               <div className="flex items-center gap-2">
                                 {task.estimated_hours && (
                                   <Badge variant="outline" className="bg-background text-[10px]">
-                                    {task.estimated_hours}h geschätzt
+                                    {task.estimated_hours}h geplant
                                   </Badge>
                                 )}
                                 <Badge variant="secondary" className="text-[10px] capitalize bg-zinc-800 text-zinc-300">
-                                  {task.status || 'todo'}
+                                  {task.status || 'offen'}
                                 </Badge>
                               </div>
                             </div>
@@ -950,17 +979,31 @@ export default function TeamPage() {
               </TabsContent>
 
               {/* Tab 2: Profil bearbeiten */}
-              {(currentUser?.role === 'admin' || currentUser?.id === selectedUser.user.id) && (
+              {(isMeisterOrAdmin || currentUser?.id === selectedUser.user.id) && (
                 <TabsContent value="edit" className="pt-4">
                   <form onSubmit={handleSaveProfile} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="edit-name" className="text-xs">Name</Label>
                         <Input
                           id="edit-name"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Name des Mitarbeiters"
+                          placeholder="Name des Handwerkers"
+                          className="bg-muted/20 border-border text-sm"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-hourly-rate" className="text-xs">Stundensatz (€/h)</Label>
+                        <Input
+                          id="edit-hourly-rate"
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={editHourlyRate}
+                          onChange={(e) => setEditHourlyRate(e.target.value === '' ? '' : Number(e.target.value))}
+                          placeholder="z.B. 65.00"
                           className="bg-muted/20 border-border text-sm"
                         />
                       </div>
@@ -977,7 +1020,7 @@ export default function TeamPage() {
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent className="bg-background border-border">
-                            {[5, 10, 15, 20, 25, 30, 35, 40].map((hours) => (
+                            {[10, 20, 30, 35, 38.5, 40, 45].map((hours) => (
                               <SelectItem key={hours} value={String(hours)} className="cursor-pointer">
                                 {hours} Std. / Woche
                               </SelectItem>
@@ -989,9 +1032,9 @@ export default function TeamPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs">Expertise / Fähigkeiten</Label>
-                        <div className="border border-border/40 bg-muted/10 rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-1.5">
-                          {EXPERTISE_OPTIONS.map((opt) => (
+                        <Label className="text-xs">Gewerke & Handwerkssparten</Label>
+                        <div className="border border-border/40 bg-muted/10 rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-1.5">
+                          {TRADE_OPTIONS.map((opt) => (
                             <div key={opt.value} className="flex items-center gap-2">
                               <input
                                 type="checkbox"
@@ -1004,7 +1047,7 @@ export default function TeamPage() {
                                       : prev.filter(v => v !== opt.value)
                                   );
                                 }}
-                                className="rounded border-zinc-700 bg-zinc-950 text-indigo-500 focus:ring-indigo-500/20 h-3.5 w-3.5"
+                                className="rounded border-zinc-700 bg-zinc-950 text-amber-500 focus:ring-amber-500/20 h-3.5 w-3.5"
                               />
                               <Label htmlFor={`exp-${opt.value}`} className="text-xs cursor-pointer text-muted-foreground hover:text-foreground">
                                 {opt.label}
@@ -1015,34 +1058,34 @@ export default function TeamPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="edit-role" className="text-xs">Systemrolle</Label>
-                        {currentUser?.role === 'admin' ? (
+                        <Label htmlFor="edit-role" className="text-xs">Handwerks-Rolle im Betrieb</Label>
+                        {isMeisterOrAdmin ? (
                           <>
                             <Select
                               value={editRole}
                               onValueChange={(val) => val && setEditRole(val)}
                             >
                               <SelectTrigger className="bg-muted/20 border-border text-sm">
-                                <SelectValue placeholder="Wähle Rolle">
-                                  {(value: string) => ROLE_LABELS[value] || value}
+                                <SelectValue placeholder="Wähle Handwerksrolle">
+                                  {(value: string) => getCraftRoleLabel(value, 'craft')}
                                 </SelectValue>
                               </SelectTrigger>
-                              <SelectContent className="bg-background border-border">
-                                <SelectItem value="admin">Administrator</SelectItem>
-                                <SelectItem value="manager">Manager</SelectItem>
-                                <SelectItem value="employee">Mitarbeiter</SelectItem>
-                                <SelectItem value="freelancer">Freelancer</SelectItem>
-                                <SelectItem value="client">Kunde</SelectItem>
+                              <SelectContent className="bg-background border-border max-h-64">
+                                {CRAFT_ROLE_OPTIONS.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                            <p className="text-[10px] text-muted-foreground mt-1">Ändert Berechtigungen im OS.</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Legt Berechtigungen & Verantwortungsbereich fest.</p>
                           </>
                         ) : (
                           <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex items-center justify-between">
-                            <Badge variant="outline" className="bg-background text-xs">
-                              {ROLE_LABELS[selectedUser.user.role || 'employee'] || selectedUser.user.role || 'Mitarbeiter'}
-                            </Badge>
-                            <span className="text-[10px] text-muted-foreground italic">Nur Admins können Rollen ändern</span>
+                            <span className={`text-xs px-2 py-0.5 rounded border font-semibold ${getCraftRoleBadgeClasses(selectedUser.user.role)}`}>
+                              {getCraftRoleLabel(selectedUser.user.role, 'craft')}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground italic">Nur Meister/Admin können Rollen ändern</span>
                           </div>
                         )}
                       </div>
@@ -1052,7 +1095,7 @@ export default function TeamPage() {
                       <Button type="button" variant="outline" size="sm" onClick={() => setSelectedUser(null)}>
                         Abbrechen
                       </Button>
-                      <Button type="submit" size="sm" disabled={isSaving}>
+                      <Button type="submit" size="sm" disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         {isSaving && <Loader2 size={12} className="animate-spin mr-1.5" />}
                         <Save size={14} className="mr-1.5" />
                         Speichern
@@ -1066,63 +1109,63 @@ export default function TeamPage() {
         </Dialog>
       )}
 
-      {/* Team Create/Edit Dialog */}
+      {/* Kolonnen Create/Edit Dialog */}
       {isTeamDialogOpen && (
         <Dialog open={isTeamDialogOpen} onOpenChange={(open) => !open && setIsTeamDialogOpen(false)}>
           <DialogContent className="sm:max-w-lg border-border bg-background/95 backdrop-blur-xl text-foreground">
             <DialogHeader className="pb-2 border-b border-border/50">
               <DialogTitle className="text-xl font-bold tracking-tight">
-                {editingTeam ? 'Team bearbeiten' : 'Neues Team erstellen'}
+                {editingTeam ? 'Kolonne bearbeiten' : 'Neue Kolonne / Bautrupp erstellen'}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                {editingTeam ? 'Passe die Team-Struktur, den Leiter und die Mitglieder an.' : 'Erstelle ein neues Team und weise Mitglieder und einen Leiter zu.'}
+                {editingTeam ? 'Passe die Kolonnen-Zusammensetzung, Vorarbeiter und Monteure an.' : 'Erstelle eine neue Kolonne und weise Monteure und einen Vorarbeiter zu.'}
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSaveTeam} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="team-name" className="text-xs">Teamname</Label>
+                <Label htmlFor="team-name" className="text-xs">Kolonnenname</Label>
                 <Input
                   id="team-name"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  placeholder="z.B. Marketing, Entwicklung"
+                  placeholder="z.B. Bautrupp Süd, Kolonne Montage SHK"
                   className="bg-muted/20 border-border text-sm"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="team-desc" className="text-xs">Beschreibung</Label>
+                <Label htmlFor="team-desc" className="text-xs">Beschreibung & Einsatzgebiet</Label>
                 <Input
                   id="team-desc"
                   value={teamDescription}
                   onChange={(e) => setTeamDescription(e.target.value)}
-                  placeholder="Optionale Kurzbeschreibung des Teams"
+                  placeholder="z.B. Neubau-Großprojekte, Sanierung, Fassadenarbeiten"
                   className="bg-muted/20 border-border text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="team-lead" className="text-xs">Teamleiter</Label>
+                <Label htmlFor="team-lead" className="text-xs">Vorarbeiter / Kolonnenführer</Label>
                 <Select
                   value={teamLeadId || 'none'}
                   onValueChange={(val) => setTeamLeadId(!val || val === 'none' ? '' : val)}
                 >
                   <SelectTrigger className="bg-muted/20 border-border text-sm">
-                    <SelectValue placeholder="Wähle Teamleiter">
+                    <SelectValue placeholder="Wähle Vorarbeiter">
                       {(() => {
-                        if (!teamLeadId || teamLeadId === 'none') return 'Kein Teamleiter';
+                        if (!teamLeadId || teamLeadId === 'none') return 'Kein Vorarbeiter';
                         const u = eligibleUsers.find((x) => x.id === teamLeadId);
                         return u ? (u.name || u.email) : teamLeadId;
                       })()}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border">
-                    <SelectItem value="none" className="cursor-pointer">Kein Teamleiter</SelectItem>
+                    <SelectItem value="none" className="cursor-pointer">Kein Vorarbeiter</SelectItem>
                     {eligibleUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id} className="cursor-pointer">
-                        {user.name || user.email}
+                        {user.name || user.email} {user.role ? `(${getCraftRoleLabel(user.role, 'craft')})` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1130,7 +1173,7 @@ export default function TeamPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs">Mitglieder auswählen</Label>
+                <Label className="text-xs">Monteure & Handwerker zuweisen</Label>
                 <div className="border border-border/40 bg-muted/10 rounded-xl p-3 max-h-[180px] overflow-y-auto space-y-1.5">
                   {eligibleUsers.map((user) => {
                     const isChecked = selectedMemberIds.includes(user.id);
@@ -1147,13 +1190,14 @@ export default function TeamPage() {
                                 : prev.filter(id => id !== user.id)
                             );
                           }}
-                          className="rounded border-zinc-700 bg-zinc-950 text-indigo-500 focus:ring-indigo-500/20 h-3.5 w-3.5"
+                          className="rounded border-zinc-700 bg-zinc-950 text-amber-500 focus:ring-amber-500/20 h-3.5 w-3.5"
                         />
                         <Label
                           htmlFor={`member-${user.id}`}
-                          className="text-xs cursor-pointer text-muted-foreground hover:text-foreground"
+                          className="text-xs cursor-pointer text-muted-foreground hover:text-foreground flex items-center justify-between w-full pr-2"
                         >
-                          {user.name || user.email}
+                          <span>{user.name || user.email}</span>
+                          <span className="text-[10px] text-zinc-500">{getCraftRoleLabel(user.role, 'craft')}</span>
                         </Label>
                       </div>
                     );
@@ -1165,7 +1209,7 @@ export default function TeamPage() {
                 <Button type="button" variant="outline" size="sm" onClick={() => setIsTeamDialogOpen(false)} disabled={isSavingTeam}>
                   Abbrechen
                 </Button>
-                <Button type="submit" size="sm" disabled={isSavingTeam}>
+                <Button type="submit" size="sm" disabled={isSavingTeam} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   {isSavingTeam && <Loader2 size={12} className="animate-spin mr-1.5" />}
                   <Save size={14} className="mr-1.5" />
                   Speichern
@@ -1176,14 +1220,14 @@ export default function TeamPage() {
         </Dialog>
       )}
 
-      {/* Team Delete Confirmation Dialog */}
+      {/* Kolonnen Delete Confirmation Dialog */}
       {teamToDelete && (
         <Dialog open={!!teamToDelete} onOpenChange={(open) => !open && setTeamToDelete(null)}>
           <DialogContent className="sm:max-w-md border-border bg-background/95 backdrop-blur-xl text-foreground">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-red-400">Team löschen</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-red-400">Kolonne auflösen / löschen</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground mt-2">
-                Bist du sicher, dass du das Team &ldquo;{teamToDelete.name}&rdquo; löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+                Bist du sicher, dass du die Kolonne &ldquo;{teamToDelete.name}&rdquo; auflösen möchtest? Die Handwerker und Monteure bleiben im System erhalten.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-6 flex justify-end gap-3">

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { verifyUserSession } from '@/lib/pocketbase-server';
+import { AdminSubNav } from '@/components/admin/AdminSubNav';
 
 export default async function AdminLayout({
   children,
@@ -8,9 +9,17 @@ export default async function AdminLayout({
 }) {
   const sessionUser = await verifyUserSession();
 
-  if (!sessionUser || sessionUser.role !== 'admin') {
-    redirect('/tasks');
+  if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'meister')) {
+    redirect('/craft');
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex flex-col min-h-full">
+      <AdminSubNav />
+      <div className="flex-1">
+        {children}
+      </div>
+    </div>
+  );
 }
+

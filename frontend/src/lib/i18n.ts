@@ -339,7 +339,17 @@ export const deDict = {
     "manager": "Manager",
     "employee": "Mitarbeiter",
     "freelancer": "Freelancer",
-    "client": "Kunde"
+    "client": "Kunde",
+    "meister": "Handwerksmeister",
+    "bauleiter": "Bauleiter / Projektleiter",
+    "vorarbeiter": "Vorarbeiter / Obermonteur",
+    "geselle": "Facharbeiter / Geselle",
+    "monteur": "Monteur",
+    "azubi": "Auszubildender (Azubi)",
+    "helfer": "Bauhelfer / Montagehelfer",
+    "subunternehmer": "Nachunternehmer / Subunternehmer",
+    "buero": "Büro & Verwaltung",
+    "auftraggeber": "Bauherr / Auftraggeber"
   },
   "team": {
     "title": "Team",
@@ -861,7 +871,17 @@ export const enDict = {
     "manager": "Manager",
     "employee": "Employee",
     "freelancer": "Freelancer",
-    "client": "Client"
+    "client": "Client",
+    "meister": "Master Craftsman",
+    "bauleiter": "Site Manager / Project Lead",
+    "vorarbeiter": "Foreman / Lead Fitter",
+    "geselle": "Journeyman / Skilled Worker",
+    "monteur": "Fitter / Assembler",
+    "azubi": "Apprentice",
+    "helfer": "Assistant / Laborer",
+    "subunternehmer": "Subcontractor",
+    "buero": "Backoffice / Administration",
+    "auftraggeber": "Client / Property Owner"
   },
   "team": {
     "title": "Team",
@@ -1188,6 +1208,16 @@ export const ROLE_LABELS: Record<string, string> = {
   employee: t('role.employee'),
   freelancer: t('role.freelancer'),
   client: t('role.client'),
+  meister: t('role.meister'),
+  bauleiter: t('role.bauleiter'),
+  vorarbeiter: t('role.vorarbeiter'),
+  geselle: t('role.geselle'),
+  monteur: t('role.monteur'),
+  azubi: t('role.azubi'),
+  helfer: t('role.helfer'),
+  subunternehmer: t('role.subunternehmer'),
+  buero: t('role.buero'),
+  auftraggeber: t('role.auftraggeber'),
 };
 
 export const PROJECT_BUDGET_TYPE_LABELS: Record<string, string> = {

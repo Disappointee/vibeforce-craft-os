@@ -25,6 +25,123 @@ export type ClientStatus = (typeof CLIENT_STATUSES)[number];
 export const USER_ROLES = ['admin', 'manager', 'employee', 'freelancer', 'client'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+export const CRAFT_ROLES = [
+  'admin',          // Meister / Betriebsinhaber
+  'meister',        // Handwerksmeister
+  'manager',        // Bauleiter (Legacy)
+  'bauleiter',      // Bauleiter / Projektleiter
+  'vorarbeiter',    // Vorarbeiter / Obermonteur
+  'employee',       // Facharbeiter / Geselle (Legacy)
+  'geselle',        // Facharbeiter / Geselle
+  'monteur',        // Monteur
+  'azubi',          // Auszubildender (Azubi)
+  'helfer',         // Bauhelfer / Montagehelfer
+  'freelancer',     // Nachunternehmer (Legacy)
+  'subunternehmer', // Nachunternehmer / Fremdfirma
+  'buero',          // Büro / Kaufmännische Verwaltung
+  'client',         // Bauherr / Auftraggeber (Legacy)
+  'auftraggeber',   // Bauherr / Auftraggeber
+] as const;
+export type CraftRole = (typeof CRAFT_ROLES)[number];
+
+export interface CraftRoleOption {
+  value: CraftRole;
+  label: string;
+  category: 'leitung' | 'baustelle' | 'nachunternehmer' | 'verwaltung' | 'kunde';
+  description: string;
+  defaultHourlyRate: number;
+}
+
+export const CRAFT_ROLE_OPTIONS: CraftRoleOption[] = [
+  {
+    value: 'admin',
+    label: 'Meister / Betriebsinhaber',
+    category: 'leitung',
+    description: 'Vollzugriff, Firmenstammdaten, Lohnsätze, ZUGFeRD, Mitarbeiterverwaltung',
+    defaultHourlyRate: 82.5,
+  },
+  {
+    value: 'bauleiter',
+    label: 'Bauleiter / Projektleiter',
+    category: 'leitung',
+    description: 'Baustellen-Koordination, Abnahmen, Bautagesberichte freigeben, VOB-Mängel',
+    defaultHourlyRate: 74.0,
+  },
+  {
+    value: 'vorarbeiter',
+    label: 'Vorarbeiter / Obermonteur',
+    category: 'baustelle',
+    description: 'Führt die Montagekolonne vor Ort, unterschreibt/erstellt Bautagesberichte',
+    defaultHourlyRate: 74.0,
+  },
+  {
+    value: 'geselle',
+    label: 'Facharbeiter / Geselle',
+    category: 'baustelle',
+    description: 'Gelernter Handwerker, Stempeluhr, GPS-Checkin, Fotodokumentation',
+    defaultHourlyRate: 64.0,
+  },
+  {
+    value: 'monteur',
+    label: 'Monteur',
+    category: 'baustelle',
+    description: 'Vor-Ort-Montage, Stempeluhr, Materiallogistik',
+    defaultHourlyRate: 52.0,
+  },
+  {
+    value: 'azubi',
+    label: 'Auszubildender (Azubi)',
+    category: 'baustelle',
+    description: 'Lehrling im Betrieb, Stempeluhr, Ausbildungs-Stundensatz',
+    defaultHourlyRate: 38.0,
+  },
+  {
+    value: 'helfer',
+    label: 'Bauhelfer / Montagehelfer',
+    category: 'baustelle',
+    description: 'Zuarbeiten, Baustellenreinigung, Materialannahme',
+    defaultHourlyRate: 42.0,
+  },
+  {
+    value: 'subunternehmer',
+    label: 'Nachunternehmer / Fremdfirma',
+    category: 'nachunternehmer',
+    description: 'Fremdleister gem. § 13b UStG Bauleistungen & § 48b EStG Freistellung',
+    defaultHourlyRate: 65.0,
+  },
+  {
+    value: 'buero',
+    label: 'Büro / Verwaltung',
+    category: 'verwaltung',
+    description: 'Kaufmännische Sachbearbeitung, DATEV, Kundenkontakt, Zeiterfassungskontrolle',
+    defaultHourlyRate: 55.0,
+  },
+  {
+    value: 'client',
+    label: 'Bauherr / Auftraggeber',
+    category: 'kunde',
+    description: 'Bauherren-Zugang für Baustellen-Freigaben, Abnahmen und Bautagebuch',
+    defaultHourlyRate: 0.0,
+  },
+];
+
+export const CRAFT_TRADES = [
+  { value: 'elektro', label: 'Elektrotechnik & Automation' },
+  { value: 'shk', label: 'Sanitär, Heizung, Klima (SHK)' },
+  { value: 'trockenbau', label: 'Trockenbau & Akustik' },
+  { value: 'maler', label: 'Maler & Lackierer' },
+  { value: 'fliesen', label: 'Fliesen-, Platten- & Mosaikleger' },
+  { value: 'dach', label: 'Dachdecker & Spengler' },
+  { value: 'zimmerer', label: 'Zimmerer & Holzbau' },
+  { value: 'maurer', label: 'Maurer & Betonbau' },
+  { value: 'metallbau', label: 'Metallbau & Schlosserei' },
+  { value: 'schreiner', label: 'Schreiner & Tischler' },
+  { value: 'brandschutz', label: 'Brandschutz & Isolierung' },
+  { value: 'montage', label: 'Allgemeine Montage' },
+] as const;
+
+export type CraftTrade = (typeof CRAFT_TRADES)[number]['value'];
+
 export const RECURRING_INTERVALS = ['daily', 'weekly', 'monthly', 'yearly', 'custom'] as const;
 export type RecurringInterval = (typeof RECURRING_INTERVALS)[number];
 
@@ -166,3 +283,61 @@ export const TASK_TYPE_LABELS: Record<string, string> = {
   consulting: 'Beratung',
   other: 'Sonstiges',
 };
+
+export const CRAFT_ROLE_LABELS: Record<string, string> = {
+  admin: 'Meister / Inhaber',
+  meister: 'Handwerksmeister',
+  manager: 'Bauleiter / Projektleiter',
+  bauleiter: 'Bauleiter / Projektleiter',
+  vorarbeiter: 'Vorarbeiter / Obermonteur',
+  employee: 'Facharbeiter / Geselle',
+  geselle: 'Facharbeiter / Geselle',
+  monteur: 'Monteur',
+  azubi: 'Auszubildender (Azubi)',
+  helfer: 'Bauhelfer / Montagehelfer',
+  freelancer: 'Nachunternehmer / Subunternehmer',
+  subunternehmer: 'Nachunternehmer / Subunternehmer',
+  buero: 'Büro & Verwaltung',
+  client: 'Bauherr / Auftraggeber',
+  auftraggeber: 'Bauherr / Auftraggeber',
+};
+
+export function getCraftRoleLabel(role?: string, mode: 'craft' | 'agency' = 'craft'): string {
+  if (!role) return '—';
+  if (mode === 'craft') {
+    return CRAFT_ROLE_LABELS[role] || role;
+  }
+  return USER_ROLE_LABEL_MAP[role as UserRole] ? t(USER_ROLE_LABEL_MAP[role as UserRole]) : role;
+}
+
+export function getCraftRoleBadgeClasses(role?: string): string {
+  switch (role) {
+    case 'admin':
+    case 'meister':
+      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    case 'manager':
+    case 'bauleiter':
+      return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+    case 'vorarbeiter':
+      return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
+    case 'employee':
+    case 'geselle':
+    case 'monteur':
+      return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25';
+    case 'azubi':
+      return 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25';
+    case 'helfer':
+      return 'bg-zinc-500/15 text-zinc-300 border-zinc-500/30';
+    case 'freelancer':
+    case 'subunternehmer':
+      return 'bg-purple-500/15 text-purple-400 border-purple-500/30';
+    case 'buero':
+      return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    case 'client':
+    case 'auftraggeber':
+      return 'bg-zinc-800 text-zinc-400 border-zinc-700';
+    default:
+      return 'bg-zinc-800 text-zinc-300 border-zinc-700';
+  }
+}
+

@@ -23,7 +23,23 @@ export interface BaseRecord {
 // User (PocketBase auth record)
 // ============================================
 
-export type UserRole = 'admin' | 'employee' | 'freelancer' | 'client' | 'manager';
+export type UserRole =
+  | 'admin'
+  | 'manager'
+  | 'employee'
+  | 'freelancer'
+  | 'client'
+  | 'meister'
+  | 'bauleiter'
+  | 'vorarbeiter'
+  | 'geselle'
+  | 'monteur'
+  | 'azubi'
+  | 'helfer'
+  | 'subunternehmer'
+  | 'buero'
+  | 'auftraggeber'
+  | string;
 export type UserLanguage = 'de' | 'en';
 
 export type BillingRoundingInterval = 0 | 5 | 6 | 10 | 15 | 30; // 0 = Exakt / 1 Min

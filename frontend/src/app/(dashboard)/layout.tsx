@@ -408,17 +408,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className={`flex-1 space-y-1 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             {craftMode ? (
               <>
+                <div className={`px-2 pt-2 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                  Baustelle & Betrieb
+                </div>
                 <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} collapsed={sidebarCollapsed} />
-                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
-                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
                 <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} collapsed={sidebarCollapsed} />
-                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} collapsed={sidebarCollapsed} />
-                {user?.role === 'admin' && (
-                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+
+                <div className={`px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                  Ressourcen & Partner
+                </div>
+                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Kolonnen" active={pathname.startsWith('/team')} collapsed={sidebarCollapsed} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
+
+                {(user?.role === 'admin' || user?.role === 'meister') && (
+                  <>
+                    <div className={`px-2 pt-4 pb-1 text-[11px] font-semibold text-amber-500/80 uppercase tracking-wider ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                      Betriebs-Leitung
+                    </div>
+                    <NavItem href="/admin" icon={<Shield size={18} className="text-amber-400" />} label="Admin-Übersicht" active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
+                  </>
                 )}
+
+                <div className={`px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                  Service & Wissen
+                </div>
                 <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
-                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Dokumentation" active={pathname === '/docs'} collapsed={sidebarCollapsed} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Hilfe" active={pathname === '/docs'} collapsed={sidebarCollapsed} />
               </>
             ) : (
               <>
@@ -429,7 +446,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavItem href="/clients" icon={<Building2 size={18} />} label={t('nav.clients')} active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
                 <NavItem href="/reports" icon={<TrendingUp size={18} />} label="Finanzen & Berichte" active={pathname.startsWith('/reports')} collapsed={sidebarCollapsed} />
                 <NavItem href="/team" icon={<Users size={18} />} label={t('nav.team')} active={pathname === '/team'} collapsed={sidebarCollapsed} />
-                {user?.role === 'admin' && (
+                {(user?.role === 'admin' || user?.role === 'meister') && (
                   <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} collapsed={sidebarCollapsed} />
                 )}
                 <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} collapsed={sidebarCollapsed} />
@@ -486,17 +503,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {craftMode ? (
               <>
+                <div className="px-2 pt-2 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                  Baustelle & Betrieb
+                </div>
                 <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
-                {user?.role === 'admin' && (
-                  <NavItem href="/admin/users" icon={<Shield size={18} />} label={t('nav.admin')} active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+
+                <div className="px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                  Ressourcen & Partner
+                </div>
+                <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Kolonnen" active={pathname.startsWith('/team')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
+
+                {(user?.role === 'admin' || user?.role === 'meister') && (
+                  <>
+                    <div className="px-2 pt-4 pb-1 text-[11px] font-semibold text-amber-500/80 uppercase tracking-wider">
+                      Betriebs-Leitung
+                    </div>
+                    <NavItem href="/admin" icon={<Shield size={18} className="text-amber-400" />} label="Admin-Übersicht" active={pathname.startsWith('/admin')} onClick={() => setMobileSidebarOpen(false)} />
+                  </>
                 )}
+
+                <div className="px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                  Service & Wissen
+                </div>
                 <NavItem href="/notifications" icon={<Bell size={18} />} label={t('nav.notifications')} active={pathname === '/notifications'} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Dokumentation" active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/docs" icon={<BookOpen size={18} />} label="VOB-Wissen & Hilfe" active={pathname === '/docs'} onClick={() => setMobileSidebarOpen(false)} />
               </>
             ) : (
               <>
@@ -670,21 +704,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <BookOpen size={16} className="text-muted-foreground" />
                           Handbuch & Hilfe
                         </button>
-                        {user?.role === 'admin' && (
+                        {(user?.role === 'admin' || user?.role === 'meister') && (
                           <>
+                            <button
+                              onClick={() => { router.push('/admin'); setUserMenuOpen(false); }}
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                            >
+                              <Shield size={16} className="text-amber-400" />
+                              Admin-Übersicht
+                            </button>
                             <button
                               onClick={() => { router.push('/admin/users'); setUserMenuOpen(false); }}
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
                             >
                               <Users size={16} className="text-muted-foreground" />
-                              Benutzerverwaltung
+                              {craftMode ? 'Personal- & Monteurverwaltung' : 'Benutzerverwaltung'}
                             </button>
                             <button
                               onClick={() => { router.push('/admin/settings'); setUserMenuOpen(false); }}
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
                             >
                               <Settings size={16} className="text-muted-foreground" />
-                              System-Einstellungen
+                              {craftMode ? 'Betriebs-Einstellungen & Lizenzen' : 'System-Einstellungen'}
                             </button>
                           </>
                         )}
