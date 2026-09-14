@@ -1,58 +1,38 @@
-# CURRENT TASK — Worker Execution Contract (Kilo Code)
+# Vibeforce Craft OS — Arbeitsauftrag für die Craft-Session
 
-> **Rolle:** Dieser Task wird von **Kilo Code** umgesetzt und von **Antigravity (Gemini)** an den neuralgischen Qualitätspunkten geprüft und freigegeben.
-
----
-
-## 📌 Aktueller Task: [PIPELINE-VERIFIKATION & HANDOFF-TEST]
-* **Task-ID:** `TASK-TEST-HANDOFF-01`
-* **Status:** `AWAITING_ANTIGRAVITY_REVIEW` *(Eingereicht via MCP um 16:53:32)*
-* **Prüfstufe:** Antigravity Gemini Quality Gate
+> **Workspace:** `c:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-craft-os`  
+> **Status:** Eigenständiges Repository (`main`, Commit `c26856f`), isolierte Konfiguration (`NEXT_PUBLIC_APP_MODE=craft`).  
+> **Backend:** `https://pb-vibeforce.46-225-178-235.sslip.io`  
+> **Ziel-Domain:** `https://craft-vibeforce.vercel.app`
 
 ---
 
-## 🎯 Ziel & Umfang
-Verifikation der automatisierten Arbeitsbrücke zwischen Kilo Code und Antigravity.
-Kilo Code soll:
-1. Eine kurze Testbestätigung in `tools/pipeline_test.txt` schreiben.
-2. Das Übergabeskript `tools/handoff_to_antigravity.mjs` ausführen (oder das MCP-Tool `validate_with_gemini` aufrufen).
-3. Auf Antigravitys Bestätigung und den Folgeauftrag warten.
+## 🎯 Unmittelbare Aufgaben in dieser Session (Schritt für Schritt)
 
----
+### Schritt 1: Craft Hub Ergonomie & Zero-Scroll Navigation
+* **Problem:** Auf Standard-Laptops & Tablets (< 1.450px) zwingt der Craft Hub (`/craft`) zu horizontalem Scrollen:
+  * Die 8 Modul-Tabs liegen in einer einzelnen horizontalen Endloszeile; beim Scrollen nach rechts verschwindet `Bautagesberichte` links.
+  * Header-Aktionsbuttons schneiden rechts `+ Baustelle anlegen` ab (`Baustelle anleg...`).
+  * Globaler Breiten-Überhang erzeugt einen horizontalen Scrollbalken am Fensterrand.
+* **Ziel:** 
+  * Responsive Navigation nach Option A (2-Cluster Arbeitsbereich: *Baustelle & Doku* vs. *Kaufmännisch & Abrechnung*) oder adaptive Pill-Bar mit Kurzformen.
+  * `flex-wrap` im Header, damit kein Button abgeschnitten wird.
+  * 0px horizontaler Überhang (`scrollWidth === innerWidth`).
 
-## 📂 Target Files (Ausschließlich diese Datei anlegen/bearbeiten)
-* `tools/pipeline_test.txt`
+### Schritt 2: Mängelmanagement vor Ort (`/craft/defects`)
+* **Problem:** Sidebar-Menüpunkt „Mängel & Baustellen-Aufgaben“ führt bisher auf die generische Aufgabenverwaltung `/tasks` („Meine Aufgaben“).
+* **Ziel:** Dedizierte Handwerks-Zentrale unter `/craft/defects`:
+  * Schnellerfassungs-Dialog für Mängel vor Ort (`NewDefectDialog`) mit Kamera-/Fotoupload, SHA-256 Integritätsprüfung, Gewerk und VOB/B § 13 Fristsetzung.
+  * Umschaltbar zwischen Mängelliste und 2D-Bauplan (`PlanPinningManager`).
+  * Generierung formaler VOB/B § 13 Abs. 5 Mängelrügen an Nachunternehmer.
 
----
+### Schritt 3: Monteur-Stempeluhr (`/craft/time`)
+* **Problem:** Menüpunkt „Monteur-Stempeluhr“ führt auf die generische Agentur-Zeiterfassung `/time`.
+* **Ziel:** Großflächiges, glove-ready Baustellen-Terminal (`MonteurTimeClock`):
+  * Große Touch-Buttons (>= 64px) für Kommen, Gehen und Pause.
+  * Schnellauswahl: Baustelle, Einsatztyp (Baustelle, Fahrtzeit/Rüstzeit, Werkstatt, Regiestunden gem. § 2 Abs. 10 VOB/B).
+  * GPS-Geofencing Verifikation vor Ort.
+  * Tagesstundenzettel mit Schichtabschluss.
 
-## 📐 Vorgabe für Target File
-Erstelle `tools/pipeline_test.txt` mit folgendem Inhalt:
-```text
-Kilo Code Handoff Pipeline Test: OK
-Zeitstempel: [Aktuelle Uhrzeit]
-Status: Bereit für Tandem-Arbeit mit Antigravity
-```
-
----
-
-## 🚫 Don'ts & Anti-Patterns für Kilo Code
-* ❌ Keine anderen Dateien anfassen.
-* ❌ Nicht das Repository durchsuchen.
-* ❌ Nach der Übergabe sofort stoppen und auf Antigravity warten.
-
----
-
-## ✅ Akzeptanzkriterien
-1. [ ] Datei `tools/pipeline_test.txt` existiert mit dem geforderten Inhalt.
-2. [ ] Übergabeskript `node tools/handoff_to_antigravity.mjs` wurde im Terminal ausgeführt.
-3. [ ] Antigravity bestätigt den Empfang in `TASK_SUBMISSION.json`.
-
----
-
-## 🚀 Übergabe-Befehl (Wenn fertig)
-Führe nach dem Erstellen der Datei folgenden Befehl im Terminal aus:
-```bash
-node tools/handoff_to_antigravity.mjs --task TASK-TEST-HANDOFF-01 --notes "Pipeline Test erfolgreich abgeschlossen"
-```
-*(Alternativ: Rufe das MCP-Tool `validate_with_gemini` mit taskId="TASK-TEST-HANDOFF-01" auf)*
-
+### Schritt 4: Eigenes Vercel-Projekt für Craft OS
+* Verknüpfung eines eigenständigen Vercel-Projekts `vibeforce-craft-os` und Zuweisung der Domain `craft-vibeforce.vercel.app`.
