@@ -38,5 +38,12 @@
   * Vollautomatisiert via Playwright E2E-Test (`tools/test_craft_time.mjs`) auf Desktop und Mobile (390px iPhone 14, 0px Überhang) erfolgreich getestet.
   * Commit: `4fd82fd`.
 
-### Schritt 4: Eigenes Vercel-Projekt für Craft OS
-* Verknüpfung eines eigenständigen Vercel-Projekts `vibeforce-craft-os` und Zuweisung der Domain `craft-vibeforce.vercel.app`.
+### Schritt 4: Eigenes Vercel-Projekt für Craft OS (✅ ABGESCHLOSSEN)
+* **Ergebnis:**
+  * Eigenständiges Vercel-Projekt `vibeforce-craft-os` erfolgreich eingerichtet und mit Produktions-Umgebungsvariablen (`NEXT_PUBLIC_APP_MODE=craft`, `NEXT_PUBLIC_POCKETBASE_URL=https://pb-vibeforce.46-225-178-235.sslip.io`) konfiguriert.
+  * Next.js 16 Production Build in Vercel erfolgreich durchgelaufen (`Build Completed in /vercel/output`).
+  * Live-Domains zugewiesen und verifiziert:
+    - **Haupt-Domain:** `https://craft-vibeforce.vercel.app` (Status: HTTP 200 / `X-Vibeforce-App-Mode: craft`)
+    - **Zweit-Domain:** `https://vibeforce-craft-os.vercel.app`
+  * Alle Routen (`/craft`, `/craft/defects`, `/craft/time`) sind live und voll funktionsfähig.
+
