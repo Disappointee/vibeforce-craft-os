@@ -1,0 +1,71 @@
+# dependencies
+/node_modules
+node_modules/
+
+# testing
+/coverage
+.playwright-mcp/
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+.kilo/
+Textdokument*.txt
+*HANDOVER*
+PROMPT_AUDIT_HANDOVER.md
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# vercel
+.vercel
+
+# pocketbase
+/pb_data
+/backend/pb_data
+/backend/pb_data_craft/
+tools/auth.json
+
+# python
+__pycache__/
+
+# Personal & Handover documents (local only)
+*.pdf
+*ANSCHREIBEN*
+*BROSCHUERE*
+*HANDOUT*
+*BRIEFING*
+*Briefing*
+*Anschreiben*
+*Broschuere*
+BROSCHUERE.md
+HANDOUT.md
+VIBEFORCE_FLOW_OS_ANSCHREIBEN_DANIEL.html
+VIBEFORCE_FLOW_OS_BROSCHUERE.html
+VIBEFORCE_FLOW_OS_BRIEFING_DANIEL_CRAFT.html
+tools/render_*.mjs
+tools/generate_*.mjs
+tools/logo_showcase.html
+tools/copy_*.mjs
+tools/export_*.mjs
+tools/create_transparent_logo.mjs
+backend/create_admin_*.mjs
+backend/create_user.js
+backend/demo_credentials.json

@@ -1,0 +1,517 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+/* react-day-picker default styles intentionally omitted — custom classNames in date-picker.tsx / date-time-picker.tsx */
+@import "shadcn/tailwind.css";
+@import "./frappe-gantt-base.css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant xs (@media (min-width: 380px));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --font-heading: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-duration-fast: var(--duration-fast);
+  --animate-duration-default: var(--duration-default);
+  --animate-duration-slow: var(--duration-slow);
+  --animate-ease-out: var(--ease-out);
+  --animate-ease-in-out: var(--ease-in-out);
+}
+
+:root {
+  --background: oklch(0.985 0.001 247.839);
+  --foreground: oklch(0.145 0.02 272.091);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.02 272.091);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.02 272.091);
+  --primary: oklch(0.578 0.203 263.676); /* Vibeforce Electric Blue #2563EB */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.523 0.026 267.968);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.578 0.203 263.676 / 0.5);
+  --chart-1: oklch(0.646 0.222 263.676);
+  --chart-2: oklch(0.6 0.239 52.946);
+  --chart-3: oklch(0.6 0.118 184.704);
+  --chart-4: oklch(0.554 0.246 315.969);
+  --chart-5: oklch(0.528 0.253 28.477);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0.001 247.839);
+  --sidebar-foreground: oklch(0.145 0.02 272.091);
+  --sidebar-primary: oklch(0.578 0.203 263.676);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.578 0.203 263.676 / 0.5);
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.795 0.184 86.047);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.623 0.214 259.815);
+  --info-foreground: oklch(0.985 0 0);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 100ms;
+  --duration-default: 150ms;
+  --duration-slow: 200ms;
+  --duration-slower: 300ms;
+}
+
+.dark {
+  --background: #121212;
+  --foreground: oklch(0.985 0 0);
+  --card: #18181a;
+  --card-foreground: oklch(0.985 0 0);
+  --popover: #1c1c1e;
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.638 0.187 263.676);
+  --primary-foreground: oklch(0.09 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: oklch(0.638 0.187 263.676 / 0.5);
+  --chart-1: oklch(0.646 0.222 263.676);
+  --chart-2: oklch(0.6 0.239 52.946);
+  --chart-3: oklch(0.6 0.118 184.704);
+  --chart-4: oklch(0.554 0.246 315.969);
+  --chart-5: oklch(0.528 0.253 28.477);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.638 0.187 263.676);
+  --sidebar-primary-foreground: oklch(0.09 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.638 0.187 263.676 / 0.5);
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.795 0.184 86.047);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.623 0.214 259.815);
+  --info-foreground: oklch(0.985 0 0);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 100ms;
+  --duration-default: 150ms;
+  --duration-slow: 200ms;
+  --duration-slower: 300ms;
+}
+
+/* Map .dark class to frappe-gantt's [data-theme="dark"] selector */
+.dark {
+  &,
+  & .gantt-container-root,
+  & .gantt-outer {
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    @apply font-sans;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility text-caps {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@utility tracking-heading {
+  letter-spacing: -0.01em;
+}
+
+/* =========================================================================
+   Frappe‑Gantt Dark‑Theme Overrides
+   ========================================================================= */
+
+.gantt-container-root {
+  --gantt-bg: transparent;
+  --gantt-grid-bg: transparent;
+  --gantt-header-bg: rgba(24, 24, 27, 0.6);
+  --gantt-border-color: rgba(255, 255, 255, 0.05);
+  --gantt-text-color: #a1a1aa;
+  --gantt-text-light: #71717a;
+  --gantt-bar-todo: #27272a;
+  --gantt-bar-in-progress: #2563EB;
+  --gantt-bar-review: #1D4ED8;
+  --gantt-bar-done: #22c55e;
+  --gantt-weekend: rgba(255, 255, 255, 0.02);
+  --gantt-today: rgba(37, 99, 235, 0.1);
+  --gantt-accent: #2563EB;
+}
+
+/* Outer scroll container */
+.gantt-outer {
+  background: transparent;
+}
+
+/* Force gantt-task-react to use full container width */
+.gantt-outer > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.gantt-outer > div > svg {
+  flex: 1 1 auto !important;
+}
+
+/* The main SVG container */
+.gantt-container-root > div {
+  background: transparent;
+}
+
+/* Force SVG in the root container to fill width too (fullscreen mode) */
+.gantt-container-root > div {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.gantt-container-root > div > svg {
+  flex: 1 1 auto !important;
+}
+
+/* SVG element */
+.gantt-container-root .gantt {
+  background: transparent;
+}
+
+/* Grid lines */
+.gantt-container-root .gantt .grid-row {
+  fill: transparent;
+}
+
+.gantt-container-root .gantt .grid-row:nth-child(even) {
+  fill: rgba(255, 255, 255, 0.015);
+}
+
+.gantt-container-root .gantt .grid-line {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 1;
+}
+
+.gantt-container-root .gantt .today-highlight {
+  fill: var(--gantt-today);
+  stroke: rgba(37, 99, 235, 0.3);
+  stroke-width: 1;
+}
+
+/* Header */
+.gantt-container-root .gantt .upper-header,
+.gantt-container-root .gantt .lower-header {
+  fill: var(--gantt-header-bg);
+}
+
+.gantt-container-root .gantt .upper-header text,
+.gantt-container-root .gantt .lower-header text {
+  fill: var(--gantt-text-color);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.gantt-container-root .gantt .upper-header {
+  border-bottom: 1px solid var(--gantt-border-color);
+}
+
+/* Row lines */
+.gantt-container-root .gantt .row-line {
+  stroke: rgba(255, 255, 255, 0.04);
+}
+
+/* Bars */
+.gantt-container-root .gantt .bar-wrapper .bar {
+  transition: opacity 0.15s ease;
+}
+
+.gantt-container-root .gantt .bar-wrapper:hover .bar {
+  opacity: 0.85;
+}
+
+/* Bar fills by custom class */
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-task {
+  fill: var(--gantt-bar-todo);
+  stroke: rgba(255, 255, 255, 0.05);
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-priority-acute {
+  fill: #ef4444;
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-priority-high {
+  fill: #f97316;
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-priority-medium {
+  fill: #6366f1;
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-priority-low {
+  fill: #52525b;
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-status-in_progress {
+  fill: var(--gantt-bar-in-progress);
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-status-review {
+  fill: var(--gantt-bar-review);
+}
+
+.gantt-container-root .gantt .bar-wrapper .bar.gantt-status-done {
+  fill: var(--gantt-bar-done);
+}
+
+/* Bar progress fill */
+.gantt-container-root .gantt .bar-wrapper .bar-progress {
+  fill: rgba(255, 255, 255, 0.15);
+}
+
+/* Bar text */
+.gantt-container-root .gantt .bar-wrapper .bar-label {
+  fill: #e4e4e7;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Dependencies (arrows) */
+.gantt-container-root .gantt .arrow {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1.5;
+}
+
+.gantt-container-root .gantt .arrow .arrow-right-angle {
+  fill: rgba(255, 255, 255, 0.1);
+}
+
+/* Popup */
+.gantt-container-root .popup-wrapper {
+  background: rgba(24, 24, 27, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  padding: 14px 18px !important;
+  font-family: inherit;
+}
+
+.gantt-container-root .popup-wrapper .title {
+  color: #f4f4f5;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.gantt-container-root .popup-wrapper .subtitle {
+  color: #a1a1aa;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.gantt-container-root .popup-wrapper .details {
+  color: #71717a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Today button */
+.gantt-container-root .gantt .today-button {
+  fill: rgba(99, 102, 241, 0.15);
+  rx: 6;
+  ry: 6;
+  cursor: pointer;
+}
+
+.gantt-container-root .gantt .today-button text {
+  fill: #818cf8;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gantt-container-root .gantt .today-button:hover {
+  fill: rgba(99, 102, 241, 0.25);
+}
+
+/* Scrollbar styling for the gantt outer container */
+.gantt-outer::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.gantt-outer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gantt-outer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.gantt-outer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Gantt-Task-React Dark Mode Overrides
+   ═══════════════════════════════════════════════════════════ */
+.gantt-container-root .gridBody .rows rect {
+  fill: transparent;
+}
+.gantt-container-root .gridBody .rows rect:nth-child(even) {
+  fill: rgba(255, 255, 255, 0.015);
+}
+.gantt-container-root .gridBody .rowLines line {
+  stroke: rgba(255, 255, 255, 0.04);
+}
+.gantt-container-root .gridBody .ticks line {
+  stroke: rgba(255, 255, 255, 0.04);
+}
+.gantt-container-root .calendar rect {
+  fill: var(--gantt-header-bg) !important;
+  stroke: var(--gantt-border-color) !important;
+}
+.gantt-container-root .calendar text {
+  fill: var(--gantt-text-color) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.gantt-container-root .calendar line {
+  stroke: var(--gantt-border-color) !important;
+}
+.gantt-container-root .arrow path {
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+.gantt-container-root .arrow polygon {
+  fill: rgba(255, 255, 255, 0.1) !important;
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+.gantt-container-root text {
+  font-family: inherit;
+}
+.gantt-container-root [class*="barLabel"] {
+  fill: #e4e4e7 !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+.gantt-container-root [class*="barLabelOutside"] {
+  fill: #a1a1aa !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Mobile overflow protection — keine Elemente breiter als Viewport */
+@utility container-mobile {
+  max-width: calc(100vw - 2rem);
+  overflow: hidden;
+}
+
+/* Form inputs never overflow */
+input, select, .select-trigger {
+  max-width: 100%;
+}
+
+/* Form labels always readable */
+label {
+  color: var(--muted-foreground);
+  opacity: 0.9;
+}
+
+@utility safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility safe-area-mb {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility safe-area-mt {
+  margin-top: env(safe-area-inset-top, 0px);
+}
+
+.dark .gantt .bar {
+  fill: #3b82f6;
+}

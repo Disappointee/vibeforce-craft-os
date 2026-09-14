@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <!-- Primary Left 'V' Ribbon Gradient (Royal Blue to Azure) -->
+    <linearGradient id="vf-grad-left" x1="10%" y1="20%" x2="90%" y2="80%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="30%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+
+    <!-- Center Fold Overlap Gradient (Azure to Deep Cobalt) -->
+    <linearGradient id="vf-grad-center" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="45%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+
+    <!-- Right Flow Wave 'F' Gradient (Azure to Bright Cyan) -->
+    <linearGradient id="vf-grad-wave" x1="0%" y1="30%" x2="100%" y2="70%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+
+    <!-- Lower Flow Bar Gradient -->
+    <linearGradient id="vf-grad-lower" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+
+    <!-- Soft Ambient Elevation Shadow -->
+    <filter id="vf-shadow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#1e3a8a" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#vf-shadow)">
+    <!-- 1. Left Wing of 'V' (Sharp Aerodynamic Blade) -->
+    <path d="M148 348 C144 348 140 354 144 360 L292 688 C302 710 324 724 348 724 L408 724 C418 724 424 712 418 702 L308 360 C304 352 296 348 286 348 Z" 
+          fill="url(#vf-grad-left)"/>
+
+    <!-- 2. Main Continuous Center Loop (V into Upward Arch) -->
+    <path d="M292 688 C302 710 324 724 348 724 L408 724 C418 724 424 712 418 702 L524 440 C542 396 584 368 632 368 L876 368 C888 368 894 354 886 344 C878 334 864 328 850 328 L632 328 C568 328 510 366 486 424 L380 676 L348 676 L248 450 Z" 
+          fill="url(#vf-grad-center)"/>
+
+    <!-- 3. Top Horizontal Flow Wave ('F' Upper Bar with Aerodynamic Speed Taper) -->
+    <path d="M520 440 C542 388 592 352 648 352 L880 352 C896 352 908 364 908 380 C908 396 896 408 880 408 L648 408 C620 408 596 426 584 452 L540 550 C528 576 504 594 476 594 L420 594 C408 594 402 580 410 570 L520 440 Z" 
+          fill="url(#vf-grad-wave)"/>
+
+    <!-- 4. Lower Horizontal Flow Bar ('F' Mid Wave Accent) -->
+    <path d="M564 496 L768 496 C782 496 794 508 794 522 C794 536 782 548 768 548 L540 548 C528 548 520 536 526 524 L542 506 C546 500 554 496 564 496 Z" 
+          fill="url(#vf-grad-lower)"/>
+  </g>
+</svg>

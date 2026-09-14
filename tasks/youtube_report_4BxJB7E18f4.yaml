@@ -1,0 +1,120 @@
+metadata:
+  source_video_id: 4BxJB7E18f4
+  analysis_focus: Kernkonzepte, KI-Trends, Software-Entwicklung, Produktivitäts-Workflows,
+    Geschäftsstrategien, technische Innovationen, praxisrelevante Handlungsanweisungen
+  purpose: Universelle LLM-Workflow- und Konzept-Referenz
+core_philosophies_or_insights:
+- concept: Memory-Loop mit Obsidian
+  relevance: 0.9
+  description: 'Obsidian dient als persistentes Gedächtnis für den KI-Workflow. Alle
+    erstellten Inhalte, Case Studies, Tools und Projekte werden gespeichert. Bei jeder
+    neuen Content-Erstellung greifen Hermes und Notebook LM auf dieses Gedächtnis
+    zu, sodass Inhalte personalisiert und nicht generisch sind. Der Loop: neues Wissen
+    rein → neuer Content raus → System wird täglich smarter.'
+- concept: Kostenlose KI-Content-Factory
+  relevance: 0.9
+  description: Durch Kombination von Notebook LM, Hermes, Obsidian und Hyperframes
+    entsteht eine vollständig kostenlose Content-Factory. Einmal eingerichtet, produziert
+    sie automatisch verschiedene Content-Formate aus einer Quelle. Der Workflow spart
+    Zeit und skaliert mit wachsendem Wissen.
+- concept: Hyperframes zur Video-Erstellung und -Bearbeitung
+  relevance: 0.85
+  description: Hyperframes ist ein kostenloses Open-Source-Tool auf GitHub, das in
+    Hermes integriert werden kann. Es ermöglicht die Erstellung und Bearbeitung von
+    Videos sowie das Hinzufügen von Avataren. Zusammen mit Notebook LM und Hermes
+    entsteht eine vollständige Content-Pipeline.
+- concept: Probleme von Notebook LM im Alleingang
+  relevance: 0.8
+  description: 'Notebook LM allein ist mächtig, aber ineffizient: unorganisierte Notebooks,
+    kein Gedächtnis, Tab-Hopping zwischen Tools, Daten bleiben in der Cloud. Die Lösung
+    ist ein System um das Tool herum, nicht ein besseres Tool.'
+workflows_and_procedures:
+- title: Notebook LM + Hermes Integration Workflow
+  steps:
+  - 'Schritt 1: Quellen in Notebook LM ablegen (Website, PDF, Google Doc, Audio).'
+  - 'Schritt 2: Hermes über MCP mit Notebook LM verbinden.'
+  - 'Schritt 3: Hermes anweisen, einen bestimmten Content-Typ zu erstellen (z.B. Podcast,
+    Video).'
+  - 'Schritt 4: Hermes nutzt Hyperframes zur Bearbeitung und fügt ggf. Avatar hinzu.'
+  - 'Schritt 5: Ergebnisse in Obsidian speichern, um Gedächtnis aufzubauen.'
+  - 'Schritt 6: Wiederholen – neues Wissen fließt ein, Agent wird smarter.'
+  guardrails_or_rules:
+  - Nutze Notebook LM als primären Content-Generator aus einer Quelle (PDF, Website,
+    Google Doc, Audio).
+  - Verbinde Hermes über MCP (Model Context Protocol) mit Notebook LM, um direkte
+    Steuerung zu ermöglichen.
+  - Integriere Obsidian als Wissensdatenbank für persistentes Gedächtnis des Agenten.
+  - Verwende Hyperframes (Open-Source) für Video-Erstellung und -Bearbeitung in Hermes.
+  - Setze auf kostenlose Modelle über Nous Portal für Hermes, um Kosten zu vermeiden.
+- title: Memory-Loop mit Obsidian
+  steps:
+  - 'Schritt 1: Richte Obsidian als zentrale Wissensdatenbank ein.'
+  - 'Schritt 2: Verbinde Obsidian mit Hermes (z.B. über Plugin oder API).'
+  - 'Schritt 3: Bei neuer Content-Erstellung zieht Hermes relevante Informationen
+    aus Obsidian.'
+  - 'Schritt 4: Neuer Content wird automatisch in Obsidian gespeichert.'
+  - 'Schritt 5: Wiederhole den Prozess – System wird mit jeder Iteration besser.'
+  guardrails_or_rules:
+  - Speichere alle erstellten Inhalte und Metadaten in Obsidian.
+  - Stelle sicher, dass Hermes und Notebook LM auf Obsidian zugreifen können.
+  - Nutze den Memory-Loop, um Content kontinuierlich zu verbessern.
+  - Vermeide generischen KI-Content durch Nutzung des unternehmenseigenen Gedächtnisses.
+- title: Hyperframes zur Video-Erstellung und -Bearbeitung
+  steps:
+  - 'Schritt 1: Hyperframes von GitHub herunterladen und in Hermes installieren.'
+  - 'Schritt 2: Notebook LM erstellt Video-Rohmaterial (z.B. Skript, Audiospur).'
+  - 'Schritt 3: Hermes ruft Hyperframes auf, um das Video zu schneiden und Avatar
+    hinzuzufügen.'
+  - 'Schritt 4: Fertiges Video in Obsidian speichern und für weitere Nutzung bereitstellen.'
+  guardrails_or_rules:
+  - Installiere Hyperframes von GitHub in Hermes.
+  - Nutze Hyperframes für Video-Schnitt und Avatar-Integration.
+  - Kombiniere mit Notebook LM für automatische Content-Erstellung.
+  - Verwende kostenlose Modelle, um Kosten zu vermeiden.
+- title: 'Kostenlose KI-Content-Factory: Aufbau und Nutzen'
+  steps:
+  - 'Schritt 1: Notebook LM mit Quellen füttern.'
+  - 'Schritt 2: Hermes via MCP mit Notebook LM verbinden.'
+  - 'Schritt 3: Obsidian als Gedächtnis anbinden.'
+  - 'Schritt 4: Hyperframes in Hermes installieren.'
+  - 'Schritt 5: Dashboard von Hermes erstellen lassen.'
+  - 'Schritt 6: Content-Produktion per Sprachbefehl starten.'
+  - 'Schritt 7: Ergebnisse automatisch in Obsidian speichern.'
+  guardrails_or_rules:
+  - 'Nutze ausschließlich kostenlose Tools: Notebook LM, Hermes, Obsidian, Hyperframes.'
+  - Richte das System einmal ein und lasse es dann automatisch laufen.
+  - Verwende den Memory-Loop, um Content-Qualität kontinuierlich zu steigern.
+  - Setze auf ein Dashboard (von Hermes erstellt) zur zentralen Steuerung.
+reusable_skills_or_actions:
+- name: Notebook LM als Content-Generator nutzen
+  trigger: Wenn eine Quelle (PDF, Website, Audio) vorliegt, aus der Content erstellt
+    werden soll.
+  instructions:
+  - Lege die Quelle in Notebook LM ab.
+  - Wähle den gewünschten Content-Typ aus (z.B. Podcast, Video, Infografik).
+  - Starte die Generierung.
+- name: Hermes über MCP mit Notebook LM verbinden
+  trigger: Wenn Notebook LM eingerichtet ist und Hermes als Orchestrator verwendet
+    werden soll.
+  instructions:
+  - Installiere den MCP-Connector in Hermes.
+  - Konfiguriere die Verbindung zu Notebook LM.
+  - Teste die Verbindung mit einem einfachen Befehl.
+- name: Obsidian als Gedächtnis einrichten
+  trigger: Wenn ein persistentes Gedächtnis für den KI-Workflow benötigt wird.
+  instructions:
+  - Erstelle einen Obsidian-Vault.
+  - Installiere ein Plugin oder richte eine API für die Verbindung zu Hermes ein.
+  - Definiere die Ordnerstruktur für Inhalte, Case Studies, Tools und Projekte.
+- name: Hyperframes in Hermes installieren
+  trigger: Wenn Video-Erstellung und -Bearbeitung im Workflow benötigt wird.
+  instructions:
+  - Lade Hyperframes von GitHub herunter.
+  - Integriere es in Hermes gemäß der Dokumentation.
+  - Teste die Funktion mit einem einfachen Video-Skript.
+- name: Dashboard von Hermes erstellen lassen
+  trigger: Wenn eine zentrale Steuerung aller Notebooks und Inhalte gewünscht wird.
+  instructions:
+  - Gib Hermes den Befehl, ein Dashboard zu erstellen.
+  - Definiere die anzuzeigenden Elemente (Notebooks, Content-Typen, Status).
+  - Passe das Dashboard bei Bedarf an.

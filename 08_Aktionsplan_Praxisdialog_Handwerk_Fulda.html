@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aktionsplan: Praxis-Dialog Handwerk & Mittelstand Osthessen — Robin Niklas Lehnebach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #f0f9ff;
+      --primary-border: #bae6fd;
+      --accent-amber: #d97706;
+      --accent-amber-light: #fffbeb;
+      --accent-amber-border: #fde68a;
+      --accent-teal: #0d9488;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --bg-card: #f8fafc;
+      --bg-highlight: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    html, body {
+      width: 210mm;
+      background: #ffffff;
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 8.3pt;
+      line-height: 1.38;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      max-height: 297mm;
+      padding: 12mm 16mm 12mm 16mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      background: #ffffff;
+      page-break-after: always;
+      position: relative;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .letterhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .sender-block {
+      font-size: 7.8pt;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .sender-name {
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .recipient-meta {
+      text-align: right;
+      font-size: 7.8pt;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .doc-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid var(--primary-border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .doc-title-box {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .doc-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12.5pt;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .doc-subtitle {
+      font-size: 8pt;
+      color: #cbd5e1;
+      font-weight: 400;
+    }
+
+    h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 9.6pt;
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2px;
+      margin-top: 7px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    p {
+      margin-bottom: 5px;
+      color: var(--text-secondary);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .card-primary {
+      background: var(--primary-light);
+      border-color: var(--primary-border);
+    }
+
+    .card-amber {
+      background: var(--accent-amber-light);
+      border-color: var(--accent-amber-border);
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 8.3pt;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-title.primary { color: var(--primary-dark); }
+    .card-title.amber { color: var(--accent-amber); }
+
+    .phase-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 7px 0;
+    }
+
+    .phase-card {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: #ffffff;
+      padding: 6px 8px;
+      border-top: 3px solid var(--primary);
+    }
+
+    .phase-number {
+      font-size: 7pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    .phase-head {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 8pt;
+      font-weight: 700;
+      color: var(--text);
+      margin: 2px 0 3px 0;
+    }
+
+    .phase-desc {
+      font-size: 7.1pt;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 7.5pt;
+    }
+
+    th, td {
+      padding: 4px 6px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--bg-highlight);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 7.3pt;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-top: 1px solid var(--border-dark);
+      border-bottom: 1.5px solid var(--border-dark);
+    }
+
+    tr:nth-child(even) td {
+      background: #fafbfc;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 6.7pt;
+      font-weight: 600;
+    }
+
+    .badge-blue { background: #e0f2fe; color: #0369a1; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-purple { background: #f3e8ff; color: #7e22ce; }
+
+    .question-block {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      border-radius: 4px;
+      padding: 5px 8px;
+      margin-bottom: 5px;
+    }
+
+    .q-title {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 7.9pt;
+      margin-bottom: 1px;
+    }
+
+    .q-pitch {
+      font-style: italic;
+      color: var(--primary-dark);
+      font-size: 7.4pt;
+      margin-bottom: 2px;
+    }
+
+    .q-benefit {
+      color: var(--text-secondary);
+      font-size: 7.2pt;
+    }
+
+    .sign-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sign-col {
+      border: 1px dashed var(--border-dark);
+      border-radius: 5px;
+      padding: 6px 8px;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sign-label {
+      font-size: 7pt;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .sign-line {
+      border-bottom: 1px solid var(--text-muted);
+      margin-top: 24px;
+    }
+
+    .sign-name {
+      font-size: 7.5pt;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 3px;
+    }
+
+    .page-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 7pt;
+      color: var(--text-muted);
+    }
+
+    .footer-left {
+      font-weight: 500;
+    }
+
+    .footer-right {
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== SEITE 1 ==================== -->
+  <div class="page">
+    <div>
+      <div class="letterhead">
+        <div class="sender-block">
+          <div class="sender-name">Robin Niklas Lehnebach</div>
+          <div>Tannenweg 47B · 36093 Künzell</div>
+          <div>Kaufmann im E-Commerce (IHK Note 2,3) & Software-Entwickler</div>
+          <div>E-Mail: ***REMOVED***</div>
+        </div>
+        <div class="recipient-meta">
+          <div class="doc-badge">Vorlage Bewährungshilfe Fulda</div>
+          <div><strong>Frau Seidel</strong> · Bewährungshelferin</div>
+          <div>Landgericht / Amtsgericht Fulda</div>
+          <div>Am Schlossgarten 4 · 36037 Fulda</div>
+          <div>Datum: <strong>08. September 2026</strong></div>
+        </div>
+      </div>
+
+      <div class="doc-title-box">
+        <div class="doc-title">📋 Aktionsplan: Regionaler Praxis-Dialog Handwerk & Mittelstand</div>
+        <div class="doc-subtitle">Strukturierte Vor-Ort-Recherche zur Beseitigung kaufmännisch-technischer Software-Kopfschmerzen und proaktiven Festanstellung im 5-km-Nahbereich Künzell / Fulda</div>
+      </div>
+
+      <h2>🎯 1. Strategisches Leitbild: Proaktive Arbeitsmarktintegration („Reverse Consulting“)</h2>
+      <p>Dieser Aktionsplan dokumentiert eine zielstrebige, lückenlos geplante Vorgehensweise zur nachhaltigen Eingliederung in den ersten Arbeitsmarkt. Statt des passiven Abwartens von Vermittlungsvorschlägen ergreift Robin Lehnebach die persönliche Initiative:</p>
+
+      <div class="grid-2">
+        <div class="card card-primary">
+          <div class="card-title primary">💡 Die Methode: Vor-Ort-Praxisdialog statt Kaltakquise</div>
+          <p style="font-size: 7.6pt; line-height: 1.35;">
+            Als IHK-Kaufmann im E-Commerce und Fullstack-Entwickler sucht Robin Lehnebach gezielt Handwerks- und Bauunternehmen im <strong>Nahbereich (Künzell, Fulda, Petersberg, Eichenzell)</strong> persönlich auf. Er führt ein strukturiertes 5-Minuten-Fachinterview zu den größten <strong>IT-Zeitfressern, Schnittstellenbrüchen und Softwarekosten</strong> durch.
+          </p>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title amber">💼 Der doppelte Hebel: Problemlösung & Festanstellung</div>
+          <p style="font-size: 7.6pt; line-height: 1.35;">
+            <strong>Hebel 1 (Primärziel):</strong> Direkte Bewerbung auf Festanstellung als <em>Digitalisierungsbeauftragter, E-Commerce-Manager oder IT-Koordinator</em> beim besuchten Betrieb.<br>
+            <strong>Hebel 2 (Sekundärziel):</strong> Bezahlte Einführung des adaptierten Moduls <em>Vibeforce Craft OS</em> (Kostensenkung um bis zu 70% gegenüber Altsoftware, kein Knebelvertrag).
+          </p>
+        </div>
+      </div>
+
+      <h2>🗺️ 2. Der 4-Phasen-Schritt-für-Schritt-Aktionsplan</h2>
+      <div class="phase-container">
+        <div class="phase-card">
+          <div class="phase-number">Phase 1 · Woche 1</div>
+          <div class="phase-head">Vorbereitung & Setup</div>
+          <div class="phase-desc">
+            • Identifikation von 10 Zielbetrieben im 5-km-Radius<br>
+            • Druck der Fach-Handouts<br>
+            • Bereitstellung der mobilen Live-Demo (Smartphone/Tablet)
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-number">Phase 2 · Woche 2–3</div>
+          <div class="phase-head">Vor-Ort-Erstkontakt</div>
+          <div class="phase-desc">
+            • Persönliche Vorsprache beim Meister / Geschäftsführer<br>
+            • Durchführung des 5-Minuten-Interviewbogens (Schmerzpunkte)<br>
+            • Eintragung in Prüfprotokoll
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-number">Phase 3 · Woche 3–4</div>
+          <div class="phase-head">Modul-Adaption</div>
+          <div class="phase-desc">
+            • Konkrete Behebung der erfassten Zeitfresser im System<br>
+            • Wiedervorlage der maßgeschneiderten Lösung vor Ort<br>
+            • Nachweisbare Kostenvorteile
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-number">Phase 4 · Laufend</div>
+          <div class="phase-head">Arbeitsmarkt-Einstieg</div>
+          <div class="phase-desc">
+            • Angebot Festanstellung / IT-Betreuung / Pilotprojekt<br>
+            • Vertragliche Vereinbarung<br>
+            • Vorlage der Ergebnisse bei Frau Seidel (Bewährungshilfe)
+          </div>
+        </div>
+      </div>
+
+      <h2>⚡ 3. Der 30-Sekunden-Vor-Ort-Einstieg (Elevator Pitch für Handwerksmeister)</h2>
+      <div style="background: #f8fafc; border-left: 3px solid var(--accent-teal); padding: 7px 10px; border-radius: 4px; font-size: 7.7pt; line-height: 1.35; margin-bottom: 6px;">
+        <em>„Guten Tag Herr/Frau [Nachname], mein Name ist Robin Lehnebach aus Künzell. Ich bin gelernter Kaufmann im E-Commerce und Software-Entwickler. Ich führe aktuell bei Handwerksbetrieben hier in unserer Region eine kurze Bedarfsanalyse durch: An welchen Stellen verlieren Sie und Ihre Kolonnen im Alltag zwischen Baustelle, Büro und Großhandel die meiste Zeit, und welche Software-Lizenzkosten ärgern Sie am meisten? Hätten Sie 3 Minuten für vier kurze Praxisfragen?“</em>
+      </div>
+
+      <div class="card" style="background: #ffffff; border: 1px solid var(--border); padding: 6px 10px;">
+        <div style="font-weight: 700; font-size: 7.8pt; color: var(--text); margin-bottom: 2px;">Vorteil für den Betrieb:</div>
+        <div style="font-size: 7.3pt; color: var(--text-secondary);">
+          Der Meister spricht mit einem regionalen Fachmann aus dem Nachbarort, der nicht theoretisiert, sondern zuhört, versteht und eine fertige, DSGVO-konforme Lösung ohne teure Zwischenhändler vorlegt.
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-left">Vibeforce Suite · Aktionsplan Praxisdialog Handwerk Osthessen · Dokument-ID: VF-AKT-2026-09-FULDA</div>
+      <div class="footer-right">Seite 1 von 3</div>
+    </div>
+  </div>
+
+  <!-- ==================== SEITE 2 ==================== -->
+  <div class="page">
+    <div>
+      <div class="letterhead" style="margin-bottom: 8px;">
+        <div class="sender-name">Robin Niklas Lehnebach · Tannenweg 47B · 36093 Künzell</div>
+        <div class="doc-badge">Seite 2: Zielbetriebe & Schmerzpunkt-Analyse</div>
+      </div>
+
+      <h2>🏢 4. Konkrete Unternehmensrecherche: 10 Zielbetriebe im 5–8 km Nahbereich</h2>
+      <p style="font-size: 7.4pt; margin-bottom: 4px;">
+        Folgende Betriebe wurden im direkten Umfeld von Robin Lehnebachs Wohnort recherchiert. Alle Unternehmen weisen akuten Digitalisierungs- und Schnittstellenbedarf auf:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 26%;">Unternehmen & Anschrift</th>
+            <th style="width: 14%;">Team & Gewerk</th>
+            <th style="width: 18%;">Ansprechpartner</th>
+            <th style="width: 27%;">IT-Kopfschmerz / Software-Falle</th>
+            <th style="width: 15%;">Arbeitsmarkt-Chance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Müller + Bug GmbH</strong><br>Philipp-Reis-Str. 9-11, Künzell (ca. 4 km)</td>
+            <td>ca. 30 MA<br><span class="badge-tag badge-blue">Dachdeckerei</span></td>
+            <td>GF Jürgen Bug<br><em>(Innungsobermeister)</em></td>
+            <td><strong>Zettelwirtschaft Dach:</strong> Handschriftliche Dachaufmaße; hohe Lizenzkosten für Altsoftware.</td>
+            <td><span class="badge-tag badge-green">Hohe Priorität</span><br>Multiplikator-Funktion</td>
+          </tr>
+          <tr>
+            <td><strong>Hartmann & Schäfer GmbH</strong><br>Am Ziegelberg 9a, Petersberg (ca. 3 km)</td>
+            <td>ca. 20 MA<br><span class="badge-tag badge-amber">SHK / Bäder</span></td>
+            <td>GF Martin Schäfer</td>
+            <td><strong>Großhandel & Regie:</strong> Häufige R+F Bestellungen; Abgleich Bautagesbericht vs. Materialschein.</td>
+            <td><span class="badge-tag badge-green">Sehr gut</span><br>Büro-/IT-Entlastung</td>
+          </tr>
+          <tr>
+            <td><strong>Kerbl GmbH & Co. KG</strong><br>Kreuzgrundweg 3, Petersberg (ca. 3 km)</td>
+            <td>ca. 230 MA<br><span class="badge-tag badge-blue">TGA Komplett</span></td>
+            <td>GF Gerd & Karin Röder</td>
+            <td><strong>Kolonnen-Management:</strong> GAEB-Vergaben (.d83/.x83), VOB-Aufmaße für Großbaustellen.</td>
+            <td><span class="badge-tag badge-purple">Konzern-Einstieg</span><br>IT-Abteilung / ERP</td>
+          </tr>
+          <tr>
+            <td><strong>Ettenberger GmbH & Co. KG</strong><br>In den Gründen 18, Künzell (ca. 4 km)</td>
+            <td>ca. 35 MA<br><span class="badge-tag badge-amber">Heizung / Klima</span></td>
+            <td>GF P. Müller / S. Fuchs</td>
+            <td><strong>Deckungsbeitrag I/II:</strong> Unklare Margen bei Projekten; Pflicht zu ZUGFeRD E-Rechnung.</td>
+            <td><span class="badge-tag badge-green">Sehr gut</span><br>Kaufm. Assistenz</td>
+          </tr>
+          <tr>
+            <td><strong>Sauer Elektrotechnik GmbH</strong><br>Florastr. 36, Künzell (ca. 4 km)</td>
+            <td>ca. 15 MA<br><span class="badge-tag badge-blue">Elektro / PV</span></td>
+            <td>Geschäftsleitung</td>
+            <td><strong>PV-Baudokumentation:</strong> Stempeluhr-Nachweise & Inbetriebnahmeprotokolle für Einspeisung.</td>
+            <td><span class="badge-tag badge-green">Guter Fit</span><br>Projekt- & Web-Betreuung</td>
+          </tr>
+          <tr>
+            <td><strong>Bauunternehmen Wingenfeld</strong><br>Ignaz-Komp-Str. 12, Fulda (ca. 3 km)</td>
+            <td>ca. 22 MA<br><span class="badge-tag badge-amber">Hoch- & Rohbau</span></td>
+            <td>Geschäftsleitung</td>
+            <td><strong>VOB-Doppelzählung:</strong> Poliere schreiben separate Berichte; VOB/B § 2 Abs. 10 Nachkalkulation.</td>
+            <td><span class="badge-tag badge-green">Guter Fit</span><br>Bauleitungs-Support</td>
+          </tr>
+          <tr>
+            <td><strong>Ulrich GmbH (Ulrich Bau)</strong><br>Pacelliallee 53, Fulda (ca. 2 km)</td>
+            <td>ca. 100 MA<br><span class="badge-tag badge-blue">Schlüsselfertig</span></td>
+            <td>GF M. & A. Wißler</td>
+            <td><strong>Behörden-Vergaben:</strong> Zwingende Leitweg-ID (BT-10) für Bauamt Fulda / Hessen; GAEB 90/XML.</td>
+            <td><span class="badge-tag badge-purple">Top-Arbeitgeber</span><br>Stammdaten & IT</td>
+          </tr>
+          <tr>
+            <td><strong>Backes + Scholz Elektrotechnik</strong><br>Alte Ziegelei 12, Petersberg (ca. 3 km)</td>
+            <td>ca. 20 MA<br><span class="badge-tag badge-blue">Industrie-Elektrik</span></td>
+            <td>Inhaber / Meister</td>
+            <td><strong>Großhandelskataloge:</strong> DATANORM-Kataloge von Sonepar/Rexel fehlerhaft eingelesen.</td>
+            <td><span class="badge-tag badge-green">Guter Fit</span><br>E-Commerce / Daten</td>
+          </tr>
+          <tr>
+            <td><strong>Dachdeckerei Gruß</strong><br>Turmstraße 14, Eichenzell (ca. 8 km)</td>
+            <td>ca. 17 MA<br><span class="badge-tag badge-amber">Bedachungen</span></td>
+            <td>Inh. Holger Gruß</td>
+            <td><strong>Büro-Überlastung:</strong> Chef sitzt sonntags an 17 Stundenzetteln; sucht einfache Cloud-Lösung.</td>
+            <td><span class="badge-tag badge-green">Sehr gut</span><br>IT-Betreuung & Digital</td>
+          </tr>
+          <tr>
+            <td><strong>WEMAG GmbH & Co. KG</strong><br>Industriepark Rhön, Fulda (ca. 4,5 km)</td>
+            <td>ca. 150 MA<br><span class="badge-tag badge-purple">Fachgroßhandel</span></td>
+            <td>E-Commerce / Leitung</td>
+            <td><strong>B2B-Schnittstellen:</strong> IDS-Connect Punchout für regionale Handwerker fehleranfällig.</td>
+            <td><span class="badge-tag badge-purple">Ideal für IHK</span><br>E-Commerce Manager</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>🔧 5. Schmerzpunkt-Beseitigung & Modul-Anpassung (Phase 3 im Detail)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title primary">📉 Beseitigung der Lizenzkostenfalle</div>
+          <p style="font-size: 7.3pt; line-height: 1.35;">
+            Altsoftware wie Streit V.1 oder pds kostet oft 300–600 € monatlich zzgl. teurer Serverwartung vor Ort. Vibeforce Craft OS läuft als moderne Web-App auf bestehenden Smartphones/Tablets ohne Serveranschaffung – <strong>Ersparnis: Bis zu 4.000 €/Jahr für den Handwerksbetrieb</strong>.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title amber">⚖️ Revisionssichere VOB- & Baurecht-Compliance</div>
+          <p style="font-size: 7.3pt; line-height: 1.35;">
+            Handschriftliche Zettel führen vor Gericht bei Baumängeln regelmäßig zu Totalverlusten. Craft OS sichert Bautagesberichte mit SHA-256 Hash-Signaturen, Wetterdaten und DIN 18299 Aufmaßen ab – <strong>sofortiger Schutz vor Abrechnungskürzungen</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-left">Vibeforce Suite · Aktionsplan Praxisdialog Handwerk Osthessen · Dokument-ID: VF-AKT-2026-09-FULDA</div>
+      <div class="footer-right">Seite 2 von 3</div>
+    </div>
+  </div>
+
+  <!-- ==================== SEITE 3 ==================== -->
+  <div class="page">
+    <div>
+      <div class="letterhead" style="margin-bottom: 8px;">
+        <div class="sender-name">Robin Niklas Lehnebach · Tannenweg 47B · 36093 Künzell</div>
+        <div class="doc-badge">Seite 3: Interviewleitfaden & Nachweisprotokoll</div>
+      </div>
+
+      <h2>🎤 6. Der Vor-Ort-Interviewleitfaden (Die 5 Handwerker-Kopfschmerz-Fragen)</h2>
+
+      <div class="question-block">
+        <div class="q-title">Frage 1: Software-Stack & Büro-Belastung</div>
+        <div class="q-pitch">„Welches Programm nutzen Sie im Büro (Streit, pds, KWP, WinWorker oder Excel)? Wie zufrieden sind Sie mit den monatlichen Kosten und der Geschwindigkeit?“</div>
+        <div class="q-benefit">→ <strong>Erkenntnis:</strong> Identifiziert Unzufriedenheit über monatliche Gebühren und starre Client-Server-Systeme.</div>
+      </div>
+
+      <div class="question-block">
+        <div class="q-title">Frage 2: Zeiterfassung & Monteurs-Zettelwirtschaft</div>
+        <div class="q-pitch">„Wie erfassen Ihre Monteure draußen die Arbeitszeit? Gibt es noch handschriftliche Zettel, die freitags mühsam abgetippt werden müssen?“</div>
+        <div class="q-benefit">→ <strong>Erkenntnis:</strong> Erkennt den drängendsten Zeitfresser; Überleitung zur Live-Vorführung der mobilen Stempeluhr.</div>
+      </div>
+
+      <div class="question-block">
+        <div class="q-title">Frage 3: DIN 18299 Aufmaße & VOB/B § 6 Behinderungen</div>
+        <div class="q-pitch">„Ist es schon vorgekommen, dass Regiestunden vom Auftraggeber gekürzt wurden, weil Bautagesberichte nicht rechtzeitig unterschrieben waren?“</div>
+        <div class="q-benefit">→ <strong>Erkenntnis:</strong> Beweist Robins Fachwissen bezüglich VOB-Baurecht und revisionssicherer Dokumentation.</div>
+      </div>
+
+      <div class="question-block">
+        <div class="q-title">Frage 4: Großhandels-Schnittstellen (IDS-Connect 2.5)</div>
+        <div class="q-pitch">„Wie bestellen Sie bei Richter+Frenzel oder Sonepar? Fließt der Warenkorb automatisch in Ihr Angebot zurück, oder tippen Sie Positionen ab?“</div>
+        <div class="q-benefit">→ <strong>Erkenntnis:</strong> Nachweis der IHK-Qualifikation als Kaufmann im E-Commerce (Schnittstellen & Datenverarbeitung).</div>
+      </div>
+
+      <div class="question-block">
+        <div class="q-title">Frage 5: E-Rechnung 2025/2026 (ZUGFeRD & Leitweg-ID)</div>
+        <div class="q-pitch">„Stellen Sie Rechnungen an öffentliche Kunden (Stadt Fulda, Schulen)? Ist Ihre Software schon für ZUGFeRD / BT-10 gerüstet?“</div>
+        <div class="q-benefit">→ <strong>Erkenntnis:</strong> Adressiert akuten gesetzlichen Handlungsdruck; Robin positioniert sich als rettender IT-Experte.</div>
+      </div>
+
+      <h2>📊 7. Kontroll- & Nachweisprotokoll zur Vorlage bei der Bewährungshilfe</h2>
+      <p style="font-size: 7.2pt; margin-bottom: 3px;">
+        Dieses Protokoll wird bei jedem Betriebstermin fortlaufend ausgefüllt und Frau Seidel beim monatlichen Meldetermin vorgelegt:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 12%;">Datum</th>
+            <th style="width: 25%;">Betrieb & Anschrift</th>
+            <th style="width: 18%;">Gesprächspartner</th>
+            <th style="width: 25%;">Erfasster Haupt-Zeitfresser</th>
+            <th style="width: 20%;">Arbeitsmarkt-Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><em>09.09.2026</em></td>
+            <td>Müller + Bug GmbH (Künzell)</td>
+            <td>GF Jürgen Bug</td>
+            <td>Papierzettel auf dem Dach; teure Lizenz</td>
+            <td><span class="badge-tag badge-green">Wiedervorlage Demo</span></td>
+          </tr>
+          <tr>
+            <td><em>11.09.2026</em></td>
+            <td>Hartmann & Schäfer (Petersberg)</td>
+            <td>GF Martin Schäfer</td>
+            <td>Richter+Frenzel IDS; Bautagesberichte</td>
+            <td><span class="badge-tag badge-green">Vorstellung Aufmaß</span></td>
+          </tr>
+          <tr>
+            <td><em>14.09.2026</em></td>
+            <td>Ettenberger GmbH (Künzell)</td>
+            <td>GF P. Müller / S. Fuchs</td>
+            <td>Margenkontrolle DB I/II; ZUGFeRD</td>
+            <td><span class="badge-tag badge-blue">Option kaufm. Assistenz</span></td>
+          </tr>
+          <tr>
+            <td><em>16.09.2026</em></td>
+            <td>Sauer Elektrotechnik (Künzell)</td>
+            <td>Geschäftsleitung</td>
+            <td>Monteurs-Stempelzeiten; PV-Doku</td>
+            <td><span class="badge-tag badge-green">Demo Stempeluhr</span></td>
+          </tr>
+          <tr>
+            <td><em>18.09.2026</em></td>
+            <td>WEMAG GmbH & Co. KG (Fulda)</td>
+            <td>Leitung E-Commerce</td>
+            <td>Handwerker-Punchout Schnittstellen</td>
+            <td><span class="badge-tag badge-purple">Bewerbung E-Commerce</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>✍️ 8. Verbindliche Erklärung & Prüfbestätigung</h2>
+      <div class="sign-box">
+        <div class="sign-col">
+          <div class="sign-label">Eigeninitiative & Durchführung (Kandidat)</div>
+          <div class="sign-line"></div>
+          <div class="sign-name">Robin Niklas Lehnebach (Künzell)</div>
+        </div>
+        <div class="sign-col">
+          <div class="sign-label">Kenntnisnahme & Prüfvermerk (Bewährungshilfe)</div>
+          <div class="sign-line"></div>
+          <div class="sign-name">Frau Seidel · Bewährungshilfe Fulda</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-left">Vibeforce Suite · Aktionsplan Praxisdialog Handwerk Osthessen · Dokument-ID: VF-AKT-2026-09-FULDA</div>
+      <div class="footer-right">Seite 3 von 3</div>
+    </div>
+  </div>
+
+</body>
+</html>

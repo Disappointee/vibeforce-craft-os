@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/z-ai/glm-5.3-flash",
+  "small_model": "openrouter/z-ai/glm-5.3-flash",
+  "default_agent": "general",
+  "agent": {
+    "general": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "General-purpose agent powered by GLM 5.3 Flash (1.31M Context, 131k max out)"
+    },
+    "orchestrator": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "Lead orchestrator coordinating Module M007 execution"
+    },
+    "code": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "Code implementation and refactoring specialist"
+    },
+    "plan": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "Architecture and phase breakdown"
+    },
+    "debug": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "Diagnostics and test validation"
+    },
+    "explore": {
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "description": "Codebase search and analysis"
+    }
+  }
+}
