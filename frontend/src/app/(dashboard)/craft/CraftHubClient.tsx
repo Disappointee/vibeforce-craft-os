@@ -80,6 +80,31 @@ export function CraftHubClient({
 }: CraftHubClientProps) {
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<CraftTab>('reports');
+  const isSiteTab = (tab: CraftTab) => ['reports', 'measurements', 'geofence', 'pinning'].includes(tab);
+  const isCommercialTab = (tab: CraftTab) => ['invoices', 'margin', 'gaeb', 'wholesale'].includes(tab);
+
+  const [activeCluster, setActiveCluster] = useState<'site' | 'commercial'>(() =>
+    ['invoices', 'margin', 'gaeb', 'wholesale'].includes(activeTab) ? 'commercial' : 'site'
+  );
+
+  // Sync cluster if activeTab changes externally (e.g. from IDS redirect or URL params)
+  useEffect(() => {
+    if (isCommercialTab(activeTab)) {
+      setActiveCluster('commercial');
+    } else if (isSiteTab(activeTab)) {
+      setActiveCluster('site');
+    }
+  }, [activeTab]);
+
+  const handleClusterSwitch = (newCluster: 'site' | 'commercial') => {
+    setActiveCluster(newCluster);
+    if (newCluster === 'site' && !isSiteTab(activeTab)) {
+      setActiveTab('reports');
+    } else if (newCluster === 'commercial' && !isCommercialTab(activeTab)) {
+      setActiveTab('invoices');
+    }
+  };
+
   // IDS-Connect 2.5 Return-Flow: vom Webhook persistierter Warenkorb
   const [idsHookCart, setIdsHookCart] = useState<IdsCart | null>(null);
   const idsHookParamsHandled = useRef(false);
@@ -421,34 +446,34 @@ export function CraftHubClient({
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto pb-28 md:pb-8">
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto pb-28 md:pb-8 w-full min-w-0 overflow-x-hidden">
       {/* SOBER FUNCTIONAL HEADER */}
-      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <span>M007 • VIBE CRAFT</span>
               <span>•</span>
-              <span>VOB/B & VOB/C</span>
+              <span>VOB/B &amp; VOB/C</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Handwerk & Baustellen
+              Handwerk &amp; Baustellen
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1">
               Bautagesberichte, VOB-Aufmaß, Geofencing und ZUGFeRD 2.1.1 E-Rechnungen.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-start sm:justify-end">
+          <div className="flex items-center gap-2 flex-wrap justify-start 2xl:justify-end shrink-0">
             <Button
               id="craft-license-btn"
               variant="outline"
               onClick={() => setIsLicenseModalOpen(true)}
               className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3 flex items-center gap-1.5 shrink-0"
             >
-              <Sliders size={13} className="text-amber-500" />
-              <span className="hidden md:inline">Module &amp; Lizenzen</span>
-              <span className="md:hidden">Lizenzen</span>
+              <Sliders size={13} className="text-amber-500 shrink-0" />
+              <span className="hidden sm:inline">Module &amp; Lizenzen</span>
+              <span className="sm:hidden">Lizenzen</span>
               <Badge variant="secondary" className="text-[10px] font-mono uppercase py-0 px-1.5 ml-0.5">
                 {activeTier}
               </Badge>
@@ -459,24 +484,24 @@ export function CraftHubClient({
               onClick={handleDownloadDatevCsv}
               className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3 shrink-0 flex items-center gap-1.5"
             >
-              <Download size={13} className="text-amber-500" />
+              <Download size={13} className="text-amber-500 shrink-0" />
               <span>DATEV</span>
             </Button>
             <Button
               id="craft-create-report-btn"
               variant="outline"
               onClick={() => setIsCreateModalOpen(true)}
-              className="border-amber-500/40 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs h-9 px-3.5 shadow-sm shrink-0 flex items-center gap-1.5"
+              className="border-amber-500/40 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs h-9 px-3.5 shadow-sm shrink-0 flex items-center gap-1.5 whitespace-nowrap"
             >
-              <Plus size={14} className="text-amber-500" />
+              <Plus size={14} className="text-amber-500 shrink-0" />
               <span>Bericht erfassen</span>
             </Button>
             <Button
               id="craft-create-baustelle-btn"
               onClick={() => setIsBaustelleModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm flex items-center gap-1.5 shrink-0"
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-4 shadow-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap"
             >
-              <Hammer size={14} />
+              <Hammer size={14} className="shrink-0" />
               <span>Baustelle anlegen</span>
             </Button>
           </div>
@@ -484,273 +509,456 @@ export function CraftHubClient({
 
         {/* 4 Clean Sober KPIs with OpenDesign Card Posture */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t border-border/60">
-          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
-            <div className="text-xs font-medium text-muted-foreground">Aktive Baustellen</div>
-            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm min-w-0">
+            <div className="text-xs font-medium text-muted-foreground truncate">Aktive Baustellen</div>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums truncate">
               {activeProjectsCount}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              {geofencedProjectsCount} mit GPS-Radius
+            <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span className="truncate">{geofencedProjectsCount} mit GPS-Radius</span>
             </div>
           </div>
-          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
-            <div className="text-xs font-medium text-muted-foreground">Bautagesberichte</div>
-            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm min-w-0">
+            <div className="text-xs font-medium text-muted-foreground truncate">Bautagesberichte</div>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums truncate">
               {reports.length}
             </div>
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
-              <CheckCircle2 size={11} />
-              {signedReportsCount} rechtssicher signiert
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1 truncate">
+              <CheckCircle2 size={11} className="shrink-0" />
+              <span className="truncate">{signedReportsCount} rechtssicher signiert</span>
             </div>
           </div>
-          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
-            <div className="text-xs font-medium text-muted-foreground">VOB-Aufmaß Netto</div>
-            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm min-w-0">
+            <div className="text-xs font-medium text-muted-foreground truncate">VOB-Aufmaß Netto</div>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums truncate">
               {measurementNetTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
+            <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
               {measurementItems.length} erfasste Positionen
             </div>
           </div>
-          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm">
-            <div className="text-xs font-medium text-muted-foreground">E-Rechnungen</div>
-            <div className="text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums">
+          <div className="p-3.5 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm min-w-0">
+            <div className="text-xs font-medium text-muted-foreground truncate">E-Rechnungen</div>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-foreground mt-1 tabular-nums truncate">
               {totalInvoicedGross.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
+            <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
               ZUGFeRD 2.1.1 &amp; § 13b
             </div>
           </div>
         </div>
       </div>
 
-      {/* RESPONSIVE STRUCTURED CRAFT HUB TABS (ZERO HORIZONTAL SCROLL) */}
-      <div className="w-full">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5">
+      {/* 2-CLUSTER ARBEITSBEREICH NAVIGATION (OPTION A — ZERO HORIZONTAL SCROLL) */}
+      <div className="w-full space-y-3">
+        {/* Cluster Selector Tabs */}
+        <div className="grid grid-cols-2 gap-2 p-1.5 bg-card/60 backdrop-blur-sm rounded-2xl border border-border">
           <button
-            id="craft-tab-reports-btn"
-            onClick={() => setActiveTab('reports')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'reports'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
+            id="craft-cluster-site-btn"
+            type="button"
+            onClick={() => handleClusterSwitch('site')}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeCluster === 'site'
+                ? 'bg-amber-500 text-black shadow-sm font-bold'
+                : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <FileText size={15} className="shrink-0" />
-              <span className="truncate">Bautagesberichte</span>
-            </div>
-            {!isReportsEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'reports' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {reports.length}
-              </span>
-            )}
+            <Hammer size={16} className={activeCluster === 'site' ? 'text-black' : 'text-amber-500'} />
+            <span className="hidden sm:inline truncate">Baustelle &amp; Doku</span>
+            <span className="sm:hidden truncate">Baustelle</span>
+            <Badge
+              variant="secondary"
+              className={`hidden lg:inline-flex text-[10px] font-mono py-0 px-1.5 ${
+                activeCluster === 'site' ? 'bg-black/20 text-black font-semibold' : ''
+              }`}
+            >
+              4 Module
+            </Badge>
           </button>
 
           <button
-            id="craft-tab-measurements-btn"
-            onClick={() => setActiveTab('measurements')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'measurements'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
+            id="craft-cluster-commercial-btn"
+            type="button"
+            onClick={() => handleClusterSwitch('commercial')}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeCluster === 'commercial'
+                ? 'bg-amber-500 text-black shadow-sm font-bold'
+                : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <FileSpreadsheet size={15} className="shrink-0" />
-              <span className="truncate">VOB-Aufmaß</span>
-            </div>
-            {!isMeasurementsEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'measurements' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                DIN
-              </span>
-            )}
+            <TrendingUp size={16} className={activeCluster === 'commercial' ? 'text-black' : 'text-amber-500'} />
+            <span className="hidden sm:inline truncate">Kaufmännisch &amp; Abrechnung</span>
+            <span className="sm:hidden truncate">Kaufmännisch</span>
+            <Badge
+              variant="secondary"
+              className={`hidden lg:inline-flex text-[10px] font-mono py-0 px-1.5 ${
+                activeCluster === 'commercial' ? 'bg-black/20 text-black font-semibold' : ''
+              }`}
+            >
+              4 Module
+            </Badge>
           </button>
+        </div>
 
-          <button
-            id="craft-tab-geofence-btn"
-            onClick={() => setActiveTab('geofence')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'geofence'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <MapPin size={15} className="shrink-0" />
-              <span className="truncate">GPS-Geofencing</span>
-            </div>
-            {!isGeofenceEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'geofence' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+        {/* Active Cluster Sub-Tabs (4 Large Touch-Ergonomic Action Cards) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
+          {activeCluster === 'site' ? (
+            <>
+              <button
+                id="craft-tab-reports-btn"
+                onClick={() => setActiveTab('reports')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'reports'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                {geofencedProjectsCount}
-              </span>
-            )}
-          </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">Bautagesberichte</span>
+                  <span className="xl:hidden truncate">Berichte</span>
+                </div>
+                {!isReportsEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'reports' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {reports.length}
+                  </span>
+                )}
+              </button>
 
-          <button
-            id="craft-tab-invoices-btn"
-            onClick={() => setActiveTab('invoices')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'invoices'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <Receipt size={15} className="shrink-0" />
-              <span className="truncate">Rechnungen & DATEV</span>
-            </div>
-            {!isInvoicesEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'invoices' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+              <button
+                id="craft-tab-measurements-btn"
+                onClick={() => setActiveTab('measurements')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'measurements'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                eRechnung
-              </span>
-            )}
-          </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileSpreadsheet size={15} className="shrink-0" />
+                  <span className="truncate">VOB-Aufmaß</span>
+                </div>
+                {!isMeasurementsEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'measurements' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    DIN
+                  </span>
+                )}
+              </button>
 
-          <button
-            id="craft-tab-gaeb-btn"
-            onClick={() => setActiveTab('gaeb')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'gaeb'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <FileCode size={15} className="shrink-0" />
-              <span className="truncate">GAEB / LV (X83/X84)</span>
-            </div>
-            {!isGaebEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'gaeb' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+              <button
+                id="craft-tab-geofence-btn"
+                onClick={() => setActiveTab('geofence')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'geofence'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                XML
-              </span>
-            )}
-          </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">GPS-Geofencing</span>
+                  <span className="xl:hidden truncate">Geofencing</span>
+                </div>
+                {!isGeofenceEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'geofence' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {geofencedProjectsCount}
+                  </span>
+                )}
+              </button>
 
-          <button
-            id="craft-tab-margin-btn"
-            onClick={() => setActiveTab('margin')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'margin'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <TrendingUp size={15} className="shrink-0" />
-              <span className="truncate">Nachkalkulation & Margen</span>
-            </div>
-            {!isMarginEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'margin' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+              <button
+                id="craft-tab-pinning-btn"
+                onClick={() => setActiveTab('pinning')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'pinning'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                DB II
-              </span>
-            )}
-          </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Layers size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">Plan-Pinning &amp; Mängel</span>
+                  <span className="xl:hidden truncate">Pläne &amp; Mängel</span>
+                </div>
+                {!isPinningEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'pinning' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    VOB/B
+                  </span>
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                id="craft-tab-invoices-btn"
+                onClick={() => setActiveTab('invoices')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'invoices'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Receipt size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">Rechnungen &amp; DATEV</span>
+                  <span className="xl:hidden truncate">Rechnungen</span>
+                </div>
+                {!isInvoicesEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'invoices' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    eRechnung
+                  </span>
+                )}
+              </button>
 
-          <button
-            id="craft-tab-wholesale-btn"
-            onClick={() => setActiveTab('wholesale')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'wholesale'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <ShoppingBag size={15} className="shrink-0" />
-              <span className="truncate">Großhandel & DATANORM</span>
-            </div>
-            {!isWholesaleEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'wholesale' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+              <button
+                id="craft-tab-margin-btn"
+                onClick={() => setActiveTab('margin')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'margin'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                IDS 2.5
-              </span>
-            )}
-          </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <TrendingUp size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">Nachkalkulation &amp; Margen</span>
+                  <span className="xl:hidden truncate">Kalkulation</span>
+                </div>
+                {!isMarginEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'margin' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    DB II
+                  </span>
+                )}
+              </button>
 
-          <button
-            id="craft-tab-pinning-btn"
-            onClick={() => setActiveTab('pinning')}
-            className={`w-full min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs active:scale-[0.99] ${
-              activeTab === 'pinning'
-                ? 'bg-amber-500 text-black shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <Layers size={15} className="shrink-0" />
-              <span className="truncate">Plan-Pinning & Mängel</span>
-            </div>
-            {!isPinningEnabled ? (
-              <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                <Lock size={10} /> Add-on
-              </span>
-            ) : (
-              <span
-                className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === 'pinning' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+              <button
+                id="craft-tab-gaeb-btn"
+                onClick={() => setActiveTab('gaeb')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'gaeb'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
                 }`}
               >
-                VOB/B
-              </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileCode size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">GAEB / LV (X83/X84)</span>
+                  <span className="xl:hidden truncate">GAEB / LV</span>
+                </div>
+                {!isGaebEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'gaeb' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    XML
+                  </span>
+                )}
+              </button>
+
+              <button
+                id="craft-tab-wholesale-btn"
+                onClick={() => setActiveTab('wholesale')}
+                className={`w-full min-h-[46px] px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shadow-xs cursor-pointer active:scale-[0.99] ${
+                  activeTab === 'wholesale'
+                    ? 'bg-amber-500 text-black shadow-sm'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-amber-500/30'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <ShoppingBag size={15} className="shrink-0" />
+                  <span className="hidden xl:inline truncate">Großhandel &amp; DATANORM</span>
+                  <span className="xl:hidden truncate">Großhandel</span>
+                </div>
+                {!isWholesaleEnabled ? (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                    <Lock size={10} /> Add-on
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                      activeTab === 'wholesale' ? 'bg-black/20 text-black font-semibold' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    IDS 2.5
+                  </span>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Secondary Cluster Quick Switch Bar (Always accessible, zero overflow) */}
+        <div className="flex items-center gap-2 px-1 pt-0.5 flex-wrap text-xs text-muted-foreground">
+          <span className="text-[11px] font-medium text-muted-foreground shrink-0">
+            {activeCluster === 'site' ? 'Kaufmännische Module:' : 'Baustellen-Module:'}
+          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {activeCluster === 'site' ? (
+              <>
+                <button
+                  id="craft-tab-invoices-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('commercial'); setActiveTab('invoices'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'invoices'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <Receipt size={12} className={activeTab === 'invoices' ? 'text-black' : 'text-amber-500'} />
+                  <span>Rechnungen &amp; DATEV</span>
+                </button>
+                <button
+                  id="craft-tab-margin-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('commercial'); setActiveTab('margin'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'margin'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <TrendingUp size={12} className={activeTab === 'margin' ? 'text-black' : 'text-amber-500'} />
+                  <span>Nachkalkulation</span>
+                </button>
+                <button
+                  id="craft-tab-gaeb-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('commercial'); setActiveTab('gaeb'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'gaeb'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <FileCode size={12} className={activeTab === 'gaeb' ? 'text-black' : 'text-amber-500'} />
+                  <span>GAEB / LV</span>
+                </button>
+                <button
+                  id="craft-tab-wholesale-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('commercial'); setActiveTab('wholesale'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'wholesale'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <ShoppingBag size={12} className={activeTab === 'wholesale' ? 'text-black' : 'text-amber-500'} />
+                  <span>Großhandel &amp; IDS</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  id="craft-tab-reports-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('site'); setActiveTab('reports'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'reports'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <FileText size={12} className={activeTab === 'reports' ? 'text-black' : 'text-amber-500'} />
+                  <span>Bautagesberichte</span>
+                </button>
+                <button
+                  id="craft-tab-measurements-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('site'); setActiveTab('measurements'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'measurements'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <FileSpreadsheet size={12} className={activeTab === 'measurements' ? 'text-black' : 'text-amber-500'} />
+                  <span>VOB-Aufmaß</span>
+                </button>
+                <button
+                  id="craft-tab-geofence-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('site'); setActiveTab('geofence'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'geofence'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <MapPin size={12} className={activeTab === 'geofence' ? 'text-black' : 'text-amber-500'} />
+                  <span>GPS-Geofencing</span>
+                </button>
+                <button
+                  id="craft-tab-pinning-btn-sec"
+                  type="button"
+                  onClick={() => { setActiveCluster('site'); setActiveTab('pinning'); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'pinning'
+                      ? 'bg-amber-500 text-black border-amber-500 font-bold'
+                      : 'bg-card border-border hover:border-amber-500/50 hover:text-foreground text-muted-foreground'
+                  }`}
+                >
+                  <Layers size={12} className={activeTab === 'pinning' ? 'text-black' : 'text-amber-500'} />
+                  <span>Plan-Pinning</span>
+                </button>
+              </>
             )}
-          </button>
+          </div>
         </div>
       </div>
 
