@@ -174,6 +174,30 @@ export function PlanPinningManager({
     }
   }, [defects, projectKey]);
 
+  // Load from local storage when projectKey changes or when an external defect is created
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`vibe_defects_${projectKey}`);
+      if (saved) {
+        try {
+          setDefects(JSON.parse(saved));
+        } catch {}
+      }
+    }
+    const handleSync = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem(`vibe_defects_${projectKey}`);
+        if (saved) {
+          try {
+            setDefects(JSON.parse(saved));
+          } catch {}
+        }
+      }
+    };
+    window.addEventListener('vibe_defect_created', handleSync);
+    return () => window.removeEventListener('vibe_defect_created', handleSync);
+  }, [projectKey]);
+
   // KPIs
   const totalOpen = useMemo(
     () => defects.filter((d) => d.status !== 'accepted').length,

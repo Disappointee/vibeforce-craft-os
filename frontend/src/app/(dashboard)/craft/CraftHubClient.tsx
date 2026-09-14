@@ -18,6 +18,7 @@ import {
   Download,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   FileCode,
   TrendingUp,
   ShoppingBag,
@@ -1657,6 +1658,19 @@ export function CraftHubClient({
       {/* TAB 8: 2D-PLAN-PINNING & VOB/B § 13 MÄNGELMANAGEMENT */}
       {activeTab === 'pinning' && (
         <div className="space-y-5 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Hier verwalten Sie Mängel direkt auf dem 2D-Bauplan. Für die Gesamtschau aller Mängel und formelle Mängelrügen nutzen Sie die Mängel-Zentrale.</span>
+            </span>
+            <Link
+              href="/craft/defects"
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-bold shrink-0 transition-colors inline-flex items-center gap-1 shadow-xs"
+            >
+              <span>Zur Mängel-Zentrale</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
           {!isPinningEnabled ? (
             <CraftFeatureUpsell
               featureId="pinning"

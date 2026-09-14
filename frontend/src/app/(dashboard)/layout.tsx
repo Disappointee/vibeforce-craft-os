@@ -408,10 +408,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className={`flex-1 space-y-1 overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             {craftMode ? (
               <>
-                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft' || pathname.startsWith('/craft/')} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} collapsed={sidebarCollapsed} />
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} collapsed={sidebarCollapsed} />
-                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname === '/tasks'} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
                 <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} collapsed={sidebarCollapsed} />
                 <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} collapsed={sidebarCollapsed} />
                 {user?.role === 'admin' && (
@@ -486,10 +486,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {craftMode ? (
               <>
-                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft' || pathname.startsWith('/craft/')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Bauvorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/clients" icon={<Building2 size={18} />} label="Bauherren & Auftraggeber (§ 13b & § 48b)" active={pathname.startsWith('/clients')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/tasks" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname === '/tasks'} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & Baustellen-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname === '/time'} onClick={() => setMobileSidebarOpen(false)} />
                 <NavItem href="/team" icon={<Users size={18} />} label="Monteure & Personal" active={pathname === '/team'} onClick={() => setMobileSidebarOpen(false)} />
                 {user?.role === 'admin' && (
