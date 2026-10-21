@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, Hammer, ArrowRight } from 'lucide-react';
+import { Loader2, Hammer, ArrowRight, Sparkles } from 'lucide-react';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { ContactAdminDialog } from '@/components/auth/ContactAdminDialog';
 import { t } from '@/lib/i18n';
@@ -14,12 +14,27 @@ import { pb } from '@/lib/pocketbase';
 
 export function LoginClient({ initialCraftMode }: { initialCraftMode: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [forgotDialogOpen, setForgotDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const craftMode = initialCraftMode;
   const appConfig = getAppConfig(craftMode ? 'craft' : 'agency');
+
+  // Zero-Click Demo Auto-Login Parameter Handler
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('auto') || params.get('demo') || params.get('guest')) {
+        setIsDemoLoading(true);
+        const slot = params.get('slot') === 'slot_b' ? 'slot_b' : 'slot_a';
+        const redirect = params.get('redirect') || '';
+        const target = `/api/auth/demo?slot=${slot}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ''}`;
+        window.location.href = target;
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +71,11 @@ export function LoginClient({ initialCraftMode }: { initialCraftMode: boolean })
     }
   };
 
+  const handle1ClickDemo = (slot: 'slot_a' | 'slot_b' = 'slot_a') => {
+    setIsDemoLoading(true);
+    window.location.href = `/api/auth/demo?slot=${slot}`;
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
 
@@ -87,7 +107,38 @@ export function LoginClient({ initialCraftMode }: { initialCraftMode: boolean })
 
         <div className="bg-card/40 backdrop-blur-2xl border border-border p-8 rounded-[2.5rem] shadow-2xl space-y-6">
 
+          {/* 1-Click Demo Schnellzugang */}
+          <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">Prüfer & Personal</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">1-Klick Login</span>
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              disabled={isDemoLoading || isLoading}
+              onClick={() => handle1ClickDemo('slot_a')}
+              className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              {isDemoLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  Gast-Zugang sofort öffnen
+                  <ArrowRight size={14} />
+                </>
+              )}
+            </Button>
+          </div>
 
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-border w-full"></div>
+            <span className="bg-card/40 px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Oder regulär</span>
+            <div className="border-t border-border w-full"></div>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
@@ -125,7 +176,7 @@ export function LoginClient({ initialCraftMode }: { initialCraftMode: boolean })
 
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isDemoLoading}
               className="w-full h-12 bg-card hover:bg-muted text-foreground border border-border rounded-2xl font-bold text-sm shadow-sm transition-all flex items-center justify-center group"
             >
               {isLoading ? (
