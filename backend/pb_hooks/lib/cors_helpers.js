@@ -46,6 +46,13 @@ module.exports = {
      */
     isAdmin: function (c) {
         try {
+            var ri = c.requestInfo ? c.requestInfo() : null;
+            if (ri && typeof ri.hasSuperuserAuth === 'function' && ri.hasSuperuserAuth()) return true;
+            if (typeof c.hasSuperuserAuth === 'function' && c.hasSuperuserAuth()) return true;
+        } catch (e) {
+            console.log('[CORS] Superuser-Check nicht verfuegbar:', e.message);
+        }
+        try {
             var authRecord = c.auth;
             if (!authRecord) return false;
             return authRecord.get('role') === 'admin';

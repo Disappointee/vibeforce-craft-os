@@ -15,7 +15,7 @@ async function checkMobileAndDesktop() {
   const craftNavD = dPage.locator('aside a[href="/craft"]');
   await craftNavD.first().click();
   await dPage.waitForTimeout(2000);
-  await dPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/view_desktop.png' });
+  await dPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/view_desktop.png' });
   console.log('Saved: scratch/view_desktop.png');
 
   // 2. Mobile Viewport (iPhone 14: 390x844)
@@ -31,7 +31,7 @@ async function checkMobileAndDesktop() {
   console.log('Mobile URL after login:', mPage.url());
   await mPage.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
   await mPage.waitForTimeout(2500);
-  await mPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/view_mobile.png' });
+  await mPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/view_mobile.png' });
   console.log('Saved: scratch/view_mobile.png');
 
   await browser.close();

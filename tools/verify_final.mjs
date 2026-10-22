@@ -14,7 +14,7 @@ async function verify() {
   console.log('Docs has VIBE Craft / Handwerker:', hasCraft);
 
   // Take screenshot of Docs
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_docs_final.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_docs_final.png' });
   console.log('Docs screenshot saved: scratch/live_docs_final.png');
 
   await browser.close();

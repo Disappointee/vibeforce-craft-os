@@ -217,7 +217,7 @@
 
 ## LOGGING PROTOKOLL (nach jedem Paket)
 
-Erstellen in: `C:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\execution_log\PAKET_<N>_<YYYY-MM-DD_HHmm>.md`
+Erstellen in: `C:\Users\Robin\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\execution_log\PAKET_<N>_<YYYY-MM-DD_HHmm>.md`
 
 ```markdown
 # Paket <N>: <Titel>

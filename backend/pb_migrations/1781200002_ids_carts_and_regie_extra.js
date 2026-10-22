@@ -3,16 +3,12 @@ migrate((app) => {
     // 1. Ensure site_reports has is_regie_extra
     try {
         const siteReports = app.findCollectionByNameOrId("site_reports");
-        if (siteReports) {
-            const hasField = siteReports.fields.some((f) => f.name === "is_regie_extra");
-            if (!hasField) {
-                siteReports.fields.push({
-                    "name": "is_regie_extra",
-                    "type": "bool",
-                    "required": false
-                });
-                app.save(siteReports);
-            }
+        if (siteReports && !siteReports.fields.getByName("is_regie_extra")) {
+            siteReports.fields.add(new BoolField({
+                name: "is_regie_extra",
+                required: false
+            }));
+            app.save(siteReports);
         }
     } catch (e) {
         // collection might not exist yet locally

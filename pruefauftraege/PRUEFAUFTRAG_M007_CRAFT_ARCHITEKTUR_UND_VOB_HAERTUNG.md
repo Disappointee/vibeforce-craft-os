@@ -1,9 +1,9 @@
-﻿# Prüfauftrag & Architektur-Audit: M007 "VIBE Craft" (Handwerker- & Baustellenmodul)
+# Prüfauftrag & Architektur-Audit: M007 "VIBE Craft" (Handwerker- & Baustellenmodul)
 
 > **Dokumenten-ID:** `PA-M007-2026-09-07`  
 > **Status:** Zur Prüfung vorgelegt an Claude Opus (Lead Enterprise Architect & Baurechts-Auditor)  
 > **Projekt:** Vibeforce Flow OS — Handwerker- & Baustellenmodul M007 "VIBE Craft"  
-> **Repository-Pfad:** `c:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\`  
+> **Repository-Pfad:** `c:\Users\Robin\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\`  
 > **Live-Deployment:** `https://vibeforce-flow-os.vercel.app/craft`  
 > **PocketBase Server:** `https://pb-vibeforce.46-225-178-235.sslip.io`  
 > **Git-Stand:** Commit `a9f9e8c` auf `origin/main` (clean & live auf Vercel)  
@@ -33,8 +33,8 @@ Prüfe die folgenden 6 Handlungsfelder, wäge die vorgelegten Lösungsoptionen a
 ### PRÜFPUNKT 1: Arbeitsstunden-Konsolidierung & Doppelzählungs-Gefahr im Margen-Cockpit
 
 * **Betroffene Dateien:**
-  - [`frontend/src/lib/cost-calculation.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/cost-calculation.ts#L163) (Zeilen 115–176)
-  - [`frontend/src/components/craft/CostCockpit.tsx`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/components/craft/CostCockpit.tsx)
+  - [`frontend/src/lib/cost-calculation.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/cost-calculation.ts#L163) (Zeilen 115–176)
+  - [`frontend/src/components/craft/CostCockpit.tsx`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/components/craft/CostCockpit.tsx)
 * **Problemstellung im Code:**
   ```typescript
   // cost-calculation.ts Zeile 163:
@@ -67,8 +67,8 @@ Prüfe die folgenden 6 Handlungsfelder, wäge die vorgelegten Lösungsoptionen a
 ### PRÜFPUNKT 2: IDS-Connect 2.5 Webhook, CORS & Punchout Return-Flow
 
 * **Betroffene Dateien:**
-  - [`frontend/src/app/api/craft/ids/hook/route.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/craft/ids/hook/route.ts)
-  - [`frontend/src/lib/ids-connect.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ids-connect.ts)
+  - [`frontend/src/app/api/craft/ids/hook/route.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/craft/ids/hook/route.ts)
+  - [`frontend/src/lib/ids-connect.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ids-connect.ts)
 * **Problemstellung im Code:**
   Aktuell besitzt `/api/craft/ids/hook/route.ts` nur einen `export async function POST(req: NextRequest)`. Es fehlen:
   1. `OPTIONS`-Methode für Browser-CORS-Preflights.
@@ -92,7 +92,7 @@ Prüfe die folgenden 6 Handlungsfelder, wäge die vorgelegten Lösungsoptionen a
 ### PRÜFPUNKT 3: ZUGFeRD 2.1.1 E-Rechnung — Leitweg-ID (BT-10) für öffentliche Aufträge
 
 * **Betroffene Dateien:**
-  - [`frontend/src/lib/zugferd.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/zugferd.ts#L205-L224)
+  - [`frontend/src/lib/zugferd.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/zugferd.ts#L205-L224)
 * **Problemstellung im Code:**
   In `generateZugferdXml` wird `<ram:BuyerTradeParty>` generiert, aber das EN 16931-Feld `ram:BuyerReference` (Business Term **BT-10**) wird aktuell nicht übergeben.
 * **Gesetzliche Pflicht nach E-RechV & VOB/A:**
@@ -117,7 +117,7 @@ Prüfe die folgenden 6 Handlungsfelder, wäge die vorgelegten Lösungsoptionen a
 ### PRÜFPUNKT 4: GAEB 90 (.d83 / .d84) Kompatibilität für kommunale Bauämter
 
 * **Betroffene Dateien:**
-  - [`frontend/src/lib/gaeb.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/gaeb.ts#L130-L150)
+  - [`frontend/src/lib/gaeb.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/gaeb.ts#L130-L150)
 * **Problemstellung im Code:**
   `parseGaebXml` wirft einen Fehler, wenn die Datei keine XML-Tags (`<GAEB>`, `<BoQ>`) enthält.
 * **Branchen-Realität:**
@@ -137,8 +137,8 @@ Prüfe die folgenden 6 Handlungsfelder, wäge die vorgelegten Lösungsoptionen a
 ### PRÜFPUNKT 5: GPS-Geofencing — Datenschutz (§ 26 BDSG) & Mitbestimmung (§ 87 BetrVG)
 
 * **Betroffene Dateien:**
-  - [`frontend/src/lib/geofence.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/geofence.ts)
-  - [`frontend/src/app/(dashboard)/projects/[id]/geofence/GeofenceClient.tsx`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/%28dashboard%29/projects/%5Bid%5D/geofence/GeofenceClient.tsx)
+  - [`frontend/src/lib/geofence.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/geofence.ts)
+  - [`frontend/src/app/(dashboard)/projects/[id]/geofence/GeofenceClient.tsx`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/%28dashboard%29/projects/%5Bid%5D/geofence/GeofenceClient.tsx)
 * **Rechtslage in Deutschland:**
   - Nach § 26 BDSG und ständiger BAG-Rechtsprechung ist eine lückenlose GPS-Überwachung von Mitarbeitern (Fahrtrouten, Standorte) unzulässig.
   - Nach § 87 Abs. 1 Nr. 6 BetrVG unterliegen Systeme zur Verhaltens- oder Leistungskontrolle der zwingenden Mitbestimmung des Betriebsrats.
@@ -179,7 +179,7 @@ Du agierst als Senior Enterprise Software-Architekt und Baurechts-Spezialist (VO
 Deine Aufgabe ist das neutrale, unvoreingenommene und schonungslose Audit der Architektur- und Umsetzungsentscheidungen für das Handwerker- & Baustellenmodul M007 "VIBE Craft" in Vibeforce Flow OS.
 
 Bitte lies das vollständige Prüfdokument unter folgendem Pfad ein:
-c:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\pruefauftraege\PRUEFAUFTRAG_M007_CRAFT_ARCHITEKTUR_UND_VOB_HAERTUNG.md
+c:\Users\Robin\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os\pruefauftraege\PRUEFAUFTRAG_M007_CRAFT_ARCHITEKTUR_UND_VOB_HAERTUNG.md
 
 Nimm zu jedem der 6 Prüfpunkte detailliert Stellung:
 1. Prüfpunkt 1: Arbeitsstunden-Konsolidierung & Vermeidung von Doppelzählung im Margen-Cockpit (Option 1C vs. Alternativen).

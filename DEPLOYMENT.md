@@ -231,7 +231,33 @@ docker compose -f docker-compose.prod.yml logs -f traefik
 
 ---
 
-## 10. Kontakt & Support
+## 10. Vercel-Frontend-Deploy per CLI (ohne Git-Integration)
+
+Die Git-Integration des Vercel-Projekts ist blockiert (Commit-Autor ohne verknüpftes Git-Konto), Auto-Deploys laufen daher nicht. Production wird nach jedem Push manuell ausgeliefert.
+
+**Flow OS** (Projekt `vibeforce-flow-os`, Root Directory `frontend`):
+
+```bash
+# aus dem Repo-Root, mit gesetztem VERCEL_TOKEN
+npx vercel --prod --yes --archive=tgz --token "$VERCEL_TOKEN"
+```
+
+Die versionierte `.vercelignore` im Repo-Root schließt `backend/` (inkl. `pb_data`), `.git/`, `node_modules/`, `.next/` und alle `.env*` aus. Sie ist Pflicht für diesen Weg — ohne sie würde das Backend mit hochgeladen.
+
+**Craft OS** (Projekt nicht git-linked):
+
+```bash
+cd frontend
+npx vercel --prod --yes --archive=tgz --token "$VERCEL_TOKEN"
+```
+
+Alternativ per API: `POST https://api.vercel.com/v13/deployments` mit `gitSource` (Team `team_MtfMNBzxg0YY0BQDG0WBnnTU`).
+
+**Domains:** Craft läuft auf `vibeforce-craft-os-five.vercel.app`. `craft-vibeforce.vercel.app` und `vibeforce-craft-os.vercel.app` gehören zum **Flow**-Projekt (Legacy-Aliase) — dort sind Craft-Routen wie `/craft/time` 404.
+
+---
+
+## 11. Kontakt & Support
 
 - **Entwickler & Wartung:** Vibeforce One Core Engineering
 - **Security-Kontakt:** `security@vibeforce-flow.de`

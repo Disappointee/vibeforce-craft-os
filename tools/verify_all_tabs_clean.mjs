@@ -18,28 +18,28 @@ async function verifyAllTabs() {
   await page.waitForTimeout(2000);
 
   // Screenshot Tab 1
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_1.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_1.png' });
   console.log('Saved: verified_tab_1.png');
 
   // Click Tab 2 (Aufmaß)
   console.log('3. Clicking Tab 2 (Aufmaß)...');
   await page.click('button:has-text("VOB Teil C Aufmaß-Center")');
   await page.waitForTimeout(1000);
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_2.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_2.png' });
   console.log('Saved: verified_tab_2.png');
 
   // Click Tab 3 (Geofencing)
   console.log('4. Clicking Tab 3 (Geofence)...');
   await page.click('button:has-text("Baustellen-Radar & Geofencing")');
   await page.waitForTimeout(2000);
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_3.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_3.png' });
   console.log('Saved: verified_tab_3.png');
 
   // Click Tab 4 (Invoices)
   console.log('5. Clicking Tab 4 (Invoices)...');
   await page.click('button:has-text("ZUGFeRD & DATEV Rechnungen")');
   await page.waitForTimeout(1000);
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_4.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/verified_tab_4.png' });
   console.log('Saved: verified_tab_4.png');
 
   console.log('ALL 4 TABS VERIFIED & CAPTURED ON PRODUCTION LIVE URL!');

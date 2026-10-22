@@ -23,7 +23,7 @@ async function verifyFinal() {
   await mPage.waitForTimeout(3000);
 
   // Take Mobile Screenshot of sober UI
-  await mPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_clean_hub_final.png' });
+  await mPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_clean_hub_final.png' });
   console.log('Saved: scratch/mobile_clean_hub_final.png');
 
   // Click #craft-create-report-btn
@@ -32,7 +32,7 @@ async function verifyFinal() {
   await mPage.waitForTimeout(1500);
 
   // Take screenshot with modal open
-  await mPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_quick_create_modal_final.png' });
+  await mPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_quick_create_modal_final.png' });
   console.log('Saved: scratch/mobile_quick_create_modal_final.png');
 
   // Close modal with Escape
@@ -50,7 +50,7 @@ async function verifyFinal() {
 
   await dPage.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
   await dPage.waitForTimeout(3000);
-  await dPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/desktop_clean_hub_final.png' });
+  await dPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/desktop_clean_hub_final.png' });
   console.log('Saved: scratch/desktop_clean_hub_final.png');
 
   await browser.close();

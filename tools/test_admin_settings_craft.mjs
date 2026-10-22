@@ -1,4 +1,4 @@
-﻿import { chromium } from 'playwright';
+import { chromium } from 'playwright';
 
 async function run() {
   const browser = await chromium.launch({ headless: true });
@@ -23,7 +23,7 @@ async function run() {
     await page.waitForTimeout(1500);
   }
 
-  const screenshotPath = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain\\9d4131b7-dd18-4294-9dc0-ab4a9932ffe9\\live_audit_admin_settings_craft.png';
+  const screenshotPath = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain\\9d4131b7-dd18-4294-9dc0-ab4a9932ffe9\\live_audit_admin_settings_craft.png';
   await page.screenshot({ path: screenshotPath });
   console.log('Saved admin settings screenshot to', screenshotPath);
 

@@ -1,4 +1,4 @@
-﻿import { chromium } from 'playwright';
+import { chromium } from 'playwright';
 
 async function run() {
   console.log('=== VERIFYING CRAFT ENTITLEMENTS LIVE ===');
@@ -26,7 +26,7 @@ async function run() {
   await page.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(3000);
 
-  const screenshotDir = 'C:/Users/kasan/.gemini/antigravity/brain/9d4131b7-dd18-4294-9dc0-ab4a9932ffe9';
+  const screenshotDir = 'C:/Users/Robin/.gemini/antigravity/brain/9d4131b7-dd18-4294-9dc0-ab4a9932ffe9';
 
   // Check header license button
   const licenseBtn = page.locator('button:has-text("Module & Lizenzen")');

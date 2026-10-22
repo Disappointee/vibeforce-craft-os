@@ -33,7 +33,7 @@ graph TD
 ## 🛠️ Die 12 Härtungsmodule & Implementierte Dateien
 
 ### 1. PocketBase Collection Rules Härtung
-* **Datei:** [`backend/harden_rules.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/harden_rules.js)
+* **Datei:** [`backend/harden_rules.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/harden_rules.js)
 * **Problem:** Standardmäßige PocketBase API Rules erlauben unberechtigte Datenabfragen oder Privilege Escalations bei direkten API-Aufrufen mit JWT.
 * **Lösung:** Superuser-Skript setzt feste API Rules für alle 11+ Collections (`users`, `projects`, `tasks`, `time_entries`, `clients`, `task_comments`, `teams`, `team_members`, `notifications`, `checklist_items`, `audit_logs`, `app_settings`, `task_links`, `task_files`, `external_expenses`, `time_entry_reports`).
 * **Regel-Highlights:**
@@ -43,7 +43,7 @@ graph TD
 ---
 
 ### 2. Playwright Singleton Browser Pool
-* **Datei:** [`frontend/src/lib/pdf-service.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pdf-service.ts)
+* **Datei:** [`frontend/src/lib/pdf-service.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pdf-service.ts)
 * **Problem:** Ungesteuertes `chromium.launch()` pro PDF-Export verbraucht 25 × 120 MB RAM und killt den Node.js-Prozess bei Monatsabschluss-Spitzen.
 * **Lösung:**
   - Persistente Chromium-Instanz mit FIFO-Semaphore (`MAX_PAGES = 3`).
@@ -54,7 +54,7 @@ graph TD
 ---
 
 ### 3. Next.js 16 SSR Request-Scope Isolation
-* **Dateien:** [`frontend/src/lib/pocketbase-server.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase-server.ts) & [`frontend/src/lib/pocketbase.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase.ts)
+* **Dateien:** [`frontend/src/lib/pocketbase-server.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase-server.ts) & [`frontend/src/lib/pocketbase.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase.ts)
 * **Problem:** Modulglobale Singletons (`let adminPb = new PocketBase()`) führten zu Cross-User Cache Poisoning im Server-Scope.
 * **Lösung:**
   - Jede Anfrage erzeugt eine eigene `new PocketBase()` Instanz mit Request-Cookies.
@@ -66,7 +66,7 @@ graph TD
 ---
 
 ### 4. SQLite WAL Mode & Client Write Retry
-* **Datei:** [`frontend/src/lib/db-retry.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/db-retry.ts)
+* **Datei:** [`frontend/src/lib/db-retry.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/db-retry.ts)
 * **Problem:** `SQLITE_BUSY (5)` Contention bei 50 simultanen Zeiterfassungen.
 * **Lösung:**
   - TypeScript Utility `withRetry(operation, { maxRetries: 5, baseDelayMs: 100, jitterFactor: 0.3, maxDelayMs: 3000 })`.
@@ -75,7 +75,7 @@ graph TD
 ---
 
 ### 5. Realtime Memory Leak & Loop-Guard
-* **Datei:** [`frontend/src/hooks/useRealtime.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/hooks/useRealtime.ts)
+* **Datei:** [`frontend/src/hooks/useRealtime.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/hooks/useRealtime.ts)
 * **Problem:** React 19 Strict Mode und schnelles Routing erzeugen verwaiste SSE-Listener ("Ghost Listeners"). 40 Bulk-Events triggern 40 parallele GET-Fetches.
 * **Lösung:**
   - In-flight Promise Cleanup (räumt Subscription selbst bei Unmount während des Verbindungsaufbaus ab).
@@ -86,7 +86,7 @@ graph TD
 ---
 
 ### 6. Next.js 16 Security Headers & CSP
-* **Datei:** [`frontend/src/middleware.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/middleware.ts)
+* **Datei:** [`frontend/src/middleware.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/middleware.ts)
 * **Problem:** Stored XSS via File-Uploads/SVGs, Clickjacking und MIME-Confusion.
 * **Lösung:** Next.js Edge Middleware setzt strikte Header:
   ```text
@@ -101,14 +101,14 @@ graph TD
 ---
 
 ### 7. Sliding-Window Token-Bucket Rate Limiter
-* **Datei:** [`frontend/src/lib/rate-limiter.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/rate-limiter.ts)
+* **Datei:** [`frontend/src/lib/rate-limiter.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/rate-limiter.ts)
 * **Problem:** Brute-Force gegen `/login` oder DoS gegen rechenintensive Endpunkte (`/api/reports/*`).
 * **Lösung:** In-Memory Sliding-Window Limiter (<0.05 ms Latenz) limitiert sensible Routen und antwortet mit `HTTP 429 Too Many Requests` und `Retry-After: <Sekunden>`.
 
 ---
 
 ### 8. Transaktionale SQLite Zeiterfassungs-Atomarität
-* **Datei:** [`backend/pb_hooks/time_entries_overlap.pb.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/pb_hooks/time_entries_overlap.pb.js)
+* **Datei:** [`backend/pb_hooks/time_entries_overlap.pb.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/pb_hooks/time_entries_overlap.pb.js)
 * **Problem:** Race Conditions beim gleichzeitigen Stoppen/Erstellen von Zeiteinträgen führen zu überlappenden Intervallen.
 * **Lösung:** Transaktionale Kapselung in `$app.runInTransaction` mit mathematisch exakter halboffener Intervall-Formel:
   ```sql
@@ -118,28 +118,28 @@ graph TD
 ---
 
 ### 9. Non-Repudiation Impersonation Audit Trail
-* **Datei:** [`frontend/src/app/api/custom/impersonate/route.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/custom/impersonate/route.ts)
+* **Datei:** [`frontend/src/app/api/custom/impersonate/route.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/custom/impersonate/route.ts)
 * **Problem:** Admins übernehmen Benutzerkonten und könnten Spuren verwischen.
 * **Lösung:** Vor der Ausstellung des 1-stündigen Tokens wird synchron ein unveränderlicher Audit-Eintrag mit Admin-ID, Zielbenutzer, Client-IP, User-Agent und Timestamp in `audit_logs` angelegt (Fail-Closed).
 
 ---
 
 ### 10. Zero-Downtime SQLite Hot Backup Engine
-* **Datei:** [`backend/backup_db.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/backup_db.js)
+* **Datei:** [`backend/backup_db.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/backup_db.js)
 * **Problem:** Dateikopien (`cp data.db`) während aktiver WAL-Writes führen zu DB-Korruption.
 * **Lösung:** Nutzt die SQLite Online Backup API (`sqlite3 data.db ".backup backup.db"`), führt unmittelbar danach einen `PRAGMA integrity_check;` auf dem Snapshot durch und rotiert alte Backups automatisch (7 Tage Retention).
 
 ---
 
 ### 11. SSRF & DNS-Rebinding Guard
-* **Datei:** [`frontend/src/lib/ssrf-guard.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ssrf-guard.ts)
+* **Datei:** [`frontend/src/lib/ssrf-guard.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ssrf-guard.ts)
 * **Problem:** Server-Side Request Forgery gegen interne Ports (`127.0.0.1:8090`) oder Cloud-Metadaten (`169.254.169.254`) über ausgehende Webhooks/E-Mails.
 * **Lösung:** Validiert Ziel-URLs vor jedem Netzwerk-I/O gegen RFC 1918 Private CIDRs, Loopback, Link-Local, Carrier-Grade NAT und IPv6 private Ranges; stellt `safeFetch()` bereit.
 
 ---
 
 ### 12. Automated SQLite Boot Healthcheck & Recovery
-* **Datei:** [`backend/db_healthcheck.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/db_healthcheck.js)
+* **Datei:** [`backend/db_healthcheck.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/db_healthcheck.js)
 * **Problem:** Unerwartete Server-Stromausfälle oder Container-Abstürze mitten im Schreibvorgang.
 * **Lösung:** Führt beim Booten `PRAGMA quick_check;` aus, flusht große WAL-Dateien (>50 MB) und führt bei Fehlern eine automatisierte `.dump`-Recovery durch.
 
@@ -148,21 +148,21 @@ graph TD
 ## 🚀 Transfer- & Betriebs-Checkliste für `vibeforce-flow-os`
 
 1. **Neu erstellte Dateien:**
-   - [x] [`frontend/src/lib/pdf-service.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pdf-service.ts)
-   - [x] [`frontend/src/lib/rate-limiter.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/rate-limiter.ts)
-   - [x] [`frontend/src/lib/ssrf-guard.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ssrf-guard.ts)
-   - [x] [`frontend/src/lib/db-retry.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/db-retry.ts)
-   - [x] [`backend/backup_db.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/backup_db.js)
-   - [x] [`backend/db_healthcheck.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/db_healthcheck.js)
-   - [x] [`backend/harden_rules.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/harden_rules.js)
+   - [x] [`frontend/src/lib/pdf-service.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pdf-service.ts)
+   - [x] [`frontend/src/lib/rate-limiter.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/rate-limiter.ts)
+   - [x] [`frontend/src/lib/ssrf-guard.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/ssrf-guard.ts)
+   - [x] [`frontend/src/lib/db-retry.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/db-retry.ts)
+   - [x] [`backend/backup_db.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/backup_db.js)
+   - [x] [`backend/db_healthcheck.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/db_healthcheck.js)
+   - [x] [`backend/harden_rules.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/harden_rules.js)
 
 2. **Gehärtete & abgeglichene Dateien:**
-   - [x] [`frontend/src/lib/pocketbase-server.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase-server.ts)
-   - [x] [`frontend/src/lib/pocketbase.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase.ts)
-   - [x] [`frontend/src/hooks/useRealtime.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/hooks/useRealtime.ts)
-   - [x] [`frontend/src/middleware.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/middleware.ts)
-   - [x] [`frontend/src/app/api/custom/impersonate/route.ts`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/custom/impersonate/route.ts)
-   - [x] [`backend/pb_hooks/time_entries_overlap.pb.js`](file:///c:/Users/kasan/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/pb_hooks/time_entries_overlap.pb.js)
+   - [x] [`frontend/src/lib/pocketbase-server.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase-server.ts)
+   - [x] [`frontend/src/lib/pocketbase.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/lib/pocketbase.ts)
+   - [x] [`frontend/src/hooks/useRealtime.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/hooks/useRealtime.ts)
+   - [x] [`frontend/src/middleware.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/middleware.ts)
+   - [x] [`frontend/src/app/api/custom/impersonate/route.ts`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/frontend/src/app/api/custom/impersonate/route.ts)
+   - [x] [`backend/pb_hooks/time_entries_overlap.pb.js`](file:///c:/Users/Robin/Desktop/AlphaExplorer/K.I.%20Takeover/Neu/Vibeforce%20One/vibeforce-flow-os/backend/pb_hooks/time_entries_overlap.pb.js)
 
 3. **PocketBase Regeln anwenden:**
    - Ausführen: `node backend/harden_rules.js`

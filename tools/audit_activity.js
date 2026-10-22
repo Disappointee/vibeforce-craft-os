@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const targetWorkspace = 'c:\\Users\\kasan\\Desktop\\AlphaExplorer\\K.I. Takeover\\Awork_Remaster';
+const targetWorkspace = 'c:\\Users\\Robin\\Desktop\\AlphaExplorer\\K.I. Takeover\\Awork_Remaster';
 const normalizedWorkspace = targetWorkspace.toLowerCase().replace(/\\/g, '/');
 
 const START_DATE = new Date('2026-04-29T00:00:00+02:00').getTime();
@@ -107,7 +107,7 @@ try {
 
 // 3. Scan Antigravity App Logs (Gemini Desktop)
 console.log('4. Scanning Antigravity conversation logs...');
-const antigravityDir = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain';
+const antigravityDir = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain';
 try {
     if (fs.existsSync(antigravityDir)) {
         const dirs = fs.readdirSync(antigravityDir);
@@ -164,7 +164,7 @@ try {
 
 // 4. Scan VS Code Extensions (Roo-Cline, Kilo-Code, Claude-Dev)
 console.log('5. Scanning VS Code Agent histories (Roo-Cline, Kilo-Code, Claude-Dev)...');
-const roamingDir = 'C:\\Users\\kasan\\AppData\\Roaming\\Code\\User\\globalStorage';
+const roamingDir = 'C:\\Users\\Robin\\AppData\\Roaming\\Code\\User\\globalStorage';
 const agentExtensions = [
     { name: 'Roo-Cline', folder: 'rooveterinaryinc.roo-cline' },
     { name: 'Kilo-Code', folder: 'kilocode.kilo-code' },

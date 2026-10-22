@@ -14,7 +14,7 @@ async function captureDashboardScreenshot() {
   await page.waitForURL('https://vibeforce-flow-os.vercel.app/', { timeout: 15000 });
   await page.waitForTimeout(3000);
 
-  const screenshotPath = 'c:\\Users\\kasan\\Desktop\\AlphaExplorer\\K.I. Takeover\\Neu\\Vibeforce One\\vibeforce-flow-os\\tools\\dashboard_live_verified.png';
+  const screenshotPath = 'c:\\Users\\Robin\\Desktop\\AlphaExplorer\\K.I. Takeover\\Neu\\Vibeforce One\\vibeforce-flow-os\\tools\\dashboard_live_verified.png';
   await page.screenshot({ path: screenshotPath, fullPage: false });
   console.log('📸 Screenshot saved to:', screenshotPath);
 

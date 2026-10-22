@@ -37,6 +37,6 @@ Die GitHub-Auto-Deployments scheitern, weil Vercel nicht weiß, dass der Build i
 
 ## Verzeichnisse
 
-- Workspace Root: `C:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os`
+- Workspace Root: `C:\Users\Robin\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-flow-os`
 - Frontend: `frontend/src/app/(dashboard)/docs/page.tsx` (Handbuch)
 - Access Docs: `kunden/vibeforce/access/` (5 MD + 5 PDF)

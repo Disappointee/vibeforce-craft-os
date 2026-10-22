@@ -39,7 +39,7 @@ async function testDaniel() {
     }
   }
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/daniel_profile.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/daniel_profile.png' });
   console.log('Screenshot saved: scratch/daniel_profile.png');
 
   // Navigate to projects
@@ -50,7 +50,7 @@ async function testDaniel() {
   const sidebarText = await page.innerText('aside');
   console.log('Sidebar has Handwerk & Baustelle:', sidebarText.includes('Handwerk & Baustelle') || sidebarText.includes('Craft'));
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/daniel_projects.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/daniel_projects.png' });
   console.log('Screenshot saved: scratch/daniel_projects.png');
 
   await browser.close();

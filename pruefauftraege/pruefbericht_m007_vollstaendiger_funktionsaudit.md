@@ -59,17 +59,17 @@ Die Browser-Tests wurden unter realen Authentifizierungsbedingungen mit dem Meis
 
 | Dateiname | Bildinhalt / Verifizierte Funktion |
 | :--- | :--- |
-| [`01_desktop_craft_hub_overview.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/01_desktop_craft_hub_overview.png) | Craft Hub Gesamtübersicht (KPIs, Baustellen, DATEV Export) |
-| [`02_desktop_plan_pinning_overview.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/02_desktop_plan_pinning_overview.png) | 2D-Plan-Pinning SVG Grundriss (Quartier Spreeauen), Zoom & Filter |
-| [`04_desktop_measurement_grid.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/04_desktop_measurement_grid.png) | VOB-Aufmaß Mengentabelle, DIN 18299 § 4 Banner, 19% vs. § 13b Split |
-| [`05_desktop_cost_cockpit.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/05_desktop_cost_cockpit.png) | Soll/Ist-Nachkalkulation mit DB I & DB II Margenanzeige |
-| [`06_desktop_cost_cockpit_site_reports.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/06_desktop_cost_cockpit_site_reports.png) | Umschaltung der Stundenquelle auf `site_reports` mit Info-Tooltip |
-| [`07_desktop_gaeb_manager.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/07_desktop_gaeb_manager.png) | GAEB Manager (.d83 / .x83 Parsing und LV-Hierarchie) |
-| [`08_desktop_wholesale_ids.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/08_desktop_wholesale_ids.png) | Großhandel & IDS-Connect 2.5 Punchout-Kataloge |
-| [`09_mobile_craft_hub_overview.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/09_mobile_craft_hub_overview.png) | Mobile Hub Ansicht bei 390px Viewport (100% Passform) |
-| [`10_mobile_measurement_touch_cards.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/10_mobile_measurement_touch_cards.png) | Mobile Touch-Karten mit DIN 18299 § 4 Übermessungsregel-Banner |
-| [`11_mobile_plan_pinning.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/11_mobile_plan_pinning.png) | Mobile 2D-Plan-Pinning Ansicht (responsiv adaptiert) |
-| [`12_mobile_report_create_modal.png`](file:///C:/Users/kasan/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/12_mobile_report_create_modal.png) | Bautagesbericht Schnellerfassung auf Mobile |
+| [`01_desktop_craft_hub_overview.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/01_desktop_craft_hub_overview.png) | Craft Hub Gesamtübersicht (KPIs, Baustellen, DATEV Export) |
+| [`02_desktop_plan_pinning_overview.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/02_desktop_plan_pinning_overview.png) | 2D-Plan-Pinning SVG Grundriss (Quartier Spreeauen), Zoom & Filter |
+| [`04_desktop_measurement_grid.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/04_desktop_measurement_grid.png) | VOB-Aufmaß Mengentabelle, DIN 18299 § 4 Banner, 19% vs. § 13b Split |
+| [`05_desktop_cost_cockpit.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/05_desktop_cost_cockpit.png) | Soll/Ist-Nachkalkulation mit DB I & DB II Margenanzeige |
+| [`06_desktop_cost_cockpit_site_reports.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/06_desktop_cost_cockpit_site_reports.png) | Umschaltung der Stundenquelle auf `site_reports` mit Info-Tooltip |
+| [`07_desktop_gaeb_manager.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/07_desktop_gaeb_manager.png) | GAEB Manager (.d83 / .x83 Parsing und LV-Hierarchie) |
+| [`08_desktop_wholesale_ids.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/08_desktop_wholesale_ids.png) | Großhandel & IDS-Connect 2.5 Punchout-Kataloge |
+| [`09_mobile_craft_hub_overview.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/09_mobile_craft_hub_overview.png) | Mobile Hub Ansicht bei 390px Viewport (100% Passform) |
+| [`10_mobile_measurement_touch_cards.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/10_mobile_measurement_touch_cards.png) | Mobile Touch-Karten mit DIN 18299 § 4 Übermessungsregel-Banner |
+| [`11_mobile_plan_pinning.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/11_mobile_plan_pinning.png) | Mobile 2D-Plan-Pinning Ansicht (responsiv adaptiert) |
+| [`12_mobile_report_create_modal.png`](file:///C:/Users/Robin/.gemini/antigravity-ide/brain/30d6871f-48b6-42df-85e0-344f7018cd85/screenshots/12_mobile_report_create_modal.png) | Bautagesbericht Schnellerfassung auf Mobile |
 
 ---
 

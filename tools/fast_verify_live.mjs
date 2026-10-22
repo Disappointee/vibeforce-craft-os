@@ -24,7 +24,7 @@ async function fastVerify() {
   console.log('Profile has M007 Craft Toggle:', hasCraft);
   console.log('Profile has Language Switcher:', hasLang);
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_profile.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_profile.png' });
   console.log('Saved screenshot to scratch/live_profile.png');
 
   // Go to Docs
@@ -35,7 +35,7 @@ async function fastVerify() {
   const docsHasCraft = docsBody.includes('VIBE Craft') || docsBody.includes('Handwerker') || docsBody.includes('M007');
   console.log('Docs has M007 section:', docsHasCraft);
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_docs.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_docs.png' });
   console.log('Saved screenshot to scratch/live_docs.png');
 
   await browser.close();
