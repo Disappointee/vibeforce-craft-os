@@ -114,7 +114,7 @@ assert(xmlPublicValid.includes('<ram:BuyerReference>04011001-12345-01</ram:Buyer
 // ---------- Aufgabe 2: IDS-Connect ----------
 console.log('=== A2: IDS-Connect hookToken + JSON-Cart ===');
 
-const secret = 'ids-hook-secret-demo';
+const secret = process.env.IDS_HOOK_SECRET;
 const token = createIdsHookToken('proj-1', secret, 1);
 const check = verifyIdsHookToken(token, secret);
 assert(check.valid === true && check.projectId === 'proj-1', 'Token-Roundtrip gültig mit korrekter projectId');

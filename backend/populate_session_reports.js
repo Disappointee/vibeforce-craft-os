@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 const email = "admin@vibeforce-flow.de";
-const password = "***REMOVED***";
+const password = process.env.PB_ADMIN_PASSWORD;
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 const HOURLY_RATE = 20;
 

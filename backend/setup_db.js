@@ -1,6 +1,6 @@
 async function setup() {
   const email = "admin@vibeforce-flow.de";
-  const password = "***REMOVED***";
+  const password = process.env.PB_ADMIN_PASSWORD;
   const baseUrl = "http://127.0.0.1:8090";
 
   let authRes = await fetch(`${baseUrl}/api/collections/_superusers/auth-with-password`, {

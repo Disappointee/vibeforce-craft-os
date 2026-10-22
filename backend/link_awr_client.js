@@ -1,5 +1,5 @@
 const email = "admin@vibeforce-flow.de";
-const password = "***REMOVED***";
+const password = process.env.PB_ADMIN_PASSWORD;
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 
 (async () => {

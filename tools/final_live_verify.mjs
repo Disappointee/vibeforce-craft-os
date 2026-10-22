@@ -38,8 +38,8 @@ async function verifyAccount(email, password, roleLabel) {
 async function main() {
   console.log('🚀 Executing Full Playwright Verification across all admin accounts...');
   
-  const robinOk = await verifyAccount('***REMOVED***', '***REMOVED***', 'Robin Admin');
-  const danielOk = await verifyAccount('Daniel@vibeforcetest.de', '***REMOVED***', 'Daniel Admin');
+  const robinOk = await verifyAccount('***REMOVED***', process.env.PB_ADMIN_PASSWORD, 'Robin Admin');
+  const danielOk = await verifyAccount('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD, 'Daniel Admin');
 
   if (robinOk && danielOk) {
     console.log('\n===============================================================');

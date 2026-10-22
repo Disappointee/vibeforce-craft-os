@@ -2,7 +2,7 @@
  * Vibeforce One — Seed Agency Demo Data (Flow OS Stack)
  * 
  * Populates pure digital agency & professional services data:
- * - Admin credentials verification (***REMOVED*** / ***REMOVED***)
+ * - Admin credentials verification (***REMOVED*** / ***)
  * - Agency Team members (Designers, Developers, Marketing)
  * - Corporate & Digital Clients (Musterfirma AG, TechNova, GreenLife, FinTech Solutions)
  * - Agency Projects (Website Relaunch, SEO Sprint, UI Components, Investor Branding)
@@ -13,7 +13,7 @@
 
 const baseUrl = process.argv[2] || process.env.POCKETBASE_URL || "http://127.0.0.1:8090";
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || "***REMOVED***";
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || "***REMOVED***";
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
 async function api(method, path, body, token) {
   const headers = { "Content-Type": "application/json" };
@@ -112,8 +112,8 @@ async function main() {
       } else {
         const created = await api("POST", "/api/collections/users/records", {
           email: member.email,
-          password: "AgencyDemo2026!",
-          passwordConfirm: "AgencyDemo2026!",
+          password: process.env.SEED_AGENCY_DEMO_PASSWORD,
+          passwordConfirm: process.env.SEED_AGENCY_DEMO_PASSWORD,
           name: member.name,
           role: member.role,
           verified: true,

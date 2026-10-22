@@ -19,9 +19,9 @@ const PB_URL = process.argv[2] || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'htt
 const FRONTEND_URL = process.argv[3] || process.env.APP_URL || 'http://localhost:3000';
 
 const CANDIDATE_CREDENTIALS = [
-  { identity: process.env.PB_ADMIN_EMAIL || 'admin@vibeforce.de', password: process.env.PB_ADMIN_PASSWORD || '***REMOVED***' },
-  { identity: 'admin@vibeforce-flow.de', password: '***REMOVED***' },
-  { identity: '***REMOVED***', password: '***REMOVED***' },
+  { identity: process.env.PB_ADMIN_EMAIL || 'admin@vibeforce.de', password: process.env.PB_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD },
+  { identity: 'admin@vibeforce-flow.de', password: process.env.PB_ADMIN_PASSWORD },
+  { identity: '***REMOVED***', password: process.env.PB_ADMIN_PASSWORD },
 ];
 
 const TEST_RUN_ID = `test_${Date.now()}`;

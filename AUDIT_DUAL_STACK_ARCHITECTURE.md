@@ -61,7 +61,7 @@ Die Trennung erfolgt **vollständig auf Container- und Datenbank-Ebene (Data Iso
 | **Docker Volume** | `pb-data-flow` | `pb-data-craft` |
 | **App-Modus Flag** | `NEXT_PUBLIC_APP_MODE=agency` | `NEXT_PUBLIC_APP_MODE=craft` |
 | **Admin-Login** | `***REMOVED***` | `***REMOVED***` |
-| **Admin-Passwort** | `***REMOVED***` | `***REMOVED***` |
+| **Admin-Passwort** | `***REDACTED***` | `***REDACTED***` |
 | **Standard-Stundensatz** | 150,00 €/h | 78,00 €/h (Meister) / 64,00 €/h (Geselle) |
 
 ---
@@ -149,7 +149,7 @@ Wenn ein Projekt den Typ `craft` besitzt oder Craft OS aktiv ist, blendet die An
 Um beide Stacks mit realistischen, unverfälschten Testdaten zu betreiben, wurden zwei dedizierte Seed-Skripte erstellt:
 
 ### 5.1 `backend/seed_agency_demo.js` (Flow OS)
-- **Superuser & Admin:** `***REMOVED***` / `***REMOVED***`.
+- **Superuser & Admin:** `***REMOVED***` / `***REDACTED***`.
 - **Agentur-Mitarbeiter:** Sarah Meier (Art Director), Lukas Wagner (Fullstack Dev), Anna Schneider (Performance Marketing).
 - **Kunden:** Musterfirma AG, TechNova Cloud GmbH, GreenLife Brand GmbH, FinTech Solutions AG.
 - **Projekte:** Website Relaunch 2026, SEO & Growth Sprint Q3, SaaS Design System.
@@ -237,7 +237,7 @@ node backend/seed_craft_demo.js http://localhost:8091
 ### 7.3 Im Browser aufrufen
 - **Flow OS (Agentur):** [http://localhost:3000](http://localhost:3000)
 - **Craft OS (Handwerk):** [http://localhost:3001](http://localhost:3001)
-- **Login-Daten (beide Stacks):** `***REMOVED***` / `***REMOVED***`
+- **Login-Daten (beide Stacks):** `***REMOVED***` / `***REDACTED***`
 
 ---
 
@@ -253,7 +253,7 @@ Um maximale Daten- und Betriebssicherheit zu gewährleisten, laufen beide Module
   - `NEXT_PUBLIC_APP_MODE=agency`
   - `NEXT_PUBLIC_POCKETBASE_URL=https://pb-flow.up.railway.app` (Beispiel)
   - `POCKETBASE_ADMIN_EMAIL=***REMOVED***`
-  - `POCKETBASE_ADMIN_PASSWORD=***REMOVED***`
+  - `POCKETBASE_ADMIN_PASSWORD=***REDACTED***`
 - **Datenbank:** Getrennte PocketBase-Instanz (Volume `pb-data-flow`).
 
 ### 8.2 Vercel Instanz 2: Craft OS (Handwerk)
@@ -264,7 +264,7 @@ Um maximale Daten- und Betriebssicherheit zu gewährleisten, laufen beide Module
   - `NEXT_PUBLIC_APP_MODE=craft`
   - `NEXT_PUBLIC_POCKETBASE_URL=https://pb-craft.up.railway.app` (Beispiel)
   - `POCKETBASE_ADMIN_EMAIL=***REMOVED***`
-  - `POCKETBASE_ADMIN_PASSWORD=***REMOVED***`
+  - `POCKETBASE_ADMIN_PASSWORD=***REDACTED***`
 - **Datenbank:** Getrennte PocketBase-Instanz (Volume `pb-data-craft`).
 
 ### 8.3 Der unschlagbare Senior-Dev-Vorteil dieses Setups

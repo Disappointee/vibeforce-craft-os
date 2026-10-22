@@ -27,7 +27,7 @@ async function testCredentials(pass) {
 async function inspectAllUsers() {
   console.log(`\n--- Inspecting all users in users collection ---`);
   try {
-    await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+    await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
     const users = await pb.collection('users').getFullList();
     console.log(`Found ${users.length} users:`);
     for (const u of users) {
@@ -39,7 +39,7 @@ async function inspectAllUsers() {
 }
 
 async function main() {
-  await testCredentials('***REMOVED***');
+  await testCredentials(process.env.PB_ADMIN_PASSWORD);
   await inspectAllUsers();
 }
 

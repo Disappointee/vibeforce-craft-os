@@ -32,7 +32,7 @@ Die GitHub-Auto-Deployments scheitern, weil Vercel nicht weiß, dass der Build i
 
 ## Zugangsdaten für Login
 
-- Admin: `***REMOVED***` / `***REMOVED***`
+- Admin: `***REMOVED***` / `***REDACTED***`
 - Demo-User: `demo001@vibeforce.de` bis `demo004@vibeforce.de` / Passwörter in `kunden/vibeforce/access/`
 
 ## Verzeichnisse

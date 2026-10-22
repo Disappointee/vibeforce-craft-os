@@ -45,8 +45,8 @@ async function run() {
 
   for (let i = 1; i <= 15; i++) {
     console.log(`\n--- Verification Run ${i}/15 ---`);
-    const robin = await testLogin('***REMOVED***', '***REMOVED***', 'Robin Admin');
-    const daniel = await testLogin('Daniel@vibeforcetest.de', '***REMOVED***', 'Daniel Admin');
+    const robin = await testLogin('***REMOVED***', process.env.PB_ADMIN_PASSWORD, 'Robin Admin');
+    const daniel = await testLogin('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD, 'Daniel Admin');
 
     if (robin.passed && daniel.passed) {
       console.log('\n======================================================');

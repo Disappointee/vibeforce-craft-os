@@ -34,7 +34,7 @@ async function runDualStackPlaywrightAudit() {
   
   // Fill credentials
   await page.fill('input[type="email"]', '***REMOVED***');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.PB_ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
 
   await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 20000 });

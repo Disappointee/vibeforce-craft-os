@@ -50,7 +50,7 @@ async function runE2eAudit() {
   console.log('1.1 Anmeldung als Bauleiter / Meister (daniel@vibeforcetest.de)...');
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   
   await page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 30000 });

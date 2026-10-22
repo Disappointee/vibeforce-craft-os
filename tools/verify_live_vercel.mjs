@@ -8,7 +8,7 @@ async function verifyLive() {
   console.log('1. Logging in to https://vibeforce-flow-os.vercel.app/login...');
   await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle' });
   await page.fill('#email', '***REMOVED***');
-  await page.fill('#password', '***REMOVED***');
+  await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
 
   await page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 15000 });

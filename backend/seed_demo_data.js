@@ -15,7 +15,7 @@ const path = require('path');
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8090";
 const ADMIN_EMAIL = "admin@vibeforce-flow.de";
-const ADMIN_PASSWORD = "***REMOVED***";
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD;
 
 const genPassword = () => crypto.randomBytes(10).toString('hex');
 

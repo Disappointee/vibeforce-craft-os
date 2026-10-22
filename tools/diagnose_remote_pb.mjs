@@ -22,9 +22,9 @@ async function testUrl(url) {
 
   // 2. Try auth as superuser / admin
   const creds = [
-    { email: 'admin@vibeforce-flow.de', pass: '***REMOVED***' },
-    { email: '***REMOVED***', pass: '***REMOVED***' },
-    { email: 'Daniel@vibeforcetest.de', pass: '***REMOVED***' }
+    { email: 'admin@vibeforce-flow.de', pass: process.env.PB_ADMIN_PASSWORD },
+    { email: '***REMOVED***', pass: process.env.PB_ADMIN_PASSWORD },
+    { email: 'Daniel@vibeforcetest.de', pass: process.env.DEMO_DANIEL_PASSWORD }
   ];
 
   for (const c of creds) {

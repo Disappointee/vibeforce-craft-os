@@ -3,7 +3,7 @@ import PocketBase from 'pocketbase';
 const pb = new PocketBase('https://pb-vibeforce.46-225-178-235.sslip.io');
 
 async function seedSampleCraft() {
-  await pb.collection('_superusers').authWithPassword('admin@vibeforce-flow.de', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('admin@vibeforce-flow.de', process.env.PB_ADMIN_PASSWORD);
   console.log('✅ Superuser authenticated');
 
   // 1. Client

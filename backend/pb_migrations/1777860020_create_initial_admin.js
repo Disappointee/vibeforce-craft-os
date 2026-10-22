@@ -1,8 +1,13 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
     try {
-        const email = "***REMOVED***";
-        const password = "***REMOVED***";
+        const email = ($os.getenv("POCKETBASE_ADMIN_EMAIL") || $os.getenv("PB_ADMIN_EMAIL") || "").trim();
+        const password = ($os.getenv("POCKETBASE_ADMIN_PASSWORD") || $os.getenv("PB_ADMIN_PASSWORD") || "").trim();
+
+        if (!email || !password) {
+            console.log("Skipping initial admin creation: admin credentials not configured via ENV.");
+            return;
+        }
 
         // Check if user already exists
         try {
@@ -33,7 +38,9 @@ migrate((app) => {
 }, (app) => {
     // Optional: remove the user on rollback
     try {
-        const record = app.findAuthRecordByEmail("users", "***REMOVED***");
+        const email = ($os.getenv("POCKETBASE_ADMIN_EMAIL") || $os.getenv("PB_ADMIN_EMAIL") || "").trim();
+        if (!email) return;
+        const record = app.findAuthRecordByEmail("users", email);
         app.delete(record);
     } catch (e) {}
 })

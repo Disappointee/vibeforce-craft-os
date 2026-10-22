@@ -10,7 +10,7 @@
 
 const baseUrl = process.argv[2] || process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8080";
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || "admin@vibeforce.de";
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || "***REMOVED***";
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
 async function api(method, path, body, token) {
   const headers = { "Content-Type": "application/json" };

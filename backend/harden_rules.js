@@ -7,8 +7,13 @@
  */
 
 const baseUrl = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
-const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || 'admin@vibeforce-flow.de').trim();
-const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '***REMOVED***').trim();
+const email = (process.env.POCKETBASE_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL || '').trim();
+const password = (process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD || '').trim();
+
+if (!email || !password) {
+  console.error('[HARDEN] Missing superuser credentials. Set POCKETBASE_ADMIN_EMAIL/PB_ADMIN_EMAIL and POCKETBASE_ADMIN_PASSWORD/PB_ADMIN_PASSWORD.');
+  process.exit(1);
+}
 
 const RULES = {
   users: {

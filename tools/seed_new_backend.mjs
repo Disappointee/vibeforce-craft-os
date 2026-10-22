@@ -8,7 +8,7 @@
  *   node tools/seed_new_backend.mjs [POCKETBASE_URL] [SUPERUSER_EMAIL] [SUPERUSER_PASSWORD]
  * 
  * Beispiel:
- *   node tools/seed_new_backend.mjs https://pb-vibeforce.46-225-178-235.sslip.io ***REMOVED*** ***REMOVED***
+ *   node tools/seed_new_backend.mjs https://pb-vibeforce.46-225-178-235.sslip.io ***REMOVED*** ***
  */
 
 import PocketBase from 'pocketbase';
@@ -16,15 +16,15 @@ import PocketBase from 'pocketbase';
 // ── 1. Configuration & CLI Parameters ──
 const TARGET_URL = process.argv[2] || process.env.POCKETBASE_URL || 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const SUPER_EMAIL = process.argv[3] || process.env.PB_SUPERUSER_EMAIL || '***REMOVED***';
-const SUPER_PASS = process.argv[4] || process.env.PB_SUPERUSER_PASSWORD || '***REMOVED***';
+const SUPER_PASS = process.argv[4] || process.env.PB_SUPERUSER_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
 // Target Admin Accounts
 const DANIEL_EMAIL = 'Daniel@vibeforcetest.de';
-const DANIEL_PASS = '***REMOVED***';
+const DANIEL_PASS = process.env.DEMO_DANIEL_PASSWORD;
 const DANIEL_NAME = 'Daniel';
 
 const ROBIN_EMAIL = '***REMOVED***';
-const ROBIN_PASS = '***REMOVED***';
+const ROBIN_PASS = process.env.PB_ADMIN_PASSWORD;
 const ROBIN_NAME = 'Robin Lehnebach';
 
 const pb = new PocketBase(TARGET_URL);
@@ -67,8 +67,8 @@ async function authenticateSuperuser() {
 
   // Try fallback credentials
   const fallbacks = [
-    { email: 'admin@vibeforce-flow.de', pass: '***REMOVED***' },
-    { email: 'admin@vibeforce.de', pass: '***REMOVED***' },
+    { email: 'admin@vibeforce-flow.de', pass: process.env.PB_ADMIN_PASSWORD },
+    { email: 'admin@vibeforce.de', pass: process.env.PB_ADMIN_PASSWORD },
   ];
 
   for (const fb of fallbacks) {
@@ -570,7 +570,7 @@ async function provisionUsers() {
     },
     {
       email: 'sarah.meier@vibeforce.de',
-      password: 'DemoVibe2026!Sarah',
+      password: process.env.SEED_DEMO_PASSWORD,
       name: 'Sarah Meier',
       first_name: 'Sarah',
       last_name: 'Meier',
@@ -586,7 +586,7 @@ async function provisionUsers() {
     },
     {
       email: 'ben.beispiel@vibeforce.de',
-      password: 'DemoVibe2026!Ben',
+      password: process.env.SEED_DEMO_PASSWORD,
       name: 'Ben Beispiel',
       first_name: 'Ben',
       last_name: 'Beispiel',
@@ -602,7 +602,7 @@ async function provisionUsers() {
     },
     {
       email: 'laura.design@vibeforce.de',
-      password: 'DemoVibe2026!Laura',
+      password: process.env.SEED_DEMO_PASSWORD,
       name: 'Laura Design',
       first_name: 'Laura',
       last_name: 'Design',
@@ -618,7 +618,7 @@ async function provisionUsers() {
     },
     {
       email: 'tom.dev@vibeforce.de',
-      password: 'DemoVibe2026!Tom',
+      password: process.env.SEED_DEMO_PASSWORD,
       name: 'Tom Entwickler',
       first_name: 'Tom',
       last_name: 'Entwickler',
@@ -1428,7 +1428,7 @@ async function runVerificationTests() {
   const robTest = await testAuth(ROBIN_EMAIL, ROBIN_PASS, 'admin', 'Admin Robin');
 
   // 3. Test Sarah Meier Auth
-  await testAuth('sarah.meier@vibeforce.de', 'DemoVibe2026!Sarah', 'manager', 'Manager Sarah');
+  await testAuth('sarah.meier@vibeforce.de', process.env.SEED_DEMO_PASSWORD, 'manager', 'Manager Sarah');
 
   // 4. Test Data Access as Daniel (Read All Collections)
   if (danTest) {

@@ -17,7 +17,7 @@ async function verifyGrillMeLive() {
   await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('input[type="email"]');
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   
   await page.waitForTimeout(5000);

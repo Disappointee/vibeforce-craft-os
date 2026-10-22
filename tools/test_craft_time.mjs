@@ -30,7 +30,7 @@ async function runCraftTimeTest() {
     } else {
       console.log('   Fallback Email Login...');
       await page.fill('#email', '***REMOVED***');
-      await page.fill('#password', '***REMOVED***');
+      await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
       await page.click('button[type="submit"]');
     }
 

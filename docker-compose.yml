@@ -21,8 +21,8 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-***REMOVED***}
-      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
       - ALLOWED_ORIGINS=*
     volumes:
       - pb-data-flow:/pb/pb_data
@@ -60,8 +60,8 @@ services:
       - NEXT_PUBLIC_APP_MODE=agency
       - POCKETBASE_URL=http://backend-flow:8080
       - NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8090
-      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-***REMOVED***}
-      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
+      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
+      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
     ports:
       - "3000:3000"
     healthcheck:
@@ -94,8 +94,8 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-***REMOVED***}
-      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
       - ALLOWED_ORIGINS=*
     volumes:
       - pb-data-craft:/pb/pb_data
@@ -133,8 +133,8 @@ services:
       - NEXT_PUBLIC_APP_MODE=craft
       - POCKETBASE_URL=http://backend-craft:8080
       - NEXT_PUBLIC_POCKETBASE_URL=http://localhost:8091
-      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-***REMOVED***}
-      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-***REMOVED***}
+      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
+      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
     ports:
       - "3001:3000"
     healthcheck:

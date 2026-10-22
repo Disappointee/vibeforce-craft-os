@@ -390,7 +390,7 @@ assert(measurementRows[0].total_price === 2775.0, 'Gesamtbetrag der Aufmaßzeile
 console.log('\n>>> MODUL 7: DATANORM 5.0 & IDS-CONNECT 2.5 (HMAC, PUNCHOUT & CART) <<<');
 
 // 7.1 IDS Hook-Token HMAC
-const secretKey = 'ultra-secure-ids-hmac-secret-2026';
+const secretKey = process.env.IDS_HMAC_SECRET;
 const hookToken = createIdsHookToken('proj_spreeauen_99', secretKey, 60);
 const verifyResult = verifyIdsHookToken(hookToken, secretKey);
 assert(verifyResult.valid === true, 'IDS Hook Token signaturgeprüft und gültig');

@@ -34,8 +34,8 @@ async function testAuth(email, pass, label) {
 }
 
 async function run() {
-  await testAuth('Daniel@vibeforcetest.de', '***REMOVED***', 'Daniel (Admin)');
-  await testAuth('***REMOVED***', '***REMOVED***', 'Robin Lehnebach (Admin)');
+  await testAuth('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD, 'Daniel (Admin)');
+  await testAuth('***REMOVED***', process.env.PB_ADMIN_PASSWORD, 'Robin Lehnebach (Admin)');
   console.log(`\n🎉 ALL LIVE END-TO-END AUTH TESTS PASSED 100%!`);
 }
 

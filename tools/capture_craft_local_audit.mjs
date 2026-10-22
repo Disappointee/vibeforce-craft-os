@@ -28,7 +28,7 @@ async function runAudit() {
     console.log('Logging in...');
     await page.goto('http://localhost:3000/login', { waitUntil: 'load' });
     await page.fill('#email', '***REMOVED***');
-    await page.fill('#password', '***REMOVED***');
+    await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForTimeout(3000);
 

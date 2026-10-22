@@ -37,7 +37,7 @@ async function runErgonomicsTest() {
   } else {
     console.log('   Fallback Email Login...');
     await page.fill('input[type="email"]', '***REMOVED***');
-    await page.fill('input[type="password"]', '***REMOVED***');
+    await page.fill('input[type="password"]', process.env.PB_ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
   }
 

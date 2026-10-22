@@ -2,7 +2,7 @@
  * Vibeforce One — Seed Craft Demo Data (Craft OS Stack)
  * 
  * Populates authentic German construction & craft (Handwerk / Baustelle) data:
- * - Superuser & Meister Account (***REMOVED*** / ***REMOVED***)
+ * - Superuser & Meister Account (***REMOVED*** / ***)
  * - Handwerker-Team (Meister, Vorarbeiter, Gesellen, Azubi)
  * - Handwerker-Stundensätze (Meister 82,50€, Geselle 64,00€, Azubi 38,00€)
  * - Bauherren & Auftraggeber mit § 13b UStG & § 48b EStG Status:
@@ -20,7 +20,7 @@
 
 const baseUrl = process.argv[2] || process.env.POCKETBASE_URL || "http://127.0.0.1:8091";
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || "***REMOVED***";
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || "***REMOVED***";
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
 async function api(method, path, body, token) {
   const headers = { "Content-Type": "application/json" };
@@ -117,8 +117,8 @@ async function main() {
       if (!existing.items || existing.items.length === 0) {
         await api("POST", "/api/collections/users/records", {
           email: member.email,
-          password: "CraftDemo2026!",
-          passwordConfirm: "CraftDemo2026!",
+          password: process.env.SEED_CRAFT_DEMO_PASSWORD,
+          passwordConfirm: process.env.SEED_CRAFT_DEMO_PASSWORD,
           name: member.name,
           role: member.role,
           verified: true,

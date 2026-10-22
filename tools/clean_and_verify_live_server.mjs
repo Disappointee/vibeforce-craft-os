@@ -4,7 +4,7 @@ const liveUrl = 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const pb = new PocketBase(liveUrl);
 
 async function main() {
-  await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
   console.log('✅ Authenticated as superuser on live server');
 
   // Check and update projects
@@ -31,8 +31,8 @@ async function main() {
     console.log(`Creating Daniel Admin user...`);
     const d = await pb.collection('users').create({
       email: 'Daniel@vibeforcetest.de',
-      password: '***REMOVED***',
-      passwordConfirm: '***REMOVED***',
+      password: process.env.DEMO_DANIEL_PASSWORD,
+      passwordConfirm: process.env.DEMO_DANIEL_PASSWORD,
       name: 'Daniel',
       role: 'admin',
       verified: true,
@@ -43,7 +43,7 @@ async function main() {
 
   // Test real login as Daniel
   pb.authStore.clear();
-  const danielAuth = await pb.collection('users').authWithPassword('Daniel@vibeforcetest.de', '***REMOVED***');
+  const danielAuth = await pb.collection('users').authWithPassword('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD);
   console.log(`🎉 TEST LOGIN SUCCESSFUL for Daniel! Token length: ${danielAuth.token.length}`);
 }
 

@@ -4,7 +4,7 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 pb.autoCancellation(false);
 
 async function audit() {
-  await pb.collection('users').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('users').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
 
   const projects = await pb.collection('projects').getFullList({ sort: 'created' });
   console.log('=== ALL PROJECTS ===');

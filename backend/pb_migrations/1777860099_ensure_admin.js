@@ -2,8 +2,13 @@
 migrate((app) => {
     // PRE-LAUNCH: Superuser-Passwort aus Env-Variable oder Default
     // Siehe: tasks/PRE_LAUNCH_CHECKLIST.md Abschnitt 1.5
-    const superuserEmail = "admin@example.com";
-    const superuserPassword = $os.getenv('PB_SUPERUSER_PASSWORD') || "admin123";
+    const superuserEmail = $os.getenv('PB_SUPERUSER_EMAIL') || "admin@example.com";
+    const superuserPassword = ($os.getenv('PB_SUPERUSER_PASSWORD') || $os.getenv('PB_ADMIN_PASSWORD') || "").trim();
+
+    if (!superuserPassword) {
+        console.log('[ensure_admin] Kein Superuser-Passwort via ENV gesetzt – Migration übersprungen.');
+        return;
+    }
     
     try {
         // Versuchen, den Superuser zu finden

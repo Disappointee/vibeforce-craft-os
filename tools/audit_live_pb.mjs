@@ -4,7 +4,7 @@ const liveUrl = 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const pb = new PocketBase(liveUrl);
 
 async function main() {
-  await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
   
   const collections = await pb.collections.getFullList();
   console.log(`\n📦 Collections on LIVE PocketBase (${liveUrl}):`);

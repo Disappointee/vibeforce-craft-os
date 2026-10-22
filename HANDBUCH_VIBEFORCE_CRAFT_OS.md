@@ -54,7 +54,7 @@ Für Vorführungen, Prüfungen und Meister-Tests verfügt die Anmeldeseite über
 
 ### 2.2 Reguläre Meister-Anmeldung
 * **E-Mail:** `***REMOVED***`
-* **Passwort:** `***REMOVED***`
+* **Passwort:** `***REDACTED***`
 
 ---
 

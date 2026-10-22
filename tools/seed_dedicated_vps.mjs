@@ -3,7 +3,7 @@ import PocketBase from 'pocketbase';
 const pb = new PocketBase('https://pb-vibeforce.46-225-178-235.sslip.io');
 
 async function main() {
-  await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
   console.log('✅ Superuser logged in');
 
   // 1. Ensure Robin is verified
