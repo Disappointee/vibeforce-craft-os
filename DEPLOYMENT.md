@@ -242,7 +242,13 @@ Die Git-Integration des Vercel-Projekts ist blockiert (Commit-Autor ohne verknü
 npx vercel --prod --yes --archive=tgz --token "$VERCEL_TOKEN"
 ```
 
-Die versionierte `.vercelignore` im Repo-Root schließt `backend/` (inkl. `pb_data`), `.git/`, `node_modules/`, `.next/` und alle `.env*` aus. Sie ist Pflicht für diesen Weg — ohne sie würde das Backend mit hochgeladen.
+Die versionierte `.vercelignore` im Repo-Root ist Pflicht für diesen Weg — ohne sie würde das Backend mit hochgeladen. Sie schließt aus:
+
+- `backend/` (inkl. `pb_data`), `.git/`, `.vercel/`, `node_modules/`, `.next/`, `out/`, `build/`, `coverage/` und alle `.env*`,
+- sämtliche lokal-only Zugangs-/Personendokumente im Root: `*.pdf`, `*HANDOUT*`, `*HANDOVER*`, `*BRIEFING*`, `*ANSCHREIBEN*`, `*BROSCHUERE*`, `Textdokument*.txt`, `VIBEFORCE_ADMIN_ZUGANG_*`, `Zugangsdaten_und_Live_Demo_Leitfaden.html`, `00_Uebergabeschreiben_Pruefzugang_*`,
+- `kunden/`, `screenshots/`, `public/qr_*.png`, die lokalen `tools/`-Skripte (inkl. `auth.json*`), `.kilo/`, `.playwright-mcp/` sowie die Root-Screenshot-Artefakte (`dashboard-after-changes.png`, `craft_*.png`, `dossier_preview_p*.png`, …).
+
+`frontend/` ist der Deploy-Inhalt und wird von keinem Muster ausgeschlossen (ausgenommen bleiben nur die lokal-only Pfade `frontend/snapshots/`, `frontend/node_modules/`, `frontend/.next/` und `frontend/.env*`).
 
 **Craft OS** (Projekt nicht git-linked):
 

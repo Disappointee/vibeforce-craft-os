@@ -1,6 +1,84 @@
+# =============================================================================
+# .vercelignore — Ausschluss lokal-only Artefakte vom Vercel-CLI-Upload
+# (Audit Block 5, Befund P1). Syntax = .gitignore; Spiegel der lokal-only
+# Kategorien aus .gitignore. Root-verankerte Muster ("/") schützen frontend/
+# (Deploy-Inhalt) vor versehentlichen Treffern.
+# =============================================================================
+
+# Backend & Repo-Metadaten
 backend/
 .git/
+.vercel/
+
+# Abhängigkeiten & Build-Output
 **/node_modules/
 **/.next/
+/out/
+/build
+/coverage
+**/__pycache__/
+
+# Env-Dateien
 **/.env
 **/.env.*
+
+# Lokale Tool-/Agent-Konfiguration
+.kilo/
+.playwright-mcp/
+.DS_Store
+*.pem
+
+# Debug-Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Persönliche/Zugangsdaten-Dokumente (Root, root-verankert)
+/Textdokument*.txt
+/*.pdf
+/*HANDOUT*
+/*Handout*
+/*HANDOVER*
+/*BRIEFING*
+/*Briefing*
+/*ANSCHREIBEN*
+/*Anschreiben*
+/*BROSCHUERE*
+/*Broschuere*
+/VIBEFORCE_ADMIN_ZUGANG_*.html
+/VIBEFORCE_ADMIN_ZUGANG_*.png
+/Zugangsdaten_und_Live_Demo_Leitfaden.html
+/00_Uebergabeschreiben_Pruefzugang_*.html
+
+# Kunden- und Zugangsdaten-Verzeichnisse
+/kunden/
+/public/qr_*.png
+/screenshots/
+/frontend/snapshots/
+
+# Lokale, zugangsdaten-tragende Tools/Skripte (Spiegel .gitignore)
+/tools/auth.json
+/tools/auth.json.burned_*
+/tools/render_*.mjs
+/tools/generate_*.mjs
+/tools/copy_*.mjs
+/tools/export_*.mjs
+/tools/create_transparent_logo.mjs
+/tools/logo_showcase.html
+/tools/modal_live.png
+/tools/provision_*.mjs
+/tools/verify_all.mjs
+/tools/check_time_logs.mjs
+/tools/seed_sample_baustelle.mjs
+/tools/test_pb_queries.mjs
+
+# Screenshot-/Audit-Artefakte (Root)
+/dashboard-after-changes.png
+/newtask-dialog-deployed.png
+/reports-deployed.png
+/reports-page.png
+/craft_baustelle_*.png
+/craft_hub_verified.png
+/craft_projects_verified.png
+/dossier_preview_p*.png
+/test_craft_hub_loaded.png
