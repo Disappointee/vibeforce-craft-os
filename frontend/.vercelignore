@@ -1,2 +1,5 @@
 .env
 .env.*
+
+# Lokal-only (Abschluss R2, 2026-10-22)
+snapshots/
