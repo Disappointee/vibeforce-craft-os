@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "build": "npm --prefix frontend install --legacy-peer-deps && npm --prefix frontend run build",
     "start": "npm --prefix frontend start",
     "lint": "npm --prefix frontend run lint"
   },
@@ -14,5 +14,10 @@
     "playwright": "^1.60.0",
     "pocketbase": "^0.27.0",
     "puppeteer": "^25.1.0"
+  },
+  "devDependencies": {
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   }
 }
