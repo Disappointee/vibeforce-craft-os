@@ -88,4 +88,17 @@ frontend/snapshots/
 tools/modal_live.png
 public/qr_*_tillmann.png
 
+# Lokale, zugangsdaten-tragende Skripte & Artefakte (Block 4, 2026-10-22)
+backend/create_admins_*.mjs
+tools/provision_*.mjs
+tools/verify_all.mjs
+tools/check_time_logs.mjs
+tools/seed_sample_baustelle.mjs
+tools/test_pb_queries.mjs
+tools/auth.json.burned_*
+VIBEFORCE_ADMIN_ZUGANG_*.png
+Zugangsdaten_und_Live_Demo_Leitfaden.html
+00_Uebergabeschreiben_Pruefzugang_*.html
+public/qr_*.png
+
 .vercel

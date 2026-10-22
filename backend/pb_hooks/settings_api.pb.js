@@ -43,7 +43,7 @@ routerAdd('GET', '/api/custom/settings', (c) => {
         if (records.length > 0) {
             const record = records[0];
             settings = {
-                id: record.getId(),
+                id: record.id,
                 app_name: record.get('app_name') || 'Vibeforce Flow OS',
                 app_logo_url: record.get('app_logo_url') || '',
                 smtp_host: record.get('smtp_host') || '',
