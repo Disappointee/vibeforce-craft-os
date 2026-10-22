@@ -1,5 +1,5 @@
 /**
- * Cycle Management für Vibeforce Flow OS
+ * Cycle Management für Vibeforce Flow OS (PocketBase >= 0.23)
  *
  * Dieses PocketBase Hook behandelt den automatischen Rollover von Tasks
  * am Ende eines Projekt-Cycles:
@@ -9,140 +9,133 @@
  *   - Der cycle_number des Projekts wird inkrementiert
  *   - Eine Benachrichtigung wird für alle Projekt-Mitglieder erstellt
  *
- * PocketBase v0.37+ pb_hooks API:
- *   - onModelAfterSave / onModelAfterUpdate
- *   - $app.dao().findRecordsByFilter()
- *   - $app.dao().saveRecord()
+ * WICHTIG (Befunde 2026-10-22, PB 0.37):
+ * - Handler laufen isoliert (kein Datei-Scope); After-Event-Ketten brauchen e.next() in jedem Pfad.
+ * - `print` ist im JSVM nicht definiert → console.log.
+ * - `record.getId()` existiert nicht → `record.id`.
+ * - Datumsfelder liefern DateTime-Objekte; leere Felder sind truthy (Jahr 0001)
+ *   → immer über toValidDate() prüfen, sonst "Invalid time value" bei toISOString().
  */
 
-/**
- * Prüft, ob ein Cycle abgelaufen ist und führt ggf. den Rollover durch.
- * Wird aufgerufen, wenn ein Projekt aktualisiert wird (cycle_end_date geändert).
- */
 onRecordAfterUpdateSuccess((e) => {
-    if (e.record.collection().name !== "projects") {
-        return;
+    /** Parst PB-Datumswerte robust (String()-Konvertierung + Gültigkeitsprüfung). */
+    function toValidDate(value) {
+        if (!value) return null;
+        const d = new Date(String(value));
+        return isNaN(d.getTime()) ? null : d;
     }
 
     try {
-        const project = e.record;
-        const cycleEndDate = project.get("cycle_end_date");
-        const cycleStartDate = project.get("cycle_start_date");
+        if (e.record.collection().name === "projects") {
+            const project = e.record;
+            const cycleEndDate = project.get("cycle_end_date");
+            const cycleStartDate = project.get("cycle_start_date");
 
-        // Nur ausführen, wenn cycle_end_date gesetzt ist
-        if (!cycleEndDate) {
-            return;
-        }
+            const endDate = toValidDate(cycleEndDate);
+            const startDate = toValidDate(cycleStartDate);
 
-        const now = new Date();
-        const endDate = new Date(cycleEndDate);
+            // Nur ausführen, wenn das Cycle-Ende in der Vergangenheit liegt
+            // UND ein cycle_start_date gesetzt ist (d.h. der Cycle wurde aktiv gestartet)
+            if (endDate && startDate && endDate <= new Date()) {
+                const projectId = project.id;
+                console.log(`[CycleMgmt] Cycle-Rollover für Projekt ${projectId} gestartet`);
 
-        // Nur ausführen, wenn das Cycle-Ende in der Vergangenheit liegt
-        // UND ein cycle_start_date gesetzt ist (d.h. der Cycle wurde aktiv gestartet)
-        if (endDate > now || !cycleStartDate) {
-            return;
-        }
+                // Alle offenen Tasks für dieses Projekt abrufen
+                const openTasks = $app.findRecordsByFilter(
+                    "tasks",
+                    "project = {:projectId} && status != {:doneStatus}",
+                    "-created",
+                    0,
+                    0,
+                    { projectId: projectId, doneStatus: "done" }
+                );
 
-        const projectId = project.getId();
-        console.log(`[CycleMgmt] 🔄 Cycle-Rollover für Projekt ${projectId} gestartet`);
+                console.log(`[CycleMgmt]   ${openTasks.length} offene Tasks gefunden`);
 
-        // Alle offenen Tasks für dieses Projekt abrufen
-        const openTasks = $app.findRecordsByFilter(
-            "tasks",
-            "project = {:projectId} && status != {:doneStatus}",
-            "-created",
-            0,
-            0,
-            { projectId: projectId, doneStatus: "done" }
-        );
+                // Neues Cycle-Ende berechnen (gleiche Dauer wie vorheriger Cycle)
+                const cycleDuration = endDate.getTime() - startDate.getTime();
 
-        print(`[CycleMgmt]   ${openTasks.length} offene Tasks gefunden`);
+                const newStart = new Date(endDate);
+                const newEnd = new Date(newStart.getTime() + cycleDuration);
 
-        // Neues Cycle-Ende berechnen (gleiche Dauer wie vorheriger Cycle)
-        const oldStart = new Date(cycleStartDate);
-        const oldEnd = new Date(cycleEndDate);
-        const cycleDuration = oldEnd.getTime() - oldStart.getTime();
+                // Offene Tasks in den nächsten Cycle verschieben
+                for (const task of openTasks) {
+                    // due_date um die Cycle-Dauer verschieben
+                    const oldDue = toValidDate(task.get("due_date"));
+                    if (oldDue) {
+                        const newDue = new Date(oldDue.getTime() + cycleDuration);
+                        task.set("due_date", newDue.toISOString());
+                    }
 
-        const newStart = new Date(oldEnd);
-        const newEnd = new Date(newStart.getTime() + cycleDuration);
+                    // start_date um die Cycle-Dauer verschieben
+                    const oldStartTask = toValidDate(task.get("start_date"));
+                    if (oldStartTask) {
+                        const newStartTask = new Date(oldStartTask.getTime() + cycleDuration);
+                        task.set("start_date", newStartTask.toISOString());
+                    }
 
-        // Offene Tasks in den nächsten Cycle verschieben
-        for (const task of openTasks) {
-            const oldDueDate = task.get("due_date");
-
-            // due_date um die Cycle-Dauer verschieben
-            if (oldDueDate) {
-                const oldDue = new Date(oldDueDate);
-                const newDue = new Date(oldDue.getTime() + cycleDuration);
-                task.set("due_date", newDue.toISOString());
-            }
-
-            // start_date um die Cycle-Dauer verschieben
-            const oldStartDate = task.get("start_date");
-            if (oldStartDate) {
-                const oldStartTask = new Date(oldStartDate);
-                const newStartTask = new Date(oldStartTask.getTime() + cycleDuration);
-                task.set("start_date", newStartTask.toISOString());
-            }
-
-            try {
-                $app.save(task);
-            } catch (err) {
-                console.error(`[CycleMgmt]   ❌ Fehler beim Speichern von Task ${task.getId()}:`, err.message);
-            }
-        }
-
-        // Projekt-Cycle-Daten aktualisieren
-        project.set("cycle_start_date", newStart.toISOString());
-        project.set("cycle_end_date", newEnd.toISOString());
-        project.set("cycle_number", (project.get("cycle_number") || 0) + 1);
-
-        try {
-            $app.save(project);
-            console.log(`[CycleMgmt] ✅ Cycle-Rollover abgeschlossen: Cycle #${project.get("cycle_number")}`);
-        } catch (err) {
-            console.error(`[CycleMgmt] ❌ Fehler beim Speichern des Projekts:`, err.message);
-        }
-
-        // Benachrichtigungen für alle Projekt-Mitglieder erstellen
-        const members = project.getStringSlice("members") || [];
-        if (members && members.length > 0) {
-            const projectName = project.get("name") || "Unbekanntes Projekt";
-            const newCycleNumber = project.get("cycle_number");
-            const collection = $app.findCollectionByNameOrId("notifications");
-
-            for (const userId of members) {
-                try {
-                    let notification;
                     try {
-                        notification = $app.findFirstRecordByFilter(
-                            "notifications",
-                            "user = {:userId} && type = {:notifType} && created >= {:cutoff}",
-                            { userId: userId, notifType: "cycle_rollover", cutoff: new Date(Date.now() - 60000).toISOString() }
-                        );
-                    } catch (_) {
-                        notification = null;
+                        $app.save(task);
+                    } catch (err) {
+                        console.error(`[CycleMgmt]   Fehler beim Speichern von Task ${task.id}:`, err.message);
                     }
+                }
 
-                    // Nur erstellen, wenn nicht bereits eine für diesen User in den letzten 60s existiert
-                    if (!notification) {
-                        const newNotif = new Record(collection);
-                        newNotif.set("user", userId);
-                        newNotif.set("type", "project_update");
-                        newNotif.set("title", `Cycle-Rollover: ${projectName}`);
-                        newNotif.set("message", `Der Cycle für ${projectName} wurde automatisch verlängert. ${openTasks.length} offene Tasks wurden in Cycle #${newCycleNumber} übernommen.`);
-                        newNotif.set("link", `/projects/${projectId}`);
-                        newNotif.set("read", false);
-                        $app.save(newNotif);
-                    }
+                // Projekt-Cycle-Daten aktualisieren
+                project.set("cycle_start_date", newStart.toISOString());
+                project.set("cycle_end_date", newEnd.toISOString());
+                project.set("cycle_number", (project.get("cycle_number") || 0) + 1);
+
+                try {
+                    $app.save(project);
+                    console.log(`[CycleMgmt] Cycle-Rollover abgeschlossen: Cycle #${project.get("cycle_number")}`);
                 } catch (err) {
-                    console.error(`[CycleMgmt]   ⚠️ Fehler beim Erstellen der Benachrichtigung für ${userId}:`, err.message);
+                    console.error(`[CycleMgmt] Fehler beim Speichern des Projekts:`, err.message);
+                }
+
+                // Benachrichtigungen für alle Projekt-Mitglieder erstellen
+                const members = project.getStringSlice("members") || [];
+                if (members && members.length > 0) {
+                    const projectName = project.get("name") || "Unbekanntes Projekt";
+                    const newCycleNumber = project.get("cycle_number");
+                    const collection = $app.findCollectionByNameOrId("notifications");
+
+                    for (const userId of members) {
+                        try {
+                            let notification;
+                            try {
+                                // PB-Zeitformat (Leerzeichen statt 'T'), sonst matcht der Stringvergleich nie
+                                const cutoff = new Date(Date.now() - 60000).toISOString().replace('T', ' ');
+                                notification = $app.findFirstRecordByFilter(
+                                    "notifications",
+                                    "user = {:userId} && type = {:notifType} && created >= {:cutoff}",
+                                    { userId: userId, notifType: "cycle_rollover", cutoff: cutoff }
+                                );
+                            } catch (_) {
+                                notification = null;
+                            }
+
+                            // Nur erstellen, wenn nicht bereits eine für diesen User in den letzten 60s existiert
+                            if (!notification) {
+                                const newNotif = new Record(collection);
+                                newNotif.set("user", userId);
+                                newNotif.set("type", "project_update");
+                                newNotif.set("title", `Cycle-Rollover: ${projectName}`);
+                                newNotif.set("message", `Der Cycle für ${projectName} wurde automatisch verlängert. ${openTasks.length} offene Tasks wurden in Cycle #${newCycleNumber} übernommen.`);
+                                newNotif.set("link", `/projects/${projectId}`);
+                                newNotif.set("read", false);
+                                $app.save(newNotif);
+                            }
+                        } catch (err) {
+                            console.error(`[CycleMgmt]   Fehler beim Erstellen der Benachrichtigung für ${userId}:`, err.message);
+                        }
+                    }
+                    console.log(`[CycleMgmt]   ${members.length} Benachrichtigungen erstellt`);
                 }
             }
-            console.log(`[CycleMgmt]   ${members.length} Benachrichtigungen erstellt`);
         }
-
     } catch (err) {
-        console.error('[CycleMgmt] Allgemeiner Fehler:', err.message);
+        console.error('[CycleMgmt] Allgemeiner Fehler:', err && err.message);
     }
+    e.next();
 }, 'projects');

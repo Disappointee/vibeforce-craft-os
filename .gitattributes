@@ -1,0 +1,2 @@
+# Shell-Skripte immer mit LF auschecken (wichtig für Git-Hooks unter sh)
+tools/git-hooks/pre-commit text eol=lf

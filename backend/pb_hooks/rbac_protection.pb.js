@@ -1,23 +1,28 @@
 /**
- * 🛡️ RBAC Protection Hook für Vibeforce Flow OS
+ * 🛡️ RBAC Protection Hook für Vibeforce Flow OS (PocketBase >= 0.23)
  *
  * Verhindert Privilege Escalation auf Datenbank-Ebene:
- * - Nur Superuser und Benutzer mit Rolle 'admin' dürfen das Feld 'role', 'supervisor' oder 'verified' anpassen oder mit diesen Privilegien erstellen.
+ * - Nur Superuser und Benutzer mit Rolle 'admin' dürfen die Felder 'role',
+ *   'supervisor' oder 'verified' anpassen oder mit diesen Privilegien erstellen.
  * - Nicht-Admins dürfen sich selbst aktualisieren (z.B. Name, Avatar, Präferenzen),
- *   aber Versuche, 'role', 'supervisor' oder 'verified' zu ändern, werden mit ForbiddenError abgewiesen.
+ *   aber Versuche, 'role', 'supervisor' oder 'verified' zu ändern, werden mit
+ *   ForbiddenError abgewiesen.
+ *
+ * WICHTIG (Befund 2026-10-22, PB 0.37): Record-Events (onRecordCreate/Update)
+ * haben KEINEN HTTP-Kontext (e.httpContext existiert nicht mehr) — der frühere
+ * Guard `if (!e.httpContext) return;` hat die Prüfung auf PB >= 0.23 komplett
+ * deaktiviert. Auth-Infos kommen jetzt aus e.requestInfo() der Request-Events
+ * (onRecordCreateRequest/onRecordUpdateRequest). Interne Systemaufrufe (Boot/CLI)
+ * lösen Request-Events nicht aus und sind damit wie bisher ausgenommen.
+ * Request-Hooks müssen e.next() aufrufen, um den Create/Update fortzusetzen.
  */
 
 // ─── CREATE PROTECTION ──────────────────────────────────────
-onRecordCreate((e) => {
-    // Interne Systemaufrufe ohne HTTP-Context zulassen (z.B. Boot / CLI)
-    if (!e.httpContext) {
-        e.next();
-        return;
-    }
-
+onRecordCreateRequest((e) => {
     try {
-        const authRecord = e.httpContext.get("authRecord");
-        const isSuperuser = e.httpContext.get("admin") != null;
+        const info = e.requestInfo();
+        const isSuperuser = info.hasSuperuserAuth();
+        const authRecord = info.auth;
         const userRole = authRecord ? authRecord.get("role") : null;
 
         // Wenn nicht Superuser und nicht Admin
@@ -41,33 +46,27 @@ onRecordCreate((e) => {
         console.error("[rbac_protection:create] Error:", err);
         throw new BadRequestError("Sicherheitsvalidierung bei der Benutzererstellung fehlgeschlagen.");
     }
-
     e.next();
 }, "users");
 
 // ─── UPDATE PROTECTION ──────────────────────────────────────
-onRecordUpdate((e) => {
-    // Interne Systemaufrufe ohne HTTP-Context zulassen
-    if (!e.httpContext) {
-        e.next();
-        return;
-    }
-
+onRecordUpdateRequest((e) => {
     try {
-        const authRecord = e.httpContext.get("authRecord");
-        
-        // Unauthentifizierte Updates blockieren
+        const info = e.requestInfo();
+        const authRecord = info.auth;
+
+        // Unauthentifizierte Updates den Collection-Rules überlassen
         if (!authRecord) {
             e.next();
             return;
         }
 
-        const isSuperuser = e.httpContext.get("admin") != null;
+        const isSuperuser = info.hasSuperuserAuth();
         const userRole = authRecord.get("role");
 
         if (!isSuperuser && userRole !== "admin") {
-            const originalRecord = e.record.originalCopy();
-            
+            const originalRecord = (typeof e.record.original === "function") ? e.record.original() : null;
+
             // 1. Role Check
             const originalRole = originalRecord ? originalRecord.get("role") : e.record.get("role");
             const newRole = e.record.get("role");
@@ -96,7 +95,5 @@ onRecordUpdate((e) => {
         console.error("[rbac_protection:update] Error:", err);
         throw new BadRequestError("Sicherheitsvalidierung bei der Benutzeraktualisierung fehlgeschlagen.");
     }
-
     e.next();
 }, "users");
-
