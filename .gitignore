@@ -69,3 +69,21 @@ tools/create_transparent_logo.mjs
 backend/create_admin_*.mjs
 backend/create_user.js
 backend/demo_credentials.json
+
+# Live-/Audit-Artefakte (2026-10-22 aus Index entfernt, lokal behalten)
+backend/pocketbase.exe
+kunden/vibeforce/access/
+VIBEFORCE_ADMIN_ZUGANG_*.html
+screenshots/
+frontend/snapshots/
+/dashboard-after-changes.png
+/newtask-dialog-deployed.png
+/reports-deployed.png
+/reports-page.png
+/craft_baustelle_*.png
+/craft_hub_verified.png
+/craft_projects_verified.png
+/dossier_preview_p*.png
+/test_craft_hub_loaded.png
+tools/modal_live.png
+public/qr_*_tillmann.png
