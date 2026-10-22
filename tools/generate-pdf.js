@@ -15,6 +15,22 @@ const BRANDS = {
   neutral:   { primary: '#1F2937', name: 'AI Research Insights' },
 };
 
+// Lokale Fonts (self-hosted, DSGVO): assets/fonts/local-fonts.css laden und die
+// WOFF2-Referenzen als Data-URIs einbetten. Chromium rendert via setContent ohne
+// Basis-URL, daher sind relative Pfade nicht auflösbar; keine externen Requests.
+function loadLocalFontsCss() {
+  const fontsDir = path.join(__dirname, '..', 'assets', 'fonts');
+  const css = fs.readFileSync(path.join(fontsDir, 'local-fonts.css'), 'utf-8');
+  return css
+    .replace(/url\('([^']+\.woff2)'\)/g, (_, file) => {
+      const b64 = fs.readFileSync(path.join(fontsDir, file)).toString('base64');
+      return `url(data:font/woff2;base64,${b64})`;
+    })
+    .trim();
+}
+
+const localFontsCss = loadLocalFontsCss();
+
 async function generatePDF(inputPath, brand = 'neutral') {
   const brandCfg = BRANDS[brand] || BRANDS.neutral;
 
@@ -50,7 +66,7 @@ async function generatePDF(inputPath, brand = 'neutral') {
 <head>
 <meta charset="UTF-8">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  ${localFontsCss}
   
   @page {
     margin: 10mm 15mm;

@@ -738,6 +738,8 @@ export default function PreviewPage() {
         <p className={styles.pageSub}>
           Alle Lösungsvarianten aus dem BUILD-Masterplan zum direkten Vergleich.
           Wähle eine Kategorie aus und vergleiche die Optionen.
+          Einzelne Designvarianten wurden mit KI-Unterstützung erstellt und sind
+          entsprechend gekennzeichnet (Transparenz nach Art. 50 EU AI Act).
         </p>
 
         {/* Navigation Tabs */}
@@ -754,7 +756,14 @@ export default function PreviewPage() {
         {/* Active Category */}
         {categories.filter(c => c.id === activeTab).map(cat => (
           <div key={cat.id}>
-            <h2 className={styles.sectionTitle}>{cat.title}</h2>
+            <h2 className={styles.sectionTitle}>
+              {cat.title}
+              {cat.id === 'pro' && (
+                <span className="ml-2 align-middle inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                  KI-assistiert – Designentwurf (Art. 50 EU AI Act)
+                </span>
+              )}
+            </h2>
             <p className={styles.sectionDesc}>{cat.desc}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

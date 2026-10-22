@@ -1,10 +1,12 @@
+import { reportFontsCss } from '@/lib/report-fonts';
+
 export const reportTemplateHtml = `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+${reportFontsCss}
 
   :root {
     --brand: #00A699;
@@ -249,7 +251,7 @@ export const reportTemplateEditorial = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+${reportFontsCss}
 
   :root {
     --brand: #00A699;
@@ -469,7 +471,7 @@ export const reportTemplateDark = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+${reportFontsCss}
 
   :root {
     --brand: #14b8a6;
@@ -690,7 +692,7 @@ export const reportTemplateSwiss = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+${reportFontsCss}
 
   :root {
     --brand: #00A699;
