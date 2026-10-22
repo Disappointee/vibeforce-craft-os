@@ -82,3 +82,10 @@ yarn-error.log*
 /craft_projects_verified.png
 /dossier_preview_p*.png
 /test_craft_hub_loaded.png
+
+# Lokal-only Root-Artefakte (Abschluss R1, 2026-10-22)
+/tools/
+/scripts/
+/*.md
+/*.html
+/*.json
