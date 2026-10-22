@@ -162,8 +162,13 @@ async function runTests() {
     const startTime = new Date(Date.now() - 3600 * 2000).toISOString();
     const endTime = new Date().toISOString();
 
+    const usersLookup = await api('GET', '/api/collections/users/records?perPage=1&sort=created', null, adminToken);
+    const testUserId = usersLookup.data?.items?.[0]?.id;
+    assert(!!testUserId, `Resolved a staff user for the time entry (id: ${testUserId})`);
+
     const timeRes = await api('POST', '/api/collections/time_entries/records', {
       task: testTaskId,
+      user: testUserId,
       start_time: startTime,
       end_time: endTime,
       duration_minutes: 120,
