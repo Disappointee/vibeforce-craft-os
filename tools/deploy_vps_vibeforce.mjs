@@ -26,5 +26,11 @@ execSync(`ssh -p 2222 -i C:\\Users\\kasan\\.ssh\\id_ed25519_hetzner root@46.225.
 console.log('✅ Started vibeforce-backend container');
 
 // 3. Upsert superuser
-execSync(`ssh -p 2222 -i C:\\Users\\kasan\\.ssh\\id_ed25519_hetzner root@46.225.178.235 "docker exec vibeforce-backend /usr/local/bin/pocketbase superuser upsert ***REMOVED*** ***REMOVED***"`, { stdio: 'inherit' });
-console.log('✅ Upserted superuser ***REMOVED***');
+const adminEmail = process.env.PB_ADMIN_EMAIL || '***REMOVED***';
+const adminPassword = process.env.PB_ADMIN_PASSWORD;
+if (!adminPassword) {
+  console.error('❌ PB_ADMIN_PASSWORD not set — refusing to upsert superuser.');
+  process.exit(1);
+}
+execSync(`ssh -p 2222 -i C:\\Users\\kasan\\.ssh\\id_ed25519_hetzner root@46.225.178.235 "docker exec vibeforce-backend /usr/local/bin/pocketbase superuser upsert ${adminEmail} ${adminPassword}"`, { stdio: 'inherit' });
+console.log('✅ Upserted superuser ' + adminEmail);

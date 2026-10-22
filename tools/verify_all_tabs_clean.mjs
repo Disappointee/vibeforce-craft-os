@@ -8,7 +8,7 @@ async function verifyAllTabs() {
   console.log('1. Logging in...');
   await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle' });
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(3000);
 

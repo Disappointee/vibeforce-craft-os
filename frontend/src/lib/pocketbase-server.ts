@@ -51,49 +51,43 @@ async function getAdminToken(): Promise<string> {
     return authPromise;
   }
 
-  const rawEmail = (
-    process.env.POCKETBASE_ADMIN_EMAIL ||
-    process.env.PB_ADMIN_EMAIL ||
-    ''
-  ).trim().replace(/[\r\n\t]+/g, '');
+  const cleanEnv = (raw: string | undefined): string =>
+    raw ? raw.trim().replace(/[\r\n\t]+/g, '') : '';
 
-  const email = (rawEmail && rawEmail.includes('@'))
-    ? rawEmail
-    : 'admin@vibeforce-flow.de';
+  const email =
+    cleanEnv(process.env.POCKETBASE_ADMIN_EMAIL) ||
+    cleanEnv(process.env.PB_ADMIN_EMAIL);
 
-  // Bulletproof candidate passwords (handles Vercel legacy env vars as well as production secret)
-  const candidatePasswords = [
-    '***REMOVED***',
-    process.env.POCKETBASE_ADMIN_PASSWORD?.trim().replace(/[\r\n\t]+/g, ''),
-    process.env.PB_ADMIN_PASSWORD?.trim().replace(/[\r\n\t]+/g, ''),
-    '***REMOVED***',
-  ].filter((p): p is string => Boolean(p));
+  const password =
+    cleanEnv(process.env.POCKETBASE_ADMIN_PASSWORD) ||
+    cleanEnv(process.env.PB_ADMIN_PASSWORD);
+
+  if (!email || !email.includes('@') || !password) {
+    throw new Error(
+      '[getAdminPB] Missing superuser credentials. Set POCKETBASE_ADMIN_EMAIL + POCKETBASE_ADMIN_PASSWORD (or PB_ADMIN_EMAIL + PB_ADMIN_PASSWORD).',
+    );
+  }
 
   authPromise = (async () => {
     const pb = new PocketBase(POCKETBASE_URL);
     pb.autoCancellation(false);
 
-    let lastError: unknown = null;
-    for (const pass of candidatePasswords) {
-      try {
-        const authData = await pb.collection('_superusers').authWithPassword(email, pass);
-        const token = authData.token;
+    try {
+      const authData = await pb.collection('_superusers').authWithPassword(email, password);
+      const token = authData.token;
 
-        // Cache token for 50 minutes (PocketBase tokens default to 7-14 days)
-        cachedAdminToken = {
-          token,
-          expiresAt: Date.now() + 50 * 60 * 1000,
-        };
+      // Cache token for 50 minutes (PocketBase tokens default to 7-14 days)
+      cachedAdminToken = {
+        token,
+        expiresAt: Date.now() + 50 * 60 * 1000,
+      };
 
-        return token;
-      } catch (err) {
-        lastError = err;
-      }
+      return token;
+    } catch (err) {
+      console.error('[getAdminPB] Superuser authentication failed:', err);
+      invalidateAdminTokenCache();
+      throw err;
     }
-
-    console.error('[getAdminPB] Superuser authentication failed with all candidates:', lastError);
-    invalidateAdminTokenCache();
-    throw lastError;
   })().finally(() => {
     authPromise = null;
   });

@@ -4,7 +4,7 @@ const pb = new PocketBase('https://pb-vibeforce.46-225-178-235.sslip.io');
 pb.autoCancellation(false);
 
 async function run() {
-  await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
   const taskCol = await pb.collections.getOne('tasks');
   const f = taskCol.fields.find(f => f.name === 'assignees');
   console.log('tasks.assignees field:', JSON.stringify(f, null, 2));

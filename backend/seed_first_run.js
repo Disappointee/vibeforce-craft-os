@@ -9,7 +9,7 @@
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8080";
 const ADMIN_EMAIL = "***REMOVED***";
-const ADMIN_PASSWORD = "***REMOVED***";
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD;
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -48,11 +48,11 @@ async function main() {
     // ── 2. Create demo users ──
     console.log("\n[2] Creating demo users...");
     const userDefs = [
-        { email: "sarah.meier@agentur.de", password: "***REMOVED***", name: "Sarah Meier", role: "employee" },
-        { email: "lukas.wagner@agentur.de", password: "***REMOVED***", name: "Lukas Wagner", role: "employee" },
-        { email: "anna.schneider@agentur.de", password: "***REMOVED***", name: "Anna Schneider", role: "employee" },
-        { email: "carl@vibeforce.de", password: "***REMOVED***", name: "Demo User", role: "employee" },
-        { email: "max@kunde.de", password: "***REMOVED***", name: "Max Mustermann", role: "client" },
+        { email: "sarah.meier@agentur.de", password: process.env.SEED_DEMO_PASSWORD, name: "Sarah Meier", role: "employee" },
+        { email: "lukas.wagner@agentur.de", password: process.env.SEED_DEMO_PASSWORD, name: "Lukas Wagner", role: "employee" },
+        { email: "anna.schneider@agentur.de", password: process.env.SEED_DEMO_PASSWORD, name: "Anna Schneider", role: "employee" },
+        { email: "carl@vibeforce.de", password: process.env.SEED_DEMO_PASSWORD, name: "Demo User", role: "employee" },
+        { email: "max@kunde.de", password: process.env.SEED_DEMO_PASSWORD, name: "Max Mustermann", role: "client" },
     ];
 
     const userIds = {};
@@ -360,7 +360,7 @@ async function main() {
 
     console.log("\n=== Seed complete! ===");
     console.log(`  Admin: ${ADMIN_EMAIL}`);
-    console.log(`  Demo users password: ***REMOVED***`);
+    console.log(`  Demo users password: ***`);
 }
 
 main().catch((err) => {

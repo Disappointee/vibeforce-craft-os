@@ -5,7 +5,7 @@ async function activateDaniel() {
   const res = await fetch('https://vibeforce-flow-os.vercel.app/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'daniel@vibeforcetest.de', password: '***REMOVED***' })
+    body: JSON.stringify({ email: 'daniel@vibeforcetest.de', password: process.env.DEMO_DANIEL_PASSWORD })
   });
   const cookieHeader = res.headers.get('set-cookie');
   console.log('Got cookie from login API');

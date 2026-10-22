@@ -8,7 +8,7 @@ async function checkMobileAndDesktop() {
   const dPage = await desktopCtx.newPage();
   await dPage.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle' });
   await dPage.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await dPage.fill('input[type="password"]', '***REMOVED***');
+  await dPage.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await dPage.click('button[type="submit"]');
   await dPage.waitForTimeout(3000);
 
@@ -23,7 +23,7 @@ async function checkMobileAndDesktop() {
   const mPage = await mobileCtx.newPage();
   await mPage.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle' });
   await mPage.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await mPage.fill('input[type="password"]', '***REMOVED***');
+  await mPage.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await mPage.click('button[type="submit"]');
   await mPage.waitForTimeout(3000);
 

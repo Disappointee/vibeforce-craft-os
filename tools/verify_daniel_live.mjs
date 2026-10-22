@@ -12,7 +12,7 @@ async function testDaniel() {
 
   await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle' });
   await page.fill('#email', 'Daniel@vibeforcetest.de');
-  await page.fill('#password', '***REMOVED***');
+  await page.fill('#password', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(4000);
 

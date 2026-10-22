@@ -8,7 +8,7 @@
  */
 
 const email = "admin@vibeforce-flow.de";
-const password = "***REMOVED***";
+const password = process.env.PB_ADMIN_PASSWORD;
 const baseUrl = "https://aworkremaster-production.up.railway.app";
 
 function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
@@ -83,7 +83,7 @@ async function populateData() {
         const res = await fetch(`${baseUrl}/api/collections/users/records`, {
             method: "POST", headers,
             body: JSON.stringify({
-                email: emailAddr, password: "***REMOVED***", passwordConfirm: "***REMOVED***",
+                email: emailAddr, password: process.env.SEED_DEMO_PASSWORD, passwordConfirm: process.env.SEED_DEMO_PASSWORD,
                 name, role, expertise, language: "de",
                 notify_on_assignment: true, notify_on_mention: true, notify_on_due: true, weekly_report: true
             })
@@ -217,7 +217,7 @@ async function populateData() {
         console.log(`  Login at: https://aworkremaster-production.up.railway.app`);
         console.log(`  Email: ${email}`);
         console.log(`  Additional users: sarah.meier@agentur.de, lukas.wagner@agentur.de, anna.schneider@agentur.de`);
-        console.log(`  Password for all: ***REMOVED***`);
+        console.log(`  Password for all: ***`);
         console.log("============================================\n");
         return;
     }
@@ -894,7 +894,7 @@ async function populateData() {
     console.log("\n  Login at: https://aworkremaster-production.up.railway.app");
     console.log(`  Email: ${email}`);
     console.log(`  Additional users: sarah.meier@agentur.de, lukas.wagner@agentur.de, anna.schneider@agentur.de`);
-    console.log(`  Password for all: ***REMOVED***`);
+    console.log(`  Password for all: ***`);
     console.log("============================================\n");
 }
 

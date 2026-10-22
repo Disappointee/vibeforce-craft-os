@@ -14,7 +14,7 @@ async function verifyFinal() {
   console.log('Logging in on Mobile...');
   await mPage.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'domcontentloaded' });
   await mPage.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await mPage.fill('input[type="password"]', '***REMOVED***');
+  await mPage.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await mPage.click('button[type="submit"]');
   await mPage.waitForTimeout(3500);
 
@@ -44,7 +44,7 @@ async function verifyFinal() {
   const dPage = await desktopCtx.newPage();
   await dPage.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'domcontentloaded' });
   await dPage.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await dPage.fill('input[type="password"]', '***REMOVED***');
+  await dPage.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await dPage.click('button[type="submit"]');
   await dPage.waitForTimeout(3500);
 

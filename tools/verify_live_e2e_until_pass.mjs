@@ -15,7 +15,7 @@ async function tryLogin() {
   try {
     await page.goto('https://vibeforce-flow-os.vercel.app/login', { waitUntil: 'networkidle', timeout: 30000 });
     await page.fill('#email', '***REMOVED***');
-    await page.fill('#password', '***REMOVED***');
+    await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForTimeout(4000);
 

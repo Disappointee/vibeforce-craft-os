@@ -18,7 +18,7 @@
 
 const POCKETBASE_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
 const POCKETBASE_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@example.com';
-const POCKETBASE_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123';
+const POCKETBASE_PASSWORD = process.env.PB_ADMIN_PASSWORD;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 // Mapping von Benachrichtigungstyp zu User-Setting

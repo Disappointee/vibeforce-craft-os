@@ -1,6 +1,6 @@
 async function test() {
   const email = 'admin@vibeforce-flow.de';
-  const pw = '***REMOVED***';
+  const pw = process.env.PB_ADMIN_PASSWORD;
   
   // Auth as USER (not superuser)
   const authRes = await fetch('http://127.0.0.1:8090/api/collections/users/auth-with-password', {

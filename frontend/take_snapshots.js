@@ -4,7 +4,7 @@ const path = require('path');
 
 const BASE_URL = 'https://vibeforce-flow-os.vercel.app';
 const EMAIL = '***REMOVED***';
-const PASSWORD = '***REMOVED***';
+const PASSWORD = process.env.PB_ADMIN_PASSWORD;
 const SNAPSHOTS_DIR = path.join(__dirname, 'snapshots');
 
 if (!fs.existsSync(SNAPSHOTS_DIR)) {

@@ -27,10 +27,10 @@ async function main() {
   console.log(`✅ Health:`, health);
 
   // Daniel
-  await testUser('Daniel@vibeforcetest.de', '***REMOVED***', 'Daniel (Admin)');
+  await testUser('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD, 'Daniel (Admin)');
 
   // Robin
-  await testUser('***REMOVED***', '***REMOVED***', 'Robin (Admin)');
+  await testUser('***REMOVED***', process.env.PB_ADMIN_PASSWORD, 'Robin (Admin)');
 
   // Projects count
   const projects = await pb.collection('projects').getList(1, 5);

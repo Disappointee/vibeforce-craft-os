@@ -3,7 +3,7 @@ import path from 'path';
 
 const url = process.env.POCKETBASE_URL || 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const email = process.env.POCKETBASE_ADMIN_EMAIL || 'admin@vibeforce-flow.de';
-const pass = process.env.POCKETBASE_ADMIN_PASSWORD || '***REMOVED***';
+const pass = process.env.POCKETBASE_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
 console.log(`=== Starting PocketBase Craft & IDS Migration on ${url} ===`);
 

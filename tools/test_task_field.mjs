@@ -4,7 +4,7 @@ const pb = new PocketBase('https://pb-vibeforce.46-225-178-235.sslip.io');
 pb.autoCancellation(false);
 
 async function run() {
-  await pb.collection('_superusers').authWithPassword('***REMOVED***', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
   const projs = await pb.collection('projects').getList(1, 1);
   const users = await pb.collection('users').getList(1, 2);
   const u1 = users.items[0].id;

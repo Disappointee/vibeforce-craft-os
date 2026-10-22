@@ -5,7 +5,7 @@ pb.autoCancellation(false);
 
 async function test() {
   try {
-    await pb.collection('users').authWithPassword('***REMOVED***', '***REMOVED***');
+    await pb.collection('users').authWithPassword('***REMOVED***', process.env.PB_ADMIN_PASSWORD);
     console.log('Auth OK, model:', pb.authStore.record?.email);
   } catch(e) {
     console.error('Auth FAILED:', e.status, e.message);

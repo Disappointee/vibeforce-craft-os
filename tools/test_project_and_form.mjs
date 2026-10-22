@@ -8,7 +8,7 @@ async function testProjectAndForm() {
   console.log('Logging in...');
   await page.goto('https://vibeforce-flow-os.vercel.app/login');
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForURL('**/');
 

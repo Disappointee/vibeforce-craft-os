@@ -10,7 +10,7 @@ async function seedLiveCraftShowcase() {
 
   // 1. Authenticate as Superuser
   console.log('1. Authentifiziere Superuser an PocketBase...');
-  await pb.collection('_superusers').authWithPassword('admin@vibeforce-flow.de', '***REMOVED***');
+  await pb.collection('_superusers').authWithPassword('admin@vibeforce-flow.de', process.env.PB_ADMIN_PASSWORD);
   console.log('   ✅ Superuser erfolgreich authentifiziert.');
 
   // Find Robin Meister User

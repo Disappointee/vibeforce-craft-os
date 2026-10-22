@@ -37,8 +37,8 @@ async function main() {
 
   for (let round = 1; round <= 10; round++) {
     console.log(`\n=== Round ${round}/10 ===`);
-    const robinOk = await testUser('***REMOVED***', '***REMOVED***', 'Robin Admin');
-    const danielOk = await testUser('Daniel@vibeforcetest.de', '***REMOVED***', 'Daniel Admin');
+    const robinOk = await testUser('***REMOVED***', process.env.PB_ADMIN_PASSWORD, 'Robin Admin');
+    const danielOk = await testUser('Daniel@vibeforcetest.de', process.env.DEMO_DANIEL_PASSWORD, 'Daniel Admin');
 
     console.log(`Results: Robin -> ${robinOk ? '✅ SUCCESS' : '❌ FAILED'}, Daniel -> ${danielOk ? '✅ SUCCESS' : '❌ FAILED'}`);
 

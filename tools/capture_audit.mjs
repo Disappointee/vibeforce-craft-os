@@ -24,7 +24,7 @@ if (existsSync(join(__dirname, 'auth.json'))) {
 } else {
   BASE_URL = 'https://vibeforce-flow-os.vercel.app';
   EMAIL = '***REMOVED***';
-  PASSWORD = '***REMOVED***';
+  PASSWORD = process.env.PB_ADMIN_PASSWORD;
 }
 
 async function escapeActiveDialogs(page) {

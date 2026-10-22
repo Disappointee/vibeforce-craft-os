@@ -5,7 +5,7 @@ async function check() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto('http://localhost:3000/login', { waitUntil: 'domcontentloaded' });
   await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-  await page.fill('input[type="password"]', '***REMOVED***');
+  await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(2000);
   await page.goto('http://localhost:3000/craft', { waitUntil: 'domcontentloaded' });

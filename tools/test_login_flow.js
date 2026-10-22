@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 
   await page.goto('https://vibeforce-flow-os.vercel.app/login');
   await page.fill('#email', 'daniel@vibeforcetest.de');
-  await page.fill('#password', '***REMOVED***');
+  await page.fill('#password', process.env.DEMO_DANIEL_PASSWORD);
   await page.click('button[type="submit"]');
 
   await page.waitForTimeout(4000);

@@ -5,12 +5,12 @@ import { getAuthCookieName, getAppConfig } from '@/config/app-mode';
 
 const DEMO_GUESTS: Record<string, { email: string; pass: string }> = {
   slot_a: {
-    email: 'guest_slot_a@vibeforce.de',
-    pass: '***REMOVED***',
+    email: process.env.DEMO_GUEST_A_EMAIL || 'guest_slot_a@vibeforce.de',
+    pass: process.env.DEMO_GUEST_A_PASSWORD || '',
   },
   slot_b: {
-    email: 'guest_slot_b@vibeforce.de',
-    pass: '***REMOVED***',
+    email: process.env.DEMO_GUEST_B_EMAIL || 'guest_slot_b@vibeforce.de',
+    pass: process.env.DEMO_GUEST_B_PASSWORD || '',
   },
 };
 
@@ -24,6 +24,10 @@ export async function GET(request: NextRequest) {
     const targetRoute = redirectParam || appConfig.startRoute;
 
     const guest = DEMO_GUESTS[slot];
+
+    if (!guest?.pass) {
+      return NextResponse.redirect(new URL('/login?error=demo_unavailable', request.url));
+    }
 
     const pb = new PocketBase(POCKETBASE_URL);
     pb.autoCancellation(false);

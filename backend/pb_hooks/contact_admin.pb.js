@@ -113,8 +113,13 @@ routerAdd('POST', '/api/custom/contact-admin', (c) => {
 
         // Fallback, wenn keine Admins gefunden
         if (adminEmails.length === 0) {
-            const fallbackEmail = $os.getenv('CONTACT_ADMIN_FALLBACK') || '***REMOVED***';
-            adminEmails = [fallbackEmail];
+            const fallbackEmail = ($os.getenv('CONTACT_ADMIN_FALLBACK') || '').trim();
+            if (fallbackEmail) {
+                adminEmails = [fallbackEmail];
+            } else {
+                console.log('[ContactAdmin] Keine Admin-Empfänger und kein CONTACT_ADMIN_FALLBACK gesetzt.');
+                return c.json(500, { success: false, message: 'Kein Empfänger konfiguriert.' }, headers);
+            }
         }
 
         // SMTP prüfen

@@ -34,7 +34,7 @@ import { chromium } from 'playwright';
     // 2. Fülle Credentials aus
     console.log('Gebe Daniel-Credentials ein...');
     await page.fill('input[type="email"]', 'daniel@vibeforcetest.de');
-    await page.fill('input[type="password"]', '***REMOVED***');
+    await page.fill('input[type="password"]', process.env.DEMO_DANIEL_PASSWORD);
     
     // 3. Klicke Login
     console.log('Klicke Login-Button...');

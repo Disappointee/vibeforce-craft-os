@@ -22,7 +22,7 @@ async function main() {
 
   console.log('Filling form...');
   await page.fill('#email', '***REMOVED***');
-  await page.fill('#password', '***REMOVED***');
+  await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
 
   console.log('Clicking Anmelden button...');
   await page.click('button[type="submit"]');

@@ -9,8 +9,13 @@ onBootstrap((e) => {
     e.next();
     try {
         const forceReset = $os.getenv("FORCE_RESET_BOOT_PASSWORDS") === "true";
-        const adminEmail = (process.env.POCKETBASE_ADMIN_EMAIL || "admin@vibeforce-flow.de").trim();
-        const adminPassword = (process.env.POCKETBASE_ADMIN_PASSWORD || "***REMOVED***").trim();
+        const adminEmail = ($os.getenv("POCKETBASE_ADMIN_EMAIL") || $os.getenv("PB_ADMIN_EMAIL") || "").trim();
+        const adminPassword = ($os.getenv("POCKETBASE_ADMIN_PASSWORD") || $os.getenv("PB_ADMIN_PASSWORD") || "").trim();
+
+        if (!adminEmail || !adminPassword) {
+            console.log("[ensure_users] Skipped: admin credentials not configured via ENV.");
+            return;
+        }
 
         try {
             const existing = $app.findAuthRecordByEmail("users", adminEmail);

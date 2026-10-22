@@ -17,8 +17,8 @@ async function validateStufe1() {
   // 1. Candidate Password Resilience Test
   console.log('1. Prüfe Superuser-Authentifizierung mit Fallback-Kandidaten...');
   const candidatePasswords = [
-    '***REMOVED***',
-    '***REMOVED***',
+    process.env.PB_ADMIN_PASSWORD,
+    process.env.PB_ADMIN_PASSWORD,
   ];
   const pb = new PocketBase(POCKETBASE_URL);
   let authed = false;

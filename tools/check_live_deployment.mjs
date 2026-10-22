@@ -8,7 +8,7 @@ async function check() {
   console.log('1. Navigating to login...');
   await page.goto('https://vibeforce-flow-2b62u54jn-robins-projects-34c3aad5.vercel.app/login', { waitUntil: 'load' });
   await page.fill('#email', '***REMOVED***');
-  await page.fill('#password', '***REMOVED***');
+  await page.fill('#password', process.env.PB_ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(4000);
   

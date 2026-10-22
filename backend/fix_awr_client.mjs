@@ -4,7 +4,7 @@ async function main() {
   const auth = await fetch(base + '/api/collections/_superusers/auth-with-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identity: 'admin@example.com', password: 'admin123' }),
+    body: JSON.stringify({ identity: 'admin@example.com', password: process.env.PB_ADMIN_PASSWORD }),
   }).then(r => r.json());
   const headers = { Authorization: auth.token, 'Content-Type': 'application/json' };
 

@@ -4,10 +4,10 @@ const liveUrl = 'https://pb-vibeforce.46-225-178-235.sslip.io';
 const pb = new PocketBase(liveUrl);
 
 const superEmail = '***REMOVED***';
-const superPass = '***REMOVED***';
+const superPass = process.env.PB_ADMIN_PASSWORD;
 
 const danielEmail = 'Daniel@vibeforcetest.de';
-const danielPass = '***REMOVED***';
+const danielPass = process.env.DEMO_DANIEL_PASSWORD;
 const danielName = 'Daniel';
 
 async function main() {
