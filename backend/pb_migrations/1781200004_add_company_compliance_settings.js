@@ -87,7 +87,7 @@ migrate((app) => {
             for (const name of fieldNames) {
                 const existing = appSettings.fields.find((f) => f.name === name);
                 if (existing) {
-                    appSettings.fields.remove(existing.id);
+                    appSettings.fields.removeById(existing.id);
                 }
             }
             app.save(appSettings);

@@ -25,6 +25,8 @@ services:
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
       # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
+      # PocketBase --origins (entrypoint.sh, Fail-fast): konkrete Origins, kein '*'
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
     volumes:
       - pb-data-flow:/pb/pb_data
     ports:
@@ -100,6 +102,8 @@ services:
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
       # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
+      # PocketBase --origins (entrypoint.sh, Fail-fast): konkrete Origins, kein '*'
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
     volumes:
       - pb-data-craft:/pb/pb_data
     ports:
