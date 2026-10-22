@@ -6,41 +6,34 @@
  *   POST /api/custom/settings    → Einstellungen aktualisieren
  *   POST /api/custom/settings/test-smtp → SMTP-Verbindung testen
  *
- * PocketBase v0.37+ pb_hooks API:
- *   - $app.dao()              → Datenbankzugriff
- *   - routerAdd(method, path, handler) → Custom Route
- *   - $app.newMailClient()    → E-Mail-Client
- *   - $app.settings()         → PocketBase Settings lesen
+ * Inkl. Company-/Compliance-Felder (Handwerk: HWK, Freistellung §48b, VOB/DIN 18299).
+ *
+ * Hinweis (2026-10-22, Block 2): Gemeinsame Helfer werden INNERHALB der Handler
+ * per require geladen — PB >= 0.23 führt Route-Handler ohne Datei-Scope aus
+ * (Datei-Funktionen sind dort nicht sichtbar → generische 400-Fehler).
+ * Body wird über c.requestInfo().body gelesen (c.request.body.read() ist leer).
  */
 
-// CORS-Helfer
-function corsHeaders() {
-    // PRE-LAUNCH: CORS auf Produktionsdomain einschränken
-    // Ersetze '*' durch die tatsächliche Domain (z.B. 'https://app.vibeforce.de')
-    // Siehe: tasks/PRE_LAUNCH_CHECKLIST.md Abschnitt 3.4
-    const allowedOrigin = process.env.CORS_ORIGIN || $os.getenv('CORS_ORIGIN') || '*';
-    return {
-        'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-}
+// ============================================================
+// GET /api/custom/settings
+// ============================================================
+routerAdd('GET', '/api/custom/settings', (c) => {
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    const headers = helpers.corsHeaders(c, 'GET, POST, OPTIONS');
 
-// Admin-Check: Ist der Benutzer ein Admin?
-function isAdmin(request) {
-    try {
-        const authRecord = request.auth;
-        if (!authRecord) return false;
-        return authRecord.get('role') === 'admin';
-    } catch (e) {
-        return false;
+    // OPTIONS (CORS preflight) — wird i. d. R. bereits von PB-Core beantwortet
+    if (c.request.method === 'OPTIONS') {
+        return c.json(200, { success: true }, headers);
     }
-}
 
-// Aktuelle Einstellungen aus der Datenbank laden
-function getSettings(app) {
+    if (!helpers.isAdmin(c)) {
+        return c.json(403, { success: false, message: 'Nur Administratoren können Einstellungen abrufen.' }, headers);
+    }
+
+    // Aktuelle Einstellungen aus der Datenbank laden
+    let settings = null;
     try {
-        const records = app.findRecordsByFilter(
+        const records = $app.findRecordsByFilter(
             'app_settings',
             'id != ""',
             '-created',
@@ -49,7 +42,7 @@ function getSettings(app) {
         );
         if (records.length > 0) {
             const record = records[0];
-            return {
+            settings = {
                 id: record.getId(),
                 app_name: record.get('app_name') || 'Vibeforce Flow OS',
                 app_logo_url: record.get('app_logo_url') || '',
@@ -96,25 +89,7 @@ function getSettings(app) {
     } catch (e) {
         console.log('[SettingsAPI] Fehler beim Laden:', e.message);
     }
-    return null;
-}
 
-// ============================================================
-// GET /api/custom/settings
-// ============================================================
-routerAdd('GET', '/api/custom/settings', (c) => {
-    const headers = corsHeaders();
-
-    // OPTIONS (CORS preflight)
-    if (c.request.method === 'OPTIONS') {
-        return c.json(200, { success: true }, headers);
-    }
-
-    if (!isAdmin(c.request)) {
-        return c.json(403, { success: false, message: 'Nur Administratoren können Einstellungen abrufen.' }, headers);
-    }
-
-    const settings = getSettings($app);
     if (!settings) {
         // Keine Einstellungen vorhanden → Standardwerte zurückgeben
         return c.json(200, {
@@ -174,16 +149,15 @@ routerAdd('GET', '/api/custom/settings', (c) => {
 // POST /api/custom/settings
 // ============================================================
 routerAdd('POST', '/api/custom/settings', (c) => {
-    const headers = corsHeaders();
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    const headers = helpers.corsHeaders(c, 'GET, POST, OPTIONS');
 
-    if (!isAdmin(c.request)) {
+    if (!helpers.isAdmin(c)) {
         return c.json(403, { success: false, message: 'Nur Administratoren können Einstellungen bearbeiten.' }, headers);
     }
 
-    let body;
-    try {
-        body = JSON.parse(c.request.body?.read() || '{}');
-    } catch (e) {
+    const body = helpers.readJsonBody(c);
+    if (body === null) {
         return c.json(400, { success: false, message: 'Ungültiges JSON.' }, headers);
     }
 
@@ -232,11 +206,7 @@ routerAdd('POST', '/api/custom/settings', (c) => {
             record.set('app_name', 'Vibeforce Flow OS');
         }
 
-        if (isNew) {
-            $app.save(record);
-        } else {
-            $app.save(record);
-        }
+        $app.save(record);
 
         // Versuche, SMTP in PocketBase-internen Settings zu setzen
         try {
@@ -275,16 +245,15 @@ routerAdd('POST', '/api/custom/settings', (c) => {
 // POST /api/custom/settings/test-smtp
 // ============================================================
 routerAdd('POST', '/api/custom/settings/test-smtp', (c) => {
-    const headers = corsHeaders();
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    const headers = helpers.corsHeaders(c, 'GET, POST, OPTIONS');
 
-    if (!isAdmin(c.request)) {
+    if (!helpers.isAdmin(c)) {
         return c.json(403, { success: false, message: 'Nur Administratoren können SMTP testen.' }, headers);
     }
 
-    let body;
-    try {
-        body = JSON.parse(c.request.body?.read() || '{}');
-    } catch (e) {
+    const body = helpers.readJsonBody(c);
+    if (body === null) {
         return c.json(400, { success: false, message: 'Ungültiges JSON.' }, headers);
     }
 
@@ -299,7 +268,7 @@ routerAdd('POST', '/api/custom/settings/test-smtp', (c) => {
         });
 
         // Wir versuchen, eine Test-E-Mail an den Admin selbst zu senden
-        const authRecord = c.request.auth;
+        const authRecord = c.auth;
         const adminEmail = authRecord.get('email');
 
         const testMessage = new MailerMessage({
@@ -335,14 +304,16 @@ routerAdd('POST', '/api/custom/settings/test-smtp', (c) => {
 });
 
 // ============================================================
-// OPTIONS-Handler für CORS
+// OPTIONS-Handler für CORS (werden i. d. R. vom PB-Core beantwortet)
 // ============================================================
 routerAdd('OPTIONS', '/api/custom/settings', (c) => {
-    return c.json(204, null, corsHeaders());
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    return c.json(204, null, helpers.corsHeaders(c, 'GET, POST, OPTIONS'));
 });
 
 routerAdd('OPTIONS', '/api/custom/settings/test-smtp', (c) => {
-    return c.json(204, null, corsHeaders());
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    return c.json(204, null, helpers.corsHeaders(c, 'GET, POST, OPTIONS'));
 });
 
 console.log('[SettingsAPI] ✅ Settings API geladen (GET/POST /api/custom/settings, POST /api/custom/settings/test-smtp)');

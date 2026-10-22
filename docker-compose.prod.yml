@@ -62,7 +62,8 @@ services:
       - PORT=8080
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
-      - ALLOWED_ORIGINS=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de}
+      # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
+      - CORS_ORIGIN=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de}
     volumes:
       - pb-data:/pb/pb_data
     healthcheck:

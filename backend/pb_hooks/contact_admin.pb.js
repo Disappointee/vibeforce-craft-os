@@ -9,33 +9,17 @@
  *   - Rate-Limiting (max. 3 pro 60s pro IP)
  *   - E-Mail an alle Admins via SMTP
  *
- * PocketBase v0.37+ pb_hooks API:
- *   - $app.findRecordsByFilter()  → Datenbankzugriff
- *   - routerAdd()                 → Custom Route
- *   - $app.newMailClient()        → E-Mail-Client
- *   - $security.htmlEncode()      → HTML-Sicherheit
+ * Hinweis (2026-10-22, Block 2): Gemeinsame Helfer werden INNERHALB der Handler
+ * per require geladen — PB >= 0.23 führt Route-Handler ohne Datei-Scope aus.
+ * Body wird über c.requestInfo().body gelesen (c.request.body.read() ist leer).
  */
 
-// CORS-Helfer
-function corsHeaders() {
-    const allowedOrigin = process.env.CORS_ORIGIN || $os.getenv('CORS_ORIGIN') || '*';
-    return {
-        'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-}
-
-// ============================================================
-// POST /api/custom/contact-admin
-// ============================================================
 routerAdd('POST', '/api/custom/contact-admin', (c) => {
-    const headers = corsHeaders();
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    const headers = helpers.corsHeaders(c);
 
-    let body;
-    try {
-        body = JSON.parse(c.request.body?.read() || '{}');
-    } catch (e) {
+    const body = helpers.readJsonBody(c);
+    if (body === null) {
         return c.json(400, { success: false, message: 'Ungültiges JSON.' }, headers);
     }
 
@@ -50,10 +34,15 @@ routerAdd('POST', '/api/custom/contact-admin', (c) => {
     }
 
     // Client-IP ermitteln
-    const ip = c.request.header('X-Forwarded-For')?.split(',')[0]?.trim()
-        || c.request.header('X-Real-IP')
-        || c.request.remoteAddr
-        || 'unknown';
+    let ip = 'unknown';
+    try {
+        ip = c.request.header.get('X-Forwarded-For')?.split(',')[0]?.trim()
+            || c.request.header.get('X-Real-IP')
+            || c.request.remoteAddr
+            || 'unknown';
+    } catch (e) {
+        ip = 'unknown';
+    }
 
     // Rate-Limiting: max. 3 Requests pro 60s pro IP
     try {
@@ -209,11 +198,9 @@ routerAdd('POST', '/api/custom/contact-admin', (c) => {
     }
 });
 
-// ============================================================
-// OPTIONS-Handler für CORS
-// ============================================================
 routerAdd('OPTIONS', '/api/custom/contact-admin', (c) => {
-    return c.json(204, null, corsHeaders());
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    return c.json(204, null, helpers.corsHeaders(c));
 });
 
 console.log('[ContactAdmin] ✅ Contact-Admin API geladen (POST /api/custom/contact-admin)');
