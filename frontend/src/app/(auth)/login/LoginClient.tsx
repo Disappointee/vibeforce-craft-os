@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -204,8 +205,17 @@ export function LoginClient({ initialCraftMode }: { initialCraftMode: boolean })
       </div>
 
       {/* Bottom info */}
-      <div className="text-muted-foreground text-[10px] uppercase tracking-[0.06em] font-black mt-auto pb-8 pt-8">
-        {t('auth.login.selfHosted')}
+      <div className="text-muted-foreground text-[10px] uppercase tracking-[0.06em] font-black mt-auto pb-8 pt-8 flex flex-col items-center gap-2">
+        <span>{t('auth.login.selfHosted')}</span>
+        <span className="flex items-center gap-3">
+          <Link href="/impressum" className="hover:text-foreground transition-colors duration-150">
+            Impressum
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/datenschutz" className="hover:text-foreground transition-colors duration-150">
+            Datenschutz
+          </Link>
+        </span>
       </div>
 
       <ForgotPasswordDialog open={forgotDialogOpen} onOpenChange={setForgotDialogOpen} />
