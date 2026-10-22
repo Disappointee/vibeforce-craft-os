@@ -3,44 +3,28 @@
  *
  * POST /api/custom/admin/reset-password
  *   → Setzt das Passwort eines beliebigen Users zurück (Admin-only)
+ *
+ * Hinweis (2026-10-22, Block 2): Gemeinsame Helfer werden INNERHALB der Handler
+ * per require geladen — PB >= 0.23 führt Route-Handler ohne Datei-Scope aus
+ * (Datei-Funktionen wären sonst nicht sichtbar → generische 400-Fehler).
  */
 
-function corsHeaders() {
-    const allowedOrigin = process.env.CORS_ORIGIN || $os.getenv('CORS_ORIGIN') || '*';
-    return {
-        'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-}
-
-function isAdmin(request) {
-    try {
-        const authRecord = request.auth;
-        if (!authRecord) return false;
-        return authRecord.get('role') === 'admin';
-    } catch (e) {
-        return false;
-    }
-}
-
 routerAdd('POST', '/api/custom/admin/reset-password', (c) => {
-    const headers = corsHeaders();
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    const headers = helpers.corsHeaders(c);
 
-    let body;
-    try {
-        body = JSON.parse(c.request.body?.read() || '{}');
-    } catch (e) {
+    const body = helpers.readJsonBody(c);
+    if (body === null) {
         return c.json(400, { success: false, message: 'Ungültiges JSON.' }, headers);
     }
 
-    const requestInfo = $apis.requestInfo(c);
-
-    if (!isAdmin(requestInfo)) {
+    if (!helpers.isAdmin(c)) {
         return c.json(403, { success: false, message: 'Nur Administratoren können Passwörter zurücksetzen.' }, headers);
     }
 
-    const { userId, password, passwordConfirm } = body;
+    const userId = body.userId;
+    const password = body.password;
+    const passwordConfirm = body.passwordConfirm;
 
     if (!userId || !password || !passwordConfirm) {
         return c.json(400, { success: false, message: 'userId, password und passwordConfirm sind erforderlich.' }, headers);
@@ -55,7 +39,8 @@ routerAdd('POST', '/api/custom/admin/reset-password', (c) => {
     }
 
     try {
-        const user = $app.findAuthRecordById('users', userId);
+        // PB >= 0.23: findAuthRecordById existiert nicht mehr → findRecordById
+        const user = $app.findRecordById('users', userId);
 
         user.setPassword(password);
         user.set('passwordConfirm', passwordConfirm);
@@ -70,5 +55,6 @@ routerAdd('POST', '/api/custom/admin/reset-password', (c) => {
 }, $apis.requireAuth());
 
 routerAdd('OPTIONS', '/api/custom/admin/reset-password', (c) => {
-    return c.json(204, null, corsHeaders());
+    const helpers = require(__hooks + '/lib/cors_helpers.js');
+    return c.json(204, null, helpers.corsHeaders(c));
 });

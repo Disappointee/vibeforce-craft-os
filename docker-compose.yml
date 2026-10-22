@@ -23,11 +23,13 @@ services:
       - PORT=8080
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
-      - ALLOWED_ORIGINS=*
+      # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
     volumes:
       - pb-data-flow:/pb/pb_data
     ports:
-      - "8090:8080"
+      # Nur Loopback: PocketBase ist NICHT nach außen veröffentlicht (Audit P1-8)
+      - "127.0.0.1:8090:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/api/health || exit 1"]
       interval: 10s
@@ -96,11 +98,13 @@ services:
       - PORT=8080
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
-      - ALLOWED_ORIGINS=*
+      # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
     volumes:
       - pb-data-craft:/pb/pb_data
     ports:
-      - "8091:8080"
+      # Nur Loopback: PocketBase ist NICHT nach außen veröffentlicht (Audit P1-8)
+      - "127.0.0.1:8091:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/api/health || exit 1"]
       interval: 10s

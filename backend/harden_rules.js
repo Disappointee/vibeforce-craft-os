@@ -1,9 +1,18 @@
 /**
  * 🛡️ PocketBase API Collection Rules Hardening Script
  * Vibeforce Flow OS - Enterprise Hardening Engine
- * 
+ *
  * Applies deterministic, hardened API rules across all collections to eliminate
  * IDOR, Broken Object Level Authorization (BOLA), and Privilege Escalation.
+ *
+ * Block 2 (2026-10-22): Extended to cover ALL live collections, incl. the
+ * previously public ones (commands, command_results, demo_sessions) and the
+ * Craft collections (site_reports, measurements, evidence_items, invoices_zugferd,
+ * ids_carts, craft_licenses, defect_pins). app_settings stays admin-only (do not loosen).
+ *
+ * Usage:
+ *   POCKETBASE_ADMIN_EMAIL=... POCKETBASE_ADMIN_PASSWORD=... node backend/harden_rules.js
+ *   POCKETBASE_URL=https://pb-... node backend/harden_rules.js
  */
 
 const baseUrl = process.env.POCKETBASE_URL || process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
@@ -15,118 +24,208 @@ if (!email || !password) {
   process.exit(1);
 }
 
+const ADMIN = "@request.auth.role = 'admin'";
+const AUTH = "@request.auth.id != ''";
+
 const RULES = {
+  // ---------------------------------------------------------------------------
+  // Flow OS
+  // ---------------------------------------------------------------------------
   users: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "(id = @request.auth.id && @request.data.role:isset = false && @request.data.deactivated:isset = false) || @request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: `(id = @request.auth.id && @request.body.role:isset = false && @request.body.deactivated:isset = false) || ${ADMIN}`,
+    deleteRule: ADMIN,
   },
   projects: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "@request.auth.role = 'admin' || members.id ?= @request.auth.id",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: `${ADMIN} || members.id ?= @request.auth.id`,
+    deleteRule: ADMIN,
   },
   tasks: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.role = 'admin' || assignees.id ?= @request.auth.id",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: AUTH,
+    deleteRule: `${ADMIN} || assignees.id ?= @request.auth.id`,
   },
   time_entries: {
-    listRule: "@request.auth.role = 'admin' || user = @request.auth.id",
-    viewRule: "@request.auth.role = 'admin' || user = @request.auth.id",
-    createRule: "@request.auth.id != '' && user = @request.auth.id",
-    updateRule: "@request.auth.role = 'admin' || (user = @request.auth.id && is_billed = false)",
-    deleteRule: "@request.auth.role = 'admin' || (user = @request.auth.id && is_billed = false)",
+    listRule: `${ADMIN} || user = @request.auth.id`,
+    viewRule: `${ADMIN} || user = @request.auth.id`,
+    createRule: `${AUTH} && user = @request.auth.id`,
+    updateRule: `${ADMIN} || (user = @request.auth.id && is_billed = false)`,
+    deleteRule: `${ADMIN} || (user = @request.auth.id && is_billed = false)`,
   },
   clients: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "@request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
   },
   task_comments: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != '' && author = @request.auth.id",
-    updateRule: "author = @request.auth.id || @request.auth.role = 'admin'",
-    deleteRule: "author = @request.auth.id || @request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: `${AUTH} && author = @request.auth.id`,
+    updateRule: `author = @request.auth.id || ${ADMIN}`,
+    deleteRule: `author = @request.auth.id || ${ADMIN}`,
   },
   teams: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "@request.auth.role = 'admin' || lead = @request.auth.id",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: `${ADMIN} || lead = @request.auth.id`,
+    deleteRule: ADMIN,
   },
   team_members: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "@request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: `${ADMIN} || team.lead = @request.auth.id`,
+    updateRule: `${ADMIN} || team.lead = @request.auth.id`,
+    deleteRule: `${ADMIN} || team.lead = @request.auth.id`,
   },
   notifications: {
-    listRule: "user = @request.auth.id",
-    viewRule: "user = @request.auth.id",
-    createRule: "@request.auth.id != ''",
-    updateRule: "user = @request.auth.id",
-    deleteRule: "user = @request.auth.id",
+    listRule: 'user = @request.auth.id',
+    viewRule: 'user = @request.auth.id',
+    createRule: AUTH,
+    updateRule: 'user = @request.auth.id',
+    deleteRule: 'user = @request.auth.id',
   },
   checklist_items: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: AUTH,
+    deleteRule: AUTH,
   },
   audit_logs: {
-    listRule: "@request.auth.role = 'admin'",
-    viewRule: "@request.auth.role = 'admin'",
-    createRule: "@request.auth.id != ''",
+    listRule: ADMIN,
+    viewRule: ADMIN,
+    createRule: AUTH,
     updateRule: null, // 100% immutable
     deleteRule: null, // 100% immutable
   },
   app_settings: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.role = 'admin'",
-    updateRule: "@request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    // Admin-only on purpose (server actions read via admin PB) — do NOT loosen.
+    listRule: ADMIN,
+    viewRule: ADMIN,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
   },
   task_links: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: AUTH,
+    deleteRule: AUTH,
   },
   task_files: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: AUTH,
+    deleteRule: AUTH,
   },
   external_expenses: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
   },
   time_entry_reports: {
-    listRule: "@request.auth.id != ''",
-    viewRule: "@request.auth.id != ''",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.role = 'admin'",
-    deleteRule: "@request.auth.role = 'admin'",
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  report_templates: {
+    listRule: `@request.auth.id = user.id || ${ADMIN}`,
+    viewRule: `@request.auth.id = user.id || ${ADMIN}`,
+    createRule: AUTH,
+    updateRule: `@request.auth.id = user.id || ${ADMIN}`,
+    deleteRule: `@request.auth.id = user.id || ${ADMIN}`,
+  },
+  commands: {
+    // Was fully public ("" rules) — admin only.
+    listRule: ADMIN,
+    viewRule: ADMIN,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  command_results: {
+    // Was fully public ("" rules) — admin only.
+    listRule: ADMIN,
+    viewRule: ADMIN,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  demo_sessions: {
+    // Was fully public ("" rules) — admin only (demo hub runs server-side).
+    listRule: ADMIN,
+    viewRule: ADMIN,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  // ---------------------------------------------------------------------------
+  // Craft OS (same live DB)
+  // ---------------------------------------------------------------------------
+  craft_licenses: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  site_reports: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: `${AUTH} && author = @request.auth.id`,
+    updateRule: `${ADMIN} || author = @request.auth.id`,
+    deleteRule: `${ADMIN} || author = @request.auth.id`,
+  },
+  measurements: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  evidence_items: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  invoices_zugferd: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  ids_carts: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: ADMIN,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
+  },
+  defect_pins: {
+    listRule: AUTH,
+    viewRule: AUTH,
+    createRule: AUTH,
+    updateRule: ADMIN,
+    deleteRule: ADMIN,
   },
 };
 
@@ -156,6 +255,7 @@ async function hardenCollectionRules() {
 
   let successCount = 0;
   let skippedCount = 0;
+  let failedCount = 0;
 
   for (const [collectionName, ruleSet] of Object.entries(RULES)) {
     try {
@@ -168,6 +268,7 @@ async function hardenCollectionRules() {
         }
         const errText = await getRes.text();
         console.error(`[HARDEN] Failed to fetch '${collectionName}' (${getRes.status}): ${errText}`);
+        failedCount++;
         continue;
       }
 
@@ -190,16 +291,19 @@ async function hardenCollectionRules() {
       if (!patchRes.ok) {
         const patchErr = await patchRes.text();
         console.error(`[HARDEN] Failed to update rules for '${collectionName}' (${patchRes.status}): ${patchErr}`);
+        failedCount++;
       } else {
         console.log(`[HARDEN] ✅ Rules hardened for collection '${collectionName}'`);
         successCount++;
       }
     } catch (err) {
       console.error(`[HARDEN] Exception while hardening '${collectionName}':`, err);
+      failedCount++;
     }
   }
 
-  console.log(`\n[HARDEN] Summary: ${successCount} collections hardened, ${skippedCount} skipped.`);
+  console.log(`\n[HARDEN] Summary: ${successCount} collections hardened, ${skippedCount} skipped (not found), ${failedCount} failed.`);
+  if (failedCount > 0) process.exitCode = 2;
 }
 
 hardenCollectionRules().catch((err) => {
