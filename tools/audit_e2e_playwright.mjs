@@ -18,7 +18,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
-const screenshotsDir = 'C:\\Users\\kasan\\.gemini\\antigravity-ide\\brain\\30d6871f-48b6-42df-85e0-344f7018cd85\\screenshots';
+const screenshotsDir = 'C:\\Users\\Robin\\.gemini\\antigravity-ide\\brain\\30d6871f-48b6-42df-85e0-344f7018cd85\\screenshots';
 if (!fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir, { recursive: true });
 }

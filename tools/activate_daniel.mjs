@@ -58,7 +58,7 @@ async function activateDaniel() {
     }
   }
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/profile_toggled.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/profile_toggled.png' });
 
   // Now go to /projects
   console.log('Navigating to /projects...');
@@ -68,7 +68,7 @@ async function activateDaniel() {
   const sidebarText = await page.innerText('aside');
   console.log('SIDEBAR CONTAINS HANDWERK & BAUSTELLE:', sidebarText.includes('Handwerk & Baustelle') || sidebarText.includes('Craft'));
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_sidebar_verified.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_sidebar_verified.png' });
   console.log('Saved live_sidebar_verified.png');
 
   await browser.close();

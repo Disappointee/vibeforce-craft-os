@@ -1,4 +1,4 @@
-﻿import { chromium } from 'playwright';
+import { chromium } from 'playwright';
 
 async function run() {
   console.log('=== VERIFYING SERVER ENTITLEMENTS LIVE ===');
@@ -37,7 +37,7 @@ async function run() {
     await page.waitForTimeout(2000);
   }
 
-  const screenshotPath = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain\\9d4131b7-dd18-4294-9dc0-ab4a9932ffe9\\live_audit_pb_saved_toast.png';
+  const screenshotPath = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain\\9d4131b7-dd18-4294-9dc0-ab4a9932ffe9\\live_audit_pb_saved_toast.png';
   await page.screenshot({ path: screenshotPath });
   console.log('Screenshot saved to', screenshotPath);
 

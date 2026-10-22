@@ -29,7 +29,7 @@ async function verifyGrillMeLive() {
 
   // Check if GAEB tab exists
   console.log('3. Testing GAEB Tab...');
-  const screenshotDir = 'C:/Users/kasan/.gemini/antigravity/brain/9d4131b7-dd18-4294-9dc0-ab4a9932ffe9';
+  const screenshotDir = 'C:/Users/Robin/.gemini/antigravity/brain/9d4131b7-dd18-4294-9dc0-ab4a9932ffe9';
   const gaebTab = await page.$('#craft-tab-gaeb-btn');
   if (!gaebTab) {
     await page.screenshot({ path: `${screenshotDir}/diagnostic_live_fail.png` });

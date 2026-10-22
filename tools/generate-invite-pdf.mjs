@@ -5,7 +5,7 @@ import { dirname, resolve } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const htmlPath = resolve(__dirname, 'invite-hotze.html');
-const pdfPath = resolve('C:\\Users\\kasan\\Desktop', 'Einladung_Frau_Kalb.pdf');
+const pdfPath = resolve('C:\\Users\\Robin\\Desktop', 'Einladung_Frau_Kalb.pdf');
 
 const html = readFileSync(htmlPath, 'utf-8');
 

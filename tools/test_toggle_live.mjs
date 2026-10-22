@@ -46,7 +46,7 @@ async function testToggle() {
   }
 
   // Take screenshot of profile with toggle
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/m007_activated_profile.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/m007_activated_profile.png' });
   console.log('Saved m007_activated_profile.png');
 
   // Go to /projects
@@ -57,7 +57,7 @@ async function testToggle() {
   const sidebarText = await page.innerText('aside');
   console.log('Sidebar contains Handwerk & Baustelle:', sidebarText.includes('Handwerk & Baustelle') || sidebarText.includes('Craft'));
 
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/sidebar_with_craft.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/sidebar_with_craft.png' });
   console.log('Saved sidebar_with_craft.png');
 
   await browser.close();

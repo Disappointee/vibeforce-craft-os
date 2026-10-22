@@ -30,7 +30,7 @@ async function verifyCraftLive() {
   }
 
   console.log('Taking screenshot of live /craft...');
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_craft_hub_verified.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_craft_hub_verified.png' });
   console.log('Saved: scratch/live_craft_hub_verified.png');
 
   const pageText = await page.innerText('body');

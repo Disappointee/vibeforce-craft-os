@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import path from 'path';
 
-const SCREENSHOT_DIR = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain\\9d1aaf3f-b89a-4ecb-802b-2cb0af98736a\\screenshots';
+const SCREENSHOT_DIR = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain\\9d1aaf3f-b89a-4ecb-802b-2cb0af98736a\\screenshots';
 const TARGET_URL = 'https://vibeforce-flow-os.vercel.app';
 
 async function captureCraftHub() {

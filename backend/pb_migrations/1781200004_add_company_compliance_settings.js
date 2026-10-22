@@ -44,13 +44,20 @@ migrate((app) => {
                 { name: "vob_payment_term_days", type: "number" }
             ];
 
+            const createField = (f) => {
+                switch (f.type) {
+                    case "bool":
+                        return new BoolField({ name: f.name, required: false });
+                    case "number":
+                        return new NumberField({ name: f.name, required: false });
+                    default:
+                        return new TextField({ name: f.name, required: false });
+                }
+            };
+
             for (const f of fieldsToAdd) {
-                if (!appSettings.fields.some((existing) => existing.name === f.name)) {
-                    appSettings.fields.addAt(appSettings.fields.length, new Field({
-                        name: f.name,
-                        type: f.type,
-                        required: false
-                    }));
+                if (!appSettings.fields.getByName(f.name)) {
+                    appSettings.fields.add(createField(f));
                     updated = true;
                 }
             }

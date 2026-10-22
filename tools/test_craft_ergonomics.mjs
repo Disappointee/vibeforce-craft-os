@@ -2,7 +2,7 @@ import { chromium } from '../frontend/node_modules/playwright/index.mjs';
 import fs from 'fs';
 import path from 'path';
 
-const SCREENSHOT_DIR = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain\\84da1e3d-0fcd-45a6-8ab4-c3b46adfdbe9\\screenshots';
+const SCREENSHOT_DIR = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain\\84da1e3d-0fcd-45a6-8ab4-c3b46adfdbe9\\screenshots';
 const BASE_URL = 'http://localhost:3001';
 
 if (!fs.existsSync(SCREENSHOT_DIR)) {

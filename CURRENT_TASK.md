@@ -1,6 +1,6 @@
 # Vibeforce Craft OS — Arbeitsauftrag für die Craft-Session
 
-> **Workspace:** `c:\Users\kasan\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-craft-os`  
+> **Workspace:** `c:\Users\Robin\Desktop\AlphaExplorer\K.I. Takeover\Neu\Vibeforce One\vibeforce-craft-os`  
 > **Status:** Eigenständiges Repository (`main`, Commit `c26856f`), isolierte Konfiguration (`NEXT_PUBLIC_APP_MODE=craft`).  
 > **Backend:** `https://pb-vibeforce.46-225-178-235.sslip.io`  
 > **Ziel-Domain:** `https://craft-vibeforce.vercel.app`

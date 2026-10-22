@@ -2,7 +2,7 @@
 
 > **Task-ID:** `TASK-DUALSTACK-PLAN-01`
 > **Erstellt von:** Kilo Code (GLM 5.3 Flash) am 07.09.2026
-> **Basis:** [`auftrag_vibeforce_dual_stack_design.md`](file:///c:/Users/kasan/.gemini/antigravity/brain/9d1aaf3f-b89a-4ecb-802b-2cb0af98736a/auftrag_vibeforce_dual_stack_design.md)
+> **Basis:** [`auftrag_vibeforce_dual_stack_design.md`](file:///c:/Users/Robin/.gemini/antigravity/brain/9d1aaf3f-b89a-4ecb-802b-2cb0af98736a/auftrag_vibeforce_dual_stack_design.md)
 > **Zweck:** Vorgehensplan für die Wiederaufnahme des gestoppten Dual-Stack-Auftrags. Zur Validierung durch Antigravity (Gemini) eingereicht.
 
 ---

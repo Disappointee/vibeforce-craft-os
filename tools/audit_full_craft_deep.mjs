@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
-const SCREENSHOT_DIR = 'C:\\Users\\kasan\\.gemini\\antigravity\\brain\\568fb111-7fa9-46aa-924c-5baba7305d6a\\screenshots';
+const SCREENSHOT_DIR = 'C:\\Users\\Robin\\.gemini\\antigravity\\brain\\568fb111-7fa9-46aa-924c-5baba7305d6a\\screenshots';
 const TARGET_URL = 'https://vibeforce-flow-os.vercel.app';
 
 async function runFullCraftAudit() {

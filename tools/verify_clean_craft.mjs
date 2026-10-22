@@ -23,7 +23,7 @@ async function verifyCleanCraft() {
   await mPage.waitForTimeout(3000);
 
   // Take Mobile Screenshot of sober UI
-  await mPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_clean_hub.png' });
+  await mPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_clean_hub.png' });
   console.log('Saved: scratch/mobile_clean_hub.png');
 
   // Test Quick Create Modal: Click "Bericht erfassen" button
@@ -33,7 +33,7 @@ async function verifyCleanCraft() {
   await mPage.waitForTimeout(1500);
 
   // Take screenshot with modal open
-  await mPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_quick_create_modal.png' });
+  await mPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/mobile_quick_create_modal.png' });
   console.log('Saved: scratch/mobile_quick_create_modal.png');
 
   // 2. Desktop Viewport (1440x900)
@@ -47,7 +47,7 @@ async function verifyCleanCraft() {
 
   await dPage.goto('https://vibeforce-flow-os.vercel.app/craft', { waitUntil: 'domcontentloaded' });
   await dPage.waitForTimeout(3000);
-  await dPage.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/desktop_clean_hub.png' });
+  await dPage.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/desktop_clean_hub.png' });
   console.log('Saved: scratch/desktop_clean_hub.png');
 
   await browser.close();

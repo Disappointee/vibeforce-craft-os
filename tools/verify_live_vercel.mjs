@@ -33,7 +33,7 @@ async function verifyLive() {
   console.log('Profile contains Language Select:', hasLanguageSelect);
 
   // Take screenshot of profile
-  await page.screenshot({ path: 'C:/Users/kasan/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_profile.png' });
+  await page.screenshot({ path: 'C:/Users/Robin/.gemini/antigravity-ide/brain/7c874965-02fd-4dce-b2a0-3b8cb1f404e0/scratch/live_profile.png' });
   console.log('Screenshot saved to scratch/live_profile.png');
 
   await browser.close();
