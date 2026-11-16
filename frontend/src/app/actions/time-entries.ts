@@ -45,6 +45,8 @@ export async function createTimeEntryAction(data: z.infer<typeof CreateTimeEntry
       date: validated.date,
     });
 
+    revalidatePath('/time');
+    revalidatePath('/craft/time');
     revalidatePath('/dashboard/time');
     return JSON.parse(JSON.stringify(record));
   });
@@ -88,6 +90,8 @@ export async function updateTimeEntryAction(
 
     const record = await pb.collection('time_entries').update(entryId, validated);
 
+    revalidatePath('/time');
+    revalidatePath('/craft/time');
     revalidatePath('/dashboard/time');
     return JSON.parse(JSON.stringify(record));
   });
@@ -110,6 +114,8 @@ export async function deleteTimeEntryAction(entryId: string) {
 
     await pb.collection('time_entries').delete(entryId);
 
+    revalidatePath('/time');
+    revalidatePath('/craft/time');
     revalidatePath('/dashboard/time');
     return { success: true };
   });

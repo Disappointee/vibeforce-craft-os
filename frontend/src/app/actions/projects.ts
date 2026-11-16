@@ -5,6 +5,8 @@ import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 
 export async function revalidateProjectsPath() {
   await verifyUserSession();
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
 }
 
@@ -41,6 +43,8 @@ export async function createProjectAction(data: z.infer<typeof CreateProjectSche
     due_date: validated.due_date || null,
   });
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
   return JSON.parse(JSON.stringify(record));
 }
@@ -53,6 +57,9 @@ export async function updateProjectAction(projectId: string, data: Record<string
   const pb = await getAdminPB();
   const record = await pb.collection('projects').update(projectId, validated);
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
+  revalidatePath('/projects/' + projectId);
   revalidatePath('/dashboard/projects');
   revalidatePath('/dashboard/projects/' + projectId);
   return JSON.parse(JSON.stringify(record));
@@ -68,5 +75,7 @@ export async function deleteProjectAction(id: string) {
     status: 'archived',
   });
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
 }

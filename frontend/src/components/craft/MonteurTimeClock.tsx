@@ -91,21 +91,21 @@ const ACTIVITY_META: Record<
     shortLabel: 'Fahrt / Rüst',
     icon: Truck,
     badge: 'Anfahrt',
-    color: 'text-blue-500 bg-blue-500/10 border-blue-500/30',
+    color: 'text-orange-500 bg-orange-500/10 border-orange-500/30',
   },
   workshop: {
     label: 'Werkstatt & Vorfertigung',
     shortLabel: 'Werkstatt',
     icon: Wrench,
     badge: 'Betrieb',
-    color: 'text-purple-500 bg-purple-500/10 border-purple-500/30',
+    color: 'text-amber-400 bg-amber-400/10 border-amber-400/30',
   },
   regie_vob: {
     label: 'Regiestunden (§ 2 Abs. 10 VOB/B)',
     shortLabel: 'Regie VOB/B',
     icon: FileSpreadsheet,
     badge: 'Zusatzvergütung',
-    color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30',
+    color: 'text-amber-500 bg-amber-500/15 border-amber-500/40',
   },
 };
 
@@ -365,7 +365,7 @@ export function MonteurTimeClock({
             <div>
               <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                 Monteur-Stempeluhr & Baustellen-Terminal
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   Handschuhtauglich (≥ 64px)
                 </span>
               </h1>
@@ -398,9 +398,9 @@ export function MonteurTimeClock({
             {/* Live Status Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-sm">
               {clockStatus === 'active' ? (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                  🟢 EINGESTEMPELT ({ACTIVITY_META[activeActivity].shortLabel})
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  🟠 EINGESTEMPELT ({ACTIVITY_META[activeActivity].shortLabel})
                 </span>
               ) : clockStatus === 'paused' ? (
                 <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
@@ -433,11 +433,11 @@ export function MonteurTimeClock({
 
             {/* Active Shift Elapsed Display */}
             {clockStatus === 'active' && (
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 max-w-sm mx-auto animate-in zoom-in-95 duration-200">
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 max-w-sm mx-auto animate-in zoom-in-95 duration-200">
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
                   Laufende Buchung ({ACTIVITY_META[activeActivity].label})
                 </span>
-                <div className="text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
+                <div className="text-3xl font-black font-mono text-amber-600 dark:text-amber-400 mt-0.5">
                   {formatHms(sessionSeconds)}
                 </div>
               </div>
@@ -446,15 +446,15 @@ export function MonteurTimeClock({
             {/* GLOVE-READY TOUCH ACTION BUTTONS (>= 64px touch target) */}
             <div className="pt-2 max-w-xl mx-auto">
               {clockStatus === 'idle' ? (
-                /* BUTTON: KOMMEN */
+                /* BUTTON: KOMMEN (Craft OS Safety Amber / Warm Orange) */
                 <button
                   id="clock-in-btn"
                   type="button"
                   onClick={handleClockIn}
-                  className="w-full min-h-[72px] sm:min-h-[80px] p-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 active:scale-[0.98] text-white text-lg sm:text-xl font-black tracking-wide shadow-xl shadow-emerald-600/25 flex items-center justify-center gap-3 transition-all cursor-pointer border-2 border-emerald-400/40"
+                  className="w-full min-h-[72px] sm:min-h-[80px] p-5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 active:scale-[0.98] text-black text-lg sm:text-xl font-black tracking-wide shadow-xl shadow-amber-500/25 flex items-center justify-center gap-3 transition-all cursor-pointer border-2 border-amber-300/40"
                 >
                   <Play className="w-7 h-7 fill-current" />
-                  <span>🟢 KOMMEN / SCHICHT STARTEN</span>
+                  <span>🟠 KOMMEN / SCHICHT STARTEN</span>
                 </button>
               ) : clockStatus === 'active' ? (
                 /* BUTTONS: PAUSE & GEHEN */
@@ -463,7 +463,7 @@ export function MonteurTimeClock({
                     id="clock-pause-btn"
                     type="button"
                     onClick={handlePause}
-                    className="w-full min-h-[64px] sm:min-h-[72px] p-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 active:scale-[0.98] text-black text-base sm:text-lg font-black tracking-wide shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer border border-amber-400/40"
+                    className="w-full min-h-[64px] sm:min-h-[72px] p-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/35 active:scale-[0.98] text-amber-500 dark:text-amber-400 text-base sm:text-lg font-black tracking-wide shadow-md shadow-amber-500/10 flex items-center justify-center gap-2.5 transition-all cursor-pointer border border-amber-400/40"
                   >
                     <Pause className="w-6 h-6 fill-current" />
                     <span>⏸️ PAUSE STARTEN</span>
@@ -485,7 +485,7 @@ export function MonteurTimeClock({
                     id="clock-resume-btn"
                     type="button"
                     onClick={handleResume}
-                    className="w-full min-h-[64px] sm:min-h-[72px] p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 active:scale-[0.98] text-white text-base sm:text-lg font-black tracking-wide shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer border border-emerald-400/40"
+                    className="w-full min-h-[64px] sm:min-h-[72px] p-4 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 active:scale-[0.98] text-black text-base sm:text-lg font-black tracking-wide shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer border border-amber-300/40"
                   >
                     <Play className="w-6 h-6 fill-current" />
                     <span>▶️ PAUSE BEENDEN</span>
@@ -605,7 +605,7 @@ export function MonteurTimeClock({
           <div className="p-5 rounded-2xl bg-card border border-border shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-teal-500" />
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
                 GPS-Geofencing vor Ort
               </label>
               <button
@@ -613,7 +613,7 @@ export function MonteurTimeClock({
                 type="button"
                 onClick={verifyGeofence}
                 disabled={gpsLoading}
-                className="text-[11px] font-bold text-teal-600 hover:text-teal-500 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-bold text-amber-600 hover:text-amber-500 transition-colors inline-flex items-center gap-1 cursor-pointer"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 {gpsLoading ? 'Wird geprüft…' : 'Neu prüfen'}
@@ -624,13 +624,13 @@ export function MonteurTimeClock({
               <div
                 className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
                   gpsStatus.verified
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
                     : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
                 }`}
               >
                 <div className="flex items-center gap-2 font-bold">
                   {gpsStatus.verified ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
                   ) : (
                     <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
                   )}
@@ -649,7 +649,7 @@ export function MonteurTimeClock({
                 onClick={verifyGeofence}
                 className="w-full p-4 rounded-xl border border-dashed border-border hover:bg-muted/40 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
-                <MapPin className="w-5 h-5 text-teal-500" />
+                <MapPin className="w-5 h-5 text-amber-500" />
                 <span className="font-semibold text-foreground">GPS-Standort prüfen</span>
                 <span className="text-[10px]">Baustellen-Anwesenheit verifizieren</span>
               </button>
@@ -679,7 +679,7 @@ export function MonteurTimeClock({
               </div>
               <div className="p-2 rounded-lg bg-muted/40">
                 <span className="text-muted-foreground block">Status:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="font-bold text-amber-500 dark:text-amber-400">
                   {clockStatus === 'active' ? 'Aktiv' : clockStatus === 'paused' ? 'Pause' : 'Bereit'}
                 </span>
               </div>
@@ -865,7 +865,7 @@ export function MonteurTimeClock({
                           </td>
                           <td className="p-2.5 text-right">
                             {seg.gpsVerified ? (
-                              <span className="text-emerald-500 font-bold">✓ Vor Ort</span>
+                              <span className="text-amber-500 font-bold">✓ Vor Ort</span>
                             ) : (
                               <span className="text-muted-foreground">-</span>
                             )}

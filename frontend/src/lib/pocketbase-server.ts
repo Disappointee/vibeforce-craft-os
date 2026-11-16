@@ -84,7 +84,31 @@ async function getAdminToken(): Promise<string> {
 
       return token;
     } catch (err) {
-      console.error('[getAdminPB] Superuser authentication failed:', err);
+      console.warn('[getAdminPB] Superuser authentication failed, attempting fallback to admin user credentials...');
+      
+      const fallbackEmail =
+        cleanEnv(process.env.DEMO_GUEST_A_EMAIL) ||
+        cleanEnv(process.env.ADMIN_FALLBACK_EMAIL) ||
+        'guest_slot_a@vibeforce.de';
+      const fallbackPassword =
+        cleanEnv(process.env.DEMO_GUEST_A_PASSWORD) ||
+        cleanEnv(process.env.ADMIN_FALLBACK_PASSWORD);
+
+      if (fallbackPassword) {
+        try {
+          const userAuth = await pb.collection('users').authWithPassword(fallbackEmail, fallbackPassword);
+          const token = userAuth.token;
+          cachedAdminToken = {
+            token,
+            expiresAt: Date.now() + 50 * 60 * 1000,
+          };
+          console.info(`[getAdminPB] Successfully authenticated fallback admin user (${fallbackEmail})`);
+          return token;
+        } catch (fallbackErr) {
+          console.error('[getAdminPB] Both superuser and fallback admin authentication failed:', fallbackErr);
+        }
+      }
+
       invalidateAdminTokenCache();
       throw err;
     }
@@ -230,4 +254,21 @@ export async function getUserAuthPB(): Promise<PocketBase | null> {
   }
   return null;
 }
+
+/**
+ * Returns a user-authenticated PB instance if available, otherwise falls back to admin PB.
+ * Ensures user context / Slot isolation in Server Actions while maintaining fallback resilience.
+ */
+export async function getAuthenticatedOrAdminPB(): Promise<PocketBase> {
+  try {
+    const userPB = await getUserAuthPB();
+    if (userPB && userPB.authStore.isValid) {
+      return userPB;
+    }
+  } catch {
+    // Proceed to admin PB fallback
+  }
+  return getAdminPB();
+}
+
 

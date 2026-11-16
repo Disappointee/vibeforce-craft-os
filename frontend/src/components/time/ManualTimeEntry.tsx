@@ -380,7 +380,7 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
             <Button
                 type="submit"
                 disabled={isSubmitting || !selectedTaskId}
-                className="w-full bg-primary hover:bg-teal-400 text-black font-bold h-11 rounded-xl shadow-lg shadow-teal-500/10 transition-all active:scale-[0.98]"
+                className="w-full bg-primary hover:bg-amber-400 text-black font-bold h-11 rounded-xl shadow-lg shadow-amber-500/10 transition-all active:scale-[0.98]"
             >
                 {isSubmitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -403,7 +403,7 @@ export function ManualTimeEntry({ onEntryCreated, initialDate, onCollapseChange,
                 onCollapseChange?.(next);
             }}>
                 <CardTitle className="flex items-center gap-2 text-foreground text-base font-bold uppercase tracking-tight">
-                    <Clock size={18} className="text-teal-500" />
+                    <Clock size={18} className="text-amber-500" />
                     Manueller Zeiteintrag
                     {isCollapsed ? (
                         <ChevronRight size={16} className="ml-auto text-muted-foreground" />

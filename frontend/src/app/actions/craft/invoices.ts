@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { generateSiteReportHtml } from '@/lib/craft-pdf-templates';
@@ -184,6 +185,10 @@ export async function generateCraftInvoiceAction(
     await pb.collection('site_reports').update(siteReportId, {
       status: 'invoiced',
     });
+
+    revalidatePath('/craft');
+    revalidatePath('/projects');
+    revalidatePath(`/projects/${project.id}`);
 
     return {
       invoice: JSON.parse(JSON.stringify(invoiceRecord)) as InvoiceZugferdRecord,

@@ -20,6 +20,8 @@ export async function createExpenseAction(data: {
     category: data.category,
   });
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
   return JSON.parse(JSON.stringify(record));
 }
@@ -42,6 +44,8 @@ export async function updateExpenseAction(
     category: data.category,
   });
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
   return JSON.parse(JSON.stringify(record));
 }
@@ -53,6 +57,8 @@ export async function deleteExpenseAction(expenseId: string) {
   const pb = await getAdminPB();
   await pb.collection('external_expenses').delete(expenseId);
 
+  revalidatePath('/projects');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
   return { success: true };
 }

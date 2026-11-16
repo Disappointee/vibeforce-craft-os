@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { useUiStore } from '@/lib/store';
+import { isCraftMode } from '@/config/app-mode';
 import { filterProjectsByMode, filterTasksByMode } from '@/lib/data-isolation';
 
 export function CommandPalette() {
@@ -90,7 +91,7 @@ export function CommandPalette() {
     };
 
     const handleStartTimer = () => {
-        router.push('/time');
+        router.push(isCraftMode() ? '/craft/time' : '/time');
         toast.info('Timer in der unteren Leiste verfügbar');
     };
 
@@ -128,19 +129,19 @@ export function CommandPalette() {
                     {/* Quick Actions */}
                     <Command.Group heading="Navigation" className="px-2 mb-2">
                         <CommandItem onSelect={() => runCommand(() => router.push('/'))}>
-                            <LayoutDashboard className="mr-3 h-4 w-4 text-teal-500" />
+                            <LayoutDashboard className="mr-3 h-4 w-4 text-amber-500" />
                             <span>Dashboard</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/tasks'))}>
                             <CheckSquare className="mr-3 h-4 w-4 text-indigo-500" />
                             <span>Aufgaben</span>
                         </CommandItem>
-                        <CommandItem onSelect={() => runCommand(() => router.push('/time'))}>
-                            <Clock className="mr-3 h-4 w-4 text-teal-500" />
-                            <span>Zeiterfassung</span>
+                        <CommandItem onSelect={() => runCommand(() => router.push(isCraftMode() ? '/craft/time' : '/time'))}>
+                            <Clock className="mr-3 h-4 w-4 text-amber-500" />
+                            <span>{isCraftMode() ? 'Monteur-Stempeluhr' : 'Zeiterfassung'}</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/planner'))}>
-                            <BarChart3 className="mr-3 h-4 w-4 text-teal-500" />
+                            <BarChart3 className="mr-3 h-4 w-4 text-amber-500" />
                             <span>Planer</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(() => router.push('/projects'))}>
@@ -160,7 +161,7 @@ export function CommandPalette() {
                     {/* Actions */}
                     <Command.Group heading="Aktionen" className="px-2 mb-2">
                         <CommandItem onSelect={() => runCommand(handleStartTimer)}>
-                            <Timer className="mr-3 h-4 w-4 text-teal-500" />
+                            <Timer className="mr-3 h-4 w-4 text-amber-500" />
                             <span>Timer starten</span>
                         </CommandItem>
                         <CommandItem onSelect={() => runCommand(handleCreateTask)}>
@@ -192,7 +193,7 @@ export function CommandPalette() {
                         <Command.Group heading="Aufgaben" className="px-2 mb-2">
                             {results.tasks.map((task) => (
                                 <CommandItem key={task.id} onSelect={() => runCommand(() => router.push(`/tasks?id=${task.id}`))}>
-                                    <ArrowRight className="mr-3 h-4 w-4 text-teal-500/50" />
+                                    <ArrowRight className="mr-3 h-4 w-4 text-amber-500/50" />
                                     <span>{task.title}</span>
                                 </CommandItem>
                             ))}

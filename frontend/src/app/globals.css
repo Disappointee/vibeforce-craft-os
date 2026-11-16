@@ -155,6 +155,29 @@
   --duration-slower: 300ms;
 }
 
+
+/* Craft OS Design System Token Overrides — Safety Amber / Warm Orange */
+[data-mode="craft"],
+.craft-mode {
+  --primary: oklch(0.795 0.184 86.047);
+  --primary-foreground: #000000;
+  --ring: oklch(0.795 0.184 86.047 / 0.5);
+  --sidebar-primary: oklch(0.795 0.184 86.047);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-ring: oklch(0.795 0.184 86.047 / 0.5);
+}
+
+.dark[data-mode="craft"],
+.dark .craft-mode,
+.dark.craft-mode {
+  --primary: oklch(0.795 0.184 86.047);
+  --primary-foreground: #000000;
+  --ring: oklch(0.795 0.184 86.047 / 0.5);
+  --sidebar-primary: oklch(0.795 0.184 86.047);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-ring: oklch(0.795 0.184 86.047 / 0.5);
+}
+
 /* Map .dark class to frappe-gantt's [data-theme="dark"] selector */
 .dark {
   &,

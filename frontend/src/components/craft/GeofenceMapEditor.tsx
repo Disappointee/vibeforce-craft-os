@@ -215,7 +215,7 @@ export function GeofenceMapEditor({
               onClick={() => setType('none')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 type === 'none'
-                  ? 'bg-white dark:bg-teal-600 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-white dark:bg-amber-500 text-gray-900 dark:text-black font-semibold shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -226,7 +226,7 @@ export function GeofenceMapEditor({
               onClick={() => setType('circle')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 type === 'circle'
-                  ? 'bg-white dark:bg-teal-600 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-white dark:bg-amber-500 text-gray-900 dark:text-black font-semibold shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -238,7 +238,7 @@ export function GeofenceMapEditor({
               onClick={() => setType('polygon')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 type === 'polygon'
-                  ? 'bg-white dark:bg-teal-600 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-white dark:bg-amber-500 text-gray-900 dark:text-black font-semibold shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -256,7 +256,7 @@ export function GeofenceMapEditor({
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   {t('craft.geofence.radius_label')}
                 </label>
-                <span className="text-xs font-bold text-teal-600 dark:text-teal-400">
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
                   {radius} m
                 </span>
               </div>
@@ -267,7 +267,7 @@ export function GeofenceMapEditor({
                 step="10"
                 value={radius}
                 onChange={(e) => setRadius(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                className="w-full h-2 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
               />
             </>
           )}
@@ -301,7 +301,7 @@ export function GeofenceMapEditor({
             type="button"
             onClick={handleSave}
             disabled={isSaving || isLoading}
-            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all disabled:opacity-50"
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] px-6 py-2.5 text-sm font-bold text-black shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50"
           >
             {isSaving ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
@@ -331,7 +331,7 @@ export function GeofenceMapEditor({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('craft.geofence.search_address')}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#121824] border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <button
@@ -353,7 +353,7 @@ export function GeofenceMapEditor({
                 onClick={() => selectSearchResult(item)}
                 className="w-full text-left px-4 py-3 text-xs hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 flex items-start gap-2"
               >
-                <MapPin className="w-3.5 h-3.5 text-teal-500 shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                 <span>{item.display_name}</span>
               </button>
             ))}

@@ -37,7 +37,7 @@ export function GeofenceCheckinPrompt({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
               <MapPin className="h-5 w-5" />
             </div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -71,7 +71,7 @@ export function GeofenceCheckinPrompt({
           <button
             id="geofence-start-btn"
             onClick={() => onStartTimer(projectId)}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] px-5 py-2.5 text-sm font-semibold text-black shadow-lg shadow-amber-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             <Play className="h-4 w-4 fill-current" />
             {t('craft.geofence.prompt_start')}

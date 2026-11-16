@@ -22,6 +22,8 @@ export async function createReportAction(data: {
 
   const record = await pb.collection('time_entry_reports').create(formData);
 
+  revalidatePath('/time');
+  revalidatePath('/craft/time');
   revalidatePath('/dashboard/time');
   return JSON.parse(JSON.stringify(record));
 }

@@ -58,7 +58,7 @@ export function WeekView({ entries, currentDate, onPrevWeek, onNextWeek, onDayCl
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-foreground text-base font-bold uppercase tracking-tight">
-                        <CalendarDays size={18} className="text-teal-500" />
+                        <CalendarDays size={18} className="text-amber-500" />
                         Wochenansicht
                     </CardTitle>
                     <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export function WeekView({ entries, currentDate, onPrevWeek, onNextWeek, onDayCl
                 {/* Week total */}
                 <div className="mb-6 rounded-2xl bg-card border border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
                             Wochensumme
                         </span>
                         <h4 className="text-sm font-bold text-foreground">
@@ -121,7 +121,7 @@ export function WeekView({ entries, currentDate, onPrevWeek, onNextWeek, onDayCl
                                 key={day.toISOString()}
                                 onClick={() => onDayClick?.(day)}
                                 className={`flex flex-col rounded-xl md:rounded-2xl border p-2 md:p-4 min-h-[80px] md:min-h-[140px] text-left transition-all group relative ${today
-                                        ? 'border-primary/30 bg-primary/5 shadow-lg shadow-teal-500/5'
+                                        ? 'border-primary/30 bg-primary/5 shadow-lg shadow-amber-500/5'
                                         : 'border-border bg-background/30 hover:border-border hover:bg-accent/50'
                                     }`}
                             >
@@ -131,12 +131,12 @@ export function WeekView({ entries, currentDate, onPrevWeek, onNextWeek, onDayCl
                                         }`}>
                                         {format(day, isMobile ? 'EEEEEE' : 'EEEE', { locale: de })}
                                     </div>
-                                    <div className={`text-lg md:text-2xl font-black mt-0.5 md:mt-1 ${today ? 'text-teal-200' : 'text-foreground'
+                                    <div className={`text-lg md:text-2xl font-black mt-0.5 md:mt-1 ${today ? 'text-amber-200' : 'text-foreground'
                                         }`}>
                                         {format(day, 'dd')}
                                     </div>
                                     {dayMinutes > 0 ? (
-                                        <div className="text-[9px] md:text-[10px] font-bold text-teal-500/70 bg-primary/5 rounded-full px-1.5 md:px-2 py-0.5 mt-1 md:mt-2 inline-block tabular-nums">
+                                        <div className="text-[9px] md:text-[10px] font-bold text-amber-500/70 bg-primary/5 rounded-full px-1.5 md:px-2 py-0.5 mt-1 md:mt-2 inline-block tabular-nums">
                                             {formatDuration(dayMinutes)}
                                         </div>
                                     ) : (

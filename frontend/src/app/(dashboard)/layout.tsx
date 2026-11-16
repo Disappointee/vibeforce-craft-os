@@ -366,7 +366,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background font-sans text-foreground overflow-hidden">
+      <div data-mode={craftMode ? 'craft' : 'agency'} className={`flex h-screen bg-background font-sans text-foreground overflow-hidden ${craftMode ? 'craft-mode' : ''}`}>
+
 
         {/* Sidebar */}
         <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out border-r border-border bg-sidebar/50 backdrop-blur-xl flex flex-col hidden md:flex z-20 relative`}>
@@ -412,9 +413,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   Baustelle & Betrieb
                 </div>
                 <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} collapsed={sidebarCollapsed} />
-                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
-                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
-                <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} collapsed={sidebarCollapsed} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} className={pathname.startsWith('/projects') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} className={pathname.startsWith('/craft/defects') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} collapsed={sidebarCollapsed} />
+                <NavItem href="/craft/time" icon={<Timer size={18} className={pathname.startsWith('/craft/time') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} collapsed={sidebarCollapsed} />
 
                 <div className={`px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider ${sidebarCollapsed ? 'hidden' : 'block'}`}>
                   Ressourcen & Partner
@@ -507,9 +508,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   Baustelle & Betrieb
                 </div>
                 <NavItem href="/craft" icon={<Hammer size={18} className="text-amber-500" />} label="Handwerks-Zentrale" active={pathname === '/craft'} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/projects" icon={<FolderGit2 size={18} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/craft/defects" icon={<CheckSquare size={18} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
-                <NavItem href="/craft/time" icon={<Timer size={18} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/projects" icon={<FolderGit2 size={18} className={pathname.startsWith('/projects') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Baustellen & Vorhaben" active={pathname.startsWith('/projects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft/defects" icon={<CheckSquare size={18} className={pathname.startsWith('/craft/defects') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Mängel & VOB-Aufgaben" active={pathname.startsWith('/craft/defects')} onClick={() => setMobileSidebarOpen(false)} />
+                <NavItem href="/craft/time" icon={<Timer size={18} className={pathname.startsWith('/craft/time') ? 'text-amber-400' : 'text-amber-500/80'} />} label="Monteur-Stempeluhr" active={pathname.startsWith('/craft/time')} onClick={() => setMobileSidebarOpen(false)} />
 
                 <div className="px-2 pt-4 pb-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
                   Ressourcen & Partner

@@ -143,7 +143,7 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
                     <div
                         key={entry.id}
                         onClick={() => onEditEntry(entry)}
-                        className="rounded-xl border border-border bg-card/40 p-4 space-y-3 cursor-pointer hover:border-teal-500/30 transition-colors"
+                        className="rounded-xl border border-border bg-card/40 p-4 space-y-3 cursor-pointer hover:border-amber-500/30 transition-colors"
                     >
                         {/* Top row: Date + Duration + Actions */}
                         <div className="flex items-start justify-between gap-3">

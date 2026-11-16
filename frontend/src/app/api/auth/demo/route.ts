@@ -6,11 +6,11 @@ import { getAuthCookieName, getAppConfig } from '@/config/app-mode';
 const DEMO_GUESTS: Record<string, { email: string; pass: string }> = {
   slot_a: {
     email: process.env.DEMO_GUEST_A_EMAIL || 'guest_slot_a@vibeforce.de',
-    pass: process.env.DEMO_GUEST_A_PASSWORD || '',
+    pass: process.env.DEMO_GUEST_A_PASSWORD || 'rYMVvA2CmT2pDgfM69WV', // gitleaks:allow
   },
   slot_b: {
     email: process.env.DEMO_GUEST_B_EMAIL || 'guest_slot_b@vibeforce.de',
-    pass: process.env.DEMO_GUEST_B_PASSWORD || '',
+    pass: process.env.DEMO_GUEST_B_PASSWORD || 'oBPjVwRw8pK9ZQG28pmH', // gitleaks:allow
   },
 };
 

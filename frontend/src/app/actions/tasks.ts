@@ -59,6 +59,7 @@ export async function createTaskAction(data: z.infer<typeof CreateTaskSchema>) {
     }
   }
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -71,6 +72,7 @@ export async function updateTaskAction(id: string, data: z.infer<typeof UpdateTa
   const pb = await getAdminPB();
   const record = await pb.collection('tasks').update(id, validated);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -82,6 +84,7 @@ export async function deleteTaskAction(id: string) {
   const pb = await getAdminPB();
   await pb.collection('tasks').delete(id);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
 }
 
@@ -96,6 +99,7 @@ export async function createTaskLinkAction(sourceTask: string, targetTask: strin
     link_type: linkType,
   });
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -107,6 +111,7 @@ export async function deleteTaskLinkAction(id: string) {
   const pb = await getAdminPB();
   await pb.collection('task_links').delete(id);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
 }
 
@@ -122,6 +127,7 @@ export async function createChecklistItemAction(taskId: string, title: string, s
     sort_order: sortOrder ?? 0,
   });
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -133,6 +139,7 @@ export async function updateChecklistItemAction(id: string, data: Partial<Checkl
   const pb = await getAdminPB();
   const record = await pb.collection('checklist_items').update(id, data);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -144,6 +151,7 @@ export async function deleteChecklistItemAction(id: string) {
   const pb = await getAdminPB();
   await pb.collection('checklist_items').delete(id);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
 }
 
@@ -154,6 +162,7 @@ export async function uploadTaskFileAction(formData: FormData) {
   const pb = await getAdminPB();
   const record = await pb.collection('task_files').create(formData);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
   return JSON.parse(JSON.stringify(record));
 }
@@ -165,5 +174,6 @@ export async function deleteTaskFileAction(id: string) {
   const pb = await getAdminPB();
   await pb.collection('task_files').delete(id);
 
+  revalidatePath('/tasks');
   revalidatePath('/dashboard/tasks');
 }

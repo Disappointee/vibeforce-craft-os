@@ -265,7 +265,7 @@ export function MeasurementGrid({
       {/* HEADER BAR */}
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-teal-500 shrink-0" />
+          <Calculator className="w-5 h-5 text-amber-500 shrink-0" />
           <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             Aufmaß & Leistungspositionen (DIN 18299)
           </h3>
@@ -369,7 +369,7 @@ export function MeasurementGrid({
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { unit_price: parseFloat(e.target.value) || 0 })}
                     placeholder="0,00"
-                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-teal-500 rounded px-1.5 py-1 text-xs"
+                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded px-1.5 py-1 text-xs"
                   />
                 </td>
                 <td className="py-2.5 px-3">
@@ -377,7 +377,7 @@ export function MeasurementGrid({
                     value={row.tax_rate_type || defaultTaxType}
                     disabled={readOnly}
                     onChange={(e) => updateRow(row.id, { tax_rate_type: e.target.value as 'reverse_charge_13b' | 'standard_19' })}
-                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-teal-500 rounded px-1 py-1 text-[11px] font-medium text-muted-foreground focus:text-foreground"
+                    className="w-full bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded px-1 py-1 text-[11px] font-medium text-muted-foreground focus:text-foreground"
                   >
                     <option value="reverse_charge_13b" className="dark:bg-gray-900">0% (§ 13b)</option>
                     <option value="standard_19" className="dark:bg-gray-900">19% USt</option>
@@ -456,7 +456,7 @@ export function MeasurementGrid({
             {/* Top Row: Pos. & GP & Action */}
             <div className="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-white/5 pb-2.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   Pos. {row.position_nr}
                 </span>
                 <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
@@ -491,7 +491,7 @@ export function MeasurementGrid({
                 disabled={readOnly}
                 onChange={(e) => updateRow(row.id, { title: e.target.value })}
                 placeholder="z.B. Trockenbau Gipskarton 2-lagig"
-                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-amber-500 outline-none transition-all"
               />
             </div>
 
@@ -499,7 +499,7 @@ export function MeasurementGrid({
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[11px]">
                 <label className="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                  <Calculator className="w-3.5 h-3.5 text-teal-500" />
+                  <Calculator className="w-3.5 h-3.5 text-amber-500" />
                   Formel (L × B × H)
                 </label>
                 <span className="text-[10px] text-gray-400 font-mono">Shunting-Yard</span>
@@ -510,7 +510,7 @@ export function MeasurementGrid({
                 disabled={readOnly}
                 onChange={(e) => updateRow(row.id, { formula: e.target.value })}
                 placeholder="z.B. 12.50 * 2.80 oder (8.4 + 2) * 3"
-                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium text-teal-600 dark:text-teal-400 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium text-amber-600 dark:text-amber-400 focus:ring-2 focus:ring-amber-500 outline-none transition-all"
               />
             </div>
 
@@ -526,7 +526,7 @@ export function MeasurementGrid({
                   value={row.quantity || ''}
                   disabled={readOnly}
                   onChange={(e) => updateRow(row.id, { quantity: parseFloat(e.target.value) || 0 })}
-                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -537,7 +537,7 @@ export function MeasurementGrid({
                   value={row.unit}
                   disabled={readOnly}
                   onChange={(e) => updateRow(row.id, { unit: e.target.value as MeasurementUnit })}
-                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                 >
                   {MEASUREMENT_UNITS.map((u) => (
                     <option key={u} value={u} className="dark:bg-gray-900">
@@ -561,7 +561,7 @@ export function MeasurementGrid({
                   disabled={readOnly}
                   onChange={(e) => updateRow(row.id, { unit_price: parseFloat(e.target.value) || 0 })}
                   placeholder="0,00"
-                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono font-medium focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -572,7 +572,7 @@ export function MeasurementGrid({
                   value={row.tax_rate_type || defaultTaxType}
                   disabled={readOnly}
                   onChange={(e) => updateRow(row.id, { tax_rate_type: e.target.value as 'reverse_charge_13b' | 'standard_19' })}
-                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                  className="w-full min-h-[42px] bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                 >
                   <option value="reverse_charge_13b" className="dark:bg-gray-900">0% (§ 13b)</option>
                   <option value="standard_19" className="dark:bg-gray-900">19% USt</option>
@@ -587,7 +587,7 @@ export function MeasurementGrid({
           <button
             type="button"
             onClick={addRow}
-            className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-teal-500/40 hover:border-teal-500 bg-teal-500/5 hover:bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-bold transition-all active:scale-[0.99]"
+            className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
             <span>Position hinzufügen</span>
@@ -619,7 +619,7 @@ export function MeasurementGrid({
             </div>
           )}
 
-          <div className="border-t border-gray-200 dark:border-white/10 pt-2.5 mt-1 flex justify-between items-center font-bold text-teal-600 dark:text-teal-400">
+          <div className="border-t border-gray-200 dark:border-white/10 pt-2.5 mt-1 flex justify-between items-center font-bold text-amber-600 dark:text-amber-400">
             <span className="text-sm">Gesamtbetrag Brutto:</span>
             <span className="font-mono text-base">{total.toFixed(2)} €</span>
           </div>
