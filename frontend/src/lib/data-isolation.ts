@@ -32,8 +32,16 @@ export function isCraftProject(project: any): boolean {
   const key = (project.key || '').toUpperCase();
   const name = (project.name || '').toLowerCase();
   const type = (project.project_type || project.type || '').toLowerCase();
-  const siteAddress = (project.site_address || '').toLowerCase();
-  const trade = (project.trade || '').toLowerCase();
+  const siteAddress = typeof project.site_address === 'string'
+    ? project.site_address.toLowerCase()
+    : project.site_address && typeof project.site_address === 'object'
+      ? JSON.stringify(project.site_address).toLowerCase()
+      : '';
+  const trade = typeof project.trade === 'string'
+    ? project.trade.toLowerCase()
+    : project.trade && typeof project.trade === 'object'
+      ? JSON.stringify(project.trade).toLowerCase()
+      : '';
   const clientId = project.client || project.expand?.client?.id;
 
   if (clientId && (KNOWN_CRAFT_CLIENT_IDS.has(clientId) || isCraftClient(project.expand?.client))) {

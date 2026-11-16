@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyUserSession } from '@/lib/pocketbase-server';
 import { buildStundenreportFullHtml, type StundenreportInput, type ReportTemplate } from '@/lib/stundenreport';
 
 export async function POST(request: NextRequest) {
+  const user = await verifyUserSession();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const body = await request.json();
   const { template, ...reportData } = body as StundenreportInput & { template?: ReportTemplate };
   const fullHtml = buildStundenreportFullHtml(reportData as StundenreportInput, template || 'default');

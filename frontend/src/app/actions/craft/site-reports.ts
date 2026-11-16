@@ -46,7 +46,9 @@ export async function createSiteReportAction(data: CreateSiteReportInput) {
     });
 
     revalidatePath(`/projects/${validated.project}/site-reports`);
+    revalidatePath(`/projects/${validated.project}`);
     revalidatePath('/craft');
+    revalidatePath('/projects');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
   });
 }
@@ -98,7 +100,10 @@ export async function updateSiteReportAction(reportId: string, data: UpdateSiteR
     const record = await pb.collection('site_reports').update(reportId, validated);
     if (record.project) {
       revalidatePath(`/projects/${record.project}/site-reports`);
+      revalidatePath(`/projects/${record.project}`);
     }
+    revalidatePath('/craft');
+    revalidatePath('/projects');
     revalidatePath('/craft');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
   });
@@ -128,8 +133,10 @@ export async function createReportRevisionAction(reportId: string, reason: strin
 
     if (existing.project) {
       revalidatePath(`/projects/${existing.project}/site-reports`);
+      revalidatePath(`/projects/${existing.project}`);
     }
     revalidatePath('/craft');
+    revalidatePath('/projects');
     return JSON.parse(JSON.stringify(revision)) as SiteReportRecord;
   });
 }
@@ -226,7 +233,10 @@ export async function signSiteReportAction(
 
     if (record.project) {
       revalidatePath(`/projects/${record.project}/site-reports`);
+      revalidatePath(`/projects/${record.project}`);
     }
+    revalidatePath('/craft');
+    revalidatePath('/projects');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
   });
 }

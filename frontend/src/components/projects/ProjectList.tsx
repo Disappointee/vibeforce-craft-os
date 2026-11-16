@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
 import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
+import { formatSiteAddress } from '@/lib/utils';
 import { isCraftMode } from '@/config/app-mode';
 import { filterProjectsByMode, isCraftProject } from '@/lib/data-isolation';
 
@@ -304,10 +305,10 @@ export function ProjectList({
                 )}
               </div>
 
-              {craft && project.site_address && (
+              {craft && project.site_address && formatSiteAddress(project.site_address) && (
                 <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
                   <MapPin size={11} className="text-amber-500 shrink-0" />
-                  <span className="truncate">{project.site_address}</span>
+                  <span className="truncate">{formatSiteAddress(project.site_address)}</span>
                 </div>
               )}
 
@@ -345,10 +346,10 @@ export function ProjectList({
                     {project.expand.client.company || project.expand.client.name}
                   </span>
                 )}
-                {project.site_address && (
+                {project.site_address && formatSiteAddress(project.site_address) && (
                   <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                     <MapPin size={10} className="text-amber-500 shrink-0" />
-                    {project.site_address}
+                    {formatSiteAddress(project.site_address)}
                   </span>
                 )}
               </div>

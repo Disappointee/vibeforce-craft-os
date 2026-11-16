@@ -5,11 +5,14 @@ import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 
 export async function revalidateClientsPath() {
   await verifyUserSession();
+  revalidatePath('/clients');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/clients');
 }
 
 export async function revalidateClientPath(clientId: string) {
   await verifyUserSession();
+  revalidatePath('/clients/' + clientId);
   revalidatePath('/dashboard/clients/' + clientId);
 }
 
@@ -45,6 +48,8 @@ export async function createClientAction(data: z.infer<typeof CreateClientSchema
   const pb = await getAdminPB();
   const record = await pb.collection('clients').create(validated);
 
+  revalidatePath('/clients');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/clients');
   return JSON.parse(JSON.stringify(record));
 }
@@ -57,7 +62,10 @@ export async function updateClientAction(clientId: string, data: z.infer<typeof 
   const pb = await getAdminPB();
   const record = await pb.collection('clients').update(clientId, validated);
 
+  revalidatePath('/clients');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/clients');
+  revalidatePath('/clients/' + clientId);
   revalidatePath('/dashboard/clients/' + clientId);
   return JSON.parse(JSON.stringify(record));
 }
@@ -73,5 +81,7 @@ export async function deleteClientAction(id: string) {
     kundenstatus: 'archived',
   });
 
+  revalidatePath('/clients');
+  revalidatePath('/craft');
   revalidatePath('/dashboard/clients');
 }

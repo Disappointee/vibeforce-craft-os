@@ -22,6 +22,7 @@ import { createEvidenceItemAction } from '@/app/actions/craft/evidence';
 import { saveMediaBlob } from '@/lib/offline-sync';
 import type { SiteReportRecord, QualificationLevel } from '@/lib/pocketbase-types';
 import { useDraftAutosave } from '@/hooks/useOfflineSync';
+import { formatLocalDate } from '@/lib/utils';
 
 interface DailySiteReportFormProps {
   projectId: string;
@@ -40,7 +41,7 @@ export function DailySiteReportForm({
 }: DailySiteReportFormProps) {
   const router = useRouter();
   const [reportDate, setReportDate] = useState(
-    initialReport?.report_date || new Date().toISOString().split('T')[0]
+    initialReport?.report_date || formatLocalDate()
   );
   const [weather, setWeather] = useState(initialReport?.weather || 'Sonnig');
   const [temperature, setTemperature] = useState<number | undefined>(
