@@ -11,17 +11,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Vibeforce Flow OS | Premium Agency OS',
-  description: 'The definitive, bespoke project management solution for agencies.',
-  metadataBase: new URL('https://vibeforce-flow-os.vercel.app'),
+  title: 'Vibeforce Craft OS | Handwerk & Bau',
+  description: 'Mobile Baustellendokumentation, VOB-Aufmaße, Mängelverwaltung & Monteur-Zeiterfassung.',
+  metadataBase: new URL('https://vibeforce-craft-os-five.vercel.app'),
   openGraph: {
-    title: 'Vibeforce Flow OS | Premium Agency OS',
-    description: 'The definitive, bespoke project management solution for agencies.',
-    url: 'https://vibeforce-flow-os.vercel.app',
-    siteName: 'Vibeforce Flow OS',
+    title: 'Vibeforce Craft OS | Handwerk & Bau',
+    description: 'Mobile Baustellendokumentation, VOB-Aufmaße, Mängelverwaltung & Monteur-Zeiterfassung.',
+    url: 'https://vibeforce-craft-os-five.vercel.app',
+    siteName: 'Vibeforce Craft OS',
     images: [
       {
-        url: '/icon-vfos.png',
+        url: '/icon-kos.png',
         width: 800,
         height: 600,
       },
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vibeforce Flow OS | Premium Agency OS',
-    description: 'The definitive, bespoke project management solution for agencies.',
-    images: ['/icon-vfos.png'],
+    title: 'Vibeforce Craft OS | Handwerk & Bau',
+    description: 'Mobile Baustellendokumentation, VOB-Aufmaße, Mängelverwaltung & Monteur-Zeiterfassung.',
+    images: ['/icon-kos.png'],
   },
 };
 

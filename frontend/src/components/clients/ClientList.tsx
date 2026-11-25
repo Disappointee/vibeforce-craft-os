@@ -59,7 +59,15 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                 const result = await pb.collection('clients').getList(1, 50, {
                     sort: '-created',
                 });
-                setClients(result.items as ClientRecord[]);
+                const items = result.items as ClientRecord[];
+                const seen = new Set<string>();
+                const deduped = items.filter((c) => {
+                    const key = `${(c.name || '').trim().toLowerCase()}|${(c.email || '').trim().toLowerCase()}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+                setClients(deduped);
             } catch (error) {
                 console.error('Failed to fetch clients:', error);
                 toast.error('Fehler beim Laden der Kunden. Bitte versuche es erneut.');
@@ -301,16 +309,15 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                 )}
                             </div>
 
-                            {/* B7: New fields display */}
-                            {(client.auftragsvolumen != null || client.stundenzahl_gesamt != null) && (
+                            {((client.auftragsvolumen != null && client.auftragsvolumen > 0) || (client.stundenzahl_gesamt != null && client.stundenzahl_gesamt > 0)) && (
                                 <div className="mt-4 pt-4 border-t border-border/50 flex items-center gap-4">
-                                    {client.auftragsvolumen != null && (
+                                    {client.auftragsvolumen != null && client.auftragsvolumen > 0 && (
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <Euro size={12} className="text-emerald-500" />
                                             <span>{formatCurrency(client.auftragsvolumen)}</span>
                                         </div>
                                     )}
-                                    {client.stundenzahl_gesamt != null && (
+                                    {client.stundenzahl_gesamt != null && client.stundenzahl_gesamt > 0 && (
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <Clock size={12} className="text-indigo-400" />
                                             <span>{client.stundenzahl_gesamt}h</span>

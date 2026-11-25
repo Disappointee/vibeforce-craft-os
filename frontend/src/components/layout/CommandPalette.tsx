@@ -221,7 +221,7 @@ export function CommandPalette() {
                     </div>
                     <div className="flex items-center gap-1 text-primary/50">
                         <Search className="h-3 w-3" />
-                        <span>Vibeforce Flow OS</span>
+                        <span>Vibeforce Craft OS</span>
                     </div>
                 </div>
             </Command>

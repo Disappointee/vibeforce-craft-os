@@ -47,6 +47,8 @@ import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { getImportedIdsCartAction } from '@/app/actions/craft/ids-carts';
+import { pb } from '@/lib/pocketbase';
+import { filterProjectsByMode } from '@/lib/data-isolation';
 import type { IdsCart } from '@/lib/ids-connect';
 import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
@@ -151,7 +153,7 @@ export function CraftHubClient({
   const [projects, setProjects] = useState<ProjectRecord[]>(initialProjects);
   const [reports, setReports] = useState<SiteReportRecord[]>(initialReports);
   const [invoices] = useState<any[]>(initialInvoices);
-  const [timeEntries] = useState<TimeEntryRecord[]>(initialTimeEntries);
+  const [timeEntries, setTimeEntries] = useState<TimeEntryRecord[]>(initialTimeEntries);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState<boolean>(false);
   const [isBaustelleModalOpen, setIsBaustelleModalOpen] = useState<boolean>(false);
@@ -208,6 +210,8 @@ export function CraftHubClient({
         author: 'u1',
         report_date: new Date().toISOString().slice(0, 10),
         status: 'signed',
+        work_performed: 'Rohbau & Trockenbau-Ständerwerk EG komplett montiert; Kabeltrassen-Abnahme vorbereitet.',
+        weather: 'Trocken · 14°C',
         qualification_hours: {
           meister: 16,
           geselle: 40,
@@ -218,6 +222,9 @@ export function CraftHubClient({
         updated: new Date().toISOString(),
         collectionId: 'site_reports',
         collectionName: 'site_reports',
+        expand: {
+          project: { id: 'sample_craft_project', key: 'BAU-DEMO', name: 'Neubau Gewerbehalle Nord (Muster-Baustelle)' } as any,
+        },
       },
     ],
     []
@@ -260,6 +267,60 @@ export function CraftHubClient({
     ],
     []
   );
+
+  // Client-side PocketBase sync + graceful demo fallback if SSR returned empty
+  useEffect(() => {
+    if (initialProjects.length > 0 && initialReports.length > 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        let nextProjects = initialProjects;
+        if (nextProjects.length === 0 && pb.authStore.isValid) {
+          const projRes = await pb.collection('projects').getList(1, 50, {
+            sort: '-created',
+            expand: 'client',
+          });
+          nextProjects = filterProjectsByMode(projRes.items as unknown as ProjectRecord[]);
+        }
+        let nextReports = initialReports;
+        if (nextReports.length === 0 && pb.authStore.isValid) {
+          try {
+            const repRes = await pb.collection('site_reports').getList(1, 50, {
+              sort: '-report_date',
+              expand: 'project,author',
+            });
+            nextReports = repRes.items as unknown as SiteReportRecord[];
+          } catch {}
+        }
+        if (cancelled) return;
+        if (nextProjects.length === 0) {
+          nextProjects = [sampleProject];
+          if (nextReports.length === 0) nextReports = sampleSiteReports;
+          if (timeEntries.length === 0) setTimeEntries(sampleTimeEntries);
+        } else if (nextReports.length === 0) {
+          nextReports = sampleSiteReports.map((r) => ({
+            ...r,
+            project: nextProjects[0].id,
+            expand: { project: nextProjects[0] as any },
+          }));
+        }
+        setProjects(nextProjects);
+        setSelectedProjectId((prev) => prev || nextProjects[0]?.id || '');
+        setReports(nextReports);
+      } catch {
+        if (cancelled) return;
+        if (projects.length === 0) {
+          setProjects([sampleProject]);
+          setSelectedProjectId(sampleProject.id);
+        }
+        if (reports.length === 0) setReports(sampleSiteReports);
+        if (timeEntries.length === 0) setTimeEntries(sampleTimeEntries);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialProjects, initialReports, sampleProject, sampleSiteReports, sampleTimeEntries]);
 
   // Filter state for reports
   const [reportFilterStatus, setReportFilterStatus] = useState<string>('all');

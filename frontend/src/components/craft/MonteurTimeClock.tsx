@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { pb } from '@/lib/pocketbase';
 import {
   Timer,
   Play,
@@ -112,9 +113,21 @@ const ACTIVITY_META: Record<
 export function MonteurTimeClock({
   projects,
   initialProjectId,
-  userName = 'Robin Lehnebach',
-  userRole = 'Obermonteur / Handwerksmeister',
+  userName = 'Gast-Monteur (Demo)',
+  userRole = 'Bauleitung / Demo-Zugang',
 }: MonteurTimeClockProps) {
+  const [resolvedUserName, setResolvedUserName] = useState(userName);
+  const [resolvedUserRole, setResolvedUserRole] = useState(userRole);
+
+  useEffect(() => {
+    const rec = pb.authStore.record as any;
+    if (rec?.name) setResolvedUserName(rec.name);
+    if (rec?.email?.startsWith('guest_slot_')) {
+      setResolvedUserRole('Bauleitung / Demo-Zugang');
+    } else if (rec?.role) {
+      setResolvedUserRole(rec.role === 'admin' ? 'Bauleitung / Admin' : 'Monteur / Fachkraft');
+    }
+  }, []);
   // Selected project
   const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
     return initialProjectId || (projects.length > 0 ? projects[0].id : '');
@@ -371,7 +384,7 @@ export function MonteurTimeClock({
               </h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                 <User className="w-3.5 h-3.5 text-foreground" />
-                <span>Angemeldet als: <strong className="text-foreground">{userName}</strong> ({userRole})</span>
+                <span>Angemeldet als: <strong className="text-foreground">{resolvedUserName}</strong> ({resolvedUserRole})</span>
               </div>
             </div>
           </div>
@@ -807,7 +820,7 @@ export function MonteurTimeClock({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-muted/40 border border-border text-center">
                 <div>
                   <span className="text-[10px] text-muted-foreground block uppercase">Monteur:</span>
-                  <span className="font-bold text-foreground">{userName}</span>
+                  <span className="font-bold text-foreground">{resolvedUserName}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-muted-foreground block uppercase">Datum:</span>

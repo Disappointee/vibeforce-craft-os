@@ -80,7 +80,7 @@ export default function DocsPage() {
                 Benutzer-Handbuch & Hilfe
               </h1>
               <p className="text-muted-foreground mt-1 text-sm">
-                Offizielle Dokumentation von Vibeforce Flow OS. Hier findest du alle Funktionen, Workflows, Abrechnungsregeln und Best Practices.
+                Offizielle Dokumentation von Vibeforce Craft OS. Hier findest du alle Funktionen, Workflows, Abrechnungsregeln und Best Practices.
               </p>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function DocsPage() {
                   Das Grundprinzip: Die 4-Stufen-Hierarchie
                 </CardTitle>
                 <CardDescription>
-                  Damit keine Stunden verloren gehen und alle Budgets stimmen, baut Vibeforce Flow OS auf einer klaren logischen Kette auf.
+                  Damit keine Stunden verloren gehen und alle Budgets stimmen, baut Vibeforce Craft OS auf einer klaren logischen Kette auf.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -639,8 +639,8 @@ export default function DocsPage() {
         </Tabs>
 
         <div className="text-center text-xs text-muted-foreground py-6 border-t border-border/40">
-          <p className="font-medium text-foreground">Vibeforce Flow OS — Handbuch & Dokumentation</p>
-          <p className="mt-1">Support & Hilfe: support@vibeforce-flow.de</p>
+          <p className="font-medium text-foreground">Vibeforce Craft OS — Handbuch &amp; Dokumentation</p>
+          <p className="mt-1">Support &amp; Hilfe: support@vibeforce-craft.de</p>
         </div>
       </div>
     </div>

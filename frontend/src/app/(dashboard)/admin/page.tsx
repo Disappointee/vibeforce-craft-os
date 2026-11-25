@@ -347,7 +347,7 @@ export default function AdminOverviewPage() {
                     <div>
                       <span className="font-semibold text-foreground">§ 13b UStG Reverse Charge Engine</span>
                       <p className="text-muted-foreground text-[11px]">
-                        {reverseChargeActive ? 'Automatische Netto-Rechnungen bei Bauleistern' : 'Deaktiviert (Regelbesteuerung)'}
+                        {reverseChargeActive ? 'Automatische Netto-Rechnungen bei Bauleistungen' : 'Deaktiviert (Regelbesteuerung)'}
                       </p>
                     </div>
                   </div>

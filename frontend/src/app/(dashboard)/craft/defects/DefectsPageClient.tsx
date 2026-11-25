@@ -55,8 +55,7 @@ const INITIAL_SAMPLE_DEFECTS: Record<string, DefectPinRecord[]> = {
       status: 'notified',
       due_date: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10),
       contractor_name: 'Trockenbau Spree GmbH',
-      evidence_photo_url:
-        'https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=600&q=80',
+      evidence_photo_url: '/images/defect-drywall.svg',
       evidence_sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
       created: '2026-09-01T08:30:00Z',
       updated: '2026-09-02T10:15:00Z',
@@ -77,8 +76,7 @@ const INITIAL_SAMPLE_DEFECTS: Record<string, DefectPinRecord[]> = {
       status: 'in_progress',
       due_date: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
       contractor_name: 'VoltCraft Elektroanlagen KG',
-      evidence_photo_url:
-        'https://images.unsplash.com/photo-1541888946425-d0fbb186156a?auto=format&fit=crop&w=600&q=80',
+      evidence_photo_url: '/images/defect-firestop.svg',
       evidence_sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
       created: '2026-09-03T14:20:00Z',
       updated: '2026-09-04T09:00:00Z',

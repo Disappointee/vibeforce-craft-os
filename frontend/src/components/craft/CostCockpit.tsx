@@ -663,7 +663,7 @@ export function CostCockpit({
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-bold">Gestempelte Monteur-Zeiten</CardTitle>
               <CardDescription className="text-xs">
-                Einzelstempelungen über das Flow OS Zeiterfassungssystem (/time)
+                Einzelstempelungen über die Craft OS Monteur-Zeiterfassung (/craft/time)
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
