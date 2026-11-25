@@ -308,9 +308,8 @@ export default function ReportsPage() {
     const [tasks, setTasks] = useState<TaskRecord[]>([]);
     const [externalExpenses, setExternalExpenses] = useState<ExternalExpenseRecord[]>([]);
 
-    const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
     const [filters, setFilters] = useState<ReportFilterValues>({
-        dateFrom: firstOfMonth,
+        dateFrom: '',
         dateTo: '',
         projectIds: [],
         userIds: [],

@@ -52,20 +52,25 @@ export function ProjectList({
           try {
             const tasksResult = await pb.collection('tasks').getList(1, 5000, {
               filter: projectIds.map((pid: string) => pb.filter('project = {:id}', { id: pid })).join(' || '),
-              fields: 'id,project',
+              fields: 'id,project,estimated_hours',
             });
             const taskIds = tasksResult.items.map((t: any) => t.id);
+
+            const taskProjectMap: Record<string, string> = {};
+            const projectEstimatedHours: Record<string, number> = {};
+            for (const t of tasksResult.items) {
+              taskProjectMap[t.id] = t.project;
+              projectEstimatedHours[t.project] = (projectEstimatedHours[t.project] || 0) + ((t as any).estimated_hours || 0);
+            }
+            for (const p of projectsData) {
+              (p as any)._estimatedHours = projectEstimatedHours[p.id] || 0;
+            }
 
             if (taskIds.length > 0) {
               const allTEResult = await pb.collection('time_entries').getList(1, 10000, {
                 filter: taskIds.map((tid: string) => pb.filter('task = {:id}', { id: tid })).join(' || '),
                 fields: 'duration_minutes,task',
               });
-
-              const taskProjectMap: Record<string, string> = {};
-              for (const t of tasksResult.items) {
-                taskProjectMap[t.id] = t.project;
-              }
 
               const projectMinutes: Record<string, number> = {};
               for (const te of allTEResult.items) {
@@ -195,7 +200,7 @@ export function ProjectList({
 
   const renderBudgetBar = (project: any) => {
     const workedHours = project._workedHours || 0;
-    const budgetHours = project.budget_hours || 0;
+    const budgetHours = project.budget_hours || project._estimatedHours || 0;
     const percent = budgetHours > 0 ? Math.min(100, Math.round((workedHours / budgetHours) * 100)) : 0;
     const isOverBudget = budgetHours > 0 && workedHours > budgetHours;
     const isNearBudget = budgetHours > 0 && !isOverBudget && percent >= 80;

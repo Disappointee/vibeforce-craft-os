@@ -64,7 +64,7 @@ export function TasksPageClient({
   const [clients] = useState(initialClients);
   const [viewMode, setViewMode] = useState<'list' | 'board'>(() => defaultTaskView === 'list' ? 'list' : 'board');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [showAllTasks, setShowAllTasks] = useState(false);
+  const [showAllTasks, setShowAllTasks] = useState(true);
   const currentUserId = pb.authStore.record?.id;
   const isAdmin = pb.authStore.record?.role === 'admin';
 

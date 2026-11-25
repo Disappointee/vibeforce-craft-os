@@ -61,7 +61,14 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
         return getEntriesForDay(day).reduce((sum, entry) => sum + (entry.duration_minutes || 0), 0);
     };
 
-    const monthTotalMinutes = entries.reduce((sum, entry) => sum + (entry.duration_minutes || 0), 0);
+    const monthEntries = useMemo(() => {
+        return entries.filter((entry) => {
+            const entryDate = entry.start_time ? parseISO(entry.start_time) : parseISO(entry.created);
+            return isSameMonth(entryDate, currentDate);
+        });
+    }, [entries, currentDate]);
+
+    const monthTotalMinutes = monthEntries.reduce((sum, entry) => sum + (entry.duration_minutes || 0), 0);
 
     const formatDuration = (minutes: number) => {
         const h = Math.floor(minutes / 60);
@@ -72,7 +79,7 @@ export function MonthView({ entries, currentDate, onPrevMonth, onNextMonth, onDa
 
     // Stats
     const daysWithEntries = new Set(
-        entries.map((entry) => {
+        monthEntries.map((entry) => {
             const d = entry.start_time ? parseISO(entry.start_time) : parseISO(entry.created);
             return format(d, 'yyyy-MM-dd');
         })

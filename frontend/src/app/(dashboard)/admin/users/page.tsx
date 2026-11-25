@@ -68,6 +68,7 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState<UserItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const isDemoGuest = Boolean(pb.authStore.record?.email?.startsWith('guest_slot_'));
 
     // Invite dialog
     const [inviteOpen, setInviteOpen] = useState(false);
@@ -361,7 +362,11 @@ export default function AdminUsersPage() {
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">Benutzer einladen, verwalten und deaktivieren</p>
                     </div>
-                    <Button onClick={() => setInviteOpen(true)}>
+                    <Button
+                        onClick={() => setInviteOpen(true)}
+                        disabled={isDemoGuest}
+                        title={isDemoGuest ? 'Im Gast-Demo-Modus schreibgeschützt' : undefined}
+                    >
                         <UserPlus size={16} />
                         Mitarbeiter anlegen
                     </Button>
@@ -489,6 +494,7 @@ export default function AdminUsersPage() {
                                                      <Button
                                                          variant="ghost"
                                                          size="xs"
+                                                         disabled={isDemoGuest}
                                                          onClick={() => {
                                                              setResetUserId(user.id);
                                                              setResetUserEmail(user.email);
@@ -497,7 +503,7 @@ export default function AdminUsersPage() {
                                                              setResetOpen(true);
                                                          }}
                                                          className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-                                                         title="Passwort zurücksetzen"
+                                                         title={isDemoGuest ? 'Im Gast-Demo-Modus schreibgeschützt' : 'Passwort zurücksetzen'}
                                                      >
                                                          <KeyRound size={14} />
                                                      </Button>
@@ -505,7 +511,8 @@ export default function AdminUsersPage() {
                                                          variant="ghost"
                                                          size="xs"
                                                          onClick={() => handleToggleStatus(user)}
-                                                         disabled={user.id === pb.authStore.record?.id}
+                                                         disabled={isDemoGuest || user.id === pb.authStore.record?.id}
+                                                         title={isDemoGuest ? 'Im Gast-Demo-Modus schreibgeschützt' : undefined}
                                                          className={!user.deactivated || user.id === pb.authStore.record?.id ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'}
                                                      >
                                                          {!user.deactivated || user.id === pb.authStore.record?.id ? <Ban size={14} /> : <CheckCircle size={14} />}
@@ -515,7 +522,8 @@ export default function AdminUsersPage() {
                                                          variant="ghost"
                                                          size="xs"
                                                          onClick={() => handleDelete(user)}
-                                                         disabled={user.id === pb.authStore.record?.id}
+                                                         disabled={isDemoGuest || user.id === pb.authStore.record?.id}
+                                                         title={isDemoGuest ? 'Im Gast-Demo-Modus schreibgeschützt' : undefined}
                                                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                                      >
                                                          <Trash2 size={14} />
