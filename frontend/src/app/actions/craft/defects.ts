@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { DefectPinRecord } from '@/lib/pocketbase-types';
 
@@ -32,53 +32,40 @@ export async function getDefectsByProjectAction(
   projectKey?: string
 ): Promise<DefectPinRecord[]> {
   const user = await verifyUserSession();
-  if (!user) return [];
+  const pb = await getUserAuthPB();
+  if (!user || !pb) return [];
 
-  return withAdminPB(async (pb) => {
-    const filter = projectKey && projectKey !== projectId
-      ? pb.filter('project = {:pid} || project = {:pkey}', { pid: projectId, pkey: projectKey })
-      : pb.filter('project = {:pid}', { pid: projectId });
+  const filter = projectKey && projectKey !== projectId
+    ? pb.filter('project = {:pid} || project = {:pkey}', { pid: projectId, pkey: projectKey })
+    : pb.filter('project = {:pid}', { pid: projectId });
 
-    let records: any[] = [];
-    try {
-      records = await pb.collection('defect_pins').getFullList({
-        filter,
-        sort: '-created',
-      });
-    } catch {
-      // Fallback without sort=-created in case collection has no created index/autodate
-      try {
-        records = await pb.collection('defect_pins').getFullList({ filter });
-        records.sort((a, b) =>
-          String(b.created || b.updated || '').localeCompare(String(a.created || a.updated || ''))
-        );
-      } catch (err) {
-        console.warn('[getDefectsByProjectAction] Failed to load defect_pins:', err);
-        return [];
-      }
-    }
-
+  try {
+    const records = await pb.collection('defect_pins').getFullList({ filter });
+    records.sort((a: any, b: any) =>
+      String(b.created || b.updated || '').localeCompare(String(a.created || a.updated || ''))
+    );
     return JSON.parse(JSON.stringify(records)) as DefectPinRecord[];
-  });
+  } catch (err) {
+    console.warn('[getDefectsByProjectAction] Failed to load defect_pins:', err);
+    return [];
+  }
 }
 
 export async function createDefectAction(
   input: z.input<typeof CreateDefectSchema>
 ): Promise<DefectPinRecord> {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = CreateDefectSchema.parse(input);
-
-  return withAdminPB(async (pb) => {
-    const record = await pb.collection('defect_pins').create(validated);
-    revalidatePath('/craft/defects');
-    revalidatePath('/craft');
-    if (validated.project) {
-      revalidatePath(`/projects/${validated.project}`);
-    }
-    return JSON.parse(JSON.stringify(record)) as DefectPinRecord;
-  });
+  const record = await pb.collection('defect_pins').create(validated);
+  revalidatePath('/craft/defects');
+  revalidatePath('/craft');
+  if (validated.project) {
+    revalidatePath(`/projects/${validated.project}`);
+  }
+  return JSON.parse(JSON.stringify(record)) as DefectPinRecord;
 }
 
 export async function updateDefectAction(
@@ -86,29 +73,26 @@ export async function updateDefectAction(
   input: z.input<typeof UpdateDefectSchema>
 ): Promise<DefectPinRecord> {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = UpdateDefectSchema.parse(input);
-
-  return withAdminPB(async (pb) => {
-    const record = await pb.collection('defect_pins').update(defectId, validated);
-    revalidatePath('/craft/defects');
-    revalidatePath('/craft');
-    if (record.project) {
-      revalidatePath(`/projects/${record.project}`);
-    }
-    return JSON.parse(JSON.stringify(record)) as DefectPinRecord;
-  });
+  const record = await pb.collection('defect_pins').update(defectId, validated);
+  revalidatePath('/craft/defects');
+  revalidatePath('/craft');
+  if (record.project) {
+    revalidatePath(`/projects/${record.project}`);
+  }
+  return JSON.parse(JSON.stringify(record)) as DefectPinRecord;
 }
 
 export async function deleteDefectAction(defectId: string): Promise<{ success: boolean }> {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
-  return withAdminPB(async (pb) => {
-    await pb.collection('defect_pins').delete(defectId);
-    revalidatePath('/craft/defects');
-    revalidatePath('/craft');
-    return { success: true };
-  });
+  await pb.collection('defect_pins').delete(defectId);
+  revalidatePath('/craft/defects');
+  revalidatePath('/craft');
+  return { success: true };
 }

@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FilePlus } from 'lucide-react';
-import { withAdminPB, getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
+import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { DailySiteReportForm } from '@/components/craft/DailySiteReportForm';
 import type { ProjectRecord } from '@/lib/pocketbase-types';
 
@@ -13,8 +13,8 @@ interface NewSiteReportPageProps {
 
 export default async function NewSiteReportPage({ params }: NewSiteReportPageProps) {
   await requireAuth();
-  const userPb = await getUserAuthPB();
-  if (!userPb) {
+  const pb = await getUserAuthPB();
+  if (!pb) {
     redirect('/login');
   }
 
@@ -22,17 +22,10 @@ export default async function NewSiteReportPage({ params }: NewSiteReportPagePro
 
   let project: ProjectRecord | null = null;
   try {
-    project = await withAdminPB(async (pb) => {
-      const rec = await pb.collection('projects').getOne(id);
-      return JSON.parse(JSON.stringify(rec)) as ProjectRecord;
-    });
+    const rec = await pb.collection('projects').getOne(id);
+    project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
   } catch {
-    try {
-      const rec = await userPb.collection('projects').getOne(id);
-      project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
-    } catch {
-      project = null;
-    }
+    project = null;
   }
 
   if (!project) notFound();

@@ -17,7 +17,7 @@ async function requireCraftProjectAuth() {
   return { user, pb };
 }
 
-export const CreateBaustelleSchema = z.object({
+const CreateBaustelleSchema = z.object({
   name: z.string().min(1, 'Bezeichnung des Bauvorhabens ist erforderlich'),
   key: z.string().min(1, 'Baustellen-Kürzel ist erforderlich').transform((val) => val.toUpperCase()),
   client: z.string().nullable().optional(),

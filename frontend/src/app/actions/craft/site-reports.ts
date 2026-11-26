@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { SiteReportRecord } from '@/lib/pocketbase-types';
 import { createHash } from 'node:crypto';
@@ -35,22 +35,21 @@ export type UpdateSiteReportInput = z.infer<typeof UpdateSiteReportSchema>;
 
 export async function createSiteReportAction(data: CreateSiteReportInput) {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = CreateSiteReportSchema.parse(data);
 
-  return withAdminPB(async (pb) => {
-    const record = await pb.collection('site_reports').create({
-      ...validated,
-      author: user.id,
-    });
-
-    revalidatePath(`/projects/${validated.project}/site-reports`);
-    revalidatePath(`/projects/${validated.project}`);
-    revalidatePath('/craft');
-    revalidatePath('/projects');
-    return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
+  const record = await pb.collection('site_reports').create({
+    ...validated,
+    author: user.id,
   });
+
+  revalidatePath(`/projects/${validated.project}/site-reports`);
+  revalidatePath(`/projects/${validated.project}`);
+  revalidatePath('/craft');
+  revalidatePath('/projects');
+  return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
 }
 
 function buildAddendumPayload(
@@ -79,66 +78,63 @@ function buildAddendumPayload(
 
 export async function updateSiteReportAction(reportId: string, data: UpdateSiteReportInput) {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = UpdateSiteReportSchema.parse(data);
 
-  return withAdminPB(async (pb) => {
-    const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
-    if (existing.status === 'invoiced' || existing.status === 'signed') {
-      const addendumRecord = await pb.collection('site_reports').create(
-        buildAddendumPayload(existing, validated, String(user.id), existing.status)
-      );
+  const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
+  if (existing.status === 'invoiced' || existing.status === 'signed') {
+    const addendumRecord = await pb.collection('site_reports').create(
+      buildAddendumPayload(existing, validated, String(user.id), existing.status)
+    );
 
-      if (existing.project) {
-        revalidatePath(`/projects/${existing.project}/site-reports`);
-      }
-      revalidatePath('/craft');
-      return JSON.parse(JSON.stringify(addendumRecord)) as SiteReportRecord;
-    }
-
-    const record = await pb.collection('site_reports').update(reportId, validated);
-    if (record.project) {
-      revalidatePath(`/projects/${record.project}/site-reports`);
-      revalidatePath(`/projects/${record.project}`);
+    if (existing.project) {
+      revalidatePath(`/projects/${existing.project}/site-reports`);
     }
     revalidatePath('/craft');
-    revalidatePath('/projects');
-    revalidatePath('/craft');
-    return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
-  });
+    return JSON.parse(JSON.stringify(addendumRecord)) as SiteReportRecord;
+  }
+
+  const record = await pb.collection('site_reports').update(reportId, validated);
+  if (record.project) {
+    revalidatePath(`/projects/${record.project}/site-reports`);
+    revalidatePath(`/projects/${record.project}`);
+  }
+  revalidatePath('/craft');
+  revalidatePath('/projects');
+  return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
 }
 
 export async function createReportRevisionAction(reportId: string, reason: string) {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
   if (!reason.trim()) throw new Error('Ein Begründungstext für die GoBD-Revision ist erforderlich.');
 
-  return withAdminPB(async (pb) => {
-    const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
+  const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
 
-    // GoBD-Klon: Neuer Entwurf mit Verweis auf den Ursprungsbericht
-    const revision = await pb.collection('site_reports').create({
-      project: existing.project,
-      report_date: existing.report_date,
-      status: 'draft',
-      weather: existing.weather,
-      temperature: existing.temperature,
-      work_performed: existing.work_performed,
-      special_events: `[REVISION zu Bericht #${reportId} | Grund: ${reason.trim()}]:\n${existing.special_events || ''}`,
-      qualification_hours: existing.qualification_hours,
-      client_name: existing.client_name,
-      author: user.id,
-    });
-
-    if (existing.project) {
-      revalidatePath(`/projects/${existing.project}/site-reports`);
-      revalidatePath(`/projects/${existing.project}`);
-    }
-    revalidatePath('/craft');
-    revalidatePath('/projects');
-    return JSON.parse(JSON.stringify(revision)) as SiteReportRecord;
+  // GoBD-Klon: Neuer Entwurf mit Verweis auf den Ursprungsbericht
+  const revision = await pb.collection('site_reports').create({
+    project: existing.project,
+    report_date: existing.report_date,
+    status: 'draft',
+    weather: existing.weather,
+    temperature: existing.temperature,
+    work_performed: existing.work_performed,
+    special_events: `[REVISION zu Bericht #${reportId} | Grund: ${reason.trim()}]:\n${existing.special_events || ''}`,
+    qualification_hours: existing.qualification_hours,
+    client_name: existing.client_name,
+    author: user.id,
   });
+
+  if (existing.project) {
+    revalidatePath(`/projects/${existing.project}/site-reports`);
+    revalidatePath(`/projects/${existing.project}`);
+  }
+  revalidatePath('/craft');
+  revalidatePath('/projects');
+  return JSON.parse(JSON.stringify(revision)) as SiteReportRecord;
 }
 
 export async function signSiteReportAction(
@@ -155,10 +151,10 @@ export async function signSiteReportAction(
   }
 ) {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
-  return withAdminPB(async (pb) => {
-    const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
+  const existing = await pb.collection('site_reports').getOne(reportId) as SiteReportRecord;
     if (existing.status === 'invoiced') {
       throw new Error('Dieser Bautagesbericht wurde bereits abgerechnet und ist schreibgeschützt (GoBD-Sperre).');
     }
@@ -238,30 +234,28 @@ export async function signSiteReportAction(
     revalidatePath('/craft');
     revalidatePath('/projects');
     return JSON.parse(JSON.stringify(record)) as SiteReportRecord;
-  });
 }
 
 export async function getSiteReportsByProjectAction(projectId: string) {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
-  return withAdminPB(async (pb) => {
-    try {
-      const records = await pb.collection('site_reports').getFullList({
-        filter: pb.filter('project = {:projectId}', { projectId }),
-        sort: '-report_date',
-        expand: 'author',
-      });
+  try {
+    const records = await pb.collection('site_reports').getFullList({
+      filter: pb.filter('project = {:projectId}', { projectId }),
+      sort: '-report_date',
+      expand: 'author',
+    });
 
-      return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
-    } catch {
-      const records = await pb.collection('site_reports').getFullList({
-        filter: pb.filter('project = {:projectId}', { projectId }),
-      });
-      records.sort((a: any, b: any) =>
-        String(b.report_date || b.created || '').localeCompare(String(a.report_date || a.created || ''))
-      );
-      return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
-    }
-  });
+    return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
+  } catch {
+    const records = await pb.collection('site_reports').getFullList({
+      filter: pb.filter('project = {:projectId}', { projectId }),
+    });
+    records.sort((a: any, b: any) =>
+      String(b.report_date || b.created || '').localeCompare(String(a.report_date || a.created || ''))
+    );
+    return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
+  }
 }

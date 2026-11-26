@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Clock,
 } from 'lucide-react';
-import { withAdminPB, getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
+import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { getSiteReportsByProjectAction } from '@/app/actions/craft/site-reports';
 import { t } from '@/lib/i18n';
 import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
@@ -21,8 +21,8 @@ interface SiteReportsPageProps {
 
 export default async function SiteReportsPage({ params }: SiteReportsPageProps) {
   await requireAuth();
-  const userPb = await getUserAuthPB();
-  if (!userPb) {
+  const pb = await getUserAuthPB();
+  if (!pb) {
     redirect('/login');
   }
 
@@ -30,17 +30,10 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
 
   let project: ProjectRecord | null = null;
   try {
-    project = await withAdminPB(async (pb) => {
-      const rec = await pb.collection('projects').getOne(id);
-      return JSON.parse(JSON.stringify(rec)) as ProjectRecord;
-    });
+    const rec = await pb.collection('projects').getOne(id);
+    project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
   } catch {
-    try {
-      const rec = await userPb.collection('projects').getOne(id);
-      project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
-    } catch {
-      project = null;
-    }
+    project = null;
   }
 
   if (!project) notFound();

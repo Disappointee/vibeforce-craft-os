@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 
 export interface CraftTimeEntryDTO {
@@ -48,7 +48,6 @@ async function resolveTaskForProject(pb: any, projectId?: string, userId?: strin
       if (existing.items.length > 0) {
         return existing.items[0].id;
       }
-      // Create a default craft time-tracking task on the project
       const createdTask = await pb.collection('tasks').create({
         project: projectId,
         title: 'Baustellen-Zeiterfassung',
@@ -62,7 +61,6 @@ async function resolveTaskForProject(pb: any, projectId?: string, userId?: strin
     }
   }
 
-  // Fallback: find any existing task so required relation is satisfied
   try {
     const anyTask = await pb.collection('tasks').getList(1, 1, { sort: '-created' });
     if (anyTask.items.length > 0) {
@@ -81,27 +79,27 @@ function buildDescription(projectKey: string, activityType: string, activityLabe
 
 export async function getTodayTimeEntriesAction(): Promise<CraftTimeEntryDTO[]> {
   const user = await verifyUserSession();
-  if (!user) return [];
+  const pb = await getUserAuthPB();
+  if (!user || !pb) return [];
 
   const userId = String(user.id);
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
 
-  return withAdminPB(async (pb) => {
-    let items: any[] = [];
+  let items: any[] = [];
+  try {
+    items = await pb.collection('time_entries').getFullList({
+      filter: pb.filter('user = {:uid} && start_time >= {:start} && start_time <= {:end}', {
+        uid: userId,
+        start: todayStart,
+        end: todayEnd,
+      }),
+      sort: 'start_time',
+      expand: 'task,task.project',
+    });
+  } catch {
     try {
-      items = await pb.collection('time_entries').getFullList({
-        filter: pb.filter('user = {:uid} && start_time >= {:start} && start_time <= {:end}', {
-          uid: userId,
-          start: todayStart,
-          end: todayEnd,
-        }),
-        sort: 'start_time',
-        expand: 'task,task.project',
-      });
-    } catch {
-      // Fallback without date filter in case PB date comparison format differs
       const allUserEntries = await pb.collection('time_entries').getList(1, 100, {
         filter: pb.filter('user = {:uid}', { uid: userId }),
         sort: '-start_time',
@@ -115,72 +113,75 @@ export async function getTodayTimeEntriesAction(): Promise<CraftTimeEntryDTO[]> 
       items.sort((a: any, b: any) =>
         String(a.start_time || a.created).localeCompare(String(b.start_time || b.created))
       );
+    } catch (err) {
+      console.warn('[getTodayTimeEntriesAction] Failed:', err);
+      return [];
     }
+  }
 
-    return items.map((e: any) => ({
-      id: e.id,
-      task: e.task,
-      user: e.user,
-      start_time: e.start_time || e.created,
-      end_time: e.end_time || undefined,
-      duration_minutes: Number(e.duration_minutes) || 0,
-      is_billable: e.is_billable !== false,
-      description: e.description || '',
-      project_id: e.expand?.task?.project || e.expand?.task?.expand?.project?.id,
-      project_key: e.expand?.task?.expand?.project?.key,
-      project_name: e.expand?.task?.expand?.project?.name,
-      created: e.created,
-    }));
-  });
+  return items.map((e: any) => ({
+    id: e.id,
+    task: e.task,
+    user: e.user,
+    start_time: e.start_time || e.created,
+    end_time: e.end_time || undefined,
+    duration_minutes: Number(e.duration_minutes) || 0,
+    is_billable: e.is_billable !== false,
+    description: e.description || '',
+    project_id: e.expand?.task?.project || e.expand?.task?.expand?.project?.id,
+    project_key: e.expand?.task?.expand?.project?.key,
+    project_name: e.expand?.task?.expand?.project?.name,
+    created: e.created,
+  }));
 }
 
 export async function clockInAction(input: z.input<typeof ClockInSchema>): Promise<CraftTimeEntryDTO> {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = ClockInSchema.parse(input);
   const userId = String(user.id);
   const nowIso = new Date().toISOString();
 
-  return withAdminPB(async (pb) => {
-    const taskId = await resolveTaskForProject(pb, validated.projectId, userId);
-    const description = buildDescription(
-      validated.projectKey || 'CRAFT',
-      validated.activityType,
-      validated.activityLabel,
-      validated.gpsVerified
-    );
+  const taskId = await resolveTaskForProject(pb, validated.projectId, userId);
+  const description = buildDescription(
+    validated.projectKey || 'CRAFT',
+    validated.activityType,
+    validated.activityLabel,
+    validated.gpsVerified
+  );
 
-    const record = await pb.collection('time_entries').create({
-      task: taskId,
-      user: userId,
-      start_time: nowIso,
-      duration_minutes: 0,
-      is_billable: true,
-      description,
-    });
-
-    revalidatePath('/craft/time');
-    revalidatePath('/craft');
-    revalidatePath('/time');
-
-    return {
-      id: record.id,
-      task: record.task,
-      user: record.user,
-      start_time: record.start_time || nowIso,
-      end_time: record.end_time || undefined,
-      duration_minutes: Number(record.duration_minutes) || 0,
-      is_billable: record.is_billable !== false,
-      description: record.description || description,
-      created: record.created,
-    };
+  const record = await pb.collection('time_entries').create({
+    task: taskId,
+    user: userId,
+    start_time: nowIso,
+    duration_minutes: 0,
+    is_billable: true,
+    description,
   });
+
+  revalidatePath('/craft/time');
+  revalidatePath('/craft');
+  revalidatePath('/time');
+
+  return {
+    id: record.id,
+    task: record.task,
+    user: record.user,
+    start_time: record.start_time || nowIso,
+    end_time: record.end_time || undefined,
+    duration_minutes: Number(record.duration_minutes) || 0,
+    is_billable: record.is_billable !== false,
+    description: record.description || description,
+    created: record.created,
+  };
 }
 
 export async function clockOutAction(input: z.input<typeof ClockOutSchema>): Promise<CraftTimeEntryDTO> {
   const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!user || !pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   const validated = ClockOutSchema.parse(input);
   const userId = String(user.id);
@@ -192,51 +193,49 @@ export async function clockOutAction(input: z.input<typeof ClockOutSchema>): Pro
     validated.gpsVerified
   );
 
-  return withAdminPB(async (pb) => {
-    let record: any;
+  let record: any;
 
-    if (validated.entryId && !validated.entryId.startsWith('seg_')) {
-      try {
-        const existing = await pb.collection('time_entries').getOne(validated.entryId);
-        if (existing.user === userId || user.role === 'admin') {
-          record = await pb.collection('time_entries').update(validated.entryId, {
-            end_time: validated.endTimeIso,
-            duration_minutes: minutes,
-            description,
-          });
-        }
-      } catch (err) {
-        console.warn('[time-clock] Update existing entry failed, creating completed entry:', err);
+  if (validated.entryId && !validated.entryId.startsWith('seg_')) {
+    try {
+      const existing = await pb.collection('time_entries').getOne(validated.entryId);
+      if (existing.user === userId || user.role === 'admin') {
+        record = await pb.collection('time_entries').update(validated.entryId, {
+          end_time: validated.endTimeIso,
+          duration_minutes: minutes,
+          description,
+        });
       }
+    } catch (err) {
+      console.warn('[time-clock] Update existing entry failed, creating completed entry:', err);
     }
+  }
 
-    if (!record) {
-      const taskId = await resolveTaskForProject(pb, validated.projectId, userId);
-      record = await pb.collection('time_entries').create({
-        task: taskId,
-        user: userId,
-        start_time: validated.startTimeIso || validated.endTimeIso,
-        end_time: validated.endTimeIso,
-        duration_minutes: minutes,
-        is_billable: true,
-        description,
-      });
-    }
+  if (!record) {
+    const taskId = await resolveTaskForProject(pb, validated.projectId, userId);
+    record = await pb.collection('time_entries').create({
+      task: taskId,
+      user: userId,
+      start_time: validated.startTimeIso || validated.endTimeIso,
+      end_time: validated.endTimeIso,
+      duration_minutes: minutes,
+      is_billable: true,
+      description,
+    });
+  }
 
-    revalidatePath('/craft/time');
-    revalidatePath('/craft');
-    revalidatePath('/time');
+  revalidatePath('/craft/time');
+  revalidatePath('/craft');
+  revalidatePath('/time');
 
-    return {
-      id: record.id,
-      task: record.task,
-      user: record.user,
-      start_time: record.start_time,
-      end_time: record.end_time,
-      duration_minutes: Number(record.duration_minutes) || minutes,
-      is_billable: record.is_billable !== false,
-      description: record.description || description,
-      created: record.created,
-    };
-  });
+  return {
+    id: record.id,
+    task: record.task,
+    user: record.user,
+    start_time: record.start_time,
+    end_time: record.end_time,
+    duration_minutes: Number(record.duration_minutes) || minutes,
+    is_billable: record.is_billable !== false,
+    description: record.description || description,
+    created: record.created,
+  };
 }

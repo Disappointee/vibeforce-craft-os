@@ -5,7 +5,7 @@ import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { ClientRecord } from '@/lib/pocketbase-types';
 
-export const CreateCraftClientSchema = z.object({
+const CreateCraftClientSchema = z.object({
   name: z.string().min(1, 'Name oder Firma des Auftraggebers ist erforderlich'),
   company: z.string().nullable().optional(),
   client_type: z.enum(['privat', 'gewerblich', 'bautraeger', 'gu', 'oeffentlich']).default('privat'),
