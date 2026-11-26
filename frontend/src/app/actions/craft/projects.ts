@@ -1,9 +1,21 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
 import { z } from 'zod';
 import type { ProjectRecord } from '@/lib/pocketbase-types';
+
+async function requireCraftProjectAuth() {
+  const user = await verifyUserSession();
+  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const role = typeof user.role === 'string' ? user.role.toLowerCase() : '';
+  if (role === 'client' || role === 'auftraggeber' || role.startsWith('guest_slot_')) {
+    throw new Error('Zugriff verweigert.');
+  }
+  return { user, pb };
+}
 
 export const CreateBaustelleSchema = z.object({
   name: z.string().min(1, 'Bezeichnung des Bauvorhabens ist erforderlich'),
@@ -25,11 +37,9 @@ export const CreateBaustelleSchema = z.object({
 });
 
 export async function createBaustelleAction(data: z.infer<typeof CreateBaustelleSchema>): Promise<ProjectRecord> {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireCraftProjectAuth();
 
   const validated = CreateBaustelleSchema.parse(data);
-  const pb = await getAdminPB();
 
   const siteAddress = (validated.street || validated.zip || validated.city) ? {
     street: validated.street || '',
@@ -69,8 +79,8 @@ export async function createBaustelleAction(data: z.infer<typeof CreateBaustelle
 }
 
 export async function getBaustellenAction(): Promise<ProjectRecord[]> {
+  const { pb } = await requireCraftProjectAuth();
   try {
-    const pb = await getAdminPB();
     // Inclusive filter: craft type or BAU/CRAFT keys or projects with site reports
     const res = await pb.collection('projects').getList(1, 100, {
       sort: '-created',

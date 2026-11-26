@@ -1,17 +1,28 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { z } from 'zod';
+
+async function requireProjectAuth() {
+  const user = await verifyUserSession();
+  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const role = typeof user.role === 'string' ? user.role.toLowerCase() : '';
+  if (role === 'client' || role === 'auftraggeber' || role.startsWith('guest_slot_')) {
+    throw new Error('Zugriff verweigert.');
+  }
+  return { user, pb, role };
+}
 
 export async function revalidateProjectsPath() {
-  await verifyUserSession();
+  const user = await verifyUserSession();
+  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
   revalidatePath('/projects');
   revalidatePath('/craft');
   revalidatePath('/dashboard/projects');
 }
-
-
-import { z } from 'zod';
 
 const CreateProjectSchema = z.object({
   name: z.string().min(1, 'Projektname ist erforderlich'),
@@ -27,11 +38,9 @@ const CreateProjectSchema = z.object({
 const UpdateProjectSchema = CreateProjectSchema.partial();
 
 export async function createProjectAction(data: z.infer<typeof CreateProjectSchema>) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireProjectAuth();
 
   const validated = CreateProjectSchema.parse(data);
-  const pb = await getAdminPB();
   const record = await pb.collection('projects').create({
     name: validated.name,
     key: validated.key,
@@ -41,6 +50,7 @@ export async function createProjectAction(data: z.infer<typeof CreateProjectSche
     client: validated.client || null,
     start_date: validated.start_date || null,
     due_date: validated.due_date || null,
+    members: [user.id],
   });
 
   revalidatePath('/projects');
@@ -50,11 +60,17 @@ export async function createProjectAction(data: z.infer<typeof CreateProjectSche
 }
 
 export async function updateProjectAction(projectId: string, data: Record<string, unknown>) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb, role } = await requireProjectAuth();
+
+  const existing = await pb.collection('projects').getOne(projectId);
+  const isPrivileged = ['admin', 'meister', 'manager', 'bauleiter', 'vorarbeiter'].includes(role);
+  const isSiteManager = existing.site_manager === user.id;
+  const isMember = Array.isArray(existing.members) && existing.members.includes(user.id);
+  if (!isPrivileged && !isSiteManager && !isMember) {
+    throw new Error('Zugriff verweigert: Keine Berechtigung für dieses Projekt.');
+  }
 
   const validated = UpdateProjectSchema.parse(data);
-  const pb = await getAdminPB();
   const record = await pb.collection('projects').update(projectId, validated);
 
   revalidatePath('/projects');
@@ -66,10 +82,15 @@ export async function updateProjectAction(projectId: string, data: Record<string
 }
 
 export async function deleteProjectAction(id: string) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb, role } = await requireProjectAuth();
 
-  const pb = await getAdminPB();
+  const existing = await pb.collection('projects').getOne(id);
+  const isPrivileged = ['admin', 'meister', 'manager', 'bauleiter'].includes(role);
+  const isSiteManager = existing.site_manager === user.id;
+  if (!isPrivileged && !isSiteManager) {
+    throw new Error('Zugriff verweigert: Nur Administratoren oder Projektleiter dürfen Projekte archivieren.');
+  }
+
   // Soft-Delete für buchhalterische & historische Sicherheit
   await pb.collection('projects').update(id, {
     status: 'archived',

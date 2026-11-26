@@ -1,5 +1,5 @@
-import { getAdminPB } from '@/lib/pocketbase-server';
-import { notFound } from 'next/navigation';
+import { getUserAuthPB, requireAuth, verifyUserSession } from '@/lib/pocketbase-server';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ClientDetailsClient } from './ClientDetailsClient';
 
@@ -8,7 +8,11 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   try {
-    const pb = await getAdminPB();
+    const user = await verifyUserSession();
+    const pb = user ? await getUserAuthPB() : null;
+    if (!pb) {
+      return { title: 'Kunde | Vibeforce Flow OS' };
+    }
     const client = await pb.collection('clients').getOne(id);
     return { title: `Kunde: ${client.name} | Vibeforce Flow OS` };
   } catch {
@@ -17,8 +21,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAuth();
+  const pb = await getUserAuthPB();
+  if (!pb) {
+    redirect('/login');
+  }
+
   const { id } = await params;
-  const pb = await getAdminPB();
 
   let client: Record<string, unknown>;
   try {

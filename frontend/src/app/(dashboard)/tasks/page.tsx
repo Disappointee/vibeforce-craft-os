@@ -1,4 +1,5 @@
-import { getAdminPB } from '@/lib/pocketbase-server';
+import { redirect } from 'next/navigation';
+import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { TasksPageClient } from './TasksPageClient';
 import type { ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { filterProjectsByMode, filterClientsByMode } from '@/lib/data-isolation';
@@ -6,12 +7,17 @@ import { filterProjectsByMode, filterClientsByMode } from '@/lib/data-isolation'
 export const dynamic = 'force-dynamic';
 
 export default async function TasksPage() {
+  await requireAuth();
+  const pb = await getUserAuthPB();
+  if (!pb) {
+    redirect('/login');
+  }
+
   let projects: ProjectRecord[] = [];
   let users: UserRecord[] = [];
   let clients: ClientRecord[] = [];
 
   try {
-    const pb = await getAdminPB();
     const [projResult, usersResult, clientsResult] = await Promise.all([
       pb.collection('projects').getList(1, 50, { sort: 'name' }),
       pb.collection('users').getList(1, 50, { sort: 'name' }),

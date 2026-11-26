@@ -15,15 +15,16 @@
  * Idempotent: collections that do not exist on a fresh instance are skipped.
  */
 migrate((app) => {
-    const ADMIN = "@request.auth.role = 'admin'";
+    const ADMIN = "(@request.auth.role = 'admin' || @request.auth.role = 'meister')";
     const AUTH = "@request.auth.id != ''";
 
     const RULES = {
         users: {
+            authRule: "deactivated != true",
             listRule: AUTH,
             viewRule: AUTH,
             createRule: ADMIN,
-            updateRule: "(id = @request.auth.id && @request.body.role:isset = false && @request.body.deactivated:isset = false) || " + ADMIN,
+            updateRule: "(id = @request.auth.id && @request.body.role:isset = false && @request.body.deactivated:isset = false && @request.body.hourly_rate:isset = false && @request.body.supervisor:isset = false && @request.body.verified:isset = false) || " + ADMIN,
             deleteRule: ADMIN,
         },
         projects: {
@@ -78,7 +79,7 @@ migrate((app) => {
         notifications: {
             listRule: "user = @request.auth.id",
             viewRule: "user = @request.auth.id",
-            createRule: AUTH,
+            createRule: ADMIN + " || user = @request.auth.id",
             updateRule: "user = @request.auth.id",
             deleteRule: "user = @request.auth.id",
         },
@@ -92,7 +93,7 @@ migrate((app) => {
         audit_logs: {
             listRule: ADMIN,
             viewRule: ADMIN,
-            createRule: AUTH,
+            createRule: ADMIN,
             updateRule: null,
             deleteRule: null,
         },
@@ -152,11 +153,12 @@ migrate((app) => {
             updateRule: ADMIN,
             deleteRule: ADMIN,
         },
+        // NOTE: Keep demo_sessions public-read/non-admin-locked until Wave 2/3 server proxy (/api/demo/slot) is live.
         demo_sessions: {
-            listRule: ADMIN,
-            viewRule: ADMIN,
-            createRule: ADMIN,
-            updateRule: ADMIN,
+            listRule: "",
+            viewRule: "",
+            createRule: "",
+            updateRule: "",
             deleteRule: ADMIN,
         },
         craft_licenses: {
@@ -169,9 +171,9 @@ migrate((app) => {
         site_reports: {
             listRule: AUTH,
             viewRule: AUTH,
-            createRule: AUTH + " && author = @request.auth.id",
-            updateRule: ADMIN + " || author = @request.auth.id",
-            deleteRule: ADMIN + " || author = @request.auth.id",
+            createRule: AUTH + " && author = @request.auth.id && @request.body.status != 'signed' && @request.body.status != 'invoiced'",
+            updateRule: "status = 'draft' && (" + ADMIN + " || author = @request.auth.id)",
+            deleteRule: "status = 'draft' && (" + ADMIN + " || author = @request.auth.id)",
         },
         measurements: {
             listRule: AUTH,
@@ -215,6 +217,7 @@ migrate((app) => {
             const collection = app.findCollectionByNameOrId(name);
             if (!collection) continue;
             const rules = RULES[name];
+            if (rules.authRule !== undefined) collection.authRule = rules.authRule;
             if (rules.listRule !== undefined) collection.listRule = rules.listRule;
             if (rules.viewRule !== undefined) collection.viewRule = rules.viewRule;
             if (rules.createRule !== undefined) collection.createRule = rules.createRule;

@@ -3,14 +3,26 @@
 import { revalidatePath } from 'next/cache';
 import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
 
+function isDemoGuestUser(user: Record<string, unknown> | null | undefined): boolean {
+  if (!user) return false;
+  const email = typeof user.email === 'string' ? user.email.toLowerCase() : '';
+  const role = typeof user.role === 'string' ? user.role.toLowerCase() : '';
+  return email.includes('guest_slot_') || role.startsWith('guest_slot_') || role === 'guest';
+}
+
+function isPrivilegedAdmin(user: Record<string, unknown> | null | undefined): boolean {
+  if (!user || isDemoGuestUser(user)) return false;
+  return user.role === 'admin';
+}
+
 export async function updateUserRoleAction(userId: string, role: string) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Rollen ändern.' };
     }
 
-    if (userId === sessionUser.id && role !== 'admin') {
+    if (userId === sessionUser!.id && role !== 'admin') {
       return { error: 'Du kannst dir selbst nicht die Admin-Rolle entziehen.' };
     }
 
@@ -27,11 +39,11 @@ export async function updateUserRoleAction(userId: string, role: string) {
 export async function toggleUserActiveAction(userId: string, targetActiveState: boolean) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer aktivieren/deaktivieren.' };
     }
 
-    if (userId === sessionUser.id) {
+    if (userId === sessionUser!.id) {
       return { error: 'Du kannst dich nicht selbst deaktivieren.' };
     }
 
@@ -49,11 +61,11 @@ export async function toggleUserActiveAction(userId: string, targetActiveState: 
 export async function deleteUserAdminAction(userId: string) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer löschen.' };
     }
 
-    if (userId === sessionUser.id) {
+    if (userId === sessionUser!.id) {
       return { error: 'Du kannst dich nicht selbst löschen.' };
     }
 
@@ -70,7 +82,7 @@ export async function deleteUserAdminAction(userId: string) {
 export async function createUserAction(data: Record<string, any>) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Benutzer anlegen.' };
     }
 
@@ -98,7 +110,7 @@ export async function createUserAction(data: Record<string, any>) {
 export async function resetUserPasswordAction(userId: string, data: Record<string, any>) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Passwörter zurücksetzen.' };
     }
 
@@ -117,7 +129,7 @@ export async function resetUserPasswordAction(userId: string, data: Record<strin
 export async function updateUserSupervisorAction(userId: string, supervisorId: string | null) {
   try {
     const sessionUser = await verifyUserSession();
-    if (!sessionUser || sessionUser.role !== 'admin') {
+    if (!isPrivilegedAdmin(sessionUser)) {
       return { error: 'Zugriff verweigert. Nur Administratoren dürfen Vorgesetzte zuweisen.' };
     }
 
@@ -148,8 +160,11 @@ export async function updateUserProfileAdminAction(
     if (!sessionUser) {
       return { error: '403 - Nicht autorisiert. Bitte erneut anmelden.' };
     }
+    if (isDemoGuestUser(sessionUser)) {
+      return { error: '403 - Demo-Gastkonten dürfen keine Benutzerprofile bearbeiten.' };
+    }
 
-    const isAdmin = sessionUser.role === 'admin';
+    const isAdmin = isPrivilegedAdmin(sessionUser);
     const isSelf = sessionUser.id === userId;
 
     if (!isAdmin && !isSelf) {

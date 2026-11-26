@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyUserSession } from '@/lib/pocketbase-server';
 
 const TILE_CACHE_MAX = 500;
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -33,6 +34,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ z: string; x: string; y: string }> }
 ) {
+  const user = await verifyUserSession();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const resolved = await params;
   const { z, x, y } = resolved;
 
