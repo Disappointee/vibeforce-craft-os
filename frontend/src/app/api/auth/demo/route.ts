@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     const redirectParam = request.nextUrl.searchParams.get('redirect');
     
     // Whitelist redirect to relative paths only (XSS/Open-Redirect protection)
-    const targetRoute = isSafeRedirect(redirectParam || '') 
-      ? redirectParam 
+    const targetRoute = redirectParam && isSafeRedirect(redirectParam)
+      ? redirectParam
       : appConfig.startRoute;
 
     const demoGuests = getDemoGuests();
