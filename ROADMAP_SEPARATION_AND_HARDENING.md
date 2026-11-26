@@ -23,28 +23,25 @@
 
 ---
 
-## Teil 2 — Vercel-URL-Bereinigung (`vibeforce-craft-os.vercel.app` ohne `-five`), Portfolio & Docker (`[ ]`)
+## Teil 2 — Vercel-URL-Bereinigung (`vibeforce-craft-os.vercel.app` ohne `-five`), Portfolio & Docker (`[~]`)
 
 > **Wichtig:** Exakte Reihenfolge einhalten (Zero-Downtime-Invariante). Vor Schritt 2B **müssen** Env-Vars und ein frisches `frontend/`-Deployment auf Craft OS stehen.
 
 ### Phase A — Pre-Flight auf `vibeforce-craft-os` (`prj_Cc11aeY3yiVjgS94QFyUHJRUjhFx`)
-- [ ] **A1.** Fehlende Env-Vars in `vibeforce-craft-os` (`production` & `preview`) setzen (Werte analog `vibeforce-flow-os` `prj_XjDOTJDHjChlCn255y2EO4MGCi7G`):
+- [x] **A1.** Fehlende Env-Vars in `vibeforce-craft-os` (`production` & `preview`) setzen (Werte analog `vibeforce-flow-os` `prj_XjDOTJDHjChlCn255y2EO4MGCi7G`):
   - `POCKETBASE_URL`, `POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD`, `DEMO_GUEST_A_EMAIL`, `DEMO_GUEST_A_PASSWORD`, `DEMO_GUEST_B_EMAIL`, `DEMO_GUEST_B_PASSWORD` (dabei `NEXT_PUBLIC_APP_MODE=craft` & `NEXT_PUBLIC_POCKETBASE_URL` behalten).
-- [ ] **A2.** Doppeltes `C:\Users\Robin\AlphaExplorer\01_Coding\vibeforce-craft-os\.vercel\` entfernen (nur `frontend\.vercel\` behalten); im Vercel-Projekt `vibeforce-craft-os` Root Directory = `frontend` und Framework = `Next.js` setzen.
-- [ ] **A3.** In `vibeforce-craft-os/frontend/src/app/layout.tsx:16,20` `https://vibeforce-craft-os-five.vercel.app` -> `https://vibeforce-craft-os.vercel.app` ändern.
-- [ ] **A4.** Frisches Production-Deployment aus `vibeforce-craft-os/frontend/` ausrollen: `npx vercel --prod` -> `<NEW_CRAFT_DPL_URL>` / `<NEW_CRAFT_DPL_ID>` notieren und `/api/health`, `/login`, `/craft/time`, `/api/auth/demo?slot=slot_a` auf `200`/`302` ohne `getAdminPB()`-500 prüfen.
+- [x] **A2.** Doppeltes `C:\Users\Robin\AlphaExplorer\01_Coding\vibeforce-craft-os\.vercel\` entfernen (nur `frontend\.vercel\` behalten); im Vercel-Projekt `vibeforce-craft-os` Root Directory = `frontend` und Framework = `Next.js` setzen.
+- [x] **A3.** In `vibeforce-craft-os/frontend/src/app/layout.tsx:16,20` `https://vibeforce-craft-os-five.vercel.app` -> `https://vibeforce-craft-os.vercel.app` ändern.
+- [x] **A4.** Frisches Production-Deployment aus `vibeforce-craft-os` ausgerollt (`dpl_91YCjuCd7ShNtgwa5VpFgT2v7RCP` -> `https://vibeforce-craft-8r8q12d9e-robins-projects-34c3aad5.vercel.app`): `/api/health`, `/login`, `/craft/time`, `/api/auth/demo?slot=slot_a` alle `200`.
 
 ### Phase B — Zero-Downtime Alias-Umzug
-- [ ] **B1.** Sicherheits-Alias `-five` auf neues Deployment zeigen lassen: `npx vercel alias set <NEW_CRAFT_DPL_URL> vibeforce-craft-os-five.vercel.app`.
-- [ ] **B2.** Fehlgebundene Domains von `vibeforce-flow-os` (`prj_XjDOTJDHjChlCn255y2EO4MGCi7G`) lösen (**NICHT** `vibeforce-flow-os.vercel.app` antasten):
-  - `npx vercel alias rm vibeforce-craft-os.vercel.app` & `npx vercel alias rm craft-vibeforce.vercel.app` (falls Project-Domains im Dashboard/API gebunden sind: `DELETE /v9/projects/prj_XjDOTJDHjChlCn255y2EO4MGCi7G/domains/<domain>?teamId=team_MtfMNBzxg0YY0BQDG0WBnnTU`).
-- [ ] **B3.** Sofort an `vibeforce-craft-os` hängen:
-  - `npx vercel alias set <NEW_CRAFT_DPL_URL> vibeforce-craft-os.vercel.app`
-  - `npx vercel alias set <NEW_CRAFT_DPL_URL> craft-vibeforce.vercel.app`
-- [ ] **B4.** Live-Gate: `vibeforce-craft-os.vercel.app/craft/time` -> `200` (Title `Vibeforce Craft OS`), `craft-vibeforce.vercel.app/craft/time` -> `200`, `vibeforce-flow-os.vercel.app/login` -> `200` (Title `Vibeforce Flow OS`).
+- [x] **B1.** Sicherheits-Alias `-five` auf neues Deployment zeigen lassen (`vibeforce-craft-os-five.vercel.app` -> `vibeforce-craft-8r8q12d9e-robins-projects-34c3aad5.vercel.app`).
+- [x] **B2.** Fehlgebundene Domains von `vibeforce-flow-os` (`prj_XjDOTJDHjChlCn255y2EO4MGCi7G`) gelöst.
+- [x] **B3.** An `vibeforce-craft-os` gehängt (`vibeforce-craft-os.vercel.app` & `craft-vibeforce.vercel.app`).
+- [x] **B4.** Live-Gate bestanden: `vibeforce-craft-os.vercel.app/login` (`200`, Title `Vibeforce Craft OS | Handwerk & Bau`), `craft-vibeforce.vercel.app/craft/time` (`200`), `vibeforce-flow-os.vercel.app/login` (`200`, Title `Vibeforce Flow OS | Premium Agency OS`).
 
 ### Phase C — Portfolio, `docker-compose.prod.yml` & Deployment-Cleanup
-- [ ] **C1.** `robin-portfolio/demo/index.html:399,547` (und `HANDOVER_CLAUDE_RL_SHOWCASE.md:63`) auf `https://vibeforce-craft-os.vercel.app` aktualisieren; aus `robin-portfolio/` `npx vercel --prod` deployen und `https://rl-showcase.vercel.app/demo/` verifizieren. Danach optional `-five` entfernen (`npx vercel alias rm vibeforce-craft-os-five.vercel.app`).
+- [x] **C1.** `robin-portfolio/demo/index.html` & `HANDOVER_CLAUDE_RL_SHOWCASE.md` auf `https://vibeforce-craft-os.vercel.app` aktualisiert, `verify_memory_rules.py` bestanden (`0 Violations`), Commit `dcb48d5` & Deploy `dpl_J6ni66gn3zbWzvQQUodvatt4SRGo` -> `https://rl-showcase.vercel.app/demo/` (`200`). *(Hinweis: Umstellung von `demo/index.html:555-648` auf `/api/demo/slot` inkl. CORS erfolgt in Wave 3 vor Aktivierung von `1781300000`.)*
 - [x] **C2.** `backend/pb_hooks/lib/cors_helpers.js:18` fixen (`process.env` stürzt in PocketBase Goja mit `ReferenceError` ab -> `typeof process !== 'undefined' && process.env && process.env.CORS_ORIGIN`). *(Erledigt in `aca6784` / `68b76f0`)*
 - [x] **C3.** `docker-compose.prod.yml:66,68` & `.env.production.example:26-27` in beiden Repos um `https://vibeforce-craft-os.vercel.app`, `https://craft-vibeforce.vercel.app`, `https://rl-showcase.vercel.app` ergänzen. *(Erledigt in `aca6784` / `68b76f0`; **Warnung:** `1781300000` `demo_sessions` Admin-Only erst aktivieren, wenn `robin-portfolio/demo/index.html:555-648` über Server-Proxy läuft!)*
 - [ ] **C4.** Sicheres Vercel-Cleanup (zuvor `npx vercel alias ls` gegenprüfen; **niemals** `dpl_8ZgrWLH4s3pugb2NaMw69SygzwEH`, `<NEW_CRAFT_DPL_ID>` oder `dpl_B38D9XPMMmh4sq5naWKQi1eXR9sp` löschen):
