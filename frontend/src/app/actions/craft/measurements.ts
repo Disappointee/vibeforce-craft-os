@@ -109,3 +109,28 @@ export async function getMeasurementsByReportAction(siteReportId: string) {
     return JSON.parse(JSON.stringify(records)) as MeasurementRecord[];
   });
 }
+
+export async function getMeasurementsByProjectAction(projectId: string) {
+  const user = await verifyUserSession();
+  if (!user) return [];
+
+  return withAdminPB(async (pb) => {
+    try {
+      const reports = await pb.collection('site_reports').getFullList({
+        filter: pb.filter('project = {:projectId}', { projectId }),
+      });
+      if (reports.length === 0) return [];
+      const reportFilter = reports
+        .map((r: any) => pb.filter('site_report = {:rid}', { rid: r.id }))
+        .join(' || ');
+      const records = await pb.collection('measurements').getFullList({
+        filter: reportFilter,
+        sort: '+position_nr',
+      });
+      return JSON.parse(JSON.stringify(records)) as MeasurementRecord[];
+    } catch (err) {
+      console.warn('[getMeasurementsByProjectAction] Failed:', err);
+      return [];
+    }
+  });
+}

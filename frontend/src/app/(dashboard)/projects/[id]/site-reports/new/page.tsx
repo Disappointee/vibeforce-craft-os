@@ -1,29 +1,39 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FilePlus } from 'lucide-react';
-import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { withAdminPB, getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { DailySiteReportForm } from '@/components/craft/DailySiteReportForm';
-import { t } from '@/lib/i18n';
 import type { ProjectRecord } from '@/lib/pocketbase-types';
+
+export const dynamic = 'force-dynamic';
 
 interface NewSiteReportPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function NewSiteReportPage({ params }: NewSiteReportPageProps) {
-  const user = await verifyUserSession();
-  if (!user) notFound();
+  await requireAuth();
+  const userPb = await getUserAuthPB();
+  if (!userPb) {
+    redirect('/login');
+  }
 
   const { id } = await params;
 
-  const project = await withAdminPB(async (pb) => {
-    try {
+  let project: ProjectRecord | null = null;
+  try {
+    project = await withAdminPB(async (pb) => {
       const rec = await pb.collection('projects').getOne(id);
       return JSON.parse(JSON.stringify(rec)) as ProjectRecord;
+    });
+  } catch {
+    try {
+      const rec = await userPb.collection('projects').getOne(id);
+      project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
     } catch {
-      return null;
+      project = null;
     }
-  });
+  }
 
   if (!project) notFound();
 

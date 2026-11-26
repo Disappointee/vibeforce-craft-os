@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
+import { getUserAuthPB, requireAuth, withAdminPB } from '@/lib/pocketbase-server';
 import { CraftHubClient } from './CraftHubClient';
 import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function CraftPage() {
   await requireAuth();
-  const pb = await getUserAuthPB();
-  if (!pb) {
+  const userPb = await getUserAuthPB();
+  if (!userPb) {
     redirect('/login');
   }
 
@@ -18,57 +18,77 @@ export default async function CraftPage() {
   let timeEntries: TimeEntryRecord[] = [];
 
   try {
-    
-    // Fetch craft projects (Baustellen) exclusively
-    try {
-      const projRes = await pb.collection('projects').getList(1, 100, {
-        sort: '-created',
-        filter: 'project_type = "craft" || key ~ "BAU" || key ~ "CRAFT"',
-        expand: 'client,site_manager',
-      });
-      projects = projRes.items as unknown as ProjectRecord[];
-    } catch {
-      const projRes = await pb.collection('projects').getList(1, 50, {
-        sort: '-created',
-        expand: 'client',
-      });
-      projects = (projRes.items as unknown as ProjectRecord[]).filter(
-        (p) => p.project_type === 'craft' || p.key?.includes('BAU') || p.key?.includes('CRAFT')
-      );
-    }
+    const data = await withAdminPB(async (pb) => {
+      let loadedProjects: ProjectRecord[] = [];
+      let loadedReports: SiteReportRecord[] = [];
+      let loadedInvoices: any[] = [];
+      let loadedTimeEntries: TimeEntryRecord[] = [];
 
-    // Fetch site reports
-    try {
-      const repRes = await pb.collection('site_reports').getList(1, 50, {
-        sort: '-report_date',
-        expand: 'project,author',
-      });
-      reports = repRes.items as unknown as SiteReportRecord[];
-    } catch {
-      reports = [];
-    }
+      // Fetch craft projects (Baustellen) exclusively
+      try {
+        const projRes = await pb.collection('projects').getList(1, 100, {
+          sort: '-created',
+          filter: 'project_type = "craft" || key ~ "BAU" || key ~ "CRAFT"',
+          expand: 'client,site_manager',
+        });
+        loadedProjects = JSON.parse(JSON.stringify(projRes.items)) as ProjectRecord[];
+      } catch {
+        const projRes = await pb.collection('projects').getList(1, 50, {
+          sort: '-created',
+          expand: 'client',
+        });
+        loadedProjects = (JSON.parse(JSON.stringify(projRes.items)) as ProjectRecord[]).filter(
+          (p) => p.project_type === 'craft' || p.key?.includes('BAU') || p.key?.includes('CRAFT')
+        );
+      }
 
-    // Fetch invoices
-    try {
-      const invRes = await pb.collection('invoices_zugferd').getList(1, 50, {
-        sort: '-created',
-        expand: 'project',
-      });
-      invoices = invRes.items as unknown as any[];
-    } catch {
-      invoices = [];
-    }
+      // Fetch site reports
+      try {
+        const repRes = await pb.collection('site_reports').getList(1, 100, {
+          sort: '-report_date',
+          expand: 'project,author',
+        });
+        loadedReports = JSON.parse(JSON.stringify(repRes.items)) as SiteReportRecord[];
+      } catch {
+        try {
+          const repRes = await pb.collection('site_reports').getList(1, 100, {
+            expand: 'project,author',
+          });
+          loadedReports = JSON.parse(JSON.stringify(repRes.items)) as SiteReportRecord[];
+        } catch {
+          loadedReports = [];
+        }
+      }
 
-    // Fetch time entries
-    try {
-      const timeRes = await pb.collection('time_entries').getList(1, 100, {
-        sort: '-start_time',
-        expand: 'task,user',
-      });
-      timeEntries = timeRes.items as unknown as TimeEntryRecord[];
-    } catch {
-      timeEntries = [];
-    }
+      // Fetch invoices
+      try {
+        const invRes = await pb.collection('invoices_zugferd').getList(1, 50, {
+          sort: '-created',
+          expand: 'project',
+        });
+        loadedInvoices = JSON.parse(JSON.stringify(invRes.items)) as any[];
+      } catch {
+        loadedInvoices = [];
+      }
+
+      // Fetch time entries
+      try {
+        const timeRes = await pb.collection('time_entries').getList(1, 100, {
+          sort: '-start_time',
+          expand: 'task,user',
+        });
+        loadedTimeEntries = JSON.parse(JSON.stringify(timeRes.items)) as TimeEntryRecord[];
+      } catch {
+        loadedTimeEntries = [];
+      }
+
+      return { loadedProjects, loadedReports, loadedInvoices, loadedTimeEntries };
+    });
+
+    projects = data.loadedProjects;
+    reports = data.loadedReports;
+    invoices = data.loadedInvoices;
+    timeEntries = data.loadedTimeEntries;
   } catch (error) {
     console.warn('[CraftPage] Failed to fetch craft data:', error);
   }

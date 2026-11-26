@@ -32,7 +32,12 @@ import {
   ExternalLink,
   Upload,
 } from 'lucide-react';
-import { pb } from '@/lib/pocketbase';
+import {
+  getDefectsByProjectAction,
+  createDefectAction,
+  updateDefectAction,
+  deleteDefectAction,
+} from '@/app/actions/craft/defects';
 import type { DefectPinRecord, DefectSeverity, DefectStatus } from '@/lib/pocketbase-types';
 
 interface PlanPinningManagerProps {
@@ -160,19 +165,8 @@ export function PlanPinningManager({
   useEffect(() => {
     let cancelled = false;
     const loadFromPB = async () => {
-      if (!pb.authStore.isValid) {
-        if (!cancelled) setDefects(INITIAL_SAMPLE_DEFECTS);
-        return;
-      }
       try {
-        const records = await pb.collection('defect_pins').getFullList<DefectPinRecord>({
-          filter: pb.filter('project = {:pid} || project = {:pkey}', {
-            pid: projectId || projectKey,
-            pkey: projectKey,
-          }),
-          sort: '-created',
-          requestKey: null,
-        });
+        const records = await getDefectsByProjectAction(projectId || projectKey, projectKey);
         if (!cancelled) {
           setDefects(records.length > 0 ? records : INITIAL_SAMPLE_DEFECTS);
         }
@@ -297,9 +291,9 @@ export function PlanPinningManager({
     if (selectedDefect) {
       // update
       let updatedRec: DefectPinRecord = { ...selectedDefect, ...data, updated: new Date().toISOString() } as DefectPinRecord;
-      if (pb.authStore.isValid && !selectedDefect.id.startsWith('def-')) {
+      if (!selectedDefect.id.startsWith('def-')) {
         try {
-          updatedRec = await pb.collection('defect_pins').update<DefectPinRecord>(selectedDefect.id, data);
+          updatedRec = await updateDefectAction(selectedDefect.id, data);
         } catch (err) {
           console.warn('[PlanPinningManager] PB update defect_pins warning:', err);
         }
@@ -333,12 +327,10 @@ export function PlanPinningManager({
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
       };
-      if (pb.authStore.isValid) {
-        try {
-          newRecord = await pb.collection('defect_pins').create<DefectPinRecord>(payload);
-        } catch (err) {
-          console.warn('[PlanPinningManager] PB create defect_pins warning:', err);
-        }
+      try {
+        newRecord = await createDefectAction(payload);
+      } catch (err) {
+        console.warn('[PlanPinningManager] PB create defect_pins warning:', err);
       }
       setDefects((prev) => [newRecord, ...prev]);
       setSelectedDefect(newRecord);
@@ -350,9 +342,9 @@ export function PlanPinningManager({
 
   const handleDeleteDefect = async (id: string) => {
     if (confirm('Möchten Sie diesen Mangel wirklich aus dem Bauplan entfernen?')) {
-      if (pb.authStore.isValid && !id.startsWith('def-')) {
+      if (!id.startsWith('def-')) {
         try {
-          await pb.collection('defect_pins').delete(id);
+          await deleteDefectAction(id);
         } catch (err) {
           console.warn('[PlanPinningManager] PB delete defect_pins warning:', err);
         }
@@ -413,8 +405,8 @@ Bauleitung / Generalunternehmer`;
 
     // Update status to 'notified' if it was draft
     if (noticeDefect && noticeDefect.status === 'draft') {
-      if (pb.authStore.isValid && !noticeDefect.id.startsWith('def-')) {
-        pb.collection('defect_pins').update(noticeDefect.id, { status: 'notified' }).catch(() => {});
+      if (!noticeDefect.id.startsWith('def-')) {
+        updateDefectAction(noticeDefect.id, { status: 'notified' }).catch(() => {});
       }
       setDefects((prev) =>
         prev.map((d) => (d.id === noticeDefect.id ? { ...d, status: 'notified', updated: new Date().toISOString() } : d))
@@ -914,7 +906,7 @@ Bauleitung / Generalunternehmer`;
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 pb-20 sm:p-6 animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setSelectedDefect(null);
@@ -1245,7 +1237,7 @@ Bauleitung / Generalunternehmer`;
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 pb-20 sm:p-6 animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setNoticeDefect(null);
           }}

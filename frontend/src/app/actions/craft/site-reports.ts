@@ -246,12 +246,22 @@ export async function getSiteReportsByProjectAction(projectId: string) {
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
 
   return withAdminPB(async (pb) => {
-    const records = await pb.collection('site_reports').getFullList({
-      filter: pb.filter('project = {:projectId}', { projectId }),
-      sort: '-report_date',
-      expand: 'author,measurements(site_report),evidence_items(site_report)',
-    });
+    try {
+      const records = await pb.collection('site_reports').getFullList({
+        filter: pb.filter('project = {:projectId}', { projectId }),
+        sort: '-report_date',
+        expand: 'author',
+      });
 
-    return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
+      return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
+    } catch {
+      const records = await pb.collection('site_reports').getFullList({
+        filter: pb.filter('project = {:projectId}', { projectId }),
+      });
+      records.sort((a: any, b: any) =>
+        String(b.report_date || b.created || '').localeCompare(String(a.report_date || a.created || ''))
+      );
+      return JSON.parse(JSON.stringify(records)) as SiteReportRecord[];
+    }
   });
 }

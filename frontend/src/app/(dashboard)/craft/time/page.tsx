@@ -1,37 +1,38 @@
 import { redirect } from 'next/navigation';
-import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
+import { getUserAuthPB, requireAuth, withAdminPB } from '@/lib/pocketbase-server';
 import { MonteurTimeClockClient } from './MonteurTimeClockClient';
-import type { ProjectRecord, UserRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord } from '@/lib/pocketbase-types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CraftTimePage() {
   await requireAuth();
-  const pb = await getUserAuthPB();
-  if (!pb) {
+  const userPb = await getUserAuthPB();
+  if (!userPb) {
     redirect('/login');
   }
 
   let projects: ProjectRecord[] = [];
-  let user: UserRecord | null = null;
 
   try {
-    try {
-      const projRes = await pb.collection('projects').getList(1, 100, {
-        sort: '-created',
-        filter: 'project_type = "craft" || key ~ "BAU" || key ~ "CRAFT"',
-        expand: 'client,site_manager',
-      });
-      projects = projRes.items as unknown as ProjectRecord[];
-    } catch {
-      const projRes = await pb.collection('projects').getList(1, 50, {
-        sort: '-created',
-        expand: 'client',
-      });
-      projects = (projRes.items as unknown as ProjectRecord[]).filter(
-        (p) => p.project_type === 'craft' || p.key?.includes('BAU') || p.key?.includes('CRAFT')
-      );
-    }
+    projects = await withAdminPB(async (pb) => {
+      try {
+        const projRes = await pb.collection('projects').getList(1, 100, {
+          sort: '-created',
+          filter: 'project_type = "craft" || key ~ "BAU" || key ~ "CRAFT"',
+          expand: 'client,site_manager',
+        });
+        return JSON.parse(JSON.stringify(projRes.items)) as ProjectRecord[];
+      } catch {
+        const projRes = await pb.collection('projects').getList(1, 50, {
+          sort: '-created',
+          expand: 'client',
+        });
+        return (JSON.parse(JSON.stringify(projRes.items)) as ProjectRecord[]).filter(
+          (p) => p.project_type === 'craft' || p.key?.includes('BAU') || p.key?.includes('CRAFT')
+        );
+      }
+    });
   } catch (error) {
     console.warn('[CraftTimePage] Failed to fetch projects:', error);
   }

@@ -1,42 +1,57 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
   Plus,
   FileText,
-  Calendar,
-  CheckCircle,
-  Clock,
   ChevronRight,
   ShieldCheck,
+  Clock,
 } from 'lucide-react';
-import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { withAdminPB, getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { getSiteReportsByProjectAction } from '@/app/actions/craft/site-reports';
 import { t } from '@/lib/i18n';
-import type { ProjectRecord } from '@/lib/pocketbase-types';
+import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
+
+export const dynamic = 'force-dynamic';
 
 interface SiteReportsPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function SiteReportsPage({ params }: SiteReportsPageProps) {
-  const user = await verifyUserSession();
-  if (!user) notFound();
+  await requireAuth();
+  const userPb = await getUserAuthPB();
+  if (!userPb) {
+    redirect('/login');
+  }
 
   const { id } = await params;
 
-  const project = await withAdminPB(async (pb) => {
-    try {
+  let project: ProjectRecord | null = null;
+  try {
+    project = await withAdminPB(async (pb) => {
       const rec = await pb.collection('projects').getOne(id);
       return JSON.parse(JSON.stringify(rec)) as ProjectRecord;
+    });
+  } catch {
+    try {
+      const rec = await userPb.collection('projects').getOne(id);
+      project = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
     } catch {
-      return null;
+      project = null;
     }
-  });
+  }
 
   if (!project) notFound();
 
-  const reports = await getSiteReportsByProjectAction(id);
+  let reports: SiteReportRecord[] = [];
+  try {
+    reports = await getSiteReportsByProjectAction(id);
+  } catch (err) {
+    console.warn('[SiteReportsPage] Failed to fetch site reports:', err);
+    reports = [];
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-6">

@@ -1,7 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { pb } from '@/lib/pocketbase';
+import { toast } from 'sonner';
+import {
+  getTodayTimeEntriesAction,
+  clockInAction,
+  clockOutAction,
+} from '@/app/actions/craft/time-clock';
 import {
   Timer,
   Play,
@@ -149,43 +155,74 @@ export function MonteurTimeClock({
   // Segments of today (loaded from PocketBase time_entries)
   const [segments, setSegments] = useState<ShiftSegment[]>([]);
 
-  // Current active segment start time
+  // Current active segment start time & PB record ID
   const [activeSegmentStart, setActiveSegmentStart] = useState<string | null>(null);
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [isSyncingClock, setIsSyncingClock] = useState(false);
 
-  // Load today's time entries from PocketBase
+  // Load today's time entries from PocketBase via Server Action
   useEffect(() => {
-    const userId = pb.authStore.record?.id;
-    if (!pb.authStore.isValid || !userId) return;
-
-    const todayDate = new Date().toISOString().slice(0, 10);
-    pb.collection('time_entries')
-      .getFullList({
-        filter: pb.filter('user = {:uid} && date = {:today}', { uid: userId, today: todayDate }),
-        sort: 'start_time',
-        requestKey: null,
-      })
+    let cancelled = false;
+    getTodayTimeEntriesAction()
       .then((entries) => {
-        const mapped: ShiftSegment[] = entries
-          .filter((e: any) => Boolean(e.end_time))
-          .map((e: any) => ({
-            id: e.id,
-            type: 'site_assembly' as ActivityType,
-            startTime: e.start_time || e.created,
-            endTime: e.end_time,
-            durationSeconds:
-              e.start_time && e.end_time
-                ? Math.max(1, Math.floor((new Date(e.end_time).getTime() - new Date(e.start_time).getTime()) / 1000))
-                : (Number(e.duration_minutes) || 0) * 60,
-            projectKey: activeProjectKey,
-            projectName: e.description || activeProjectName,
-            gpsVerified: typeof e.description === 'string' && e.description.includes('GPS verifiziert'),
-          }));
-        setSegments(mapped);
+        if (cancelled) return;
+        const completed: ShiftSegment[] = [];
+        let openEntry: (typeof entries)[number] | null = null;
+
+        for (const e of entries) {
+          const desc = e.description || '';
+          const metaMatch = desc.match(/^\[([^|\]]+)(?:\|([^\]]+))?\]/);
+          const parsedKey = metaMatch?.[1] || e.project_key || activeProjectKey;
+          const parsedType = (metaMatch?.[2] as ActivityType) || 'site_assembly';
+          const validType: ActivityType = ACTIVITY_META[parsedType] ? parsedType : 'site_assembly';
+
+          if (!e.end_time) {
+            openEntry = e;
+          } else {
+            const startMs = new Date(e.start_time).getTime();
+            const endMs = new Date(e.end_time).getTime();
+            const durSec =
+              Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs
+                ? Math.max(1, Math.floor((endMs - startMs) / 1000))
+                : Math.max(60, (Number(e.duration_minutes) || 1) * 60);
+
+            completed.push({
+              id: e.id,
+              type: validType,
+              startTime: e.start_time,
+              endTime: e.end_time,
+              durationSeconds: durSec,
+              projectKey: parsedKey,
+              projectName: e.project_name || desc || activeProjectName,
+              gpsVerified: desc.includes('GPS verifiziert'),
+            });
+          }
+        }
+
+        setSegments(completed);
+        if (openEntry) {
+          const desc = openEntry.description || '';
+          const metaMatch = desc.match(/^\[([^|\]]+)(?:\|([^\]]+))?\]/);
+          const parsedType = (metaMatch?.[2] as ActivityType) || 'site_assembly';
+          if (ACTIVITY_META[parsedType]) {
+            setActiveActivity(parsedType);
+          }
+          if (openEntry.project_id && projects.some((p) => p.id === openEntry!.project_id)) {
+            setSelectedProjectId(openEntry.project_id);
+          }
+          setActiveEntryId(openEntry.id);
+          setActiveSegmentStart(openEntry.start_time);
+          setClockStatus('active');
+        }
       })
       .catch((err) => {
         console.warn('[MonteurTimeClock] Failed to load today time_entries:', err);
       });
-  }, [activeProjectKey, activeProjectName]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProjectKey, activeProjectName, projects]);
 
   // Digital clock (HH:MM:SS)
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -267,41 +304,10 @@ export function MonteurTimeClock({
     }
   };
 
-  const persistSegmentToPB = async (segment: ShiftSegment) => {
-    const userId = pb.authStore.record?.id;
-    if (!pb.authStore.isValid || !userId) return;
-
-    try {
-      let taskId: string | undefined;
-      if (selectedProjectId) {
-        try {
-          const tasksRes = await pb.collection('tasks').getList(1, 1, {
-            filter: pb.filter('project = {:pid}', { pid: selectedProjectId }),
-            requestKey: null,
-          });
-          taskId = tasksRes.items[0]?.id;
-        } catch {}
-      }
-
-      const minutes = Math.max(1, Math.round(segment.durationSeconds / 60));
-      await pb.collection('time_entries').create({
-        ...(taskId ? { task: taskId } : {}),
-        user: userId,
-        start_time: segment.startTime,
-        end_time: segment.endTime,
-        duration_minutes: minutes,
-        duration: minutes,
-        date: segment.startTime.slice(0, 10),
-        is_billable: true,
-        description: `[${segment.projectKey}] ${ACTIVITY_META[segment.type].label}${segment.gpsVerified ? ' (GPS verifiziert)' : ''}`,
-      });
-    } catch (err) {
-      console.warn('[MonteurTimeClock] Failed to persist time_entry to PocketBase:', err);
-    }
-  };
-
   // Actions
-  const handleClockIn = () => {
+  const handleClockIn = async () => {
+    if (isSyncingClock) return;
+    setIsSyncingClock(true);
     const nowIso = new Date().toISOString();
     setActiveSegmentStart(nowIso);
     setClockStatus('active');
@@ -310,69 +316,92 @@ export function MonteurTimeClock({
     if (!gpsStatus) {
       verifyGeofence();
     }
+
+    try {
+      const created = await clockInAction({
+        projectId: selectedProjectId,
+        projectKey: activeProjectKey,
+        activityType: activeActivity,
+        activityLabel: ACTIVITY_META[activeActivity].label,
+        gpsVerified: Boolean(gpsStatus?.verified),
+      });
+      setActiveEntryId(created.id);
+      setActiveSegmentStart(created.start_time);
+    } catch (err: any) {
+      console.error('[MonteurTimeClock] clockInAction failed:', err);
+      toast.error(err?.message || 'Stempeln fehlgeschlagen.');
+    } finally {
+      setIsSyncingClock(false);
+    }
+  };
+
+  const finishActiveSegment = async (nextStatus: 'paused' | 'idle') => {
+    if (clockStatus === 'active' && activeSegmentStart) {
+      if (isSyncingClock) return;
+      setIsSyncingClock(true);
+      const nowIso = new Date().toISOString();
+      const duration = Math.max(
+        1,
+        Math.floor((Date.now() - new Date(activeSegmentStart).getTime()) / 1000)
+      );
+
+      const tempId = activeEntryId || 'seg_' + Math.random().toString(36).substring(2, 9);
+      const finishedSegment: ShiftSegment = {
+        id: tempId,
+        type: activeActivity,
+        startTime: activeSegmentStart,
+        endTime: nowIso,
+        durationSeconds: duration,
+        projectKey: activeProjectKey,
+        projectName: activeProjectName,
+        gpsVerified: gpsStatus?.verified,
+        gpsCoords: gpsStatus?.coords,
+        gpsDistanceMeters: gpsStatus?.distance,
+      };
+
+      setSegments((prev) => [...prev, finishedSegment]);
+      setActiveSegmentStart(null);
+      setActiveEntryId(null);
+      setClockStatus(nextStatus);
+
+      try {
+        const saved = await clockOutAction({
+          entryId: activeEntryId || undefined,
+          startTimeIso: activeSegmentStart,
+          endTimeIso: nowIso,
+          durationSeconds: duration,
+          projectId: selectedProjectId,
+          projectKey: activeProjectKey,
+          activityType: activeActivity,
+          activityLabel: ACTIVITY_META[activeActivity].label,
+          gpsVerified: Boolean(gpsStatus?.verified),
+        });
+        setSegments((prev) =>
+          prev.map((s) => (s.id === tempId ? { ...s, id: saved.id } : s))
+        );
+      } catch (err: any) {
+        console.error('[MonteurTimeClock] clockOutAction failed:', err);
+        toast.error(err?.message || 'Speichern der Stempelzeit fehlgeschlagen.');
+      } finally {
+        setIsSyncingClock(false);
+      }
+    } else {
+      setActiveSegmentStart(null);
+      setActiveEntryId(null);
+      setClockStatus(nextStatus);
+    }
   };
 
   const handlePause = () => {
-    if (clockStatus === 'active' && activeSegmentStart) {
-      const nowIso = new Date().toISOString();
-      const duration = Math.max(
-        1,
-        Math.floor((Date.now() - new Date(activeSegmentStart).getTime()) / 1000)
-      );
-
-      const finishedSegment: ShiftSegment = {
-        id: 'seg_' + Math.random().toString(36).substring(2, 9),
-        type: activeActivity,
-        startTime: activeSegmentStart,
-        endTime: nowIso,
-        durationSeconds: duration,
-        projectKey: activeProjectKey,
-        projectName: activeProjectName,
-        gpsVerified: gpsStatus?.verified,
-        gpsCoords: gpsStatus?.coords,
-        gpsDistanceMeters: gpsStatus?.distance,
-      };
-
-      setSegments((prev) => [...prev, finishedSegment]);
-      void persistSegmentToPB(finishedSegment);
-      setActiveSegmentStart(null);
-      setClockStatus('paused');
-    }
+    void finishActiveSegment('paused');
   };
 
   const handleResume = () => {
-    const nowIso = new Date().toISOString();
-    setActiveSegmentStart(nowIso);
-    setClockStatus('active');
+    void handleClockIn();
   };
 
   const handleClockOut = () => {
-    if (clockStatus === 'active' && activeSegmentStart) {
-      const nowIso = new Date().toISOString();
-      const duration = Math.max(
-        1,
-        Math.floor((Date.now() - new Date(activeSegmentStart).getTime()) / 1000)
-      );
-
-      const finishedSegment: ShiftSegment = {
-        id: 'seg_' + Math.random().toString(36).substring(2, 9),
-        type: activeActivity,
-        startTime: activeSegmentStart,
-        endTime: nowIso,
-        durationSeconds: duration,
-        projectKey: activeProjectKey,
-        projectName: activeProjectName,
-        gpsVerified: gpsStatus?.verified,
-        gpsCoords: gpsStatus?.coords,
-        gpsDistanceMeters: gpsStatus?.distance,
-      };
-
-      setSegments((prev) => [...prev, finishedSegment]);
-      void persistSegmentToPB(finishedSegment);
-    }
-
-    setActiveSegmentStart(null);
-    setClockStatus('idle');
+    void finishActiveSegment('idle');
   };
 
   // Format seconds to HH:MM:SS

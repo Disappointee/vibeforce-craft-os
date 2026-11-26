@@ -84,6 +84,7 @@ interface ProjectDetailsClientProps {
   initialTimeEntries: Record<string, unknown>[];
   initialExpenses: Record<string, unknown>[];
   initialSiteReports?: Record<string, unknown>[];
+  initialMeasurements?: Record<string, unknown>[];
 }
 
 export function ProjectDetailsClient({
@@ -93,6 +94,7 @@ export function ProjectDetailsClient({
   initialTimeEntries,
   initialExpenses,
   initialSiteReports = [],
+  initialMeasurements = [],
 }: ProjectDetailsClientProps) {
   const router = useRouter();
   const craftMode = isCraftMode();
@@ -104,32 +106,48 @@ export function ProjectDetailsClient({
   const [expenses, setExpenses] = useState<Record<string, unknown>[]>(initialExpenses);
   const [siteReports, setSiteReports] = useState<Record<string, unknown>[]>(initialSiteReports);
   const [craftTab, setCraftTab] = useState<'bautagebuch' | 'aufmass' | 'kalkulation' | 'gaeb' | 'geofence' | 'pinning' | 'tasks'>('bautagebuch');
-  const [measurements, setMeasurements] = useState<MeasurementRowItem[]>([
-    {
-      id: 'm1',
-      position_nr: '01.01',
-      title: 'Bodenbelagsabbruch & Estrichfräsen',
-      formula: '12.40 * 6.50',
-      quantity: 80.6,
-      unit: 'm2',
-      unit_price: 18.5,
-      total_price: 1491.1,
-      tax_rate_type: 'reverse_charge_13b',
-      notes: 'EG Flur und Technikraum',
-    },
-    {
-      id: 'm2',
-      position_nr: '01.02',
-      title: 'Zementestrich DIN 18560 CT-C25-F4 d=65mm',
-      formula: '12.40 * 6.50 - 1.20 * 0.80',
-      quantity: 79.64,
-      unit: 'm2',
-      unit_price: 34.0,
-      total_price: 2707.76,
-      tax_rate_type: 'reverse_charge_13b',
-      notes: 'Übermessungsabzug Schacht < 2.5m² gem. DIN 18299',
-    },
-  ]);
+  const [measurements, setMeasurements] = useState<MeasurementRowItem[]>(() => {
+    if (initialMeasurements && initialMeasurements.length > 0) {
+      return initialMeasurements.map((m: any) => ({
+        id: m.id,
+        position_nr: m.position_nr || '01',
+        title: m.title || '',
+        formula: m.formula || '',
+        quantity: Number(m.quantity) || 0,
+        unit: m.unit || 'm2',
+        unit_price: Number(m.unit_price) || 0,
+        total_price: Number(m.total_price) || 0,
+        tax_rate_type: m.tax_rate_type || 'reverse_charge_13b',
+        notes: m.notes || '',
+      }));
+    }
+    return [
+      {
+        id: 'm1',
+        position_nr: '01.01',
+        title: 'Bodenbelagsabbruch & Estrichfräsen',
+        formula: '12.40 * 6.50',
+        quantity: 80.6,
+        unit: 'm2',
+        unit_price: 18.5,
+        total_price: 1491.1,
+        tax_rate_type: 'reverse_charge_13b',
+        notes: 'EG Flur und Technikraum',
+      },
+      {
+        id: 'm2',
+        position_nr: '01.02',
+        title: 'Zementestrich DIN 18560 CT-C25-F4 d=65mm',
+        formula: '12.40 * 6.50 - 1.20 * 0.80',
+        quantity: 79.64,
+        unit: 'm2',
+        unit_price: 34.0,
+        total_price: 2707.76,
+        tax_rate_type: 'reverse_charge_13b',
+        notes: 'Übermessungsabzug Schacht < 2.5m² gem. DIN 18299',
+      },
+    ];
+  });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline'>(() =>
     defaultTaskView === 'list' ? 'list' : defaultTaskView === 'timeline' ? 'timeline' : 'board'

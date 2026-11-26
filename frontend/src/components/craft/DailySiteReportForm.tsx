@@ -178,15 +178,19 @@ export function DailySiteReportForm({
       if (measurements.length > 0) {
         for (const m of measurements) {
           if (m.title.trim()) {
+            const qty = Number.isFinite(Number(m.quantity)) ? Math.max(0, Number(m.quantity)) : 0;
+            const unitPrice = Number.isFinite(Number(m.unit_price)) ? Math.max(0, Number(m.unit_price)) : 0;
             await createMeasurementAction({
               site_report: savedReport.id,
-              position_nr: m.position_nr,
-              title: m.title,
-              formula: m.formula,
-              quantity: m.quantity,
-              unit: m.unit,
-              unit_price: m.unit_price,
-              total_price: m.total_price,
+              position_nr: m.position_nr || '01',
+              title: m.title.trim(),
+              formula: m.formula || '',
+              quantity: qty,
+              unit: m.unit || 'm2',
+              unit_price: unitPrice,
+              total_price: Math.round(qty * unitPrice * 100) / 100,
+              tax_rate_type: m.tax_rate_type || 'reverse_charge_13b',
+              notes: m.notes || '',
             });
           }
         }

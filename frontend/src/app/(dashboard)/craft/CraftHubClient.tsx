@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
   Hammer,
@@ -47,6 +48,7 @@ import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { getImportedIdsCartAction } from '@/app/actions/craft/ids-carts';
+import { getMeasurementsByProjectAction } from '@/app/actions/craft/measurements';
 import { pb } from '@/lib/pocketbase';
 import { filterProjectsByMode } from '@/lib/data-isolation';
 import type { IdsCart } from '@/lib/ids-connect';
@@ -81,6 +83,7 @@ export function CraftHubClient({
   initialInvoices = [],
   initialTimeEntries = [],
 }: CraftHubClientProps) {
+  const router = useRouter();
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<CraftTab>('reports');
   const isSiteTab = (tab: CraftTab) => ['reports', 'measurements', 'geofence', 'pinning'].includes(tab);
@@ -362,6 +365,36 @@ export function CraftHubClient({
       notes: 'Schwerlasttrasse Stahl verzinkt',
     },
   ]);
+
+  // Load persisted measurements for the selected project
+  useEffect(() => {
+    if (!selectedProjectId || selectedProjectId === 'sample_craft_project') return;
+    let cancelled = false;
+    getMeasurementsByProjectAction(selectedProjectId)
+      .then((rows) => {
+        if (cancelled || rows.length === 0) return;
+        setMeasurementItems(
+          rows.map((r: any) => ({
+            id: r.id,
+            position_nr: r.position_nr || '01',
+            title: r.title,
+            formula: r.formula || '',
+            quantity: Number(r.quantity) || 0,
+            unit: r.unit || 'm2',
+            unit_price: Number(r.unit_price) || 0,
+            total_price: Number(r.total_price) || 0,
+            tax_rate_type: r.tax_rate_type || 'reverse_charge_13b',
+            notes: r.notes || '',
+          }))
+        );
+      })
+      .catch((err) => {
+        console.warn('[CraftHubClient] Failed to load project measurements:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProjectId]);
 
   // Computed metrics
   const activeProjectsCount = projects.filter((p) => p.status === 'active').length;
@@ -1857,7 +1890,38 @@ export function CraftHubClient({
         projects={projects}
         defaultProjectId={selectedProject?.id}
         onSuccess={(savedReport) => {
-          setReports((prev) => [savedReport, ...prev]);
+          const matchedProject = projects.find((p) => p.id === savedReport.project) || selectedProject;
+          const enrichedReport: SiteReportRecord = {
+            ...savedReport,
+            expand: {
+              ...(savedReport.expand || {}),
+              project: savedReport.expand?.project || matchedProject,
+            },
+          };
+          setReports((prev) => [enrichedReport, ...prev.filter((r) => r.id !== enrichedReport.id)]);
+          if (selectedProjectId && selectedProjectId !== 'sample_craft_project') {
+            getMeasurementsByProjectAction(selectedProjectId)
+              .then((rows) => {
+                if (rows.length > 0) {
+                  setMeasurementItems(
+                    rows.map((r: any) => ({
+                      id: r.id,
+                      position_nr: r.position_nr || '01',
+                      title: r.title,
+                      formula: r.formula || '',
+                      quantity: Number(r.quantity) || 0,
+                      unit: r.unit || 'm2',
+                      unit_price: Number(r.unit_price) || 0,
+                      total_price: Number(r.total_price) || 0,
+                      tax_rate_type: r.tax_rate_type || 'reverse_charge_13b',
+                      notes: r.notes || '',
+                    }))
+                  );
+                }
+              })
+              .catch(() => {});
+          }
+          router.refresh();
         }}
         onBaustelleCreated={handleBaustelleCreated}
       />

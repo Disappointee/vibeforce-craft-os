@@ -16,7 +16,8 @@ import {
   Sparkles,
   Check,
 } from 'lucide-react';
-import { pb } from '@/lib/pocketbase';
+import { toast } from 'sonner';
+import { createDefectAction } from '@/app/actions/craft/defects';
 import type { DefectPinRecord, DefectSeverity, DefectStatus, ProjectRecord } from '@/lib/pocketbase-types';
 
 export const CRAFT_TRADES_LIST = [
@@ -179,23 +180,13 @@ export function NewDefectDialog({
       evidence_sha256: photoSha256 || '',
     };
 
-    let createdDefect: DefectPinRecord = {
-      id: 'def_' + Math.random().toString(36).substring(2, 9),
-      collectionId: 'defect_pins',
-      collectionName: 'defect_pins',
-      ...payload,
-      evidence_photo_url: photoPreview || undefined,
-      evidence_sha256: photoSha256 || undefined,
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-    };
-
-    if (pb.authStore.isValid) {
-      try {
-        createdDefect = await pb.collection('defect_pins').create<DefectPinRecord>(payload);
-      } catch (err) {
-        console.warn('PocketBase defect_pins create warning:', err);
-      }
+    let createdDefect: DefectPinRecord;
+    try {
+      createdDefect = await createDefectAction(payload);
+    } catch (err: any) {
+      console.error('PocketBase defect_pins create error:', err);
+      toast.error(err?.message || 'Mangel konnte nicht in PocketBase gespeichert werden.');
+      return;
     }
 
     // Globales Custom-Event auslösen, damit offene Manager synchronisieren
@@ -209,13 +200,13 @@ export function NewDefectDialog({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 pb-20 sm:p-6 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onOpenChange(false);
       }}
     >
       <div
-        className="w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-5.5rem)] sm:max-h-[90vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

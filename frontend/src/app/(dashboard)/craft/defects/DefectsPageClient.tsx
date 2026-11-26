@@ -29,7 +29,12 @@ import {
   ExternalLink,
   Hammer,
 } from 'lucide-react';
-import { pb } from '@/lib/pocketbase';
+import { toast } from 'sonner';
+import {
+  getDefectsByProjectAction,
+  updateDefectAction,
+  deleteDefectAction,
+} from '@/app/actions/craft/defects';
 import type { ProjectRecord, DefectPinRecord, DefectSeverity, DefectStatus } from '@/lib/pocketbase-types';
 import { NewDefectDialog, CRAFT_TRADES_LIST } from '@/components/craft/NewDefectDialog';
 import { PlanPinningManager } from '@/components/craft/PlanPinningManager';
@@ -153,22 +158,11 @@ export function DefectsPageClient({ initialProjects }: DefectsPageClientProps) {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTrade, setFilterTrade] = useState<string>('all');
 
-  // Load defects for active project from PocketBase defect_pins
+  // Load defects for active project from PocketBase defect_pins via Server Action
   const loadDefects = async () => {
     const fallbackSamples = INITIAL_SAMPLE_DEFECTS[activeKey] || INITIAL_SAMPLE_DEFECTS['ULB'] || [];
-    if (!pb.authStore.isValid) {
-      setDefects(fallbackSamples);
-      return;
-    }
     try {
-      const records = await pb.collection('defect_pins').getFullList<DefectPinRecord>({
-        filter: pb.filter('project = {:pid} || project = {:pkey}', {
-          pid: activeProject?.id || activeKey,
-          pkey: activeKey,
-        }),
-        sort: '-created',
-        requestKey: null,
-      });
+      const records = await getDefectsByProjectAction(activeProject?.id || activeKey, activeKey);
       setDefects(records.length > 0 ? records : fallbackSamples);
     } catch (err) {
       console.warn('[DefectsPageClient] Failed to load defect_pins from PB:', err);
@@ -234,17 +228,7 @@ export function DefectsPageClient({ initialProjects }: DefectsPageClientProps) {
   const handleUpdateStatus = async (defectId: string, newStatus: DefectStatus) => {
     const resolved_at = newStatus === 'resolved' ? new Date().toISOString() : undefined;
     const accepted_at = newStatus === 'accepted' ? new Date().toISOString() : undefined;
-    if (pb.authStore.isValid && !defectId.startsWith('def-')) {
-      try {
-        await pb.collection('defect_pins').update(defectId, {
-          status: newStatus,
-          ...(resolved_at ? { resolved_at } : {}),
-          ...(accepted_at ? { accepted_at } : {}),
-        });
-      } catch (err) {
-        console.warn('[DefectsPageClient] PB update status warning:', err);
-      }
-    }
+
     setDefects((prev) =>
       prev.map((d) =>
         d.id === defectId
@@ -258,19 +242,33 @@ export function DefectsPageClient({ initialProjects }: DefectsPageClientProps) {
           : d
       )
     );
+
+    if (!defectId.startsWith('def-')) {
+      try {
+        await updateDefectAction(defectId, {
+          status: newStatus,
+          ...(resolved_at ? { resolved_at } : {}),
+          ...(accepted_at ? { accepted_at } : {}),
+        });
+      } catch (err: any) {
+        console.warn('[DefectsPageClient] PB update status warning:', err);
+        toast.error(err?.message || 'Status konnte nicht gespeichert werden.');
+      }
+    }
   };
 
   // Delete defect
   const handleDeleteDefect = async (id: string) => {
     if (confirm('Möchten Sie diesen Mangel wirklich unwiderruflich löschen?')) {
-      if (pb.authStore.isValid && !id.startsWith('def-')) {
+      setDefects((prev) => prev.filter((d) => d.id !== id));
+      if (!id.startsWith('def-')) {
         try {
-          await pb.collection('defect_pins').delete(id);
-        } catch (err) {
+          await deleteDefectAction(id);
+        } catch (err: any) {
           console.warn('[DefectsPageClient] PB delete warning:', err);
+          toast.error(err?.message || 'Löschen fehlgeschlagen.');
         }
       }
-      setDefects((prev) => prev.filter((d) => d.id !== id));
     }
   };
 
@@ -819,7 +817,7 @@ ${activeProject?.name}`;
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 pb-20 sm:p-6 animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setNoticeDefect(null);
           }}
@@ -903,7 +901,7 @@ ${activeProject?.name}`;
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 pb-20 sm:pb-4 animate-in fade-in"
           onClick={() => setPreviewPhotoUrl(null)}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
