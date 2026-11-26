@@ -14,7 +14,7 @@ function sanitizeSessionRecord(record: Record<string, any>) {
   return {
     id: record.id,
     slot: record.slot,
-    active: Boolean(record.active),
+    active: Boolean(record.is_active),
     label: typeof record.label === 'string' ? record.label : undefined,
     expires_at: record.expires_at || null,
     updated: record.updated || null,
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       const filter = slotParam ? pb.filter('slot = {:slot}', { slot: slotParam }) : undefined;
       const list = await pb.collection('demo_sessions').getFullList({
         filter,
-        sort: undefined,
+        sort: '-last_heartbeat',
         requestKey: null,
       });
       return list.map((rec) => sanitizeSessionRecord(rec as Record<string, any>));
