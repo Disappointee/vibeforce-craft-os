@@ -34,7 +34,6 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
   let tasks: Record<string, unknown>[] = [];
   let timeEntries: Record<string, unknown>[] = [];
   let expenses: Record<string, unknown>[] = [];
-  let siteReports: Record<string, unknown>[] = [];
 
   try {
 
@@ -77,17 +76,6 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
     } catch {
       // external_expenses collection might not exist yet
     }
-
-    try {
-      const reportsResult = await pb.collection('site_reports').getList(1, 100, {
-        filter: pb.filter('project = {:id}', { id }),
-        sort: '-report_date',
-        expand: 'author',
-      });
-      siteReports = reportsResult.items;
-    } catch (err) {
-      console.warn('[ProjectDetailsPage] Failed to fetch site reports:', err);
-    }
   } catch (outerErr) {
     console.error('[ProjectDetailsPage] Critical error initializing project page:', outerErr);
     notFound();
@@ -100,7 +88,6 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
       initialTasks={JSON.parse(JSON.stringify(tasks))}
       initialTimeEntries={JSON.parse(JSON.stringify(timeEntries))}
       initialExpenses={JSON.parse(JSON.stringify(expenses))}
-      initialSiteReports={JSON.parse(JSON.stringify(siteReports))}
     />
   );
 }
