@@ -33,10 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     const sessions = await withAdminPB(async (pb) => {
-      const filter = slotParam ? pb.filter('slot = {:slot}', { slot: slotParam }) : '';
+      const filter = slotParam ? pb.filter('slot = {:slot}', { slot: slotParam }) : undefined;
       const list = await pb.collection('demo_sessions').getFullList({
         filter,
-        sort: '-updated',
+        sort: undefined,
         requestKey: null,
       });
       return list.map((rec) => sanitizeSessionRecord(rec as Record<string, any>));
