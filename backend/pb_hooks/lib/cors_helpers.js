@@ -15,7 +15,8 @@ module.exports = {
      * 3. c.json()-Argument) und gibt sie zusätzlich zurück (Alt-PB-Kompatibilität).
      */
     corsHeaders: function (c, methods) {
-        var raw = process.env.CORS_ORIGIN || $os.getenv('CORS_ORIGIN') || 'http://localhost:3000,http://localhost:3001';
+        var processEnv = (typeof process !== 'undefined' && process.env) ? process.env : {};
+        var raw = processEnv.CORS_ORIGIN || $os.getenv('CORS_ORIGIN') || 'http://localhost:3000,http://localhost:3001';
         var allowed = raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
         var origin = allowed.length ? allowed[0] : 'http://localhost:3000';
         try {

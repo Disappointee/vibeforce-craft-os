@@ -3,16 +3,31 @@ import PocketBase from 'pocketbase';
 import { POCKETBASE_URL } from '@/lib/pocketbase-server';
 import { getAuthCookieName, getAppConfig } from '@/config/app-mode';
 
-const DEMO_GUESTS: Record<string, { email: string; pass: string }> = {
-  slot_a: {
-    email: process.env.DEMO_GUEST_A_EMAIL || 'guest_slot_a@vibeforce.de',
-    pass: process.env.DEMO_GUEST_A_PASSWORD || 'rYMVvA2CmT2pDgfM69WV', // gitleaks:allow
-  },
-  slot_b: {
-    email: process.env.DEMO_GUEST_B_EMAIL || 'guest_slot_b@vibeforce.de',
-    pass: process.env.DEMO_GUEST_B_PASSWORD || 'oBPjVwRw8pK9ZQG28pmH', // gitleaks:allow
-  },
-};
+function getDemoGuests(): Record<string, { email: string; pass: string }> {
+  const emailA = process.env.DEMO_GUEST_A_EMAIL;
+  const passA = process.env.DEMO_GUEST_A_PASSWORD;
+  const emailB = process.env.DEMO_GUEST_B_EMAIL;
+  const passB = process.env.DEMO_GUEST_B_PASSWORD;
+
+  if (!emailA || !passA || !emailB || !passB) {
+    throw new Error('DEMO_GUEST_A/B_EMAIL/PASSWORD must be set in environment');
+  }
+
+  return {
+    slot_a: { email: emailA, pass: passA },
+    slot_b: { email: emailB, pass: passB },
+  };
+}
+
+function isSafeRedirect(url: string): boolean {
+  try {
+    const parsed = new URL(url, 'http://localhost');
+    // Only allow relative paths (no protocol, no host)
+    return parsed.origin === 'http://localhost' && parsed.pathname.startsWith('/');
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +36,14 @@ export async function GET(request: NextRequest) {
     const slotParam = request.nextUrl.searchParams.get('slot');
     const slot = slotParam === 'slot_b' ? 'slot_b' : 'slot_a';
     const redirectParam = request.nextUrl.searchParams.get('redirect');
-    const targetRoute = redirectParam || appConfig.startRoute;
+    
+    // Whitelist redirect to relative paths only (XSS/Open-Redirect protection)
+    const targetRoute = isSafeRedirect(redirectParam || '') 
+      ? redirectParam 
+      : appConfig.startRoute;
 
-    const guest = DEMO_GUESTS[slot];
+    const demoGuests = getDemoGuests();
+    const guest = demoGuests[slot];
 
     if (!guest?.pass) {
       return NextResponse.redirect(new URL('/login?error=demo_unavailable', request.url));

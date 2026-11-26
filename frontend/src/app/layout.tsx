@@ -13,11 +13,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Vibeforce Craft OS | Handwerk & Bau',
   description: 'Mobile Baustellendokumentation, VOB-Aufmaße, Mängelverwaltung & Monteur-Zeiterfassung.',
-  metadataBase: new URL('https://vibeforce-craft-os-five.vercel.app'),
+  metadataBase: new URL('https://vibeforce-craft-os.vercel.app'),
   openGraph: {
     title: 'Vibeforce Craft OS | Handwerk & Bau',
     description: 'Mobile Baustellendokumentation, VOB-Aufmaße, Mängelverwaltung & Monteur-Zeiterfassung.',
-    url: 'https://vibeforce-craft-os-five.vercel.app',
+    url: 'https://vibeforce-craft-os.vercel.app',
     siteName: 'Vibeforce Craft OS',
     images: [
       {

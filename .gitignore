@@ -102,3 +102,4 @@ Zugangsdaten_und_Live_Demo_Leitfaden.html
 public/qr_*.png
 
 .vercel
+.env*

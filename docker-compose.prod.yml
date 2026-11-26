@@ -63,9 +63,9 @@ services:
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
       # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
-      - CORS_ORIGIN=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de}
+      - CORS_ORIGIN=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de},https://vibeforce-flow-os.vercel.app,https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
       # PocketBase --origins (entrypoint.sh, Fail-fast): konkrete Origins, kein '*'
-      - ALLOWED_ORIGINS=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de},https://vibeforce-flow-os.vercel.app,https://vibeforce-craft-os-five.vercel.app
+      - ALLOWED_ORIGINS=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de},https://vibeforce-flow-os.vercel.app,https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
     volumes:
       - pb-data:/pb/pb_data
     healthcheck:
