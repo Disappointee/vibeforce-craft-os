@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { getSiteReportsByProjectAction } from '@/app/actions/craft/site-reports';
-import { t } from '@/lib/i18n';
 import type { ProjectRecord, SiteReportRecord } from '@/lib/pocketbase-types';
 
 export const dynamic = 'force-dynamic';
@@ -66,10 +65,10 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {t('craft.site_report.title')}
+            Bautagesberichte
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Bautagesberichte, Regieberichte & VOB-Aufmaße für {project.name}.
+            Bautagesberichte, Regieberichte &amp; VOB-Aufmaße für {project.name}.
           </p>
         </div>
 
@@ -78,7 +77,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all"
         >
           <Plus className="w-4 h-4" />
-          {t('craft.site_report.new')}
+          Neuer Bericht
         </Link>
       </div>
 
@@ -87,7 +86,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
         <div className="p-12 text-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/50 dark:bg-[#121824]/50">
           <FileText className="w-10 h-10 text-gray-400 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-            {t('craft.site_report.no_reports')}
+            Noch keine Bautagesberichte erfasst
           </h3>
           <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
             Erstelle den ersten Bautagesbericht inklusive Vor-Ort-Signatur und VOB-Aufmaß.
@@ -126,9 +125,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
                       ) : (
                         <Clock className="w-3 h-3" />
                       )}
-                      {isSigned
-                        ? t('craft.site_report.status_signed')
-                        : t('craft.site_report.status_draft')}
+                      {isSigned ? 'Signiert' : 'Entwurf'}
                     </span>
                   </div>
 

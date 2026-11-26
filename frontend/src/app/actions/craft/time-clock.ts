@@ -84,39 +84,26 @@ export async function getTodayTimeEntriesAction(): Promise<CraftTimeEntryDTO[]> 
 
   const userId = String(user.id);
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const todayUtc = now.toISOString().slice(0, 10);
+  const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   let items: any[] = [];
   try {
-    items = await pb.collection('time_entries').getFullList({
-      filter: pb.filter('user = {:uid} && start_time >= {:start} && start_time <= {:end}', {
-        uid: userId,
-        start: todayStart,
-        end: todayEnd,
-      }),
-      sort: 'start_time',
+    const allUserEntries = await pb.collection('time_entries').getList(1, 100, {
+      filter: pb.filter('user = {:uid}', { uid: userId }),
+      sort: '-start_time',
       expand: 'task,task.project',
     });
-  } catch {
-    try {
-      const allUserEntries = await pb.collection('time_entries').getList(1, 100, {
-        filter: pb.filter('user = {:uid}', { uid: userId }),
-        sort: '-start_time',
-        expand: 'task,task.project',
-      });
-      const todayPrefix = now.toISOString().slice(0, 10);
-      items = allUserEntries.items.filter((e: any) => {
-        const st = String(e.start_time || e.created || '');
-        return st.slice(0, 10) === todayPrefix;
-      });
-      items.sort((a: any, b: any) =>
-        String(a.start_time || a.created).localeCompare(String(b.start_time || b.created))
-      );
-    } catch (err) {
-      console.warn('[getTodayTimeEntriesAction] Failed:', err);
-      return [];
-    }
+    items = allUserEntries.items.filter((e: any) => {
+      const st = String(e.start_time || e.created || '').slice(0, 10);
+      return st === todayUtc || st === todayLocal;
+    });
+    items.sort((a: any, b: any) =>
+      String(a.start_time || a.created).localeCompare(String(b.start_time || b.created))
+    );
+  } catch (err) {
+    console.warn('[getTodayTimeEntriesAction] Failed:', err);
+    return [];
   }
 
   return items.map((e: any) => ({

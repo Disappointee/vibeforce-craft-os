@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import {
@@ -158,9 +158,9 @@ export function MonteurTimeClock({
   // Current active segment start time & PB record ID
   const [activeSegmentStart, setActiveSegmentStart] = useState<string | null>(null);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
-  const [isSyncingClock, setIsSyncingClock] = useState(false);
+  const clockInPromiseRef = useRef<Promise<string | null> | null>(null);
 
-  // Load today's time entries from PocketBase via Server Action
+  // Load today's time entries from PocketBase via Server Action on mount
   useEffect(() => {
     let cancelled = false;
     getTodayTimeEntriesAction()
@@ -222,7 +222,8 @@ export function MonteurTimeClock({
     return () => {
       cancelled = true;
     };
-  }, [activeProjectKey, activeProjectName, projects]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Digital clock (HH:MM:SS)
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -306,8 +307,6 @@ export function MonteurTimeClock({
 
   // Actions
   const handleClockIn = async () => {
-    if (isSyncingClock) return;
-    setIsSyncingClock(true);
     const nowIso = new Date().toISOString();
     setActiveSegmentStart(nowIso);
     setClockStatus('active');
@@ -317,39 +316,42 @@ export function MonteurTimeClock({
       verifyGeofence();
     }
 
-    try {
-      const created = await clockInAction({
-        projectId: selectedProjectId,
-        projectKey: activeProjectKey,
-        activityType: activeActivity,
-        activityLabel: ACTIVITY_META[activeActivity].label,
-        gpsVerified: Boolean(gpsStatus?.verified),
+    const promise = clockInAction({
+      projectId: selectedProjectId,
+      projectKey: activeProjectKey,
+      activityType: activeActivity,
+      activityLabel: ACTIVITY_META[activeActivity].label,
+      gpsVerified: Boolean(gpsStatus?.verified),
+    })
+      .then((created) => {
+        setActiveEntryId(created.id);
+        setActiveSegmentStart(created.start_time);
+        return created.id;
+      })
+      .catch((err: any) => {
+        console.error('[MonteurTimeClock] clockInAction failed:', err);
+        toast.error(err?.message || 'Stempeln fehlgeschlagen.');
+        return null;
       });
-      setActiveEntryId(created.id);
-      setActiveSegmentStart(created.start_time);
-    } catch (err: any) {
-      console.error('[MonteurTimeClock] clockInAction failed:', err);
-      toast.error(err?.message || 'Stempeln fehlgeschlagen.');
-    } finally {
-      setIsSyncingClock(false);
-    }
+
+    clockInPromiseRef.current = promise;
+    await promise;
   };
 
   const finishActiveSegment = async (nextStatus: 'paused' | 'idle') => {
     if (clockStatus === 'active' && activeSegmentStart) {
-      if (isSyncingClock) return;
-      setIsSyncingClock(true);
+      const startIso = activeSegmentStart;
       const nowIso = new Date().toISOString();
       const duration = Math.max(
         1,
-        Math.floor((Date.now() - new Date(activeSegmentStart).getTime()) / 1000)
+        Math.floor((Date.now() - new Date(startIso).getTime()) / 1000)
       );
 
       const tempId = activeEntryId || 'seg_' + Math.random().toString(36).substring(2, 9);
       const finishedSegment: ShiftSegment = {
         id: tempId,
         type: activeActivity,
-        startTime: activeSegmentStart,
+        startTime: startIso,
         endTime: nowIso,
         durationSeconds: duration,
         projectKey: activeProjectKey,
@@ -365,9 +367,15 @@ export function MonteurTimeClock({
       setClockStatus(nextStatus);
 
       try {
+        let resolvedEntryId = activeEntryId;
+        if (!resolvedEntryId && clockInPromiseRef.current) {
+          resolvedEntryId = await clockInPromiseRef.current;
+        }
+        clockInPromiseRef.current = null;
+
         const saved = await clockOutAction({
-          entryId: activeEntryId || undefined,
-          startTimeIso: activeSegmentStart,
+          entryId: resolvedEntryId || undefined,
+          startTimeIso: startIso,
           endTimeIso: nowIso,
           durationSeconds: duration,
           projectId: selectedProjectId,
@@ -382,8 +390,6 @@ export function MonteurTimeClock({
       } catch (err: any) {
         console.error('[MonteurTimeClock] clockOutAction failed:', err);
         toast.error(err?.message || 'Speichern der Stempelzeit fehlgeschlagen.');
-      } finally {
-        setIsSyncingClock(false);
       }
     } else {
       setActiveSegmentStart(null);
