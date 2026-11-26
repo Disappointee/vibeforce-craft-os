@@ -1,5 +1,6 @@
 # =============================================================================
-# Vibeforce Flow OS — Docker Compose (Production with Traefik v3 & SSL)
+# Vibeforce — Docker Compose (Production with Traefik v3 & SSL)
+# Two PocketBase instances: pb-flow and pb-craft
 # =============================================================================
 # Usage:
 #   docker compose -f docker-compose.prod.yml up -d --build
@@ -42,32 +43,37 @@ services:
       - vibeforce-net
     labels:
       - "traefik.enable=true"
-      # Secure dashboard router (optional auth)
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN:-vibeforce-flow.de}`)"
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.pb-flow.rule=Host(`pb-flow.vibeforce.46-225-178-235.sslip.io`)"
+      - "traefik.http.routers.pb-flow.entrypoints=websecure"
+      - "traefik.http.routers.pb-flow.tls=true"
+      - "traefik.http.routers.pb-flow.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.pb-craft.rule=Host(`pb-craft.vibeforce.46-225-178-235.sslip.io`)"
+      - "traefik.http.routers.pb-craft.entrypoints=websecure"
+      - "traefik.http.routers.pb-craft.tls=true"
+      - "traefik.http.routers.pb-craft.tls.certresolver=letsencrypt"
 
   # ---------------------------------------------------------------------------
-  # Backend — PocketBase
+  # Backend — PocketBase pb-flow
   # ---------------------------------------------------------------------------
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: vibeforce-backend
+  pb-flow:
+    image: pocketbase/pocketbase:latest
+    container_name: vibeforce-pb-flow
     restart: unless-stopped
     environment:
-      - PORT=8080
-      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:?PB_ADMIN_EMAIL is required}
-      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:?PB_ADMIN_PASSWORD is required}
-      # CORS: konkrete Origins (Komma-getrennt), kein '*' — von den pb_hooks ausgewertet
-      - CORS_ORIGIN=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de},https://vibeforce-flow-os.vercel.app,https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
-      # PocketBase --origins (entrypoint.sh, Fail-fast): konkrete Origins, kein '*'
-      - ALLOWED_ORIGINS=https://${DOMAIN:-vibeforce-flow.de},https://pb.${DOMAIN:-vibeforce-flow.de},https://vibeforce-flow-os.vercel.app,https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
+      - ALLOWED_ORIGINS=https://vibeforce-flow-os.vercel.app,https://rl-showcase.vercel.app
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL_FLOW:?PB_ADMIN_EMAIL_FLOW is required}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD_FLOW:?PB_ADMIN_PASSWORD_FLOW is required}
+      - DEMO_GUEST_A_EMAIL=demo-flow-a@vibeforce.flow.de
+      - DEMO_GUEST_A_PASSWORD=${DEMO_GUEST_A_PASSWORD_FLOW:?}
+      - DEMO_GUEST_B_EMAIL=demo-flow-b@vibeforce.flow.de
+      - DEMO_GUEST_B_PASSWORD=${DEMO_GUEST_B_PASSWORD_FLOW:?}
+      - CORS_ORIGIN=https://vibeforce-flow-os.vercel.app,https://rl-showcase.vercel.app
     volumes:
-      - pb-data:/pb/pb_data
+      - pb-flow-data:/pb/pb_data
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/api/health || exit 1"]
       interval: 10s
@@ -78,69 +84,91 @@ services:
       - vibeforce-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`pb.${DOMAIN:-vibeforce-flow.de}`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls=true"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=8080"
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 256M
+      - "traefik.http.routers.pb-flow.rule=Host(`pb-flow.vibeforce.46-225-178-235.sslip.io`)"
+      - "traefik.http.routers.pb-flow.entrypoints=websecure"
+      - "traefik.http.routers.pb-flow.tls=true"
+      - "traefik.http.routers.pb-flow.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pb-flow.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pb-flow.tls.certresolver=letsencrypt"
 
   # ---------------------------------------------------------------------------
-  # Frontend — Next.js 16 Standalone
+  # Backend — PocketBase pb-craft
   # ---------------------------------------------------------------------------
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_POCKETBASE_URL: https://pb.${DOMAIN:-vibeforce-flow.de}
-        NEXT_PUBLIC_DEFAULT_HOURLY_RATE: ${NEXT_PUBLIC_DEFAULT_HOURLY_RATE:-150}
-    container_name: vibeforce-frontend
+  pb-craft:
+    image: pocketbase/pocketbase:latest
+    container_name: vibeforce-pb-craft
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - APP_URL=https://${DOMAIN:-vibeforce-flow.de}
-      - POCKETBASE_URL=http://backend:8080
-      - NEXT_PUBLIC_POCKETBASE_URL=https://pb.${DOMAIN:-vibeforce-flow.de}
-      - POCKETBASE_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
-      - POCKETBASE_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+      - ALLOWED_ORIGINS=https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL_CRAFT:?PB_ADMIN_EMAIL_CRAFT is required}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD_CRAFT:?PB_ADMIN_PASSWORD_CRAFT is required}
+      - DEMO_GUEST_A_EMAIL=demo-craft-a@vibeforce.craft.de
+      - DEMO_GUEST_A_PASSWORD=${DEMO_GUEST_A_PASSWORD_CRAFT:?}
+      - DEMO_GUEST_B_EMAIL=demo-craft-b@vibeforce.craft.de
+      - DEMO_GUEST_B_PASSWORD=${DEMO_GUEST_B_PASSWORD_CRAFT:?}
+      - CORS_ORIGIN=https://vibeforce-craft-os.vercel.app,https://craft-vibeforce.vercel.app,https://rl-showcase.vercel.app
+    volumes:
+      - pb-craft-data:/pb/pb_data
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/api/health || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
-    depends_on:
-      backend:
-        condition: service_healthy
+      start_period: 5s
     networks:
       - vibeforce-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-vibeforce-flow.de}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls=true"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 512M
+      - "traefik.http.routers.pb-craft.rule=Host(`pb-craft.vibeforce.46-225-178-235.sslip.io`)"
+      - "traefik.http.routers.pb-craft.entrypoints=websecure"
+      - "traefik.http.routers.pb-craft.tls=true"
+      - "traefik.http.routers.pb-craft.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pb-craft.loadbalancer.server.port=8080"
 
+  # ---------------------------------------------------------------------------
+  # Redis
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - vibeforce-net
+
+  # ---------------------------------------------------------------------------
+  # MinIO
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    volumes:
+      - minio-data:/data
+    networks:
+      - vibeforce-net
+
+# ---------------------------------------------------------------------------
+# Volumes
+# ---------------------------------------------------------------------------
 volumes:
-  pb-data:
+  pb-flow-data:
+    driver: local
+  pb-craft-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
     driver: local
   letsencrypt-data:
     driver: local
 
+# ---------------------------------------------------------------------------
+# Networks
+# ---------------------------------------------------------------------------
 networks:
   vibeforce-net:
     driver: bridge

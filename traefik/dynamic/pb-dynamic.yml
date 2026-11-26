@@ -1,0 +1,35 @@
+# =============================================================================
+# Traefik v3 Dynamic Configuration — pb-flow and pb-craft
+# Dynamische Router für zwei PocketBase-Instanzen
+# =============================================================================
+
+# Die file Provider lädt alle .yml Files aus /etc/traefik/dynamic/,
+# sodass diese Konfigurationen neben den Docker-Labels wirken.
+
+# -- pb-flow Router --
+http:
+  routers:
+    pb-flow:
+      rule: "Host(`pb-flow.vibeforce.46-225-178-235.sslip.io`)"
+      entrypoints: [websecure]
+      tls: { certResolver: letsencrypt }
+      service: pb-flow
+  services:
+    pb-flow:
+      loadBalancer:
+        servers:
+          - url: "http://pb-flow:8080"
+
+# -- pb-craft Router --
+http:
+  routers:
+    pb-craft:
+      rule: "Host(`pb-craft.vibeforce.46-225-178-235.sslip.io`)"
+      entrypoints: [websecure]
+      tls: { certResolver: letsencrypt }
+      service: pb-craft
+  services:
+    pb-craft:
+      loadBalancer:
+        servers:
+          - url: "http://pb-craft:8080"

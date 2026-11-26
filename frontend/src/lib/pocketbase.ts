@@ -7,10 +7,7 @@ const cleanUrl = (raw: string | undefined): string =>
   raw ? raw.trim().replace(/[\r\n\t]+/g, '') : '';
 
 const rawClientUrl = cleanUrl(process.env.NEXT_PUBLIC_POCKETBASE_URL);
-export const POCKETBASE_URL =
-  (!rawClientUrl || rawClientUrl.includes('railway.app'))
-    ? 'https://pb-vibeforce.46-225-178-235.sslip.io'
-    : rawClientUrl;
+export const POCKETBASE_URL = rawClientUrl;
 
 function createPocketBase() {
   if (typeof window === 'undefined') {

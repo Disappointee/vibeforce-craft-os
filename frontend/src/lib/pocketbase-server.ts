@@ -20,10 +20,7 @@ const rawServerUrl =
   cleanUrl(process.env.POCKETBASE_URL) ||
   cleanUrl(process.env.NEXT_PUBLIC_POCKETBASE_URL);
 
-export const POCKETBASE_URL =
-  (!rawServerUrl || rawServerUrl.includes('railway.app'))
-    ? 'https://pb-vibeforce.46-225-178-235.sslip.io'
-    : rawServerUrl;
+export const POCKETBASE_URL = rawServerUrl;
 
 interface CachedAdminAuth {
   token: string;

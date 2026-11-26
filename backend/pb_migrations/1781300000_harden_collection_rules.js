@@ -153,12 +153,12 @@ migrate((app) => {
             updateRule: ADMIN,
             deleteRule: ADMIN,
         },
-        // NOTE: Keep demo_sessions public-read/non-admin-locked until Wave 2/3 server proxy (/api/demo/slot) is live.
+        // NOTE: demo_sessions hardened to admin-only (Wave 2/3 proxy /api/demo/slot pending).
         demo_sessions: {
-            listRule: "",
-            viewRule: "",
-            createRule: "",
-            updateRule: "",
+            listRule: ADMIN,
+            viewRule: ADMIN,
+            createRule: ADMIN,
+            updateRule: ADMIN,
             deleteRule: ADMIN,
         },
         craft_licenses: {
