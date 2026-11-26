@@ -84,31 +84,7 @@ async function getAdminToken(): Promise<string> {
 
       return token;
     } catch (err) {
-      console.warn('[getAdminPB] Superuser authentication failed, attempting fallback to admin user credentials...');
-      
-      const fallbackEmail =
-        cleanEnv(process.env.DEMO_GUEST_A_EMAIL) ||
-        cleanEnv(process.env.ADMIN_FALLBACK_EMAIL) ||
-        'guest_slot_a@vibeforce.de';
-      const fallbackPassword =
-        cleanEnv(process.env.DEMO_GUEST_A_PASSWORD) ||
-        cleanEnv(process.env.ADMIN_FALLBACK_PASSWORD);
-
-      if (fallbackPassword) {
-        try {
-          const userAuth = await pb.collection('users').authWithPassword(fallbackEmail, fallbackPassword);
-          const token = userAuth.token;
-          cachedAdminToken = {
-            token,
-            expiresAt: Date.now() + 50 * 60 * 1000,
-          };
-          console.info(`[getAdminPB] Successfully authenticated fallback admin user (${fallbackEmail})`);
-          return token;
-        } catch (fallbackErr) {
-          console.error('[getAdminPB] Both superuser and fallback admin authentication failed:', fallbackErr);
-        }
-      }
-
+      console.warn('[getAdminPB] Superuser authentication failed');
       invalidateAdminTokenCache();
       throw err;
     }
@@ -174,15 +150,12 @@ export async function verifyUserSession(): Promise<Record<string, unknown> | nul
   const pb = new PocketBase(POCKETBASE_URL);
   pb.autoCancellation(false);
 
-  let userRecord: Record<string, unknown> | null = null;
-
   try {
     const decodedValue = decodeURIComponent(authCookie.value);
     const authData = JSON.parse(decodedValue);
     const userModel = authData.record || authData.model || null;
     if (authData.token) {
       pb.authStore.save(authData.token, userModel);
-      userRecord = userModel;
     }
   } catch {
     pb.authStore.loadFromCookie(`${cookieKey}=${authCookie.value}`, cookieKey);
@@ -197,15 +170,7 @@ export async function verifyUserSession(): Promise<Record<string, unknown> | nul
     console.warn('[verifyUserSession] authRefresh warning:', refreshErr);
   }
 
-  // If token & record from cookie are valid, maintain the session
-  if (pb.authStore.isValid && (pb.authStore.record || pb.authStore.model)) {
-    return (pb.authStore.record || pb.authStore.model) as unknown as Record<string, unknown>;
-  }
-
-  if (userRecord && (userRecord.role || userRecord.email)) {
-    return userRecord;
-  }
-
+  // Fail-closed: no valid session
   return null;
 }
 
@@ -253,22 +218,6 @@ export async function getUserAuthPB(): Promise<PocketBase | null> {
     return pb;
   }
   return null;
-}
-
-/**
- * Returns a user-authenticated PB instance if available, otherwise falls back to admin PB.
- * Ensures user context / Slot isolation in Server Actions while maintaining fallback resilience.
- */
-export async function getAuthenticatedOrAdminPB(): Promise<PocketBase> {
-  try {
-    const userPB = await getUserAuthPB();
-    if (userPB && userPB.authStore.isValid) {
-      return userPB;
-    }
-  } catch {
-    // Proceed to admin PB fallback
-  }
-  return getAdminPB();
 }
 
 

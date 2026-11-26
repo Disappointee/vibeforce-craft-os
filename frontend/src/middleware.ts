@@ -6,13 +6,47 @@ import {
   createRateLimitResponse,
 } from '@/lib/rate-limiter';
 import { detectModeFromHostname, isCraftMode, getAuthCookieName } from '@/config/app-mode';
+import PocketBase from 'pocketbase';
+import { POCKETBASE_URL } from '@/lib/pocketbase-server';
 
 /**
  * 🛡️ Next.js 16 Security Headers & Rate Limiting Middleware
  * Vibeforce Flow OS - Enterprise Hardening Engine
  */
 
-export function middleware(request: NextRequest) {
+async function validateAdminSession(request: NextRequest, isCraftHost: boolean): Promise<boolean> {
+  const cookieKey = isCraftHost ? 'pb_auth_craft' : 'pb_auth_flow';
+  const authCookie = request.cookies.get(cookieKey) || request.cookies.get('pb_auth');
+  if (!authCookie?.value) return false;
+
+  const pb = new PocketBase(POCKETBASE_URL);
+  pb.autoCancellation(false);
+
+  try {
+    const decoded = decodeURIComponent(authCookie.value);
+    const authData = JSON.parse(decoded);
+    const token = authData.token;
+    const model = authData.record || authData.model || null;
+    
+    if (!token) return false;
+    
+    pb.authStore.save(token, model);
+    
+    // Validate session with PocketBase (fail-closed)
+    await pb.collection('users').authRefresh();
+    
+    const user = pb.authStore.record;
+    if (!user) return false;
+    
+    const role = user.role;
+    // Admin OR meister have access to /admin
+    return role === 'admin' || role === 'meister';
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
@@ -43,30 +77,11 @@ export function middleware(request: NextRequest) {
 
   // 2. Protect /admin routes
   if (pathname.startsWith('/admin')) {
-    const cookieKey = isCraftHost ? 'pb_auth_craft' : 'pb_auth_flow';
-    const authCookie = request.cookies.get(cookieKey) || request.cookies.get('pb_auth');
-    if (!authCookie?.value) {
+    const isAdmin = await validateAdminSession(request, isCraftHost);
+    if (!isAdmin) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
-    }
-
-    try {
-      let authData: { token?: string; model?: { role?: string }; record?: { role?: string } } | null = null;
-      try {
-        const decoded = decodeURIComponent(authCookie.value);
-        authData = JSON.parse(decoded);
-      } catch {
-        authData = JSON.parse(authCookie.value);
-      }
-
-      const role = authData?.model?.role || authData?.record?.role;
-      if (role !== 'admin') {
-        // Redirect non-admin users to /tasks
-        return NextResponse.redirect(new URL('/tasks', request.url));
-      }
-    } catch {
-      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
