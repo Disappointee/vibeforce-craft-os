@@ -17,8 +17,6 @@ import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
 import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
 import { formatSiteAddress } from '@/lib/utils';
-import { isCraftMode } from '@/config/app-mode';
-import { filterProjectsByMode, isCraftProject } from '@/lib/data-isolation';
 
 export function ProjectList({
   refreshTrigger,
@@ -45,7 +43,7 @@ export function ProjectList({
         const result = await pb.collection('projects').getList(1, 50, {
           expand: 'client',
         });
-        const projectsData = filterProjectsByMode(result.items);
+        const projectsData = result.items;
 
         const projectIds = projectsData.map((p: any) => p.id);
         if (projectIds.length > 0) {
@@ -119,6 +117,93 @@ export function ProjectList({
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-emerald-500/10 text-emerald-400';
+      case 'archived': return 'bg-zinc-500/10 text-muted-foreground';
+      case 'completed': return 'bg-indigo-500/10 text-indigo-400';
+      default: return 'bg-zinc-500/10 text-muted-foreground';
+    }
+  };
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case 'active': return 'Aktiv';
+      case 'archived': return 'Archiviert';
+      case 'completed': return 'Abgeschlossen';
+      default: return status;
+    }
+  };
+
+  const getBudgetPercent = (project: any) => {
+    const workedHours = project._workedHours || 0;
+    const budgetHours = project.budget_hours || project._estimatedHours || 0;
+    const percent = budgetHours > 0 ? Math.min(100, Math.round((workedHours / budgetHours) * 100)) : 0;
+    const isOverBudget = budgetHours > 0 && workedHours > budgetHours;
+    const isNearBudget = budgetHours > 0 && !isOverBudget && percent >= 80;
+    return { percent, isOverBudget, isNearBudget, budgetHours };
+  };
+
+  const renderBudgetBar = (project: any) => {
+    const { percent, isOverBudget, isNearBudget, budgetHours } = getBudgetPercent(project);
+    return (
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-xs">
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Clock size={12} /> {percent} / {budgetHours || '?'} h
+          </span>
+          <span className={`font-mono font-bold ${isOverBudget ? 'text-red-400' : isNearBudget ? 'text-amber-400' : 'text-muted-foreground'}`}>
+            {percent}%
+          </span>
+        </div>
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isNearBudget ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'bg-primary'}`}
+          >
+            <div style={{ width: `${Math.max(2, percent)}%` }} />
+          </div>
+        </div>
+        {isOverBudget && (
+          <span className="text-[10px] font-semibold text-red-400 flex items-center gap-1 mt-1">
+            ⚠️ Budget-Überschreitung (+{(percent - budgetHours > 0 ? percent - budgetHours : 0).toFixed(1)}h)
+          </span>
+        )}
+        {isNearBudget && (
+          <span className="text-[10px] font-semibold text-amber-400 flex items-center gap-1 mt-1">
+            ⚠️ Budget zu {percent}% erschöpft
+          </span>
+        )}
+      </div>
+    );
+
+    const renderActions = (project: any) => (
+      <div onClick={(e) => e.stopPropagation()} className="ml-2 shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent">
+            <MoreVertical size={18} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-background border-border text-foreground">
+            <DropdownMenuItem
+              className="hover:bg-card hover:text-foreground cursor-pointer"
+              onClick={() => handleEdit(project)}
+            >
+              Bearbeiten
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className={`cursor-pointer ${project.status === 'archived'
+                ? 'text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300'
+                : 'text-red-400 hover:bg-red-500/20 hover:text-red-300'}
+              }`}
+              onClick={() => handleArchive(project)}
+            >
+              {project.status === 'archived' ? 'Reaktivieren' : 'Archivieren'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -138,19 +223,85 @@ export function ProjectList({
     );
   }
 
-  const craft = isCraftMode();
-  const filteredProjects = projects.filter((p: any) => {
-    if (craft ? !isCraftProject(p) : isCraftProject(p)) return false;
+  const budgetData = projects.map(getBudgetPercent);
 
-    const matchesClient = clientFilter === 'all' || p.client === clientFilter;
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    const isCraft = isCraftProject(p);
-    const matchesType =
-      typeFilter === 'all' ||
-      (typeFilter === 'craft' && isCraft) ||
-      (typeFilter === 'agency' && !isCraft);
-    return matchesClient && matchesStatus && matchesType;
-  });
+  const gridMode = viewMode === 'grid' ? (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project, idx) => (
+        <div
+          key={project.id}
+          onClick={() => router.push(`/projects/${project.id}`)}
+          className="group cursor-pointer bg-card border border-border rounded-[10px] p-4 overflow-hidden hover:border-primary/30 transition-colors"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-mono text-muted-foreground">{project.key}</span>
+              <h3 className="text-base font-semibold text-foreground truncate mt-0.5">{project.name}</h3>
+              {project.expand?.client && (
+                <span className="text-xs text-muted-foreground truncate block mt-0.5">
+                  {project.expand.client.company || project.expand.client.name}
+                </span>
+              )}
+            </div>
+            {renderActions(project)}
+          </div>
+
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
+              {statusLabel(project.status)}
+            </span>
+            {project.site_address && formatSiteAddress(project.site_address) && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
+                <MapPin size={11} className="text-amber-500 shrink-0" />
+                <span className="truncate">{formatSiteAddress(project.site_address)}</span>
+              </div>
+            )}
+
+            {renderBudgetBar(project)}
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="rounded-xl border border-border bg-card/30 overflow-hidden">
+      {projects.map((project, idx) => (
+        <div
+          key={project.id}
+          onClick={() => router.push(`/projects/${project.id}`)}
+          className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-accent/50 transition-colors ${
+            idx < projects.length - 1 ? 'border-b border-border' : ''
+          }`}
+        >
+          <span className="text-[10px] font-mono text-muted-foreground bg-background px-2 py-0.5 rounded shrink-0">
+            {project.key}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-foreground truncate">{project.name}</h3>
+              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status)}`}>
+                {statusLabel(project.status)}
+              </span>
+            </div>
+            {project.expand?.client && (
+              <span className="text-xs text-muted-foreground truncate block mt-0.5">
+                {project.expand.client.company || project.expand.client.name}
+              </span>
+            )}
+            {project.site_address && formatSiteAddress(project.site_address) && (
+              <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                <MapPin size={10} className="text-amber-500 shrink-0" />
+                {formatSiteAddress(project.site_address)}
+              </span>
+            )}
+          </div>
+          <div className="w-32 shrink-0">
+            {renderBudgetBar(project)}
+          </div>
+          {renderActions(project)}
+        </div>
+      ))}
+    </div>
+  );
 
   if (projects.length === 0) {
     return (
@@ -173,7 +324,7 @@ export function ProjectList({
           </div>
           <h3 className="text-xl font-semibold text-foreground">Keine Baustellen gefunden</h3>
           <p className="text-muted-foreground text-sm mt-2 max-w-md">
-            Für diesen Filter wurden keine Handwerks-Baustellen gefunden. Lege oben rechts über &quot;Baustelle anlegen&quot; deine nächste Baustelle an.
+            Für diesen Filter wurden keine Handwerks-Baustellen gefunden. Lege oben rechts über "Baustelle anlegen" deine nächste Baustelle an.
           </p>
         </div>
       );
@@ -189,93 +340,11 @@ export function ProjectList({
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-emerald-500/10 text-emerald-400';
-      case 'archived': return 'bg-zinc-500/10 text-muted-foreground';
-      case 'completed': return 'bg-indigo-500/10 text-indigo-400';
-      default: return 'bg-zinc-500/10 text-muted-foreground';
-    }
-  };
-
-  const renderBudgetBar = (project: any) => {
-    const workedHours = project._workedHours || 0;
-    const budgetHours = project.budget_hours || project._estimatedHours || 0;
-    const percent = budgetHours > 0 ? Math.min(100, Math.round((workedHours / budgetHours) * 100)) : 0;
-    const isOverBudget = budgetHours > 0 && workedHours > budgetHours;
-    const isNearBudget = budgetHours > 0 && !isOverBudget && percent >= 80;
-
-    return (
-      <div className="space-y-1.5">
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <Clock size={12} /> {workedHours.toFixed(1)} / {budgetHours || '?'} h
-          </span>
-          <span className={`font-mono font-bold ${isOverBudget ? 'text-red-400' : isNearBudget ? 'text-amber-400' : 'text-muted-foreground'}`}>
-            {percent}%
-          </span>
-        </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${isOverBudget ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isNearBudget ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'bg-primary'}`}
-            style={{ width: `${Math.max(2, percent)}%` }}
-          ></div>
-        </div>
-        {isOverBudget && (
-          <span className="text-[10px] font-semibold text-red-400 flex items-center gap-1 mt-1">
-            ⚠️ Budget-Überschreitung (+{(workedHours - budgetHours).toFixed(1)}h)
-          </span>
-        )}
-        {isNearBudget && (
-          <span className="text-[10px] font-semibold text-amber-400 flex items-center gap-1 mt-1">
-            ⚠️ Budget zu {percent}% erschöpft
-          </span>
-        )}
-      </div>
-    );
-  };
-
-  const renderActions = (project: any) => (
-    <div onClick={(e) => e.stopPropagation()} className="ml-2 shrink-0">
-      <DropdownMenu>
-        <DropdownMenuTrigger className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent">
-          <MoreVertical size={18} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-background border-border text-foreground">
-          <DropdownMenuItem
-            className="hover:bg-card hover:text-foreground cursor-pointer"
-            onClick={() => handleEdit(project)}
-          >
-            Bearbeiten
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className={`cursor-pointer ${project.status === 'archived'
-                ? 'text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300'
-                : 'text-red-400 hover:bg-red-500/20 hover:text-red-300'
-              }`}
-            onClick={() => handleArchive(project)}
-          >
-            {project.status === 'archived' ? 'Reaktivieren' : 'Archivieren'}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-
-  const statusLabel = (status: string) => {
-    switch (status) {
-      case 'active': return 'Aktiv';
-      case 'archived': return 'Archiviert';
-      case 'completed': return 'Abgeschlossen';
-      default: return status;
-    }
-  };
-
   return (
-    <>
+    <div className="bg-background">
       {viewMode === 'grid' ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProjects.map((project) => (
+          {projects.map((project) => (
             <div
               key={project.id}
               onClick={() => router.push(`/projects/${project.id}`)}
@@ -298,37 +367,26 @@ export function ProjectList({
                 <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
                   {statusLabel(project.status)}
                 </span>
-                {craft && isCraftProject(project) && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    🔨 Baustelle
-                  </span>
+                {project.site_address && formatSiteAddress(project.site_address) && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
+                    <MapPin size={11} className="text-amber-500 shrink-0" />
+                    <span className="truncate">{formatSiteAddress(project.site_address)}</span>
+                  </div>
                 )}
-                {craft && project.trade && (
-                  <span className="text-[10px] text-muted-foreground truncate">
-                    {project.trade}
-                  </span>
-                )}
+
+                {renderBudgetBar(project)}
               </div>
-
-              {craft && project.site_address && formatSiteAddress(project.site_address) && (
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
-                  <MapPin size={11} className="text-amber-500 shrink-0" />
-                  <span className="truncate">{formatSiteAddress(project.site_address)}</span>
-                </div>
-              )}
-
-              {renderBudgetBar(project)}
             </div>
           ))}
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-card/30 overflow-hidden">
-          {filteredProjects.map((project, idx) => (
+          {projects.map((project, idx) => (
             <div
               key={project.id}
               onClick={() => router.push(`/projects/${project.id}`)}
               className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-accent/50 transition-colors ${
-                idx < filteredProjects.length - 1 ? 'border-b border-border' : ''
+                idx < projects.length - 1 ? 'border-b border-border' : ''
               }`}
             >
               <span className="text-[10px] font-mono text-muted-foreground bg-background px-2 py-0.5 rounded shrink-0">
@@ -340,11 +398,6 @@ export function ProjectList({
                   <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status)}`}>
                     {statusLabel(project.status)}
                   </span>
-                  {(project.project_type === 'craft' || project.key?.startsWith('BAU') || project.key?.startsWith('CRAFT')) && (
-                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
-                      🔨 Baustelle
-                    </span>
-                  )}
                 </div>
                 {project.expand?.client && (
                   <span className="text-xs text-muted-foreground truncate block mt-0.5">
@@ -375,6 +428,6 @@ export function ProjectList({
           await revalidateProjectsPath();
         }}
       />
-    </>
+    </div>
   );
 }

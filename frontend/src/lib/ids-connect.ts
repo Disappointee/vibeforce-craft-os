@@ -10,8 +10,22 @@
  * - Seamless Bridge to VOB-Aufmaß (MeasurementRowItem) and GAEB-LV (GaebItem)
  */
 
-import type { MeasurementRowItem } from '@/components/craft/MeasurementGrid';
-import type { GaebItem } from '@/lib/gaeb';
+/**
+ * Measurement row item for VOB/Aufmass bridge.
+ * Kein externes Craft-Dependency mehr; Typ ist hier definiert.
+ */
+export type MeasurementRowItem = {
+  id: string;
+  position_nr: string;
+  title: string;
+  formula: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total_price: number;
+  tax_rate_type: string;
+  notes?: string;
+};
 import type { MeasurementUnit } from '@/lib/pocketbase-types';
 
 export interface IdsCartHeader {

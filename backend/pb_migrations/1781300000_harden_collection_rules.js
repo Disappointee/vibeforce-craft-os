@@ -10,10 +10,9 @@
  *   - time_entries: scoped per user (admin bypass)
  *   - tasks: delete only admin or assignee
  *   - clients: create/update/delete admin only
- *   - craft collections: author/admin scoping, CUD admin where server-side only
+ *   - Removed craft-specific rules (now in separate Craft OS repo).
  *
- * Idempotent: collections that do not exist on a fresh instance are skipped.
- */
+ * Idempotent: collections that do not exist on a fresh instance are skipped. */
 migrate((app) => {
     const ADMIN = "(@request.auth.role = 'admin' || @request.auth.role = 'meister')";
     const AUTH = "@request.auth.id != ''";
@@ -159,55 +158,6 @@ migrate((app) => {
             viewRule: "",
             createRule: "",
             updateRule: "",
-            deleteRule: ADMIN,
-        },
-        craft_licenses: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: ADMIN,
-            updateRule: ADMIN,
-            deleteRule: ADMIN,
-        },
-        site_reports: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: AUTH + " && author = @request.auth.id && @request.body.status != 'signed' && @request.body.status != 'invoiced'",
-            updateRule: "status = 'draft' && (" + ADMIN + " || author = @request.auth.id)",
-            deleteRule: "status = 'draft' && (" + ADMIN + " || author = @request.auth.id)",
-        },
-        measurements: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: AUTH,
-            updateRule: ADMIN,
-            deleteRule: ADMIN,
-        },
-        evidence_items: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: AUTH,
-            updateRule: ADMIN,
-            deleteRule: ADMIN,
-        },
-        invoices_zugferd: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: ADMIN,
-            updateRule: ADMIN,
-            deleteRule: ADMIN,
-        },
-        ids_carts: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: ADMIN,
-            updateRule: ADMIN,
-            deleteRule: ADMIN,
-        },
-        defect_pins: {
-            listRule: AUTH,
-            viewRule: AUTH,
-            createRule: AUTH,
-            updateRule: ADMIN,
             deleteRule: ADMIN,
         },
     };

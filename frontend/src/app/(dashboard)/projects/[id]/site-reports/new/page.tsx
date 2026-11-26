@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FilePlus } from 'lucide-react';
 import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
-import { DailySiteReportForm } from '@/components/craft/DailySiteReportForm';
 import { t } from '@/lib/i18n';
 import type { ProjectRecord } from '@/lib/pocketbase-types';
 
@@ -39,7 +38,7 @@ export default async function NewSiteReportPage({ params }: NewSiteReportPagePro
           Zurück zur Übersicht
         </Link>
         <span className="text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
-          Modul M007: VIBE Craft
+          Modul M007: Site Reports
         </span>
       </div>
 
@@ -60,8 +59,15 @@ export default async function NewSiteReportPage({ params }: NewSiteReportPagePro
         </div>
       </div>
 
-      {/* Full Form */}
-      <DailySiteReportForm projectId={id} />
+      {/* Form Placeholder */}
+      <div className="mt-6 p-4 rounded-2xl bg-card/40 border border-border/60">
+        <h3 className="text-semibold text-foreground mb-3">
+          {t('site_report.new_report')}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Die Berichtserstellung steht im modularen Flow OS Aufbau zur Verfügung.
+        </p>
+      </div>
     </div>
   );
 }

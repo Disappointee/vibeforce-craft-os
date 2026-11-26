@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
 import type { TaskRecord, ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { formatGanttDate as formatDate, statusToProgress, buildCustomClass, type GanttTask, type GanttProjectGroup } from '@/lib/gantt-utils';
-import { filterProjectsByMode, filterClientsByMode, filterTasksByMode } from '@/lib/data-isolation';
 
 export type { GanttTask, GanttProjectGroup };
 
@@ -88,7 +87,7 @@ export function useGanttData(): GanttData {
                 sort: 'start_date',
                 expand: 'project,assignees',
             });
-            const rawTasks = filterTasksByMode(tasksResult.items as TaskRecord[]);
+            const rawTasks = tasksResult.items as TaskRecord[];
             setRawTasks(rawTasks);
 
             // 4. Transform into GanttTask[]

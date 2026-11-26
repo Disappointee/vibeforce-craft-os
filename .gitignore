@@ -100,3 +100,4 @@ VIBEFORCE_ADMIN_ZUGANG_*.png
 Zugangsdaten_und_Live_Demo_Leitfaden.html
 00_Uebergabeschreiben_Pruefzugang_*.html
 public/qr_*.png
+.env*

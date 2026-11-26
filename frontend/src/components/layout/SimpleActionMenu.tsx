@@ -9,13 +9,11 @@ import { toast } from 'sonner';
 import { NewSimpleTaskDialog } from '@/components/tasks/NewSimpleTaskDialog';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
-import { NewBaustelleDialog } from '@/components/craft/NewBaustelleDialog';
-import { NewCraftClientDialog } from '@/components/craft/NewCraftClientDialog';
+import { NewBaustelleDialog } from '@/components/projects/NewBaustelleDialog';
 import { Input } from '@/components/ui/input';
 import { revalidateClientsPath } from '@/app/actions/clients';
 import { revalidateProjectsPath } from '@/app/actions/projects';
-import { isCraftMode } from '@/config/app-mode';
-import { filterTasksByMode } from '@/lib/data-isolation';
+import { filterTasksByMode } from '@/lib/utils';
 
 interface TaskOption {
   id: string;
@@ -31,10 +29,8 @@ export function SimpleActionMenu() {
   const { startTimer } = useTimerStore();
   const router = useRouter();
   const pathname = usePathname();
-  const isCraftContext = isCraftMode() || pathname?.startsWith('/craft') || pathname?.includes('/site-reports') || pathname?.includes('/geofence');
 
   const [baustelleDialogOpen, setBaustelleDialogOpen] = useState(false);
-  const [craftClientDialogOpen, setCraftClientDialogOpen] = useState(false);
   const [showTimerSearch, setShowTimerSearch] = useState(false);
   const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
   const [timerSearchQuery, setTimerSearchQuery] = useState('');
@@ -109,94 +105,161 @@ export function SimpleActionMenu() {
     }
   };
 
-  const actions = isCraftContext
-    ? [
-        {
-          icon: <Hammer size={20} />,
-          iconClass: 'text-amber-500 bg-amber-500/10',
-          label: 'Neue Baustelle anlegen',
-          description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
-          onClick: () => {
-            setOpen(false);
-            setBaustelleDialogOpen(true);
-          },
-        },
-        {
-          icon: <FileText size={20} />,
-          iconClass: 'text-emerald-500 bg-emerald-500/10',
-          label: 'Bautagesbericht erfassen',
-          description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
-          onClick: () => {
-            setOpen(false);
-            router.push('/craft');
-          },
-        },
-        {
-          icon: <Clock size={20} />,
-          iconClass: 'text-primary bg-primary/10',
-          label: 'Zeiterfassung starten',
-          description: 'Wähle ein Gewerk und starte den Timer sofort',
-          onClick: () => {
-            setShowTimerSearch(true);
-            setTimerSearchQuery('');
-          },
-        },
-        {
-          icon: <Building2 size={20} />,
-          iconClass: 'text-blue-500 bg-blue-500/10',
-          label: 'Neuen Auftraggeber / Bauherr anlegen',
-          description: 'Bauherrn mit Anschrift & § 48b EStG anlegen',
-          onClick: () => {
-            setOpen(false);
-            setCraftClientDialogOpen(true);
-          },
-        },
-      ]
-    : [
-        {
-          icon: <Plus size={20} />,
-          iconClass: 'text-indigo-500 bg-indigo-500/10',
-          label: 'Neue Aufgabe erstellen',
-          description: 'Lege eine neue Aufgabe in einem Projekt an',
-          onClick: () => {
-            setOpen(false);
-            setTaskDialogOpen(true);
-          },
-        },
-        {
-          icon: <FolderGit2 size={20} />,
-          iconClass: 'text-rose-500 bg-rose-500/10',
-          label: 'Neues Projekt anlegen',
-          description: 'Erstelle einen neuen Arbeitsbereich',
-          onClick: () => {
-            setOpen(false);
-            setProjectDialogOpen(true);
-          },
-        },
-        {
-          icon: <Clock size={20} />,
-          iconClass: 'text-primary bg-primary/10',
-          label: 'Zeiterfassung starten',
-          description: 'Wähle eine Aufgabe und starte den Timer sofort',
-          onClick: () => {
-            setShowTimerSearch(true);
-            setTimerSearchQuery('');
-          },
-        },
-        {
-          icon: <Building2 size={20} />,
-          iconClass: 'text-blue-500 bg-blue-500/10',
-          label: 'Neuen Kunden anlegen',
-          description: 'Erstelle einen neuen Kunden-Eintrag',
-          onClick: () => {
-            setOpen(false);
-            setClientDialogOpen(true);
-          },
-        },
-      ];
+  const craftActions = [
+    {
+      icon: <Hammer size={20} />,
+      iconClass: 'text-amber-500 bg-amber-500/10',
+      label: 'Neue Baustelle anlegen',
+      description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
+      onClick: () => {
+        setOpen(false);
+        setBaustelleDialogOpen(true);
+      },
+    },
+    {
+      icon: <FileText size={20} />,
+      iconClass: 'text-emerald-500 bg-emerald-500/10',
+      label: 'Bautagesbericht erfassen',
+      description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
+      onClick: () => {
+        router.push('/craft');
+      },
+    },
+    {
+      icon: <Clock size={20} />,
+      iconClass: 'text-primary bg-primary/10',
+      label: 'Zeiterfassung starten',
+      description: 'Wähle ein Gewerk und starte den Timer sofort',
+      onClick: () => {
+        setShowTimerSearch(true);
+        setTimerSearchQuery('');
+      },
+    },
+    {
+      icon: <Building2 size={20} />,
+      iconClass: 'text-blue-500 bg-blue-500/10',
+      label: 'Neuen Auftraggeber / Bauherr anlegen',
+      description: 'Bauherrn mit Anschrift & § 48b EStG anlegen',
+      onClick: () => {
+        setOpen(false);
+        setClientDialogOpen(true);
+      },
+    },
+  ];
+
+  const regularActions = [
+    {
+      icon: <Plus size={20} />,
+      iconClass: 'text-indigo-500 bg-indigo-500/10',
+      label: 'Neue Aufgabe erstellen',
+      description: 'Lege eine neue Aufgabe in einem Projekt an',
+      onClick: () => {
+        setOpen(false);
+        setTaskDialogOpen(true);
+      },
+    },
+    {
+      icon: <FolderGit2 size={20} />,
+      iconClass: 'text-rose-500 bg-rose-500/10',
+      label: 'Neues Projekt anlegen',
+      description: 'Erstelle einen neuen Arbeitsbereich',
+      onClick: () => {
+        setOpen(false);
+        setProjectDialogOpen(true);
+      },
+    },
+    {
+      icon: <Clock size={20} />,
+      iconClass: 'text-primary bg-primary/10',
+      label: 'Zeiterfassung starten',
+      description: 'Wähle eine Aufgabe und starte den Timer sofort',
+      onClick: () => {
+        setShowTimerSearch(true);
+        setTimerSearchQuery '';
+      },
+    },
+    {
+      icon: <Building2 size={20} />,
+      iconClass: 'text-blue-500 bg-blue-500/10',
+      label: 'Neuen Kunden anlegen',
+      description: 'Erstelle einen neuen Kunden-Eintrag',
+      onClick: () => {
+        setOpen(false);
+        setClientDialogOpen(true);
+      },
+    },
+  ];
+
+  const allActions = [
+    {
+      icon: <Plus size={20} />,
+      iconClass: 'text-indigo-500 bg-indigo-500/10',
+      label: 'Neue Aufgabe erstellen',
+      description: 'Lege eine neue Aufgabe in einem Projekt an',
+      onClick: () => {
+        setOpen(false);
+        setTaskDialogOpen(true);
+      },
+    },
+    {
+      icon: <FolderGit2 size={20} />,
+      iconClass: 'text-rose-500 bg-rose-500/10',
+      label: 'Neues Projekt anlegen',
+      description: 'Erstelle einen neuen Arbeitsbereich',
+      onClick: () => {
+        setOpen(false);
+        setProjectDialogOpen(true);
+      },
+    },
+    {
+      icon: <Clock size={20} />,
+      iconClass: 'text-primary bg-primary/10',
+      label: 'Zeiterfassung starten',
+      description: 'Wähle eine Aufgabe und starte den Timer sofort',
+      onClick: () => {
+        setShowTimerSearch(true);
+        setTimerSearchQuery '';
+      },
+    },
+    {
+      icon: <Building2 size={20} />,
+      iconClass: 'text-blue-500 bg-blue-500/10',
+      label: 'Neuen Kunden anlegen',
+      description: 'Erstelle einen neuen Kunden-Eintrag',
+      onClick: () => {
+        setOpen(false);
+        setClientDialogOpen(true);
+      },
+    },
+    {
+      icon: <Hammer size={20} />,
+      iconClass: 'text-amber-500 bg-amber-500/10',
+      label: 'Neue Baustelle anlegen',
+      description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
+      onClick: () => {
+        setOpen(false);
+        setBaustelleDialogOpen(true);
+      },
+    },
+    {
+      icon: <FileText size={20} />,
+      iconClass: 'text-emerald-500 bg-emerald-500/10',
+      label: 'Bautagesbericht erfassen',
+      description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
+      onClick: () => {
+        router.push('/craft');
+      },
+    },
+  ];
+
+  useEffect(() => {
+    if (showTimerSearch) {
+      setTimerSearchQuery('');
+    }
+  }, [showTimerSearch]);
 
   return (
-    <>
+    <div>
       {open && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150"
@@ -289,32 +352,30 @@ export function SimpleActionMenu() {
                 >
                   ← Zurück zu den Aktionen
                 </button>
-              </div>
-            ) : (
-              <div className="p-3 space-y-1.5">
-                {actions.map((action, idx) => (
-                  <button
-                    key={idx}
-                    onClick={action.onClick}
-                    className="flex w-full items-center gap-4 px-4 py-3 rounded-xl hover:bg-accent transition-colors text-left group"
-                  >
-                    <div className={`p-2 rounded-lg shrink-0 ${action.iconClass}`}>
-                      {action.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground group-hover:text-foreground">
-                        {action.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {action.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-
-
-              </div>
-            )}
+              ) : (
+                <div className="p-3 space-y-1.5">
+                  {allActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={action.onClick}
+                      className="flex w-full items-center gap-4 px-4 py-3 rounded-xl hover:bg-accent transition-colors text-left group"
+                    >
+                      <div className={`p-2 rounded-lg shrink-0 ${action.iconClass}`}>
+                        {action.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground group-hover:text-foreground">
+                          {action.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {action.description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -352,14 +413,6 @@ export function SimpleActionMenu() {
           router.refresh();
         }}
       />
-
-      <NewCraftClientDialog
-        open={craftClientDialogOpen}
-        onOpenChange={setCraftClientDialogOpen}
-        onClientCreated={() => {
-          router.refresh();
-        }}
-      />
-    </>
+    </div>
   );
 }

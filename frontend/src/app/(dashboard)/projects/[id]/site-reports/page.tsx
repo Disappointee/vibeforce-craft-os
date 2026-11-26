@@ -11,8 +11,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { withAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
-import { getSiteReportsByProjectAction } from '@/app/actions/craft/site-reports';
 import { t } from '@/lib/i18n';
+import { getSiteReportsByProjectAction } from '@/app/actions/reports';
 import type { ProjectRecord } from '@/lib/pocketbase-types';
 
 interface SiteReportsPageProps {
@@ -50,7 +50,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
           Zurück zum Projekt
         </Link>
         <span className="text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
-          Modul M007: VIBE Craft
+          Modul M007: Site Reports
         </span>
       </div>
 
@@ -58,10 +58,10 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {t('craft.site_report.title')}
+            {t('site_report.title')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Bautagesberichte, Regieberichte & VOB-Aufmaße für {project.name}.
+            Bautageberichte, Regieberichte & VOB-Aufmaße für {project.name}.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all"
         >
           <Plus className="w-4 h-4" />
-          {t('craft.site_report.new')}
+          {t('site_report.new')}
         </Link>
       </div>
 
@@ -79,7 +79,7 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
         <div className="p-12 text-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white/50 dark:bg-[#121824]/50">
           <FileText className="w-10 h-10 text-gray-400 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-            {t('craft.site_report.no_reports')}
+            {t('site_report.no_reports')}
           </h3>
           <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
             Erstelle den ersten Bautagesbericht inklusive Vor-Ort-Signatur und VOB-Aufmaß.
@@ -119,8 +119,8 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
                         <Clock className="w-3 h-3" />
                       )}
                       {isSigned
-                        ? t('craft.site_report.status_signed')
-                        : t('craft.site_report.status_draft')}
+                        ? t('site_report.status_signed')
+                        : t('site_report.status_draft')}
                     </span>
                   </div>
 
@@ -132,13 +132,6 @@ export default async function SiteReportsPage({ params }: SiteReportsPageProps) 
                     {rep.weather && <span>Wetter: {rep.weather}</span>}
                     {rep.client_name && <span>Kunde: {rep.client_name}</span>}
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-teal-600 dark:text-teal-400 font-medium">
-                    Details
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
               </div>
             );

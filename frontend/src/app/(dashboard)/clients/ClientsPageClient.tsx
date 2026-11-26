@@ -1,20 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Hammer, HardHat } from 'lucide-react';
+import { Users, HardHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClientList } from '@/components/clients/ClientList';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
-import { NewCraftClientDialog } from '@/components/craft/NewCraftClientDialog';
 import { useUiStore } from '@/lib/store';
 import { pb } from '@/lib/pocketbase';
-import { isCraftMode } from '@/config/app-mode';
 
 export function ClientsPageClient() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isCraftClientModalOpen, setIsCraftClientModalOpen] = useState(false);
   const { clientDialogOpen, setClientDialogOpen } = useUiStore();
-  const craft = isCraftMode();
 
   useEffect(() => {
     if (!pb.authStore.isValid) {
@@ -38,47 +34,26 @@ export function ClientsPageClient() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-              {craft ? (
-                <>
-                  <HardHat size={26} className="text-amber-500" />
-                  Bauherren &amp; Auftraggeber (§ 13b &amp; § 48b)
-                </>
-              ) : (
-                <>
-                  <Users size={26} className="text-primary" />
-                  Kunden &amp; Auftraggeber
-                </>
-              )}
+              <HardHat size={26} className="text-amber-500" />Bauherren & Auftraggeber (Â§ 13b & Â§ 48b)
             </h1>
             <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              {craft
-                ? 'Verwalte Bauherren, Bauträger und Auftraggeber inklusive Bauabzugsteuer (§ 48b) und Steuerschuldnerschaft (§ 13b).'
-                : 'Verwalte Kundenbeziehungen, Ansprechpartner und Verträge.'}
+              Verwalte Bauherren, BautrÃ¤ger und Auftraggeber inklusive Bauabzugsteuer (Â§ 48b) und Steuerschuldnerschaft (Â§ 13b).
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            {craft ? (
-              <Button
-                id="craft-create-client-btn"
-                onClick={() => setIsCraftClientModalOpen(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5 shrink-0"
-              >
-                <Hammer size={14} />
-                <span>+ Bauherr / Auftraggeber anlegen</span>
-              </Button>
-            ) : (
-              <NewClientDialog
-                open={clientDialogOpen}
-                onOpenChange={setClientDialogOpen}
-                onClientCreated={handleClientCreated}
-              />
-            )}
+            <Button
+              id="craft-create-client-btn"
+              onClick={() => setClientDialogOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5 shrink-0"
+            >
+              <Hammer size={14} />+ Bauherr / Auftraggeber anlegen
+            </Button>
           </div>
         </div>
 
-        <NewCraftClientDialog
-          open={isCraftClientModalOpen}
-          onOpenChange={setIsCraftClientModalOpen}
+        <NewClientDialog
+          open={clientDialogOpen}
+          onOpenChange={setClientDialogOpen}
           onClientCreated={handleClientCreated}
         />
 
