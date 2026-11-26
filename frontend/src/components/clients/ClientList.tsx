@@ -187,7 +187,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                             onClick={() => setCategoryFilter('craft')}
                             className={`text-xs h-8 px-3 ${categoryFilter === 'craft' ? 'border-amber-500/40 text-amber-500 font-semibold' : ''}`}
                         >
-                            🔨 Bauherren (Handwerk)
+                            Bauherren (Handwerk)
                         </Button>
                         <Button
                             type="button"
@@ -275,7 +275,7 @@ export function ClientList({ refreshTrigger }: { refreshTrigger: number }) {
                                         variant="outline"
                                         className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-bold"
                                     >
-                                        🔨 {(client as any).client_type === 'privat' ? 'Bauherr' : (client as any).client_type === 'bautraeger' ? 'Bauträger' : (client as any).client_type === 'gu' ? 'GU' : 'Auftraggeber'}
+                                        {(client as any).client_type === 'privat' ? 'Bauherr' : (client as any).client_type === 'bautraeger' ? 'Bauträger' : (client as any).client_type === 'gu' ? 'GU' : 'Auftraggeber'}
                                     </Badge>
                                 )}
                                 {craft && (client as any).has_48b_certificate && (

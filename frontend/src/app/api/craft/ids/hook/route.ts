@@ -5,15 +5,54 @@ import { withAdminPB } from '@/lib/pocketbase-server';
 
 export const dynamic = 'force-dynamic';
 
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-  'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
-  'Access-Control-Max-Age': '86400',
-};
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://onlineplus.gc-gruppe.de',
+  'https://www.sonepar.de',
+  'https://www.richter-frenzel.de',
+  'https://www.rexel.de',
+  'https://eshop.wuerth.de',
+];
 
-function corsJson(body: unknown, status: number = 200): NextResponse {
-  return NextResponse.json(body, { status, headers: CORS_HEADERS });
+function getAllowedOrigins(req?: NextRequest): Set<string> {
+  const allowed = new Set<string>(DEFAULT_ALLOWED_ORIGINS);
+  const envOrigins = process.env.IDS_ALLOWED_ORIGINS;
+  if (envOrigins) {
+    for (const o of envOrigins.split(',')) {
+      const trimmed = o.trim();
+      if (trimmed) allowed.add(trimmed);
+    }
+  }
+  for (const appUrl of [process.env.NEXT_PUBLIC_APP_URL, process.env.APP_URL]) {
+    if (appUrl) {
+      try {
+        allowed.add(new URL(appUrl).origin);
+      } catch {}
+    }
+  }
+  if (req) {
+    try {
+      allowed.add(new URL(req.url).origin);
+    } catch {}
+  }
+  return allowed;
+}
+
+function getCorsHeaders(req?: NextRequest): Record<string, string> {
+  const origin = req?.headers.get('origin');
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+  if (origin && getAllowedOrigins(req).has(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
+}
+
+function corsJson(body: unknown, status: number = 200, req?: NextRequest): NextResponse {
+  return NextResponse.json(body, { status, headers: getCorsHeaders(req) });
 }
 
 /**
@@ -24,10 +63,10 @@ function corsJson(body: unknown, status: number = 200): NextResponse {
  * - AJAX-Posts (application/xml, application/json) -> JSON-Antwort
  * - HTML-Formular-POSTs (x-www-form-urlencoded / multipart) -> HTTP 303 Redirect ins Dashboard
  */
-export async function OPTIONS() {
+export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(req),
   });
 }
 
@@ -46,42 +85,60 @@ export async function POST(req: NextRequest) {
           error: message,
           status: 'forbidden',
         },
-        403
+        403,
+        req
       );
     }
 
     // CSRF/Session-Validierung per hookToken (HMAC-SHA256, max. 4h gültig).
-    // Resilient Secret Fallback: Nutzt IDS_HOOK_SECRET oder stabilen System-Schlüssel
     const hookSecret =
       process.env.IDS_HOOK_SECRET ||
       process.env.NEXTAUTH_SECRET ||
-      process.env.SESSION_SECRET ||
-      'vibeforce-craft-ids-connect-secret-salt-2026';
+      process.env.SESSION_SECRET;
+    if (!hookSecret) {
+      console.error('[IDS-Connect Hook]: Missing IDS_HOOK_SECRET / NEXTAUTH_SECRET / SESSION_SECRET.');
+      return corsJson(
+        {
+          error: 'IDS-Connect Webhook ist serverseitig nicht konfiguriert (Secret fehlt).',
+          status: 'misconfigured',
+        },
+        500,
+        req
+      );
+    }
 
     const token = searchParams.get('token') || '';
-    if (token) {
-      const tokenCheck = verifyIdsHookToken(token, hookSecret);
-      if (!tokenCheck.valid) {
-        return corsJson(
-          {
-            error: tokenCheck.error || 'Ungültiges oder abgelaufenes hookToken.',
-            status: 'unauthorized',
-          },
-          401
-        );
-      }
-      if (projectId && tokenCheck.projectId && tokenCheck.projectId !== projectId) {
-        return corsJson(
-          {
-            error: 'hookToken gehört nicht zum angefragten Projekt (projectId-Mismatch).',
-            status: 'unauthorized',
-          },
-          401
-        );
-      }
-    } else {
-      // Ältere Großhändlersysteme (z.B. GC ONLINE / Sonepar legacy) schneiden URL-Parameter ab
-      console.warn('[IDS-Connect Hook]: Rücksprung ohne Token empfangen. Cart wird unter UUID gesichert und erfordert Authentifizierung beim Abruf.');
+    if (!token) {
+      return corsJson(
+        {
+          error: 'Fehlendes hookToken. Authentifizierung erforderlich.',
+          status: 'unauthorized',
+        },
+        401,
+        req
+      );
+    }
+
+    const tokenCheck = verifyIdsHookToken(token, hookSecret);
+    if (!tokenCheck.valid) {
+      return corsJson(
+        {
+          error: tokenCheck.error || 'Ungültiges oder abgelaufenes hookToken.',
+          status: 'unauthorized',
+        },
+        401,
+        req
+      );
+    }
+    if (projectId && tokenCheck.projectId && tokenCheck.projectId !== projectId) {
+      return corsJson(
+        {
+          error: 'hookToken gehört nicht zum angefragten Projekt (projectId-Mismatch).',
+          status: 'unauthorized',
+        },
+        401,
+        req
+      );
     }
 
     const contentType = req.headers.get('content-type') || '';
@@ -140,7 +197,8 @@ export async function POST(req: NextRequest) {
             error: `Ungültiger IDS-Connect 2.5 JSON-Cart: ${parseMessage}`,
             status: 'error',
           },
-          400
+          400,
+          req
         );
       }
     } else {
@@ -150,7 +208,8 @@ export async function POST(req: NextRequest) {
             error: 'Ungültiges oder leeres IDS-Connect 2.5 XML-Payload empfangen.',
             status: 'error',
           },
-          400
+          400,
+          req
         );
       }
       parsedCart = parseIdsCartXml(xmlContent);
@@ -190,7 +249,7 @@ export async function POST(req: NextRequest) {
         status: 303,
         headers: {
           Location: redirectUrl.toString(),
-          ...CORS_HEADERS,
+          ...getCorsHeaders(req),
         },
       });
     }
@@ -201,16 +260,21 @@ export async function POST(req: NextRequest) {
           error: 'IDS-Connect 2.5 Warenkorb konnte nicht persistiert werden (ids_carts). Bitte erneut senden.',
           status: 'error',
         },
-        500
+        500,
+        req
       );
     }
 
-    return corsJson({
-      success: true,
-      cart_id: cartId,
-      message: `IDS-Connect 2.5 Warenkorb erfolgreich verarbeitet und gespeichert (${parsedCart.items.length} Positionen).`,
-      cart: parsedCart as IdsCart,
-    });
+    return corsJson(
+      {
+        success: true,
+        cart_id: cartId,
+        message: `IDS-Connect 2.5 Warenkorb erfolgreich verarbeitet und gespeichert (${parsedCart.items.length} Positionen).`,
+        cart: parsedCart as IdsCart,
+      },
+      200,
+      req
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unbekannter Fehler';
     console.error('[IDS-Connect Hook Error]:', error);
@@ -219,17 +283,22 @@ export async function POST(req: NextRequest) {
         error: 'Fehler beim Parsen des IDS 2.5 Warenkorbs: ' + message,
         status: 'error',
       },
-      500
+      500,
+      req
     );
   }
 }
 
-export async function GET() {
-  return corsJson({
-    status: 'online',
-    service: 'VIBE Craft IDS-Connect 2.5 Webhook Service',
-    specification: 'IDS-Connect 2.5 (IGH / BVBS)',
-    supportedWholesalers: ['GC-ONLINE PLUS', 'Sonepar Deutschland', 'Richter+Frenzel', 'Rexel Germany', 'Würth B2B'],
-    methods: ['POST (XML/Form-Data payload)', 'OPTIONS (CORS preflight)', 'GET (Status)'],
-  });
+export async function GET(req: NextRequest) {
+  return corsJson(
+    {
+      status: 'online',
+      service: 'VIBE Craft IDS-Connect 2.5 Webhook Service',
+      specification: 'IDS-Connect 2.5 (IGH / BVBS)',
+      supportedWholesalers: ['GC-ONLINE PLUS', 'Sonepar Deutschland', 'Richter+Frenzel', 'Rexel Germany', 'Würth B2B'],
+      methods: ['POST (XML/Form-Data payload)', 'OPTIONS (CORS preflight)', 'GET (Status)'],
+    },
+    200,
+    req
+  );
 }

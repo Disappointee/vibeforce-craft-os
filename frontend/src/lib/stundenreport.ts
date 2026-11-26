@@ -1,4 +1,5 @@
 import { reportTemplateHtml, reportTemplateEditorial, reportTemplateDark, reportTemplateSwiss } from '@/lib/report-template';
+import { validateOutgoingUrl } from '@/lib/ssrf-guard';
 
 export type ReportTemplate = 'default' | 'editorial' | 'dark' | 'swiss';
 
@@ -54,6 +55,7 @@ function escAttr(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 }
@@ -109,9 +111,13 @@ export function buildStundenreportBodyHtml(data: StundenreportInput): string {
   const uniqueClients = Array.from(new Set(projects.map(p => p.clientName).filter(Boolean)));
   const showProjectClient = uniqueClients.length > 1;
 
-  const logoHtml = meta.logoUrl
-    ? `<div class="header-logo"><img src="${escAttr(meta.logoUrl)}" alt="Logo" /></div>`
-    : '';
+  let logoHtml = '';
+  if (meta.logoUrl) {
+    const logoCheck = validateOutgoingUrl(meta.logoUrl);
+    if (logoCheck.isValid && logoCheck.sanitizedUrl) {
+      logoHtml = `<div class="header-logo"><img src="${escAttr(logoCheck.sanitizedUrl.toString())}" alt="Logo" /></div>`;
+    }
+  }
 
   let totalBlock = `
         <span class="total-label">Gesamtsumme</span>

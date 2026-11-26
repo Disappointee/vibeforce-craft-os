@@ -42,6 +42,7 @@ import {
 } from '@/lib/datanorm';
 import {
   IDS_WHOLESALER_PROFILES,
+  generateIdsPunchoutUrl,
   generateIdsCartXml,
   parseIdsCartXml,
   convertIdsItemToMeasurement,
@@ -791,28 +792,56 @@ export function WholesaleManager({
                 </div>
 
                 {/* Selected Wholesaler Details & Punchout Action */}
-                <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="space-y-1 text-xs">
-                    <div className="font-bold text-foreground">
-                      Aktives Punchout-Ziel: {selectedWholesaler.name}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground font-mono">
-                      Hook-URL: https://vibeforce-flow-os.vercel.app/api/craft/ids/hook
-                    </div>
-                  </div>
+                {(() => {
+                  const craftBaseUrl =
+                    typeof window !== 'undefined'
+                      ? window.location.origin
+                      : (process.env.NEXT_PUBLIC_CRAFT_URL || 'https://vibeforce-craft-os.vercel.app').replace(/\/$/, '');
+                  const craftHookUrl = `${craftBaseUrl}/api/craft/ids/hook`;
+                  const punchoutUrl = generateIdsPunchoutUrl(selectedWholesaler, {
+                    wholesalerId: selectedWholesaler.id,
+                    hookUrl: craftHookUrl,
+                    sessionId: `ids_${selectedWholesaler.id}`,
+                    customerNumber: selectedWholesaler.customerNumber,
+                    orderReference: projectName || 'Baustellen-Projekt',
+                  });
 
-                  <Button
-                    size="default"
-                    onClick={() => {
-                      setSimulatorBasket([]);
-                      setIsSimulatorOpen(true);
-                    }}
-                    className="bg-amber-500 hover:bg-amber-600 text-black font-black text-xs px-5 h-10 shadow-sm w-full sm:w-auto"
-                  >
-                    <ExternalLink size={15} className="mr-2" />
-                    Großhandels-Shop öffnen (Punchout)
-                  </Button>
-                </div>
+                  return (
+                    <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="space-y-1 text-xs min-w-0 flex-1">
+                        <div className="font-bold text-foreground">
+                          Aktives Punchout-Ziel: {selectedWholesaler.name}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground font-mono truncate" title={craftHookUrl}>
+                          Hook-URL: {craftHookUrl}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                        <a
+                          href={punchoutUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-xl border border-border bg-card hover:bg-muted px-3 h-10 text-xs font-semibold text-foreground transition-colors"
+                        >
+                          <ExternalLink size={14} className="mr-1.5" />
+                          Live-Shop
+                        </a>
+                        <Button
+                          size="default"
+                          onClick={() => {
+                            setSimulatorBasket([]);
+                            setIsSimulatorOpen(true);
+                          }}
+                          className="bg-amber-500 hover:bg-amber-600 text-black font-black text-xs px-5 h-10 shadow-sm flex-1 sm:flex-initial"
+                        >
+                          <ExternalLink size={15} className="mr-2" />
+                          Großhandels-Shop öffnen (Punchout)
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 

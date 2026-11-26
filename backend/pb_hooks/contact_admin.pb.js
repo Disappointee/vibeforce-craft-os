@@ -164,21 +164,21 @@ routerAdd('POST', '/api/custom/contact-admin', (c) => {
         const mailClient = $app.newMailClient();
         const mailMessage = new MailerMessage({
             from: {
-                address: settings.mailSettings.fromAddress || 'noreply@vibeforce.de',
-                name: settings.mailSettings.fromName || 'Vibeforce Flow OS',
+                address: (settings.meta && settings.meta.senderAddress) || 'noreply@vibeforce.de',
+                name: (settings.meta && settings.meta.senderName) || 'Vibeforce Flow OS',
             },
             to: adminEmails.map(addr => ({ address: addr })),
             subject: 'Kontaktanfrage: ' + subject,
             html: html,
         });
 
-        mailClient.send(mailMessage)
-            .then(() => {
-                console.log('[ContactAdmin] ✅ E-Mail gesendet an Admins: ' + adminEmails.join(', '));
-            })
-            .catch((err) => {
-                console.error('[ContactAdmin] ❌ Fehler beim Senden:', err.message);
-            });
+        try {
+            mailClient.send(mailMessage);
+            console.log('[ContactAdmin] ✅ E-Mail gesendet an Admins: ' + adminEmails.join(', '));
+        } catch (err) {
+            console.error('[ContactAdmin] ❌ Fehler beim Senden:', err && err.message ? err.message : err);
+            return c.json(500, { success: false, message: 'Fehler beim Senden der Nachricht.' }, headers);
+        }
 
         // Rate-Limit-Eintrag speichern
         try {

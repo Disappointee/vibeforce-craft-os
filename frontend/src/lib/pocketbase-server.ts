@@ -156,7 +156,6 @@ export async function verifyUserSession(): Promise<Record<string, unknown> | nul
     const userModel = authData.record || authData.model || null;
     if (authData.token) {
       pb.authStore.save(authData.token, userModel);
-      userRecord = userModel;
     }
   } catch {
     pb.authStore.loadFromCookie(`${cookieKey}=${authCookie.value}`, cookieKey);

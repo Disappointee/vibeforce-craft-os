@@ -140,7 +140,6 @@ export class DwellTimeTracker {
   ): 'entered' | 'exited' | 'dwelling' | null {
     const gpsLoss =
       (pos.accuracy !== undefined && pos.accuracy > 50) ||
-      (pos.speed === null || pos.speed === undefined) ||
       (this.lastGoodTimestamp !== null &&
         pos.timestamp !== undefined &&
         Math.abs(pos.timestamp - this.lastGoodTimestamp) > 30_000);

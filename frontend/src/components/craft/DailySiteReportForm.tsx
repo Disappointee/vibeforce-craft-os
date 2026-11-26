@@ -156,7 +156,7 @@ export function DailySiteReportForm({
       const payload = {
         project: projectId,
         report_date: reportDate,
-        status: (clientSignature ? 'signed' : 'draft') as 'signed' | 'draft',
+        status: 'draft' as const,
         weather,
         temperature,
         work_performed: workPerformed,
@@ -164,8 +164,6 @@ export function DailySiteReportForm({
         client_name: clientName,
         qualification_hours: qualificationHours,
         is_regie_extra: isRegieExtra,
-        client_signature: clientSignature || undefined,
-        client_signed_at: clientSignature ? new Date().toISOString() : undefined,
         contractor_signature: contractorSignature || undefined,
         contractor_signed_at: contractorSignature ? new Date().toISOString() : undefined,
       };

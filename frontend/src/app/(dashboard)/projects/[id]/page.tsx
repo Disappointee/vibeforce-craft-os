@@ -1,5 +1,5 @@
-import { getAdminPB } from '@/lib/pocketbase-server';
-import { notFound } from 'next/navigation';
+import { getUserAuthPB, requireAuth, verifyUserSession } from '@/lib/pocketbase-server';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ProjectDetailsClient } from './ProjectDetailsClient';
 
@@ -9,7 +9,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const isCraft = process.env.NEXT_PUBLIC_APP_MODE === 'craft';
   try {
-    const pb = await getAdminPB();
+    const user = await verifyUserSession();
+    const pb = user ? await getUserAuthPB() : null;
+    if (!pb) {
+      return { title: `${isCraft ? 'Baustelle' : 'Projekt'} | ${isCraft ? 'Vibeforce Craft OS' : 'Vibeforce Flow OS'}` };
+    }
     const project = await pb.collection('projects').getOne(id);
     return { title: `${isCraft ? 'Baustelle' : 'Projekt'}: ${project.name} | ${isCraft ? 'Vibeforce Craft OS' : 'Vibeforce Flow OS'}` };
   } catch {
@@ -18,6 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function ProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAuth();
+  const pb = await getUserAuthPB();
+  if (!pb) {
+    redirect('/login');
+  }
+
   const { id } = await params;
 
   let project: Record<string, unknown>;
@@ -27,7 +37,6 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
   let siteReports: Record<string, unknown>[] = [];
 
   try {
-    const pb = await getAdminPB();
 
     try {
       project = await pb.collection('projects').getOne(id);

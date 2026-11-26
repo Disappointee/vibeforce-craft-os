@@ -38,7 +38,7 @@ export async function getServerCraftLicense(
         const projectLicenses = await pb
           .collection('craft_licenses')
           .getFullList<CraftLicenseRecord>({
-            filter: `scope = "project:${projectId}"`,
+            filter: pb.filter('scope = {:scope}', { scope: `project:${projectId}` }),
             sort: '-created',
             requestKey: null,
           });
@@ -117,7 +117,7 @@ export async function setServerCraftLicense(
     const existing = await pb
       .collection('craft_licenses')
       .getFullList<CraftLicenseRecord>({
-        filter: `scope = "${cleanScope}"`,
+        filter: pb.filter('scope = {:scope}', { scope: cleanScope }),
         sort: '-created',
         requestKey: null,
       });

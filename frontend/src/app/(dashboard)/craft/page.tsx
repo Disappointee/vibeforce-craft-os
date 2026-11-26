@@ -1,17 +1,23 @@
-import { getAdminPB } from '@/lib/pocketbase-server';
+import { redirect } from 'next/navigation';
+import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { CraftHubClient } from './CraftHubClient';
 import type { ProjectRecord, SiteReportRecord, TimeEntryRecord } from '@/lib/pocketbase-types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CraftPage() {
+  await requireAuth();
+  const pb = await getUserAuthPB();
+  if (!pb) {
+    redirect('/login');
+  }
+
   let projects: ProjectRecord[] = [];
   let reports: SiteReportRecord[] = [];
   let invoices: any[] = [];
   let timeEntries: TimeEntryRecord[] = [];
 
   try {
-    const pb = await getAdminPB();
     
     // Fetch craft projects (Baustellen) exclusively
     try {

@@ -135,30 +135,29 @@ function handleNotificationSave(e, ctx) {
         var mailClient = app.newMailClient();
         var mailMessage = new MailerMessage({
             from: {
-                address: settings.meta.senderAddress || 'noreply@vibeforce.de',
-                name: settings.meta.senderName || 'Vibeforce Flow OS',
+                address: (settings.meta && settings.meta.senderAddress) || 'noreply@vibeforce.de',
+                name: (settings.meta && settings.meta.senderName) || 'Vibeforce Flow OS',
             },
             to: [{ address: userEmail }],
             subject: subject,
             html: html,
         });
 
-        mailClient.send(mailMessage)
-            .then(function () {
-                console.log('[EmailHook] E-Mail gesendet an ' + userEmail + ': "' + subject + '"');
+        try {
+            mailClient.send(mailMessage);
+            console.log('[EmailHook] E-Mail gesendet an ' + userEmail + ': "' + subject + '"');
 
-                // email_sent auf true setzen (Direkt via SQL um Endlosschleife zu vermeiden)
-                try {
-                    app.db().newQuery('UPDATE notifications SET email_sent = 1 WHERE id = {:id}')
-                        .bind({ id: record.id })
-                        .execute();
-                } catch (err) {
-                    console.error('[EmailHook] Fehler beim Setzen von email_sent:', err.message);
-                }
-            })
-            .catch(function (err) {
-                console.error('[EmailHook] Fehler beim Senden an ' + userEmail + ':', err.message);
-            });
+            // email_sent auf true setzen (Direkt via SQL um Endlosschleife zu vermeiden)
+            try {
+                app.db().newQuery('UPDATE notifications SET email_sent = 1 WHERE id = {:id}')
+                    .bind({ id: record.id })
+                    .execute();
+            } catch (err) {
+                console.error('[EmailHook] Fehler beim Setzen von email_sent:', err && err.message ? err.message : err);
+            }
+        } catch (err) {
+            console.error('[EmailHook] Fehler beim Senden an ' + userEmail + ':', err && err.message ? err.message : err);
+        }
     } catch (err) {
         console.error('[EmailHook] Allgemeiner Fehler:', err && err.message);
     }

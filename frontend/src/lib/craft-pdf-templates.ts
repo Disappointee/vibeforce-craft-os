@@ -23,6 +23,19 @@ function esc(text?: string | null): string {
     .replace(/'/g, '&#39;');
 }
 
+function isSafeImageSrc(src?: string | null): boolean {
+  if (!src) return false;
+  const trimmed = src.trim().toLowerCase();
+  return (
+    trimmed.startsWith('data:image/png;') ||
+    trimmed.startsWith('data:image/jpeg;') ||
+    trimmed.startsWith('data:image/jpg;') ||
+    trimmed.startsWith('data:image/webp;') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('http://')
+  );
+}
+
 export function generateSiteReportHtml(data: CraftReportPdfData): string {
   const { report, projectName, projectKey, clientName, authorName, measurements = [], isReverseCharge = false, freistellungNotice } = data;
   const formattedDate = new Date(report.report_date).toLocaleDateString('de-DE', {
@@ -43,7 +56,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Bautagesbericht - ${projectName}</title>
+  <title>Bautagesbericht - ${esc(projectName)}</title>
   <style>
     @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
     body {
@@ -144,12 +157,12 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
     </div>
     <div class="meta-item">
       <span class="meta-label">Wetter & Temperatur</span>
-      <span class="meta-val">${esc(report.weather) || 'Standard'} ${report.temperature ? `(${report.temperature} °C)` : ''}</span>
+      <span class="meta-val">${esc(report.weather) || 'Standard'} ${report.temperature ? `(${esc(String(report.temperature))} °C)` : ''}</span>
     </div>
     <div class="meta-item">
       <span class="meta-label">Stunden nach Qualifikation</span>
       <span class="meta-val">
-        Meister: ${report.qualification_hours?.meister || 0}h | Geselle: ${report.qualification_hours?.geselle || 0}h | Helfer: ${report.qualification_hours?.helfer || 0}h | Azubi: ${report.qualification_hours?.azubi || 0}h
+        Meister: ${Number(report.qualification_hours?.meister) || 0}h | Geselle: ${Number(report.qualification_hours?.geselle) || 0}h | Helfer: ${Number(report.qualification_hours?.helfer) || 0}h | Azubi: ${Number(report.qualification_hours?.azubi) || 0}h
       </span>
     </div>
   </div>
@@ -182,7 +195,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
             <td>${esc(m.position_nr)}</td>
             <td>${esc(m.title)}</td>
             <td style="font-family: monospace; color: #0d9488;">${esc(m.formula) || '-'}</td>
-            <td class="text-right">${m.quantity}</td>
+            <td class="text-right">${esc(String(m.quantity ?? 0))}</td>
             <td>${esc(m.unit)}</td>
             <td class="text-right">${(m.unit_price || 0).toFixed(2)}</td>
             <td class="text-right" style="font-weight: 600;">${(m.total_price || 0).toFixed(2)}</td>
@@ -214,7 +227,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
 
   <div class="signatures">
     <div class="sig-box">
-      ${report.client_signature ? `<img src="${report.client_signature}" class="sig-img" alt="Unterschrift Auftraggeber" />` : '<div style="height: 40px;"></div>'}
+      ${isSafeImageSrc(report.client_signature) ? `<img src="${esc(report.client_signature)}" class="sig-img" alt="Unterschrift Auftraggeber" />` : '<div style="height: 40px;"></div>'}
       <div class="sig-label">Unterschrift Auftraggeber (${esc(report.client_name) || 'Bauleiter'})</div>
       <div style="font-size: 9px; color: #94a3b8;">
         ${(() => {
@@ -233,7 +246,7 @@ export function generateSiteReportHtml(data: CraftReportPdfData): string {
       </div>
     </div>
     <div class="sig-box">
-      ${report.contractor_signature ? `<img src="${report.contractor_signature}" class="sig-img" alt="Unterschrift Auftragnehmer" />` : '<div style="height: 40px;"></div>'}
+      ${isSafeImageSrc(report.contractor_signature) ? `<img src="${esc(report.contractor_signature)}" class="sig-img" alt="Unterschrift Auftragnehmer" />` : '<div style="height: 40px;"></div>'}
       <div class="sig-label">Unterschrift Auftragnehmer (${esc(authorName) || 'Monteur'})</div>
       <div style="font-size: 9px; color: #94a3b8;">${report.contractor_signed_at ? `Signiert am ${new Date(report.contractor_signed_at).toLocaleString('de-DE')}` : 'Ausstehend'}</div>
     </div>

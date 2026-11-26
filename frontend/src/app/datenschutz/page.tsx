@@ -50,13 +50,14 @@ export default function DatenschutzPage() {
             </section>
 
             <section>
-              <h2 className="text-foreground font-bold text-base mb-2">2. Überblick</h2>
+              <h2 className="text-foreground font-bold text-base mb-2">2. Überblick &amp; Betriebszweck</h2>
               <p>
-                Diese Anwendung („Vibeforce Flow OS“ / „VIBE Craft OS“) ist eine private Entwicklungs- und
-                Demonstrations-Webanwendung zur Projekt-, Zeit- und Handwerksverwaltung. Personenbezogene Daten werden
-                nur verarbeitet, soweit dies zur Bereitstellung der Anwendung, zu deren sicherem Betrieb und für
-                Demonstrations- bzw. Testzwecke erforderlich ist. Es findet kein Tracking, keine Werbung und keine
-                Weitergabe personenbezogener Daten zu Marketingzwecken statt.
+                Diese Anwendung („Vibeforce Flow OS“ / „VIBE Craft OS“) wird als gewerbliche Software-as-a-Service-Lösung
+                (SaaS) für Projekt-, Zeit- und Handwerksverwaltung sowie ergänzend zu Demonstrations- und Testzwecken
+                betrieben. Personenbezogene Daten werden nur verarbeitet, soweit dies zur Vertragserfüllung, zur
+                Bereitstellung der Anwendung, zu deren sicherem Betrieb oder zur Erfüllung gesetzlicher Pflichten
+                erforderlich ist. Es findet kein Tracking, keine Werbung und keine Weitergabe personenbezogener Daten zu
+                Marketingzwecken statt.
               </p>
             </section>
 
@@ -93,6 +94,20 @@ export default function DatenschutzPage() {
                   Tracking- oder Drittanbieter-Cookies eingesetzt (Rechtsgrundlage: § 25 Abs. 2 Nr. 2 TDDDG).
                 </li>
                 <li>
+                  <span className="text-foreground">Standort- und Geofencing-Daten (GPS):</span> Bei Nutzung der
+                  Baustellen-Zeiterfassung (Monteur-Stempeluhr) sowie bei der Beweisfotodokumentation (Mängelmanagement
+                  und Bautagesberichte) können — ausschließlich nach ausdrücklicher Gerätefreigabe — GPS-Koordinaten
+                  (Breitengrad, Längengrad, Genauigkeit) zum Zeitpunkt des Stempel- bzw. Aufnahmevorgangs verarbeitet
+                  werden. Es erfolgt kein dauerhaftes Hintergrund-Tracking und keine Bewegungsprofilerstellung.
+                </li>
+                <li>
+                  <span className="text-foreground">Betriebliche Mitbestimmung (BetrVG § 87 Abs. 1 Nr. 6):</span> Bei
+                  Einsatz der digitalen Zeiterfassung und der optionalen Geofencing-Verifikation im Beschäftigtenverhältnis
+                  obliegt dem jeweiligen Arbeitgeber (Mandanten) die Einhaltung etwaiger betriebsverfassungsrechtlicher
+                  Mitbestimmungspflichten (§ 87 Abs. 1 Nr. 6 BetrVG). Die Anwendung unterstützt eine datensparsame,
+                  zweckgebundene Standortprüfung ohne lückenlose Verhaltens- oder Leistungskontrolle.
+                </li>
+                <li>
                   <span className="text-foreground">Kontaktanfragen:</span> Nutzen Sie das Kontaktformular an die
                   Administration, werden Ihre Angaben (E-Mail, Betreff, Nachricht) ausschließlich zur Bearbeitung der
                   Anfrage per E-Mail weitergeleitet und nicht in der Anwendungsdatenbank gespeichert.
@@ -104,9 +119,10 @@ export default function DatenschutzPage() {
               <h2 className="text-foreground font-bold text-base mb-2">4. Zwecke und Rechtsgrundlagen</h2>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
-                  Bereitstellung und Betrieb der Anwendung (Anmeldung, Darstellung, Kernfunktionen) — Art. 6 Abs. 1
-                  lit. b DSGVO bzw. bei Demo-/Testnutzung Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer
-                  funktionsfähigen Test- und Demonstrationsumgebung).
+                  Bereitstellung und Betrieb der Anwendung (Anmeldung, Darstellung, Kernfunktionen, Baustellen- und
+                  Zeiterfassung einschließlich optionaler GPS-Verifikation) — Art. 6 Abs. 1 lit. b DSGVO
+                  (Vertragserfüllung), Art. 6 Abs. 1 lit. a DSGVO (Einwilligung bei optionaler Standortfreigabe), § 26
+                  BDSG (Beschäftigtendaten) bzw. bei Demo-/Testnutzung Art. 6 Abs. 1 lit. f DSGVO.
                 </li>
                 <li>
                   IT-Sicherheit, Missbrauchsabwehr und Fehleranalyse — Art. 6 Abs. 1 lit. f DSGVO (berechtigtes
@@ -230,7 +246,7 @@ export default function DatenschutzPage() {
           </div>
 
           <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Stand: 22.10.2026 — Diese Erklärung wird bei Änderungen der Verarbeitung aktualisiert.</span>
+            <span>Stand: 26.11.2026 — Diese Erklärung wird bei Änderungen der Verarbeitung aktualisiert.</span>
             <Link href="/impressum" className="hover:text-foreground transition-colors">
               Zum Impressum →
             </Link>

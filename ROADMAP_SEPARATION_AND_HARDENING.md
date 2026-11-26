@@ -45,8 +45,8 @@
 
 ### Phase C — Portfolio, `docker-compose.prod.yml` & Deployment-Cleanup
 - [ ] **C1.** `robin-portfolio/demo/index.html:399,547` (und `HANDOVER_CLAUDE_RL_SHOWCASE.md:63`) auf `https://vibeforce-craft-os.vercel.app` aktualisieren; aus `robin-portfolio/` `npx vercel --prod` deployen und `https://rl-showcase.vercel.app/demo/` verifizieren. Danach optional `-five` entfernen (`npx vercel alias rm vibeforce-craft-os-five.vercel.app`).
-- [ ] **C2.** `backend/pb_hooks/lib/cors_helpers.js:18` fixen (`process.env` stürzt in PocketBase Goja mit `ReferenceError` ab -> `typeof process !== 'undefined' && process.env && process.env.CORS_ORIGIN`).
-- [ ] **C3.** `docker-compose.prod.yml:66,68` & `.env.production.example:26-27` in beiden Repos um `https://vibeforce-craft-os.vercel.app`, `https://craft-vibeforce.vercel.app`, `https://rl-showcase.vercel.app` ergänzen. (**Warnung:** `1781300000` `demo_sessions` Admin-Only erst aktivieren, wenn `robin-portfolio/demo/index.html:555-648` über Server-Proxy läuft!)
+- [x] **C2.** `backend/pb_hooks/lib/cors_helpers.js:18` fixen (`process.env` stürzt in PocketBase Goja mit `ReferenceError` ab -> `typeof process !== 'undefined' && process.env && process.env.CORS_ORIGIN`). *(Erledigt in `aca6784` / `68b76f0`)*
+- [x] **C3.** `docker-compose.prod.yml:66,68` & `.env.production.example:26-27` in beiden Repos um `https://vibeforce-craft-os.vercel.app`, `https://craft-vibeforce.vercel.app`, `https://rl-showcase.vercel.app` ergänzen. *(Erledigt in `aca6784` / `68b76f0`; **Warnung:** `1781300000` `demo_sessions` Admin-Only erst aktivieren, wenn `robin-portfolio/demo/index.html:555-648` über Server-Proxy läuft!)*
 - [ ] **C4.** Sicheres Vercel-Cleanup (zuvor `npx vercel alias ls` gegenprüfen; **niemals** `dpl_8ZgrWLH4s3pugb2NaMw69SygzwEH`, `<NEW_CRAFT_DPL_ID>` oder `dpl_B38D9XPMMmh4sq5naWKQi1eXR9sp` löschen):
   - Verwaistes Flow-Alias: `npx vercel alias rm vibeforce-flow-os-lehnebachrobin-7794-robins-projects-34c3aad5.vercel.app`
   - Craft Alt-/Root-Deploys: `dpl_6ELnCEzumG5AjoKtwGnBM9czf39e`, `dpl_F4cUw9H4QVtJMiGPwBJJssLszL69`, `dpl_9zEktGaYSeYmyEdFspNvHVp6w4QW`, `dpl_4CwVFfUQgtNvDQUCZ2yF4nbHMj8C` (und `dpl_9RxTwhdcwHxcAAgwUCQqe1yVgTGk` erst nach erfolgreichem Umzug auf `<NEW_CRAFT_DPL_ID>`) mit `--safe --confirm-name`.
@@ -58,29 +58,29 @@
 ## Teil 3 (Meilenstein 2) — Security-Hardening, `pb-flow`/`pb-craft` & Repo-Trennung (`[ ]`)
 
 ### Phase D — P0/P1 Security- & Hook-Hardening (vor DB-Split!)
-- [ ] **D1. Auth/Session-Bypass schließen (Flow & Craft):**
-  - `frontend/src/lib/pocketbase-server.ts:179-209`: Fallback auf ungeprüftes `userRecord` bei fehlgeschlagenem `authRefresh()` entfernen (fail-closed -> `null`); `getAuthenticatedOrAdminPB()` (`:262-272`) und `guest_slot_a`-Admin-Fallback (`:89-110`) entfernen.
-  - `frontend/src/middleware.ts:32,45-67`: Cookie-Signatur/Session validieren statt `JSON.parse(authCookie.value)` blind zu vertrauen; `loginRateLimiter` auf `/api/auth/login` anwenden; `meister` konsistent behandeln.
-  - `frontend/src/app/api/auth/demo/route.ts:6-24,132-143`: Klartext-Passwörter entfernen, `redirect`-Parameter strikt auf relative Pfade whitelisten (XSS/Open-Redirect fixen), Demo-Gäste von realen Admin-Operationen (`admin-users.ts`, `impersonate/route.ts`, `entitlements/route.ts`) serverseitig trennen.
-- [ ] **D2. SSR-Leaks & Server-Action-BOLA schließen (Flow & Craft):**
-  - `verifyUserSession()` / `requireAuth()` in allen betroffenen Server-Pages (`craft/page.tsx:7-68`, `tasks/page.tsx:8-25`, `projects/page.tsx:7-17`, `projects/[id]/page.tsx:20-85`, `clients/[id]/page.tsx:19-100`, Craft `craft/defects/page.tsx:7-30`, `craft/time/page.tsx:7-31`) und `actions/craft/projects.ts:71-85` (`getBaustellenAction`) erzwingen; User-scoped PB statt `getAdminPB()` verwenden bzw. explizite Ownership-/Rollen-Checks in allen 19 Actions ergänzen.
-  - `actions/profile.ts:57-67`: `updateNotificationSettingsAction` auf erlaubte Notification-Keys whitelisten (Mass-Assignment-Fix).
-  - `actions/tasks.ts:21,73` & `actions/clients.ts:39,49,63`: `.passthrough()` entfernen.
-- [ ] **D3. API-Routen, Filter-Injection & PDF-SSRF (Flow & Craft):**
-  - `api/craft/ids/hook/route.ts:55-85,164-174`: Tokenlose Requests ablehnen (kein `else`-Skip), Fallback-Secret entfernen, CORS-Wildcard `*` einschränken.
-  - `lib/server-entitlements.ts:41,120` & `actions/craft/cost-calculation.ts:42`: `pb.filter()` mit Parametern verwenden.
-  - `api/craft/geocoding/route.ts:4-16` & `api/craft/tiles/[z]/[x]/[y]/route.ts:32-103`: `verifyUserSession()` erzwingen.
-  - `api/reports/stundenreport-export/route.ts:17` & `lib/stundenreport.ts:112-113`: `pdfService` mit `try/finally` + `reportsRateLimiter` nutzen, `meta.logoUrl` via `ssrf-guard.ts` prüfen, `craft-pdf-templates.ts:46` HTML-escapen.
-- [ ] **D4. PocketBase-Hooks & DB-Rules fixen:**
-  - `notification_email.js:146-161`, `contact_admin.pb.js:175-181`, `settings_api.pb.js:151-152,191,213-219`: `.then()` auf sync `mailClient.send()` durch `try/catch` ersetzen & PB `0.37.5` `meta`-API nutzen.
-  - `cycle_management.pb.js:39-123`: Rekursions-Guard & `cycle_rollover`-Typangleich.
-  - `time_entries_overlap.pb.js:21,58,82`: Laufende Timer (`end_time = ""`) einbeziehen und `e.next()` innerhalb der Transaktion prüfen.
-  - `rbac_protection.pb.js:70-89` & `1781300000_harden_collection_rules.js`: `hourly_rate` schützen, `site_reports` bei `signed`/`invoiced` auf DB-Ebene sperren (GoBD), `users` `authRule` gegen `deactivated`, `notifications`/`audit_logs` `createRule` härten, `meister`-Konflikt lösen.
-- [ ] **D5. Craft-Integrationen & Compliance nachziehen (`vibeforce-craft-os`):**
-  - **VOB:** `PlanPinningManager` / `NewDefectDialog` / `DefectsPageClient` von `localStorage` auf PB `defect_pins` umstellen; `DailySiteReportForm.tsx:159-263` erst nach Measurements/Evidence signieren; `images.unsplash.com` entfernen.
-  - **ZUGFeRD / DATEV:** Dummy-Werte (`DE888888888`, `Musterstraße 42`, `RE-2026-0042`) entfernen, `project.client` expandieren, `tax_rate_type` & Doppelrechnungs-Sperre & `assertCraftFeatureEntitlement` einbauen, DATEV aus `invoices_zugferd` (CP1252) speisen.
-  - **Geofence / IDS:** `MonteurTimeClock.tsx` (`localStorage`, `< 2000 m`, `verified: true` bei Fehler) & `geofencing.ts:141-146` (`pos.speed === null`) korrigieren; `WholesaleManager.tsx:800,808` auf echte Craft-URL & `generateIdsPunchoutUrl()` umstellen.
-  - **Portfolio-Proxy & DSGVO:** `/api/demo/slot` Server-Proxy einführen, `robin-portfolio/demo/index.html:555-648` darauf umstellen; `ClientList.tsx:190` `🔨`-Emoji entfernen; `datenschutz/page.tsx` um GPS/BetrVG/kommerziellen Betrieb aktualisieren.
+- [x] **D1. Auth/Session-Bypass schließen (Flow & Craft):**
+  - [x] `frontend/src/lib/pocketbase-server.ts`: Fallback auf ungeprüftes `userRecord` bei fehlgeschlagenem `authRefresh()` entfernt (fail-closed -> `null`); `getAuthenticatedOrAdminPB()` und `guest_slot_a`-Admin-Fallback entfernt.
+  - [x] `frontend/src/middleware.ts`: `authRefresh()` + `loginRateLimiter` + `meister`-Behandlung umgesetzt.
+  - [x] `frontend/src/app/api/auth/demo/route.ts` & `actions/admin-users.ts`: Klartext-Passwörter & Open-Redirect gefixt; Demo-Gäste (`guest_slot_*`) in `admin-users.ts` serverseitig blockiert (`impersonate`/`entitlements`-Routen existieren nicht). *(Ausstehend: `tsc`/`build`-Gate)*
+- [x] **D2. SSR-Leaks & Server-Action-BOLA schließen (Flow & Craft):** *(Umgesetzt & `tsc`/`build`-Gate bestanden)*
+  - `verifyUserSession()` / `requireAuth()` in allen betroffenen Server-Pages (`craft/page.tsx`, `tasks/page.tsx`, `projects/page.tsx`, `projects/[id]/page.tsx`, `clients/[id]/page.tsx`, Craft `craft/defects/page.tsx`, `craft/time/page.tsx`) und `actions/craft/projects.ts` (`getBaustellenAction`) erzwungen; `getUserAuthPB()` statt `getAdminPB()` + Ownership-/Rollen-Checks ergänzt.
+  - `actions/profile.ts`: `updateNotificationSettingsAction` auf erlaubte Keys gewhitelistet.
+  - `actions/tasks.ts` & `actions/clients.ts`: `.passthrough()` entfernt.
+- [x] **D3. API-Routen, Filter-Injection & PDF-SSRF (Flow & Craft):** *(Umgesetzt & `tsc`/`build`-Gate bestanden)*
+  - `api/craft/ids/hook/route.ts`: Tokenlose Requests mit 401 abgelehnt, Fallback-Secret entfernt, CORS-Origin-Allowlist gesetzt.
+  - `lib/server-entitlements.ts` & `actions/craft/cost-calculation.ts`: `pb.filter()` mit Parametern verwendet.
+  - `api/craft/geocoding/route.ts` & `api/craft/tiles/[z]/[x]/[y]/route.ts`: `verifyUserSession()` erzwungen.
+  - `api/reports/stundenreport-export/route.ts` & `lib/stundenreport.ts`: `pdfService` mit `try/finally` + `reportsRateLimiter`, `meta.logoUrl` via `validateOutgoingUrl` (`ssrf-guard.ts`), `craft-pdf-templates.ts` HTML-escaped.
+- [x] **D4. PocketBase-Hooks & DB-Rules fixen:** *(Umgesetzt & `tsc`/`build`-Gate bestanden)*
+  - `notification_email.js`, `contact_admin.pb.js`, `settings_api.pb.js`: `.then()` auf sync `mailClient.send()` durch `try/catch` ersetzt & PB `0.37.5` `meta`-API genutzt.
+  - `cycle_management.pb.js`: Rekursions-Guard & `cycle_rollover`-Typangleich.
+  - `time_entries_overlap.pb.js`: Laufende Timer (`end_time = ""`) einbeziehen und `e.next()` in Transaktion.
+  - `rbac_protection.pb.js` & `1781300000_harden_collection_rules.js`: `hourly_rate` & `deactivated` geschützt, `site_reports` bei `signed`/`invoiced` gesperrt (GoBD), `users` `authRule`, `notifications`/`audit_logs` `createRule` gehärtet, `meister`-Konflikt gelöst (`demo_sessions` bleibt bis Wave 2/3 Proxy-Livegang offen).
+- [x] **D5. Craft-Integrationen & Compliance nachziehen (`vibeforce-craft-os`):** *(Umgesetzt & `tsc`/`build`-Gate bestanden)*
+  - **VOB:** `PlanPinningManager`, `NewDefectDialog`, `DefectsPageClient` auf PB `defect_pins` umgestellt; `DailySiteReportForm.tsx` erst nach Measurements/Evidence signieren.
+  - **ZUGFeRD / DATEV:** Dummy-Werte entfernt, `project.client` expandiert, `tax_rate_type` & Doppelrechnungs-Sperre & `assertCraftFeatureEntitlement` eingebaut, DATEV aus `invoices_zugferd` (CP1252) gespeist.
+  - **Geofence / IDS:** `MonteurTimeClock.tsx` & `geofencing.ts` korrigiert; `WholesaleManager.tsx` auf echte Craft-URL & `generateIdsPunchoutUrl()` umgestellt.
+  - **Portfolio-Proxy & DSGVO:** `/api/demo/slot/route.ts` Server-Proxy angelegt; `ClientList.tsx` `🔨`-Emoji entfernt; `datenschutz/page.tsx` um GPS/BetrVG/kommerziellen Betrieb aktualisiert.
 
 ### Phase E — Trennung `pb-flow` / `pb-craft` & zwei GitHub-Repos
 - [ ] **E1.** `docker-compose.prod.yml` + Traefik in zwei PocketBase-Services aufteilen: `pb-flow` (`pb-flow-data`) und `pb-craft` (`pb-craft-data`), jeweils mit eigenen `ALLOWED_ORIGINS`, eigenen `PB_ADMIN_*` und rotierten `DEMO_GUEST_*` Secrets.

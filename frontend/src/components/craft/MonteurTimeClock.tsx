@@ -144,35 +144,48 @@ export function MonteurTimeClock({
   const [activeActivity, setActiveActivity] = useState<ActivityType>('site_assembly');
 
   // Clock state: 'idle' | 'active' | 'paused'
-  const [clockStatus, setClockStatus] = useState<'idle' | 'active' | 'paused'>(() => {
-    if (typeof window !== 'undefined') {
-      const savedStatus = localStorage.getItem('vibe_clock_status');
-      if (savedStatus === 'active' || savedStatus === 'paused') return savedStatus;
-    }
-    return 'idle';
-  });
+  const [clockStatus, setClockStatus] = useState<'idle' | 'active' | 'paused'>('idle');
 
-  // Segments of today
-  const [segments, setSegments] = useState<ShiftSegment[]>(() => {
-    if (typeof window !== 'undefined') {
-      const todayDate = new Date().toISOString().slice(0, 10);
-      const saved = localStorage.getItem(`vibe_shifts_${todayDate}`);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {}
-      }
-    }
-    return [];
-  });
+  // Segments of today (loaded from PocketBase time_entries)
+  const [segments, setSegments] = useState<ShiftSegment[]>([]);
 
   // Current active segment start time
-  const [activeSegmentStart, setActiveSegmentStart] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('vibe_clock_active_start');
-    }
-    return null;
-  });
+  const [activeSegmentStart, setActiveSegmentStart] = useState<string | null>(null);
+
+  // Load today's time entries from PocketBase
+  useEffect(() => {
+    const userId = pb.authStore.record?.id;
+    if (!pb.authStore.isValid || !userId) return;
+
+    const todayDate = new Date().toISOString().slice(0, 10);
+    pb.collection('time_entries')
+      .getFullList({
+        filter: pb.filter('user = {:uid} && date = {:today}', { uid: userId, today: todayDate }),
+        sort: 'start_time',
+        requestKey: null,
+      })
+      .then((entries) => {
+        const mapped: ShiftSegment[] = entries
+          .filter((e: any) => Boolean(e.end_time))
+          .map((e: any) => ({
+            id: e.id,
+            type: 'site_assembly' as ActivityType,
+            startTime: e.start_time || e.created,
+            endTime: e.end_time,
+            durationSeconds:
+              e.start_time && e.end_time
+                ? Math.max(1, Math.floor((new Date(e.end_time).getTime() - new Date(e.start_time).getTime()) / 1000))
+                : (Number(e.duration_minutes) || 0) * 60,
+            projectKey: activeProjectKey,
+            projectName: e.description || activeProjectName,
+            gpsVerified: typeof e.description === 'string' && e.description.includes('GPS verifiziert'),
+          }));
+        setSegments(mapped);
+      })
+      .catch((err) => {
+        console.warn('[MonteurTimeClock] Failed to load today time_entries:', err);
+      });
+  }, [activeProjectKey, activeProjectName]);
 
   // Digital clock (HH:MM:SS)
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -223,8 +236,7 @@ export function MonteurTimeClock({
           const targetRadius = activeProject?.geofence_radius || 150;
 
           const dist = computeDistanceMeters(userLat, userLng, targetLat, targetLng);
-          // If within radius or in demo mode
-          const isInside = dist <= targetRadius || dist < 2000;
+          const isInside = dist <= targetRadius;
 
           setGpsStatus({
             verified: isInside,
@@ -239,9 +251,8 @@ export function MonteurTimeClock({
         (err) => {
           console.warn('GPS Geolocation warning:', err);
           setGpsStatus({
-            verified: true, // Graceful fallback
-            distance: 35,
-            message: 'GPS Toleranzmodus: Standort manuell bestätigt (±35m)',
+            verified: false,
+            message: 'GPS-Standort konnte nicht verifiziert werden (Berechtigung oder Signal fehlt).',
           });
           setGpsLoading(false);
         },
@@ -249,26 +260,45 @@ export function MonteurTimeClock({
       );
     } else {
       setGpsStatus({
-        verified: true,
-        message: 'GPS nicht verfügbar · Manuelle Buchung',
+        verified: false,
+        message: 'GPS nicht verfügbar · Standort nicht verifiziert',
       });
       setGpsLoading(false);
     }
   };
 
-  // Sync to local storage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const todayDate = new Date().toISOString().slice(0, 10);
-      localStorage.setItem(`vibe_shifts_${todayDate}`, JSON.stringify(segments));
-      localStorage.setItem('vibe_clock_status', clockStatus);
-      if (activeSegmentStart) {
-        localStorage.setItem('vibe_clock_active_start', activeSegmentStart);
-      } else {
-        localStorage.removeItem('vibe_clock_active_start');
+  const persistSegmentToPB = async (segment: ShiftSegment) => {
+    const userId = pb.authStore.record?.id;
+    if (!pb.authStore.isValid || !userId) return;
+
+    try {
+      let taskId: string | undefined;
+      if (selectedProjectId) {
+        try {
+          const tasksRes = await pb.collection('tasks').getList(1, 1, {
+            filter: pb.filter('project = {:pid}', { pid: selectedProjectId }),
+            requestKey: null,
+          });
+          taskId = tasksRes.items[0]?.id;
+        } catch {}
       }
+
+      const minutes = Math.max(1, Math.round(segment.durationSeconds / 60));
+      await pb.collection('time_entries').create({
+        ...(taskId ? { task: taskId } : {}),
+        user: userId,
+        start_time: segment.startTime,
+        end_time: segment.endTime,
+        duration_minutes: minutes,
+        duration: minutes,
+        date: segment.startTime.slice(0, 10),
+        is_billable: true,
+        description: `[${segment.projectKey}] ${ACTIVITY_META[segment.type].label}${segment.gpsVerified ? ' (GPS verifiziert)' : ''}`,
+      });
+    } catch (err) {
+      console.warn('[MonteurTimeClock] Failed to persist time_entry to PocketBase:', err);
     }
-  }, [segments, clockStatus, activeSegmentStart]);
+  };
 
   // Actions
   const handleClockIn = () => {
@@ -304,6 +334,7 @@ export function MonteurTimeClock({
       };
 
       setSegments((prev) => [...prev, finishedSegment]);
+      void persistSegmentToPB(finishedSegment);
       setActiveSegmentStart(null);
       setClockStatus('paused');
     }
@@ -337,6 +368,7 @@ export function MonteurTimeClock({
       };
 
       setSegments((prev) => [...prev, finishedSegment]);
+      void persistSegmentToPB(finishedSegment);
     }
 
     setActiveSegmentStart(null);

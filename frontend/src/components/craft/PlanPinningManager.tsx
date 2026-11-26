@@ -32,6 +32,7 @@ import {
   ExternalLink,
   Upload,
 } from 'lucide-react';
+import { pb } from '@/lib/pocketbase';
 import type { DefectPinRecord, DefectSeverity, DefectStatus } from '@/lib/pocketbase-types';
 
 interface PlanPinningManagerProps {
@@ -130,19 +131,7 @@ export function PlanPinningManager({
   projectKey = 'ULB',
   readOnly = false,
 }: PlanPinningManagerProps) {
-  const [defects, setDefects] = useState<DefectPinRecord[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`vibe_defects_${projectKey}`);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          // fallback
-        }
-      }
-    }
-    return INITIAL_SAMPLE_DEFECTS;
-  });
+  const [defects, setDefects] = useState<DefectPinRecord[]>(INITIAL_SAMPLE_DEFECTS);
 
   const [activeView, setActiveView] = useState<'plan' | 'list'>('plan');
   const [selectedDefect, setSelectedDefect] = useState<DefectPinRecord | null>(null);
@@ -167,36 +156,41 @@ export function PlanPinningManager({
   const customPlanInputRef = useRef<HTMLInputElement>(null);
   const [customPlanUrl, setCustomPlanUrl] = useState<string | null>(null);
 
-  // Sync to local storage
+  // Load from PocketBase defect_pins when project changes or when an external defect is created
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`vibe_defects_${projectKey}`, JSON.stringify(defects));
-    }
-  }, [defects, projectKey]);
-
-  // Load from local storage when projectKey changes or when an external defect is created
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`vibe_defects_${projectKey}`);
-      if (saved) {
-        try {
-          setDefects(JSON.parse(saved));
-        } catch {}
+    let cancelled = false;
+    const loadFromPB = async () => {
+      if (!pb.authStore.isValid) {
+        if (!cancelled) setDefects(INITIAL_SAMPLE_DEFECTS);
+        return;
       }
-    }
-    const handleSync = () => {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem(`vibe_defects_${projectKey}`);
-        if (saved) {
-          try {
-            setDefects(JSON.parse(saved));
-          } catch {}
+      try {
+        const records = await pb.collection('defect_pins').getFullList<DefectPinRecord>({
+          filter: pb.filter('project = {:pid} || project = {:pkey}', {
+            pid: projectId || projectKey,
+            pkey: projectKey,
+          }),
+          sort: '-created',
+          requestKey: null,
+        });
+        if (!cancelled) {
+          setDefects(records.length > 0 ? records : INITIAL_SAMPLE_DEFECTS);
         }
+      } catch (err) {
+        console.warn('[PlanPinningManager] Failed to load defect_pins from PB:', err);
       }
     };
+
+    void loadFromPB();
+    const handleSync = () => {
+      void loadFromPB();
+    };
     window.addEventListener('vibe_defect_created', handleSync);
-    return () => window.removeEventListener('vibe_defect_created', handleSync);
-  }, [projectKey]);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('vibe_defect_created', handleSync);
+    };
+  }, [projectId, projectKey]);
 
   // KPIs
   const totalOpen = useMemo(
@@ -299,20 +293,25 @@ export function PlanPinningManager({
   };
 
   // Save / Update defect
-  const handleSaveDefect = (data: Partial<DefectPinRecord>) => {
+  const handleSaveDefect = async (data: Partial<DefectPinRecord>) => {
     if (selectedDefect) {
       // update
+      let updatedRec: DefectPinRecord = { ...selectedDefect, ...data, updated: new Date().toISOString() } as DefectPinRecord;
+      if (pb.authStore.isValid && !selectedDefect.id.startsWith('def-')) {
+        try {
+          updatedRec = await pb.collection('defect_pins').update<DefectPinRecord>(selectedDefect.id, data);
+        } catch (err) {
+          console.warn('[PlanPinningManager] PB update defect_pins warning:', err);
+        }
+      }
       setDefects((prev) =>
-        prev.map((d) => (d.id === selectedDefect.id ? ({ ...d, ...data, updated: new Date().toISOString() } as DefectPinRecord) : d))
+        prev.map((d) => (d.id === selectedDefect.id ? updatedRec : d))
       );
-      setSelectedDefect((prev) => (prev ? ({ ...prev, ...data } as DefectPinRecord) : null));
+      setSelectedDefect(updatedRec);
     } else if (newPinCoords) {
       // create new
-      const newRecord: DefectPinRecord = {
-        id: 'def_' + Math.random().toString(36).substring(2, 9),
-        collectionId: 'defect_pins',
-        collectionName: 'defect_pins',
-        project: projectKey,
+      const payload = {
+        project: projectId || projectKey,
         title: data.title || 'Unbenannter Mangel',
         description: data.description || '',
         trade: data.trade || 'Trockenbau',
@@ -323,20 +322,41 @@ export function PlanPinningManager({
         status: (data.status as DefectStatus) || 'draft',
         due_date: data.due_date || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
         contractor_name: data.contractor_name || 'Nachunternehmer N.N.',
-        evidence_photo_url: data.evidence_photo_url,
-        evidence_sha256: data.evidence_sha256,
+        evidence_photo_url: data.evidence_photo_url || '',
+        evidence_sha256: data.evidence_sha256 || '',
+      };
+      let newRecord: DefectPinRecord = {
+        id: 'def_' + Math.random().toString(36).substring(2, 9),
+        collectionId: 'defect_pins',
+        collectionName: 'defect_pins',
+        ...payload,
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
       };
+      if (pb.authStore.isValid) {
+        try {
+          newRecord = await pb.collection('defect_pins').create<DefectPinRecord>(payload);
+        } catch (err) {
+          console.warn('[PlanPinningManager] PB create defect_pins warning:', err);
+        }
+      }
       setDefects((prev) => [newRecord, ...prev]);
       setSelectedDefect(newRecord);
       setNewPinCoords(null);
+      window.dispatchEvent(new CustomEvent('vibe_defect_created', { detail: newRecord }));
     }
     setIsEditing(false);
   };
 
-  const handleDeleteDefect = (id: string) => {
+  const handleDeleteDefect = async (id: string) => {
     if (confirm('Möchten Sie diesen Mangel wirklich aus dem Bauplan entfernen?')) {
+      if (pb.authStore.isValid && !id.startsWith('def-')) {
+        try {
+          await pb.collection('defect_pins').delete(id);
+        } catch (err) {
+          console.warn('[PlanPinningManager] PB delete defect_pins warning:', err);
+        }
+      }
       setDefects((prev) => prev.filter((d) => d.id !== id));
       setSelectedDefect(null);
       setIsEditing(false);
@@ -393,6 +413,9 @@ Bauleitung / Generalunternehmer`;
 
     // Update status to 'notified' if it was draft
     if (noticeDefect && noticeDefect.status === 'draft') {
+      if (pb.authStore.isValid && !noticeDefect.id.startsWith('def-')) {
+        pb.collection('defect_pins').update(noticeDefect.id, { status: 'notified' }).catch(() => {});
+      }
       setDefects((prev) =>
         prev.map((d) => (d.id === noticeDefect.id ? { ...d, status: 'notified', updated: new Date().toISOString() } : d))
       );

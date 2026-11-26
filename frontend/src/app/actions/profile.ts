@@ -1,28 +1,40 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getAdminPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { getUserAuthPB, verifyUserSession } from '@/lib/pocketbase-server';
+import { z } from 'zod';
 
-export async function updateAvatarAction(formData: FormData) {
+const NotificationSettingsSchema = z.object({
+  notify_on_assignment: z.boolean().optional(),
+  notify_on_mention: z.boolean().optional(),
+  notify_on_due: z.boolean().optional(),
+  weekly_report: z.boolean().optional(),
+});
+
+async function requireAuthUserPB() {
   const user = await verifyUserSession();
   if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const pb = await getUserAuthPB();
+  if (!pb) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  return { user, pb };
+}
+
+export async function updateAvatarAction(formData: FormData) {
+  const { user, pb } = await requireAuthUserPB();
 
   const userId = user.id as string;
-  const pbAdmin = await getAdminPB();
-  const updated = await pbAdmin.collection('users').update(userId, formData);
-  const url = pbAdmin.files.getURL(updated, updated.avatar, { thumb: '256x256' });
+  const updated = await pb.collection('users').update(userId, formData);
+  const url = pb.files.getURL(updated, updated.avatar, { thumb: '256x256' });
 
   revalidatePath('/profile');
   return { success: true, url };
 }
 
 export async function removeAvatarAction() {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireAuthUserPB();
 
   const userId = user.id as string;
-  const pbAdmin = await getAdminPB();
-  await pbAdmin.collection('users').update(userId, { avatar: null });
+  await pb.collection('users').update(userId, { avatar: null });
 
   revalidatePath('/profile');
   return { success: true };
@@ -33,14 +45,12 @@ export async function updatePasswordAction(data: {
   password: string;
   passwordConfirm: string;
 }) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireAuthUserPB();
 
   const userId = user.id as string;
-  const pbAdmin = await getAdminPB();
 
   try {
-    await pbAdmin.collection('users').update(userId, {
+    await pb.collection('users').update(userId, {
       oldPassword: data.oldPassword,
       password: data.password,
       passwordConfirm: data.passwordConfirm,
@@ -55,28 +65,35 @@ export async function updatePasswordAction(data: {
 }
 
 export async function updateNotificationSettingsAction(settings: Record<string, boolean>) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireAuthUserPB();
+
+  const parsed = NotificationSettingsSchema.parse(settings);
+  const sanitized: Record<string, boolean> = {};
+  if (parsed.notify_on_assignment !== undefined) sanitized.notify_on_assignment = parsed.notify_on_assignment;
+  if (parsed.notify_on_mention !== undefined) sanitized.notify_on_mention = parsed.notify_on_mention;
+  if (parsed.notify_on_due !== undefined) sanitized.notify_on_due = parsed.notify_on_due;
+  if (parsed.weekly_report !== undefined) sanitized.weekly_report = parsed.weekly_report;
+
+  if (Object.keys(sanitized).length === 0) {
+    throw new Error('Keine gültigen Benachrichtigungseinstellungen angegeben.');
+  }
 
   const userId = user.id as string;
-  const pbAdmin = await getAdminPB();
-  await pbAdmin.collection('users').update(userId, settings);
+  await pb.collection('users').update(userId, sanitized);
 
   revalidatePath('/profile');
   return { success: true };
 }
 
 export async function updateUserPreferencesAction(preferences: Record<string, any>) {
-  const user = await verifyUserSession();
-  if (!user) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+  const { user, pb } = await requireAuthUserPB();
 
   const userId = user.id as string;
-  const pbAdmin = await getAdminPB();
 
   try {
-    const existing = await pbAdmin.collection('users').getOne(userId);
+    const existing = await pb.collection('users').getOne(userId);
     const merged = { ...((existing as any).preferences || {}), ...preferences };
-    await pbAdmin.collection('users').update(userId, { preferences: merged });
+    await pb.collection('users').update(userId, { preferences: merged });
     revalidatePath('/profile');
     return { success: true, preferences: merged };
   } catch (error: any) {

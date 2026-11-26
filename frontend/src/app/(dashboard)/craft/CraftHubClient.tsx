@@ -42,7 +42,7 @@ import { PlanPinningManager } from '@/components/craft/PlanPinningManager';
 import { CraftFeatureUpsell } from '@/components/craft/CraftFeatureUpsell';
 import { CraftEntitlementsModal } from '@/components/craft/CraftEntitlementsModal';
 import { useCraftEntitlementsStore } from '@/lib/craft-entitlements';
-import { generateDatevCsv, type DatevBookingItem } from '@/lib/datev-export';
+import { generateDatevCsv, encodeWindows1252, type DatevBookingItem } from '@/lib/datev-export';
 import { generateZugferdXml, type ZugferdInvoiceData } from '@/lib/zugferd';
 import { useI18n } from '@/lib/i18n';
 import { toast } from 'sonner';
@@ -402,43 +402,86 @@ export function CraftHubClient({
   const measurementGrossTotal = useMemo(() => Math.round((measurementNetTotal + measurementVatTotal) * 100) / 100, [measurementNetTotal, measurementVatTotal]);
 
   // Handlers for Exports with Mixed § 13b / 19% Tax Split Support
-  const handleDownloadDatevCsv = () => {
+  const projectInvoices = useMemo(
+    () =>
+      selectedProject?.id
+        ? invoices.filter((inv) => inv.project === selectedProject.id)
+        : invoices,
+    [invoices, selectedProject?.id]
+  );
+
+  const buildDynamicInvoiceNumber = () => {
+    const year = new Date().getFullYear();
+    const key = (selectedProject?.key || 'CRAFT').replace(/[^A-Za-z0-9_-]/g, '');
+    const seq = String(projectInvoices.length + 1).padStart(4, '0');
+    return `RE-${year}-${key}-${seq}`;
+  };
+
+  const handleDownloadDatevCsv = (targetInvoice?: any) => {
     const bookingItems: DatevBookingItem[] = [];
-    const invNum = 'RE-2026-0042';
     const dateStr = new Date().toISOString().slice(0, 10);
     const costCenter = selectedProject?.key || 'CRAFT-01';
 
-    // Split booking: Line 1 for § 13b (Konto 8337 / SKR03)
-    if (net13bTotal > 0 || (net13bTotal === 0 && net19Total === 0)) {
-      bookingItems.push({
-        bookingId: 'BK-001',
-        date: dateStr,
-        amount: net13bTotal > 0 ? net13bTotal : measurementGrossTotal,
-        invoiceNumber: invNum,
-        accountNumber: '8337',
-        contraAccount: '10000',
-        costCenter,
-        bookingText: `VOB § 13b ${selectedProject?.name || 'Baustelle'}`,
-        isReverseCharge: true,
-        buKey: '68',
-      });
-    }
+    const sourceInvoices = targetInvoice ? [targetInvoice] : projectInvoices;
 
-    // Split booking: Line 2 for 19% Material / Leistung (Konto 8400 / SKR03)
-    if (net19Total > 0) {
-      const gross19 = Math.round((net19Total + measurementVatTotal) * 100) / 100;
-      bookingItems.push({
-        bookingId: 'BK-002',
-        date: dateStr,
-        amount: gross19,
-        invoiceNumber: invNum,
-        accountNumber: '8400',
-        contraAccount: '10000',
-        costCenter,
-        bookingText: `19% Material ${selectedProject?.name || 'Baustelle'}`,
-        taxRate: 0.19,
-        isReverseCharge: false,
+    if (sourceInvoices.length > 0) {
+      sourceInvoices.forEach((inv, idx) => {
+        const invNum = inv.invoice_number || buildDynamicInvoiceNumber();
+        const invDate = (inv.created || dateStr).slice(0, 10);
+        const invCostCenter = inv.expand?.project?.key || costCenter;
+        const invProjName = inv.expand?.project?.name || selectedProject?.name || 'Baustelle';
+        const isRevCharge = Number(inv.tax_rate) === 0;
+        const amount = Number(inv.gross_total ?? inv.net_total ?? 0);
+
+        bookingItems.push({
+          bookingId: `BK-${String(idx + 1).padStart(3, '0')}`,
+          date: invDate,
+          amount,
+          invoiceNumber: invNum,
+          accountNumber: isRevCharge ? '8337' : '8400',
+          contraAccount: '10000',
+          costCenter: invCostCenter,
+          bookingText: `${isRevCharge ? 'VOB § 13b' : '19% USt'} ${invProjName}`,
+          taxRate: isRevCharge ? 0 : (Number(inv.tax_rate) || 19) / 100,
+          isReverseCharge: isRevCharge,
+          buKey: isRevCharge ? '68' : undefined,
+        });
       });
+    } else {
+      const invNum = buildDynamicInvoiceNumber();
+
+      // Split booking: Line 1 for § 13b (Konto 8337 / SKR03)
+      if (net13bTotal > 0 || (net13bTotal === 0 && net19Total === 0)) {
+        bookingItems.push({
+          bookingId: 'BK-001',
+          date: dateStr,
+          amount: net13bTotal > 0 ? net13bTotal : measurementGrossTotal,
+          invoiceNumber: invNum,
+          accountNumber: '8337',
+          contraAccount: '10000',
+          costCenter,
+          bookingText: `VOB § 13b ${selectedProject?.name || 'Baustelle'}`,
+          isReverseCharge: true,
+          buKey: '68',
+        });
+      }
+
+      // Split booking: Line 2 for 19% Material / Leistung (Konto 8400 / SKR03)
+      if (net19Total > 0) {
+        const gross19 = Math.round((net19Total + measurementVatTotal) * 100) / 100;
+        bookingItems.push({
+          bookingId: 'BK-002',
+          date: dateStr,
+          amount: gross19,
+          invoiceNumber: invNum,
+          accountNumber: '8400',
+          contraAccount: '10000',
+          costCenter,
+          bookingText: `19% Material ${selectedProject?.name || 'Baustelle'}`,
+          taxRate: 0.19,
+          isReverseCharge: false,
+        });
+      }
     }
 
     const csvContent = generateDatevCsv(bookingItems, {
@@ -448,7 +491,8 @@ export function CraftHubClient({
       bezeichnung: 'DATEV Export VIBE Craft',
     });
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const cp1252Bytes = encodeWindows1252(csvContent);
+    const blob = new Blob([new Uint8Array(cp1252Bytes)], { type: 'text/csv;charset=windows-1252;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -459,9 +503,40 @@ export function CraftHubClient({
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadZugferdXml = () => {
+  const handleDownloadZugferdXml = (targetInvoice?: any) => {
+    if (targetInvoice?.zugferd_xml) {
+      const blob = new Blob([targetInvoice.zugferd_xml], { type: 'application/xml;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `ZUGFeRD_2.1.1_${targetInvoice.invoice_number || 'Rechnung'}.xml`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    const client = (selectedProject as any)?.expand?.client;
+    const rawVatId =
+      (selectedProject as any)?.buyer_vat_id ||
+      (selectedProject as any)?.vat_id ||
+      client?.vat_id ||
+      client?.ust_idnr ||
+      client?.tax_id;
+    const buyerVatId = typeof rawVatId === 'string' && rawVatId.trim() ? rawVatId.trim() : undefined;
+
+    if (isSelectedProject13b && !buyerVatId) {
+      toast.error('Für § 13b Reverse-Charge fehlt die USt-IdNr. beim Auftraggeber.');
+      return;
+    }
+
+    const rawAddress = typeof client?.address === 'string' ? client.address.trim() : '';
+    const addressParts = rawAddress ? rawAddress.split(',').map((s: string) => s.trim()) : [];
+    const invoiceNum = buildDynamicInvoiceNumber();
+
     const invoiceData: ZugferdInvoiceData = {
-      invoiceNumber: 'RE-2026-0042',
+      invoiceNumber: invoiceNum,
       invoiceDate: new Date().toISOString().slice(0, 10),
       periodFrom: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
       periodTo: new Date().toISOString().slice(0, 10),
@@ -472,11 +547,15 @@ export function CraftHubClient({
       sellerCountry: 'DE',
       sellerTaxId: 'DE999999999',
       sellerVatId: 'DE999999999',
-      buyerName: (selectedProject as any)?.expand?.client?.name || 'Bauherr & Auftraggeber AG',
-      buyerStreet: 'Hauptstraße 1',
-      buyerCity: 'Berlin',
-      buyerCountry: 'DE',
-      buyerVatId: isSelectedProject13b ? 'DE888888888' : undefined,
+      buyerName: client?.company || client?.name || selectedProject?.name || 'Auftraggeber',
+      buyerStreet: client?.street || addressParts[0] || selectedProject?.site_address?.street || '',
+      buyerCity:
+        client?.city ||
+        addressParts.slice(1).join(', ') ||
+        [selectedProject?.site_address?.zip, selectedProject?.site_address?.city].filter(Boolean).join(' ') ||
+        '',
+      buyerCountry: client?.country || selectedProject?.site_address?.country || 'DE',
+      buyerVatId,
       lineItems: measurementItems.map((item) => {
         const isItem19 = (item.tax_rate_type || defaultTaxType) === 'standard_19';
         return {
@@ -543,7 +622,7 @@ export function CraftHubClient({
             <Button
               id="craft-datev-export-btn"
               variant="outline"
-              onClick={handleDownloadDatevCsv}
+              onClick={() => handleDownloadDatevCsv()}
               className="border-border hover:border-amber-500/50 text-foreground text-xs h-9 px-3 shrink-0 flex items-center gap-1.5"
             >
               <Download size={13} className="text-amber-500 shrink-0" />
@@ -1251,7 +1330,7 @@ export function CraftHubClient({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDownloadZugferdXml}
+                onClick={() => handleDownloadZugferdXml()}
                 className="border-border hover:border-amber-500 text-xs font-semibold"
               >
                 <FileCode size={14} className="mr-1.5 text-teal-500" />
@@ -1259,7 +1338,7 @@ export function CraftHubClient({
               </Button>
               <Button
                 size="sm"
-                onClick={handleDownloadDatevCsv}
+                onClick={() => handleDownloadDatevCsv()}
                 className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs"
               >
                 <Download size={14} className="mr-1.5" />
@@ -1528,14 +1607,14 @@ export function CraftHubClient({
             <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
-                onClick={handleDownloadZugferdXml}
+                onClick={() => handleDownloadZugferdXml()}
                 className="border-border hover:border-teal-500 text-xs font-bold"
               >
                 <FileCode size={15} className="mr-1.5 text-teal-500" />
                 ZUGFeRD XML herunterladen
               </Button>
               <Button
-                onClick={handleDownloadDatevCsv}
+                onClick={() => handleDownloadDatevCsv()}
                 className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs"
               >
                 <Download size={15} className="mr-1.5" />
@@ -1546,56 +1625,79 @@ export function CraftHubClient({
 
           <Card className="border-border/70">
             <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="text-base text-foreground">Erstellte Rechnungen & VOB-Abschläge</CardTitle>
+              <CardTitle className="text-base text-foreground">Erstellte Rechnungen &amp; VOB-Abschläge</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/60">
-                <div className="p-4 flex items-center justify-between gap-4 flex-wrap hover:bg-accent/20 transition-colors">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono font-bold text-sm text-foreground">RE-2026-0042</span>
-                      <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-bold">
-                        1. Abschlagsrechnung (VOB § 16)
-                      </Badge>
-                      <Badge className="bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 text-[10px]">
-                        § 13b UStG Reverse Charge
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Baustelle: {selectedProject?.name || 'Gewerbepark Nord'} • Datum: 02.09.2026 • Fällig in 14 Tagen
-                    </div>
+                {projectInvoices.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-muted-foreground">
+                    Noch keine E-Rechnungen in PocketBase (<code className="font-mono">invoices_zugferd</code>) für diese Baustelle gespeichert.
                   </div>
+                ) : (
+                  projectInvoices.map((inv) => {
+                    const isRevCharge = Number(inv.tax_rate) === 0;
+                    const invProjName = inv.expand?.project?.name || selectedProject?.name || 'Baustelle';
+                    const invDate = inv.created
+                      ? new Date(inv.created).toLocaleDateString('de-DE')
+                      : '-';
+                    return (
+                      <div key={inv.id} className="p-4 flex items-center justify-between gap-4 flex-wrap hover:bg-accent/20 transition-colors">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2.5">
+                            <span className="font-mono font-bold text-sm text-foreground">{inv.invoice_number}</span>
+                            <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-bold">
+                              {inv.invoice_type === 'abschlag'
+                                ? 'Abschlagsrechnung (VOB § 16)'
+                                : inv.invoice_type === 'schluss'
+                                ? 'Schlussrechnung'
+                                : 'Standardrechnung'}
+                            </Badge>
+                            {isRevCharge && (
+                              <Badge className="bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 text-[10px]">
+                                § 13b UStG Reverse Charge
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Baustelle: {invProjName} • Datum: {invDate} • Fällig in 14 Tagen
+                          </div>
+                        </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-base font-black text-foreground">
-                        {measurementGrossTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-base font-black text-foreground">
+                              {Number(inv.gross_total || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                            </div>
+                            <span className="text-[10px] text-emerald-500 font-semibold">
+                              {isRevCharge ? 'SKR03 Kto. 8337' : 'SKR03 Kto. 8400'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadZugferdXml(inv)}
+                              className="h-8 text-xs font-semibold"
+                            >
+                              <Download size={13} className="mr-1 text-teal-500" />
+                              XML
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDatevCsv(inv)}
+                              className="h-8 text-xs font-semibold"
+                            >
+                              <Download size={13} className="mr-1 text-amber-500" />
+                              DATEV
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-emerald-500 font-semibold">SKR03 Kto. 8337</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadZugferdXml}
-                        className="h-8 text-xs font-semibold"
-                      >
-                        <Download size={13} className="mr-1 text-teal-500" />
-                        XML
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadDatevCsv}
-                        className="h-8 text-xs font-semibold"
-                      >
-                        <Download size={13} className="mr-1 text-amber-500" />
-                        DATEV
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                    );
+                  })
+                )}
               </div>
             </CardContent>
           </Card>

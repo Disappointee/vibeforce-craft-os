@@ -14,26 +14,32 @@ onRecordCreateRequest((e) => {
     const startTime = e.record.get("start_time");
     const endTime = e.record.get("end_time");
 
-    if (userId && startTime && endTime) {
+    if (userId && startTime) {
       $app.runInTransaction((txApp) => {
+        const filter = endTime
+          ? 'user = {:user} && id != {:id} && start_time < {:end_time} && (end_time = "" || end_time > {:start_time})'
+          : 'user = {:user} && id != {:id} && (end_time = "" || end_time > {:start_time})';
+        const params = endTime
+          ? { user: userId, id: e.record.id || "", start_time: startTime, end_time: endTime }
+          : { user: userId, id: e.record.id || "", start_time: startTime };
+
         const overlapping = txApp.findRecordsByFilter(
           "time_entries",
-          "user = {:user} && id != {:id} && start_time < {:end_time} && end_time > {:start_time}",
+          filter,
           "-created",
           1,
           0,
-          {
-            user: userId,
-            id: e.record.id || "",
-            start_time: startTime,
-            end_time: endTime,
-          }
+          params
         );
 
         if (overlapping && overlapping.length > 0) {
           throw new BadRequestError("Time entry overlaps with an existing entry.");
         }
+
+        e.next();
       });
+    } else {
+      e.next();
     }
   } catch (err) {
     if (err instanceof BadRequestError) {
@@ -42,7 +48,6 @@ onRecordCreateRequest((e) => {
     console.error("[time_entries_overlap:create] Error:", err);
     throw new BadRequestError("Überlappungsprüfung fehlgeschlagen.");
   }
-  e.next();
 }, "time_entries");
 
 onRecordUpdateRequest((e) => {
@@ -51,26 +56,32 @@ onRecordUpdateRequest((e) => {
     const startTime = e.record.get("start_time");
     const endTime = e.record.get("end_time");
 
-    if (userId && startTime && endTime) {
+    if (userId && startTime) {
       $app.runInTransaction((txApp) => {
+        const filter = endTime
+          ? 'user = {:user} && id != {:id} && start_time < {:end_time} && (end_time = "" || end_time > {:start_time})'
+          : 'user = {:user} && id != {:id} && (end_time = "" || end_time > {:start_time})';
+        const params = endTime
+          ? { user: userId, id: e.record.id, start_time: startTime, end_time: endTime }
+          : { user: userId, id: e.record.id, start_time: startTime };
+
         const overlapping = txApp.findRecordsByFilter(
           "time_entries",
-          "user = {:user} && id != {:id} && start_time < {:end_time} && end_time > {:start_time}",
+          filter,
           "-created",
           1,
           0,
-          {
-            user: userId,
-            id: e.record.id,
-            start_time: startTime,
-            end_time: endTime,
-          }
+          params
         );
 
         if (overlapping && overlapping.length > 0) {
           throw new BadRequestError("Time entry overlaps with an existing entry.");
         }
+
+        e.next();
       });
+    } else {
+      e.next();
     }
   } catch (err) {
     if (err instanceof BadRequestError) {
@@ -79,5 +90,4 @@ onRecordUpdateRequest((e) => {
     console.error("[time_entries_overlap:update] Error:", err);
     throw new BadRequestError("Überlappungsprüfung fehlgeschlagen.");
   }
-  e.next();
 }, "time_entries");

@@ -16,6 +16,7 @@ import {
   Sparkles,
   Check,
 } from 'lucide-react';
+import { pb } from '@/lib/pocketbase';
 import type { DefectPinRecord, DefectSeverity, DefectStatus, ProjectRecord } from '@/lib/pocketbase-types';
 
 export const CRAFT_TRADES_LIST = [
@@ -157,17 +158,13 @@ export function NewDefectDialog({
     setDueDate(d.toISOString().slice(0, 10));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
     const projectKey = activeProject?.key || 'BAUSTELLE';
-
-    const newDefect: DefectPinRecord = {
-      id: 'def_' + Math.random().toString(36).substring(2, 9),
-      collectionId: 'defect_pins',
-      collectionName: 'defect_pins',
-      project: projectKey,
+    const payload = {
+      project: activeProject?.id || projectKey,
       title: title.trim(),
       description: description.trim(),
       trade,
@@ -178,27 +175,33 @@ export function NewDefectDialog({
       status,
       due_date: dueDate,
       contractor_name: contractorName.trim() || 'Nachunternehmer N.N.',
+      evidence_photo_url: photoPreview || '',
+      evidence_sha256: photoSha256 || '',
+    };
+
+    let createdDefect: DefectPinRecord = {
+      id: 'def_' + Math.random().toString(36).substring(2, 9),
+      collectionId: 'defect_pins',
+      collectionName: 'defect_pins',
+      ...payload,
       evidence_photo_url: photoPreview || undefined,
       evidence_sha256: photoSha256 || undefined,
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
     };
 
-    // Im LocalStorage für das Projekt persistieren
-    try {
-      const storageKey = `vibe_defects_${projectKey}`;
-      const existing = localStorage.getItem(storageKey);
-      const parsed: DefectPinRecord[] = existing ? JSON.parse(existing) : [];
-      const updated = [newDefect, ...parsed];
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-
-      // Globales Custom-Event auslösen, damit offene Manager synchronisieren
-      window.dispatchEvent(new CustomEvent('vibe_defect_created', { detail: newDefect }));
-    } catch (err) {
-      console.warn('LocalStorage save warning:', err);
+    if (pb.authStore.isValid) {
+      try {
+        createdDefect = await pb.collection('defect_pins').create<DefectPinRecord>(payload);
+      } catch (err) {
+        console.warn('PocketBase defect_pins create warning:', err);
+      }
     }
 
-    onDefectCreated?.(newDefect);
+    // Globales Custom-Event auslösen, damit offene Manager synchronisieren
+    window.dispatchEvent(new CustomEvent('vibe_defect_created', { detail: createdDefect }));
+
+    onDefectCreated?.(createdDefect);
     onOpenChange(false);
   };
 

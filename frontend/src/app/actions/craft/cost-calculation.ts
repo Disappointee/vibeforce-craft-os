@@ -38,10 +38,17 @@ export async function getProjectCostSummaryAction(
     let timeEntries: TimeEntryRecord[] = [];
     if (taskIds.length > 0) {
       try {
-        // PocketBase Filter für Tasks
-        const filterStr = taskIds.map((id) => `task = "${id}"`).join(' || ');
+        // Parameterisierter PocketBase Filter für Tasks
+        const filterParams: Record<string, string> = {};
+        const filterExpr = taskIds
+          .map((id, idx) => {
+            const key = `tid${idx}`;
+            filterParams[key] = id;
+            return `task = {:${key}}`;
+          })
+          .join(' || ');
         const entriesRes = await pb.collection('time_entries').getList(1, 500, {
-          filter: filterStr,
+          filter: pb.filter(filterExpr, filterParams),
           expand: 'user,task',
         });
         timeEntries = entriesRes.items as unknown as TimeEntryRecord[];

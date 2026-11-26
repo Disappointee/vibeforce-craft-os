@@ -1,15 +1,21 @@
-import { getAdminPB } from '@/lib/pocketbase-server';
+import { redirect } from 'next/navigation';
+import { getUserAuthPB, requireAuth } from '@/lib/pocketbase-server';
 import { MonteurTimeClockClient } from './MonteurTimeClockClient';
 import type { ProjectRecord, UserRecord } from '@/lib/pocketbase-types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CraftTimePage() {
+  await requireAuth();
+  const pb = await getUserAuthPB();
+  if (!pb) {
+    redirect('/login');
+  }
+
   let projects: ProjectRecord[] = [];
   let user: UserRecord | null = null;
 
   try {
-    const pb = await getAdminPB();
     try {
       const projRes = await pb.collection('projects').getList(1, 100, {
         sort: '-created',

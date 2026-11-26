@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { assertCraftFeatureEntitlement } from '@/lib/server-entitlements';
+import { verifyUserSession } from '@/lib/pocketbase-server';
 
 export async function GET(request: NextRequest) {
+  const user = await verifyUserSession();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
   const projectId = searchParams.get('projectId') || undefined;

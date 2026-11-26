@@ -29,6 +29,7 @@ import {
   ExternalLink,
   Hammer,
 } from 'lucide-react';
+import { pb } from '@/lib/pocketbase';
 import type { ProjectRecord, DefectPinRecord, DefectSeverity, DefectStatus } from '@/lib/pocketbase-types';
 import { NewDefectDialog, CRAFT_TRADES_LIST } from '@/components/craft/NewDefectDialog';
 import { PlanPinningManager } from '@/components/craft/PlanPinningManager';
@@ -152,48 +153,41 @@ export function DefectsPageClient({ initialProjects }: DefectsPageClientProps) {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTrade, setFilterTrade] = useState<string>('all');
 
-  // Load defects for active project
-  const loadDefects = () => {
-    if (typeof window === 'undefined') return;
-    const storageKey = `vibe_defects_${activeKey}`;
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setDefects(parsed);
-          return;
-        }
-      } catch {
-        // fallback
-      }
+  // Load defects for active project from PocketBase defect_pins
+  const loadDefects = async () => {
+    const fallbackSamples = INITIAL_SAMPLE_DEFECTS[activeKey] || INITIAL_SAMPLE_DEFECTS['ULB'] || [];
+    if (!pb.authStore.isValid) {
+      setDefects(fallbackSamples);
+      return;
     }
-    // Fallback zu Samples
-    const samples = INITIAL_SAMPLE_DEFECTS[activeKey] || INITIAL_SAMPLE_DEFECTS['ULB'] || [];
-    setDefects(samples);
-    localStorage.setItem(storageKey, JSON.stringify(samples));
+    try {
+      const records = await pb.collection('defect_pins').getFullList<DefectPinRecord>({
+        filter: pb.filter('project = {:pid} || project = {:pkey}', {
+          pid: activeProject?.id || activeKey,
+          pkey: activeKey,
+        }),
+        sort: '-created',
+        requestKey: null,
+      });
+      setDefects(records.length > 0 ? records : fallbackSamples);
+    } catch (err) {
+      console.warn('[DefectsPageClient] Failed to load defect_pins from PB:', err);
+      setDefects(fallbackSamples);
+    }
   };
 
   useEffect(() => {
-    loadDefects();
-  }, [activeKey]);
+    void loadDefects();
+  }, [activeProject?.id, activeKey]);
 
   // Event listener for sync with NewDefectDialog & PlanPinningManager
   useEffect(() => {
     const handleCreated = () => {
-      loadDefects();
+      void loadDefects();
     };
     window.addEventListener('vibe_defect_created', handleCreated);
     return () => window.removeEventListener('vibe_defect_created', handleCreated);
-  }, [activeKey]);
-
-  // Sync state changes back to storage
-  const persistDefects = (updated: DefectPinRecord[]) => {
-    setDefects(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`vibe_defects_${activeKey}`, JSON.stringify(updated));
-    }
-  };
+  }, [activeProject?.id, activeKey]);
 
   // KPIs
   const totalOpen = useMemo(
@@ -237,26 +231,46 @@ export function DefectsPageClient({ initialProjects }: DefectsPageClientProps) {
   }, [defects, filterSeverity, filterStatus, filterTrade, searchQuery]);
 
   // Update Status
-  const handleUpdateStatus = (defectId: string, newStatus: DefectStatus) => {
-    const updated = defects.map((d) =>
-      d.id === defectId
-        ? {
-            ...d,
-            status: newStatus,
-            resolved_at: newStatus === 'resolved' ? new Date().toISOString() : d.resolved_at,
-            accepted_at: newStatus === 'accepted' ? new Date().toISOString() : d.accepted_at,
-            updated: new Date().toISOString(),
-          }
-        : d
+  const handleUpdateStatus = async (defectId: string, newStatus: DefectStatus) => {
+    const resolved_at = newStatus === 'resolved' ? new Date().toISOString() : undefined;
+    const accepted_at = newStatus === 'accepted' ? new Date().toISOString() : undefined;
+    if (pb.authStore.isValid && !defectId.startsWith('def-')) {
+      try {
+        await pb.collection('defect_pins').update(defectId, {
+          status: newStatus,
+          ...(resolved_at ? { resolved_at } : {}),
+          ...(accepted_at ? { accepted_at } : {}),
+        });
+      } catch (err) {
+        console.warn('[DefectsPageClient] PB update status warning:', err);
+      }
+    }
+    setDefects((prev) =>
+      prev.map((d) =>
+        d.id === defectId
+          ? {
+              ...d,
+              status: newStatus,
+              resolved_at: resolved_at ?? d.resolved_at,
+              accepted_at: accepted_at ?? d.accepted_at,
+              updated: new Date().toISOString(),
+            }
+          : d
+      )
     );
-    persistDefects(updated);
   };
 
   // Delete defect
-  const handleDeleteDefect = (id: string) => {
+  const handleDeleteDefect = async (id: string) => {
     if (confirm('Möchten Sie diesen Mangel wirklich unwiderruflich löschen?')) {
-      const updated = defects.filter((d) => d.id !== id);
-      persistDefects(updated);
+      if (pb.authStore.isValid && !id.startsWith('def-')) {
+        try {
+          await pb.collection('defect_pins').delete(id);
+        } catch (err) {
+          console.warn('[DefectsPageClient] PB delete warning:', err);
+        }
+      }
+      setDefects((prev) => prev.filter((d) => d.id !== id));
     }
   };
 

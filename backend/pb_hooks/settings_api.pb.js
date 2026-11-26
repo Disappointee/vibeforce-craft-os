@@ -219,8 +219,8 @@ routerAdd('POST', '/api/custom/settings', (c) => {
                 if (body.smtp_password && body.smtp_password !== '********') {
                     pbSettings.smtp.password = body.smtp_password;
                 }
-                pbSettings.mailSettings.fromAddress = body.smtp_from_address || 'noreply@vibeforce.de';
-                pbSettings.mailSettings.fromName = body.smtp_from_name || 'Vibeforce Flow OS';
+                pbSettings.meta.senderAddress = body.smtp_from_address || 'noreply@vibeforce.de';
+                pbSettings.meta.senderName = body.smtp_from_name || 'Vibeforce Flow OS';
                 $app.saveSettings(pbSettings);
                 console.log('[SettingsAPI] ✅ SMTP in PocketBase-Settings aktualisiert');
             }
@@ -281,17 +281,20 @@ routerAdd('POST', '/api/custom/settings/test-smtp', (c) => {
             html: '<h2>SMTP-Test erfolgreich</h2><p>Deine SMTP-Konfiguration funktioniert korrekt.</p>',
         });
 
-        mailClient.send(testMessage)
-            .then(() => {
-                console.log('[SettingsAPI] ✅ SMTP-Test-E-Mail gesendet an:', adminEmail);
-            })
-            .catch((err) => {
-                console.error('[SettingsAPI] ❌ SMTP-Test fehlgeschlagen:', err.message);
-            });
+        try {
+            mailClient.send(testMessage);
+            console.log('[SettingsAPI] ✅ SMTP-Test-E-Mail gesendet an:', adminEmail);
+        } catch (err) {
+            console.error('[SettingsAPI] ❌ SMTP-Test fehlgeschlagen:', err && err.message ? err.message : err);
+            return c.json(500, {
+                success: false,
+                message: 'SMTP-Test fehlgeschlagen: ' + (err && err.message ? err.message : err)
+            }, headers);
+        }
 
         return c.json(200, {
             success: true,
-            message: 'Test-E-Mail wird an ' + adminEmail + ' gesendet. Bitte Posteingang prüfen.'
+            message: 'Test-E-Mail erfolgreich an ' + adminEmail + ' gesendet. Bitte Posteingang prüfen.'
         }, headers);
 
     } catch (e) {
