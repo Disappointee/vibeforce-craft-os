@@ -11,14 +11,19 @@ const SlotActionSchema = z.object({
 const SLOT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 function sanitizeSessionRecord(record: Record<string, any>) {
+  const pbSlot = record.assigned_slot; // "Slot_A" | "Slot_B"
   return {
     id: record.id,
-    slot: record.slot,
+    slot: pbSlot === 'Slot_A' ? 'slot_a' : 'slot_b',
     active: Boolean(record.is_active),
     label: typeof record.label === 'string' ? record.label : undefined,
     expires_at: record.expires_at || null,
     updated: record.updated || null,
   };
+}
+
+function toPbSlot(slot: 'slot_a' | 'slot_b'): 'Slot_A' | 'Slot_B' {
+  return slot === 'slot_a' ? 'Slot_A' : 'Slot_B';
 }
 
 /**
@@ -33,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sessions = await withAdminPB(async (pb) => {
-      const filter = slotParam ? pb.filter('slot = {:slot}', { slot: slotParam }) : undefined;
+      const filter = slotParam ? pb.filter('assigned_slot = {:slot}', { slot: toPbSlot(slotParam) }) : undefined;
       const list = await pb.collection('demo_sessions').getFullList({
         filter,
         sort: '-last_heartbeat',
@@ -62,13 +67,14 @@ export async function POST(request: NextRequest) {
     const expiresAtIso = new Date(now + SLOT_TTL_MS).toISOString();
 
     const updated = await withAdminPB(async (pb) => {
+      const pbSlot = toPbSlot(slot);
       const existing = await pb
         .collection('demo_sessions')
-        .getList(1, 1, { filter: pb.filter('slot = {:slot}', { slot }) });
+        .getList(1, 1, { filter: pb.filter('assigned_slot = {:slot}', { slot: pbSlot }) });
 
       const payload = {
-        slot,
-        active: action !== 'release',
+        assigned_slot: pbSlot,
+        is_active: action !== 'release',
         label: label || (slot === 'slot_a' ? 'Demo-Slot A' : 'Demo-Slot B'),
         expires_at: action === 'release' ? null : expiresAtIso,
       };
@@ -96,12 +102,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     await withAdminPB(async (pb) => {
+      const pbSlot = toPbSlot(slotParam);
       const existing = await pb
         .collection('demo_sessions')
-        .getList(1, 1, { filter: pb.filter('slot = {:slot}', { slot: slotParam }) });
+        .getList(1, 1, { filter: pb.filter('assigned_slot = {:slot}', { slot: pbSlot }) });
       if (existing.items.length > 0) {
         await pb.collection('demo_sessions').update(existing.items[0].id, {
-          active: false,
+          is_active: false,
           expires_at: null,
         });
       }
