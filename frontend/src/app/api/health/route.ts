@@ -7,7 +7,7 @@ export async function GET() {
     {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      service: 'vibeforce-flow-os-frontend',
+      service: 'vibeforce-craft-os-frontend',
       uptime: process.uptime(),
     },
     {

@@ -796,7 +796,7 @@ export function WholesaleManager({
                   const craftBaseUrl =
                     typeof window !== 'undefined'
                       ? window.location.origin
-                      : (process.env.NEXT_PUBLIC_CRAFT_URL || 'https://vibeforce-craft-os.vercel.app').replace(/\/$/, '');
+                      : (process.env.NEXT_PUBLIC_CRAFT_URL || 'https://craft-vibeforce.vercel.app').replace(/\/$/, '');
                   const craftHookUrl = `${craftBaseUrl}/api/craft/ids/hook`;
                   const punchoutUrl = generateIdsPunchoutUrl(selectedWholesaler, {
                     wholesalerId: selectedWholesaler.id,
