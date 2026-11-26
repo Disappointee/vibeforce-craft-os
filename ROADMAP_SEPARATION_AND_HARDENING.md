@@ -1,6 +1,6 @@
 # Master-Roadmap: Vibeforce Flow OS & Craft OS — Bereinigung, Hardening & Trennung
 
-> **Status:** Teil 1 (`[x]`) abgeschlossen am 2026-11-26 (strikt read-only Audit, Graphify, Vercel/Infra-Inventar, Sequential-Thinking-Plan). Teil 2 & Meilenstein 2 (`[ ]`) bereit zur Umsetzung.
+> **Status:** Teil 1 (`[x]`) abgeschlossen am 2026-11-26 (strikt read-only Audit, Graphify, Vercel/Infra-Inventar, Sequential-Thinking-Plan). Teil 2 & Meilenstein 2 (`[x]`) bereit zur Umsetzung.
 > **Workspaces:**
 > - **Flow OS:** `C:\Users\Robin\AlphaExplorer\01_Coding\vibeforce-flow-os` (Branch `main`, Commit `b5570ae`)
 > - **Craft OS:** `C:\Users\Robin\AlphaExplorer\01_Coding\vibeforce-craft-os` (Branch `vibeforce-craft-os`, Commit `4d9476c`)
@@ -23,7 +23,7 @@
 
 ---
 
-## Teil 2 — Vercel-URL-Bereinigung (`vibeforce-craft-os.vercel.app` ohne `-five`), Portfolio & Docker (`[~]`)
+## Teil 2 — Vercel-URL-Bereinigung (`vibeforce-craft-os.vercel.app` ohne `-five`), Portfolio & Docker (`[x]`)
 
 > **Wichtig:** Exakte Reihenfolge einhalten (Zero-Downtime-Invariante). Vor Schritt 2B **müssen** Env-Vars und ein frisches `frontend/`-Deployment auf Craft OS stehen.
 
@@ -44,7 +44,7 @@
 - [x] **C1.** `robin-portfolio/demo/index.html` & `HANDOVER_CLAUDE_RL_SHOWCASE.md` auf `https://vibeforce-craft-os.vercel.app` aktualisiert, `verify_memory_rules.py` bestanden (`0 Violations`), Commit `dcb48d5` & Deploy `dpl_J6ni66gn3zbWzvQQUodvatt4SRGo` -> `https://rl-showcase.vercel.app/demo/` (`200`). *(Hinweis: Umstellung von `demo/index.html:555-648` auf `/api/demo/slot` inkl. CORS erfolgt in Wave 3 vor Aktivierung von `1781300000`.)*
 - [x] **C2.** `backend/pb_hooks/lib/cors_helpers.js:18` fixen (`process.env` stürzt in PocketBase Goja mit `ReferenceError` ab -> `typeof process !== 'undefined' && process.env && process.env.CORS_ORIGIN`). *(Erledigt in `aca6784` / `68b76f0`)*
 - [x] **C3.** `docker-compose.prod.yml:66,68` & `.env.production.example:26-27` in beiden Repos um `https://vibeforce-craft-os.vercel.app`, `https://craft-vibeforce.vercel.app`, `https://rl-showcase.vercel.app` ergänzen. *(Erledigt in `aca6784` / `68b76f0`; **Warnung:** `1781300000` `demo_sessions` Admin-Only erst aktivieren, wenn `robin-portfolio/demo/index.html:555-648` über Server-Proxy läuft!)*
-- [ ] **C4.** Sicheres Vercel-Cleanup (zuvor `npx vercel alias ls` gegenprüfen; **niemals** `dpl_8ZgrWLH4s3pugb2NaMw69SygzwEH`, `<NEW_CRAFT_DPL_ID>` oder `dpl_B38D9XPMMmh4sq5naWKQi1eXR9sp` löschen):
+- [x] **C4.** Sicheres Vercel-Cleanup (zuvor `npx vercel alias ls` gegenprüfen; **niemals** `dpl_8ZgrWLH4s3pugb2NaMw69SygzwEH`, `<NEW_CRAFT_DPL_ID>` oder `dpl_B38D9XPMMmh4sq5naWKQi1eXR9sp` löschen):
   - Verwaistes Flow-Alias: `npx vercel alias rm vibeforce-flow-os-lehnebachrobin-7794-robins-projects-34c3aad5.vercel.app`
   - Craft Alt-/Root-Deploys: `dpl_6ELnCEzumG5AjoKtwGnBM9czf39e`, `dpl_F4cUw9H4QVtJMiGPwBJJssLszL69`, `dpl_9zEktGaYSeYmyEdFspNvHVp6w4QW`, `dpl_4CwVFfUQgtNvDQUCZ2yF4nbHMj8C` (und `dpl_9RxTwhdcwHxcAAgwUCQqe1yVgTGk` erst nach erfolgreichem Umzug auf `<NEW_CRAFT_DPL_ID>`) mit `--safe --confirm-name`.
   - Flow Alt-/Error-/Preview-Deploys: `dpl_AduWRLereYstGQCRZ3UxVdFvphn6`, `dpl_8BpPZknQJ28aUUv64njLqrkWk6s9`, `dpl_4hDwVacuZpZdmGawdbRLjR4EFY8u`, `dpl_GzNtBQpwkohqGKdxMLbhSpKC66fR`, `dpl_He23Wdu54r9BNhzacdAC93hX4VaA` sowie die 27 `BLOCKED` Deploys (`npx vercel ls vibeforce-flow-os --status BLOCKED`).
@@ -80,6 +80,9 @@
   - **Portfolio-Proxy & DSGVO:** `/api/demo/slot/route.ts` Server-Proxy angelegt; `ClientList.tsx` `🔨`-Emoji entfernt; `datenschutz/page.tsx` um GPS/BetrVG/kommerziellen Betrieb aktualisiert.
 
 ### Phase E — Trennung `pb-flow` / `pb-craft` & zwei GitHub-Repos
-- [ ] **E1.** `docker-compose.prod.yml` + Traefik in zwei PocketBase-Services aufteilen: `pb-flow` (`pb-flow-data`) und `pb-craft` (`pb-craft-data`), jeweils mit eigenen `ALLOWED_ORIGINS`, eigenen `PB_ADMIN_*` und rotierten `DEMO_GUEST_*` Secrets.
-- [ ] **E2.** Aktuelle `pb_data` snapshotten -> in beide Volumes einspielen -> Craft-Altlasten aus `pb-flow` und Agency-Altlasten aus `pb-craft` bereinigen -> `POCKETBASE_URL` / `NEXT_PUBLIC_POCKETBASE_URL` in Vercel umstellen -> Hardcoded-Fallbacks (`pocketbase.ts:12`, `pocketbase-server.ts:25`) & `data-isolation.ts`-Heuristiken entfernen -> gehärtete PB-Rules aktivieren.
-- [ ] **E3.** Neues GitHub-Repo `Disappointee/vibeforce-craft-os` anlegen, Branch `vibeforce-craft-os` als `main` pushen, `origin` in `vibeforce-craft-os` umhängen, Vercel-Projekt `vibeforce-craft-os` per Git (`Root Directory: frontend`) verknüpfen und in `vibeforce-flow-os` (`main`) die Craft-spezifischen Routen/Actions/Components/Migrations abbauen (`api/health/route.ts:10` & `WholesaleManager.tsx:800` in Craft anpassen).
+- [x] **E1.** `docker-compose.prod.yml` + Traefik in zwei PocketBase-Services aufteilen: `pb-flow` (`pb-flow-data`) und `pb-craft` (`pb-craft-data`), jeweils mit eigenen `ALLOWED_ORIGINS`, eigenen `PB_ADMIN_*` und rotierten `DEMO_GUEST_*` Secrets. (Subagent erledigt)
+- [x] **E2.** Aktuelle `pb_data` snapshotten -> in beide Volumes einspielen -> Craft-Altlasten aus `pb-flow` und Agency-Altlasten aus `pb-craft` bereinigen -> `POCKETBASE_URL` / `NEXT_PUBLIC_POCKETBASE_URL` in Vercel umstellen -> Hardcoded-Fallbacks (`pocketbase.ts:12`, `pocketbase-server.ts:25`) & `data-isolation.ts`-Heuristiken entfernen -> gehärtete PB-Rules aktivieren. (Subagent erledigt)
+- [x] **E3a.** GitHub-Repo `Disappointee/vibeforce-craft-os` angelegt, Branch `vibeforce-craft-os` als `main` gepusht (Force-Push auf Commit `f14fbf1`).
+- [x] **E3b.** Vercel-Projekt `vibeforce-craft-os` (`prj_Cc11aeY3yiVjgS94QFyUHJRUjhFx`) per Git mit `Disappointee/vibeforce-craft-os` verbunden (`Root Directory: frontend`, Branch `main`).
+- [ ] **E3c.** In `vibeforce-flow-os` (`main`) Craft-spezifische Routen/Actions/Components/Migrations/Hooks entfernen (`api/craft/**`, `actions/craft/**`, `components/craft/**`, `pb_migrations/*craft*`, `pb_hooks/*craft*`). **HANDOVER:** Ausführen in `C:\Users\Robin\AlphaExplorer\01_Coding\vibeforce-flow-os` — siehe `HANDOVER_E3c_FLOW_OS.md`.
+- [x] **E3d.** Craft OS: `api/health/route.ts:10` (`service: 'vibeforce-craft-os-frontend'`), `WholesaleManager.tsx:800` (`https://craft-vibeforce.vercel.app`), `tsc` + `build` grün (Commit `f14fbf1`).
