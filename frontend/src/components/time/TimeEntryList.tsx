@@ -110,7 +110,10 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
     const renderDefaultActions = (entry: TimeEntryRecord) => (
         <div className="flex items-center justify-end gap-1">
             <Button
-                onClick={() => onEditEntry(entry)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEditEntry(entry);
+                }}
                 size="icon-xs"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground"
@@ -119,7 +122,11 @@ export function TimeEntryList({ entries, onEntryUpdated, onEditEntry, isLoading 
                 <Pencil size={14} />
             </Button>
             <Button
-                onClick={() => deleteEntry(entry.id)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    deleteEntry(entry.id);
+                }}
                 disabled={deletingId === entry.id}
                 size="icon-xs"
                 variant="ghost"

@@ -9,15 +9,15 @@ import { z } from 'zod';
 const CreateTaskSchema = z.object({
   project: z.string().min(1, 'Projekt-ID ist erforderlich'),
   title: z.string().min(1, 'Aufgabentitel ist erforderlich'),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   status: z.string().optional(),
   priority: z.string().optional(),
   type: z.string().optional(),
   assignees: z.array(z.string()).optional(),
-  start_date: z.string().optional(),
-  due_date: z.string().optional(),
-  parent_task: z.string().optional(),
-  estimated_hours: z.number().optional(),
+  start_date: z.string().nullable().optional(),
+  due_date: z.string().nullable().optional(),
+  parent_task: z.string().nullable().optional(),
+  estimated_hours: z.number().nullable().optional(),
 });
 
 const UpdateTaskSchema = CreateTaskSchema.partial();
