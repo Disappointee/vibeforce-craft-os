@@ -10,6 +10,23 @@ const SlotActionSchema = z.object({
 
 const SLOT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Cache-Control',
+};
+
+function withCors(res: NextResponse) {
+  for (const [k, v] of Object.entries(CORS_HEADERS)) {
+    res.headers.set(k, v);
+  }
+  return res;
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 function sanitizeSessionRecord(record: Record<string, any>) {
   const pbSlot = record.assigned_slot; // "Slot_A" | "Slot_B"
   return {
@@ -34,7 +51,7 @@ export async function GET(request: NextRequest) {
   try {
     const slotParam = request.nextUrl.searchParams.get('slot');
     if (slotParam && slotParam !== 'slot_a' && slotParam !== 'slot_b') {
-      return NextResponse.json({ error: 'Ungültiger Demo-Slot.' }, { status: 400 });
+      return withCors(NextResponse.json({ error: 'Ungültiger Demo-Slot.' }, { status: 400 }));
     }
 
     const validatedSlot: 'slot_a' | 'slot_b' | undefined = slotParam === 'slot_a' || slotParam === 'slot_b' ? slotParam : undefined;
@@ -49,10 +66,10 @@ export async function GET(request: NextRequest) {
       return list.map((rec) => sanitizeSessionRecord(rec as Record<string, any>));
     });
 
-    return NextResponse.json({ sessions }, { headers: { 'Cache-Control': 'no-store' } });
+    return withCors(NextResponse.json({ sessions }, { headers: { 'Cache-Control': 'no-store' } }));
   } catch (err) {
     console.warn('[api/demo/slot GET] Error:', err);
-    return NextResponse.json({ error: 'Demo-Slots derzeit nicht verfügbar.' }, { status: 500 });
+    return withCors(NextResponse.json({ error: 'Demo-Slots derzeit nicht verfügbar.' }, { status: 500 }));
   }
 }
 
@@ -61,7 +78,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null);
     const parsed = SlotActionSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Ungültige Anfrageparameter.' }, { status: 400 });
+      return withCors(NextResponse.json({ error: 'Ungültige Anfrageparameter.' }, { status: 400 }));
     }
 
     const { slot, action, label } = parsed.data;
@@ -89,10 +106,10 @@ export async function POST(request: NextRequest) {
       return sanitizeSessionRecord(rec as Record<string, any>);
     });
 
-    return NextResponse.json({ session: updated }, { headers: { 'Cache-Control': 'no-store' } });
+    return withCors(NextResponse.json({ session: updated }, { headers: { 'Cache-Control': 'no-store' } }));
   } catch (err) {
     console.warn('[api/demo/slot POST] Error:', err);
-    return NextResponse.json({ error: 'Demo-Slot konnte nicht aktualisiert werden.' }, { status: 500 });
+    return withCors(NextResponse.json({ error: 'Demo-Slot konnte nicht aktualisiert werden.' }, { status: 500 }));
   }
 }
 
@@ -100,7 +117,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const slotParam = request.nextUrl.searchParams.get('slot');
     if (slotParam !== 'slot_a' && slotParam !== 'slot_b') {
-      return NextResponse.json({ error: 'Ungültiger Demo-Slot.' }, { status: 400 });
+      return withCors(NextResponse.json({ error: 'Ungültiger Demo-Slot.' }, { status: 400 }));
     }
 
     await withAdminPB(async (pb) => {
@@ -116,9 +133,9 @@ export async function DELETE(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({ released: true, slot: slotParam }, { headers: { 'Cache-Control': 'no-store' } });
+    return withCors(NextResponse.json({ released: true, slot: slotParam }, { headers: { 'Cache-Control': 'no-store' } }));
   } catch (err) {
     console.warn('[api/demo/slot DELETE] Error:', err);
-    return NextResponse.json({ error: 'Demo-Slot konnte nicht freigegeben werden.' }, { status: 500 });
+    return withCors(NextResponse.json({ error: 'Demo-Slot konnte nicht freigegeben werden.' }, { status: 500 }));
   }
 }
