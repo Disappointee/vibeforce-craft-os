@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Zap, Plus, Clock, Building2, X, Loader2, Search, FolderGit2, Hammer, FileText } from 'lucide-react';
+import { Zap, Plus, Clock, Building2, X, Loader2, Search, FolderGit2, FileText } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUiStore, useTimerStore } from '@/lib/store';
 import { pb } from '@/lib/pocketbase';
@@ -9,11 +9,11 @@ import { toast } from 'sonner';
 import { NewSimpleTaskDialog } from '@/components/tasks/NewSimpleTaskDialog';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
 import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
-import { NewBaustelleDialog } from '@/components/projects/NewBaustelleDialog';
 import { Input } from '@/components/ui/input';
 import { revalidateClientsPath } from '@/app/actions/clients';
 import { revalidateProjectsPath } from '@/app/actions/projects';
-import { filterTasksByMode } from '@/lib/utils';
+import { filterTasksByMode } from '@/lib/data-isolation';
+import type { TaskRecord } from '@/lib/pocketbase-types';
 
 interface TaskOption {
   id: string;
@@ -30,7 +30,6 @@ export function SimpleActionMenu() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [baustelleDialogOpen, setBaustelleDialogOpen] = useState(false);
   const [showTimerSearch, setShowTimerSearch] = useState(false);
   const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
   const [timerSearchQuery, setTimerSearchQuery] = useState('');
@@ -46,7 +45,7 @@ export function SimpleActionMenu() {
           expand: 'project,project.client',
           filter: pb.filter("status != {:status}", { status: 'done' }),
         });
-        const filteredItems = filterTasksByMode(result.items);
+        const filteredItems = filterTasksByMode(result.items as TaskRecord[]);
         setTimerTasks(filteredItems.map((task: any) => {
           const project = task.expand?.project;
           const client = project?.expand?.client;
@@ -105,48 +104,6 @@ export function SimpleActionMenu() {
     }
   };
 
-  const craftActions = [
-    {
-      icon: <Hammer size={20} />,
-      iconClass: 'text-amber-500 bg-amber-500/10',
-      label: 'Neue Baustelle anlegen',
-      description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
-      onClick: () => {
-        setOpen(false);
-        setBaustelleDialogOpen(true);
-      },
-    },
-    {
-      icon: <FileText size={20} />,
-      iconClass: 'text-emerald-500 bg-emerald-500/10',
-      label: 'Bautagesbericht erfassen',
-      description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
-      onClick: () => {
-        router.push('/craft');
-      },
-    },
-    {
-      icon: <Clock size={20} />,
-      iconClass: 'text-primary bg-primary/10',
-      label: 'Zeiterfassung starten',
-      description: 'Wähle ein Gewerk und starte den Timer sofort',
-      onClick: () => {
-        setShowTimerSearch(true);
-        setTimerSearchQuery('');
-      },
-    },
-    {
-      icon: <Building2 size={20} />,
-      iconClass: 'text-blue-500 bg-blue-500/10',
-      label: 'Neuen Auftraggeber / Bauherr anlegen',
-      description: 'Bauherrn mit Anschrift & § 48b EStG anlegen',
-      onClick: () => {
-        setOpen(false);
-        setClientDialogOpen(true);
-      },
-    },
-  ];
-
   const regularActions = [
     {
       icon: <Plus size={20} />,
@@ -175,7 +132,7 @@ export function SimpleActionMenu() {
       description: 'Wähle eine Aufgabe und starte den Timer sofort',
       onClick: () => {
         setShowTimerSearch(true);
-        setTimerSearchQuery '';
+        setTimerSearchQuery('');
       },
     },
     {
@@ -190,67 +147,7 @@ export function SimpleActionMenu() {
     },
   ];
 
-  const allActions = [
-    {
-      icon: <Plus size={20} />,
-      iconClass: 'text-indigo-500 bg-indigo-500/10',
-      label: 'Neue Aufgabe erstellen',
-      description: 'Lege eine neue Aufgabe in einem Projekt an',
-      onClick: () => {
-        setOpen(false);
-        setTaskDialogOpen(true);
-      },
-    },
-    {
-      icon: <FolderGit2 size={20} />,
-      iconClass: 'text-rose-500 bg-rose-500/10',
-      label: 'Neues Projekt anlegen',
-      description: 'Erstelle einen neuen Arbeitsbereich',
-      onClick: () => {
-        setOpen(false);
-        setProjectDialogOpen(true);
-      },
-    },
-    {
-      icon: <Clock size={20} />,
-      iconClass: 'text-primary bg-primary/10',
-      label: 'Zeiterfassung starten',
-      description: 'Wähle eine Aufgabe und starte den Timer sofort',
-      onClick: () => {
-        setShowTimerSearch(true);
-        setTimerSearchQuery '';
-      },
-    },
-    {
-      icon: <Building2 size={20} />,
-      iconClass: 'text-blue-500 bg-blue-500/10',
-      label: 'Neuen Kunden anlegen',
-      description: 'Erstelle einen neuen Kunden-Eintrag',
-      onClick: () => {
-        setOpen(false);
-        setClientDialogOpen(true);
-      },
-    },
-    {
-      icon: <Hammer size={20} />,
-      iconClass: 'text-amber-500 bg-amber-500/10',
-      label: 'Neue Baustelle anlegen',
-      description: 'Bauvorhaben mit Adresse, Gewerk & VOB erfassen',
-      onClick: () => {
-        setOpen(false);
-        setBaustelleDialogOpen(true);
-      },
-    },
-    {
-      icon: <FileText size={20} />,
-      iconClass: 'text-emerald-500 bg-emerald-500/10',
-      label: 'Bautagesbericht erfassen',
-      description: 'Tagesbericht, Wetter & Kolonnenstunden erfassen',
-      onClick: () => {
-        router.push('/craft');
-      },
-    },
-  ];
+  const allActions = regularActions;
 
   useEffect(() => {
     if (showTimerSearch) {
@@ -352,7 +249,8 @@ export function SimpleActionMenu() {
                 >
                   ← Zurück zu den Aktionen
                 </button>
-              ) : (
+              </div>
+            ) : (
                 <div className="p-3 space-y-1.5">
                   {allActions.map((action) => (
                     <button
@@ -374,8 +272,7 @@ export function SimpleActionMenu() {
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+)}
           </div>
         </div>
       )}
@@ -402,14 +299,6 @@ export function SimpleActionMenu() {
         onOpenChange={setProjectDialogOpen}
         onProjectCreated={async () => {
           await revalidateProjectsPath();
-          router.refresh();
-        }}
-      />
-
-      <NewBaustelleDialog
-        open={baustelleDialogOpen}
-        onOpenChange={setBaustelleDialogOpen}
-        onBaustelleCreated={() => {
           router.refresh();
         }}
       />

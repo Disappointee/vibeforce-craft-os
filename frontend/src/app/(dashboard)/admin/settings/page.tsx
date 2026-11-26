@@ -23,12 +23,9 @@ import {
     Send,
     Clock,
     ShieldCheck,
-    Hammer,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CraftSettingsSection } from '@/components/craft/CraftSettingsSection';
 import { useSettingsStore } from '@/lib/store';
-import { isCraftMode } from '@/config/app-mode';
 import {
     Select,
     SelectContent,
@@ -72,7 +69,6 @@ export default function AdminSettingsPage() {
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
     const [showPassword, setShowPassword] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
-    const craftMode = isCraftMode();
 
     const {
         maxTimerHoursContinuous,
@@ -218,12 +214,6 @@ export default function AdminSettingsPage() {
                             <Mail size={16} />
                             E-Mail (SMTP)
                         </TabsTrigger>
-                        {craftMode && (
-                            <TabsTrigger value="craft" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
-                                <Hammer size={16} />
-                                Craft Lizenzen
-                            </TabsTrigger>
-                        )}
                     </TabsList>
 
                     {/* General Settings */}
@@ -639,13 +629,6 @@ export default function AdminSettingsPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
-                    {/* Craft Module & License Management */}
-                    {craftMode && (
-                        <TabsContent value="craft" className="space-y-6">
-                            <CraftSettingsSection />
-                        </TabsContent>
-                    )}
                 </Tabs>
             </div>
         </div>

@@ -11,6 +11,22 @@
  */
 
 /**
+ * GAEB Item type for GAEB-LV bridge.
+ * Minimal definition for Flow OS (no external craft dependency).
+ */
+export interface GaebItem {
+  id: string;
+  oz: string;
+  rNoPart: string;
+  shortText: string;
+  longText: string;
+  qty: number;
+  qu: string;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+/**
  * Measurement row item for VOB/Aufmass bridge.
  * Kein externes Craft-Dependency mehr; Typ ist hier definiert.
  */

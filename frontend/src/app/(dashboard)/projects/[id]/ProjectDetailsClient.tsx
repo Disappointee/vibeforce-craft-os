@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -19,19 +18,18 @@ import { useSettingsStore } from '@/lib/store';
 import { toast } from 'sonner';
 import { format, isValid, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
-
-const GeofenceMapEditor = dynamic(
-  () => import('@/components/geofence/GeofenceMapEditor').then((mod) => mod.GeofenceMapEditor),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-96 flex flex-col items-center justify-center bg-card/40 border border-border/60 rounded-2xl animate-pulse text-muted-foreground gap-2">
-        <MapPin size={28} className="text-amber-500 animate-bounce" />
-        <span className="text-sm font-medium">Interaktive Baustellenkarte wird geladen...</span>
-      </div>
-    ),
-  }
-);
+import {
+  ArrowLeft,
+  Clock,
+  Euro,
+  AlertTriangle,
+  KanbanSquare,
+  List,
+  BarChart3,
+  CheckCircle2,
+  Trash2,
+  MapPin,
+} from 'lucide-react';
 
 interface ProjectDetailsClientProps {
   id: string;
@@ -53,15 +51,16 @@ export function ProjectDetailsClient({
   const router = useRouter();
   const { defaultTaskView } = useSettingsStore();
   const { tasks: ganttTasks, taskStatusMap, isLoading: ganttLoading, error: ganttError, refresh: refreshGantt } = useProjectGanttData(id);
-  const { defaultTaskView: _, ...restStore } = useSettingsStore();
-  const { tasks, setTasks } = restStore;
+  
+  // Use local state instead of store for tasks
+  const [tasks, setTasks] = useState<Record<string, unknown>[]>(initialTasks);
   const [project, setProject] = useState<Record<string, unknown>>(initialProject);
   const [timeEntries, setTimeEntries] = useState<Record<string, unknown>[]>(initialTimeEntries);
   const [expenses, setExpenses] = useState<Record<string, unknown>[]>(initialExpenses);
   const [siteReports, setSiteReports] = useState<Record<string, unknown>[]>(initialSiteReports);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline'>(() =>
-    restStore.defaultTaskView === 'list' ? 'list' : restStore.defaultTaskView === 'timeline' ? 'timeline' : 'board'
+    defaultTaskView === 'list' ? 'list' : defaultTaskView === 'timeline' ? 'timeline' : 'board'
   );
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -101,7 +100,7 @@ export function ProjectDetailsClient({
       }
 
       const newTasks = tasksResult.items;
-      setTasksState(newTasks);
+      setTasks(newTasks);
 
       const taskIds = newTasks.map((t: Record<string, unknown>) => t.id as string);
       if (taskIds.length > 0) {
@@ -138,20 +137,20 @@ export function ProjectDetailsClient({
 
       switch (event.action) {
         case 'create':
-          setTasksState((prev) => {
+          setTasks((prev) => {
             if (prev.some((t) => t.id === event.record.id)) return prev;
             return [event.record as Record<string, unknown>, ...prev];
           });
           break;
         case 'update':
-          setTasksState((prev) =>
+          setTasks((prev) =>
             prev.map((t) =>
               t.id === event.record.id ? (event.record as Record<string, unknown>) : t
             )
           );
           break;
         case 'delete':
-          setTasksState((prev) => prev.filter((t) => t.id !== event.record.id));
+          setTasks((prev) => prev.filter((t) => t.id !== event.record.id));
           break;
       }
       refreshGantt();
@@ -279,11 +278,6 @@ export function ProjectDetailsClient({
 
   const totalTimeEntries = timeEntries.length;
 
-  useEffect(() => {
-    if (refreshTrigger === 0) return;
-    refreshData();
-  }, [refreshTrigger, refreshData]);
-
   // Floating Action Bar für Bulk-Aktionen
   const bulkActions = selectedTasks.length > 0 && (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
@@ -302,7 +296,7 @@ export function ProjectDetailsClient({
             <Trash2 size={14} /> Entschelekt
           </Button>
           <Button
-            variant="primary"
+            variant="outline"
             onClick={() => setSelectedTasks([])}
           >
             <CheckCircle2 size={14} /> Abbrechen
@@ -466,7 +460,7 @@ export function ProjectDetailsClient({
                           if (e.target.checked) {
                             setSelectedTasks(tasks.map((t: any) => t.id));
                           } else {
-                            setSelectedTasks(prev => prev.filter(id => id !== task.id));
+                            setSelectedTasks([]);
                           }
                         }}
                       />

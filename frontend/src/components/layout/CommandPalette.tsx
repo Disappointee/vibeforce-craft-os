@@ -21,6 +21,7 @@ import { pb } from '@/lib/pocketbase';
 import { toast } from 'sonner';
 import { useUiStore } from '@/lib/store';
 import { filterProjectsByMode, filterTasksByMode } from '@/lib/data-isolation';
+import type { ProjectRecord, TaskRecord } from '@/lib/pocketbase-types';
 
 export function CommandPalette() {
     const [open, setOpen] = useState(false);
@@ -60,8 +61,8 @@ export function CommandPalette() {
             const [projects, tasks] = await Promise.all([projectPromise, taskPromise]);
 
             setResults({
-                projects: filterProjectsByMode(projects.items),
-                tasks: filterTasksByMode(tasks.items as any[])
+                projects: filterProjectsByMode(projects.items as ProjectRecord[]),
+                tasks: filterTasksByMode(tasks.items as TaskRecord[])
             });
         } catch (err) {
             console.error('Search failed:', err);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { pb } from '@/lib/pocketbase';
-import { TimeEntryRecord, ClientRecord } from '@/lib/pocketbase-types';
+import { TimeEntryRecord, ClientRecord, ProjectRecord } from '@/lib/pocketbase-types';
 import { Clock, Loader2, Filter, Building2, Plus, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ManualTimeEntry } from '@/components/time/ManualTimeEntry';
@@ -72,7 +72,13 @@ export default function TimePage() {
                     sort: 'key',
                     fields: 'id,key,name,client',
                 });
-                setProjects(filterProjectsByMode(result.items as unknown as ProjectOption[]));
+                const filteredProjects = filterProjectsByMode(result.items as ProjectRecord[]);
+                setProjects(filteredProjects.map((p: any) => ({
+                    id: p.id,
+                    key: p.key,
+                    name: p.name,
+                    client: (p as any).client,
+                })));
             } catch (error) {
                 console.error('Failed to fetch projects:', error);
             }

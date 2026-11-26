@@ -25,18 +25,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from '@/components/ui/date-picker';
+import type { ProjectRecord } from '@/lib/pocketbase-types';
 
 interface EditProjectDialogProps {
-    project: {
-        id: string;
-        name: string;
-        key: string;
-        status: string;
-        budget_hours?: number | null;
-        client?: string | null;
-        start_date?: string | null;
-        due_date?: string | null;
-    } | null;
+    project: Pick<ProjectRecord, 'id' | 'name' | 'key' | 'budget_hours' | 'client' | 'start_date' | 'due_date'> & { status: string } | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onProjectUpdated: () => void;

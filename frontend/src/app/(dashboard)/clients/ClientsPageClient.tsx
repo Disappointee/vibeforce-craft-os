@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, HardHat } from 'lucide-react';
+import { Users, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClientList } from '@/components/clients/ClientList';
 import { NewClientDialog } from '@/components/clients/NewClientDialog';
@@ -34,19 +34,19 @@ export function ClientsPageClient() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-              <HardHat size={26} className="text-amber-500" />Bauherren & Auftraggeber (Â§ 13b & Â§ 48b)
+              <Building2 size={26} className="text-blue-500" />Kunden & Auftraggeber
             </h1>
             <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              Verwalte Bauherren, BautrÃ¤ger und Auftraggeber inklusive Bauabzugsteuer (Â§ 48b) und Steuerschuldnerschaft (Â§ 13b).
+              Verwalte Kunden, Auftraggeber und Bauherren.
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
             <Button
               id="craft-create-client-btn"
               onClick={() => setClientDialogOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5 shrink-0"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-9 px-3.5 shadow-sm flex items-center gap-1.5 shrink-0"
             >
-              <Hammer size={14} />+ Bauherr / Auftraggeber anlegen
+              <Users size={14} />+ Kunde anlegen
             </Button>
           </div>
         </div>

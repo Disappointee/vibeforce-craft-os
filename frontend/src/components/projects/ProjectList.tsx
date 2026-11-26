@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { pb } from '@/lib/pocketbase';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, FolderGit2, MoreVertical, MapPin, Hammer } from 'lucide-react';
+import { Clock, FolderGit2, MoreVertical, MapPin } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,33 +17,43 @@ import { EditProjectDialog } from '@/components/projects/EditProjectDialog';
 import { toast } from 'sonner';
 import { revalidateProjectsPath, updateProjectAction } from '@/app/actions/projects';
 import { formatSiteAddress } from '@/lib/utils';
+import type { ProjectRecord } from '@/lib/pocketbase-types';
 
 export function ProjectList({
   refreshTrigger,
+  projects: projectsProp,
   viewMode = 'grid',
   clientFilter = 'all',
   statusFilter = 'active',
   typeFilter = 'all',
 }: {
   refreshTrigger: number;
+  projects?: ProjectRecord[];
   viewMode?: 'grid' | 'list';
   clientFilter?: string;
   statusFilter?: string;
   typeFilter?: string;
 }) {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editProject, setEditProject] = useState<any | null>(null);
+  const [editProject, setEditProject] = useState<Pick<ProjectRecord, 'id' | 'name' | 'key' | 'budget_hours' | 'client' | 'start_date' | 'due_date'> & { status: string } | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const router = useRouter();
 
+  // Use passed projects or fetch them
   useEffect(() => {
+    if (projectsProp) {
+      setProjects(projectsProp);
+      setIsLoading(false);
+      return;
+    }
+    
     const fetchProjects = async () => {
       try {
         const result = await pb.collection('projects').getList(1, 50, {
           expand: 'client',
         });
-        const projectsData = result.items;
+        const projectsData = result.items as ProjectRecord[];
 
         const projectIds = projectsData.map((p: any) => p.id);
         if (projectIds.length > 0) {
@@ -175,34 +185,34 @@ export function ProjectList({
         )}
       </div>
     );
-
-    const renderActions = (project: any) => (
-      <div onClick={(e) => e.stopPropagation()} className="ml-2 shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent">
-            <MoreVertical size={18} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-background border-border text-foreground">
-            <DropdownMenuItem
-              className="hover:bg-card hover:text-foreground cursor-pointer"
-              onClick={() => handleEdit(project)}
-            >
-              Bearbeiten
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className={`cursor-pointer ${project.status === 'archived'
-                ? 'text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300'
-                : 'text-red-400 hover:bg-red-500/20 hover:text-red-300'}
-              }`}
-              onClick={() => handleArchive(project)}
-            >
-              {project.status === 'archived' ? 'Reaktivieren' : 'Archivieren'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
   };
+
+  const renderActions = (project: any) => (
+    <div onClick={(e) => e.stopPropagation()} className="ml-2 shrink-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent">
+          <MoreVertical size={18} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-background border-border text-foreground">
+          <DropdownMenuItem
+            className="hover:bg-card hover:text-foreground cursor-pointer"
+            onClick={() => handleEdit(project)}
+          >
+            Bearbeiten
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className={`cursor-pointer ${project.status === 'archived'
+              ? 'text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300'
+              : 'text-red-400 hover:bg-red-500/20 hover:text-red-300'}
+            }`}
+            onClick={() => handleArchive(project)}
+          >
+            {project.status === 'archived' ? 'Reaktivieren' : 'Archivieren'}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -223,86 +233,6 @@ export function ProjectList({
     );
   }
 
-  const budgetData = projects.map(getBudgetPercent);
-
-  const gridMode = viewMode === 'grid' ? (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project, idx) => (
-        <div
-          key={project.id}
-          onClick={() => router.push(`/projects/${project.id}`)}
-          className="group cursor-pointer bg-card border border-border rounded-[10px] p-4 overflow-hidden hover:border-primary/30 transition-colors"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="min-w-0 flex-1">
-              <span className="text-[11px] font-mono text-muted-foreground">{project.key}</span>
-              <h3 className="text-base font-semibold text-foreground truncate mt-0.5">{project.name}</h3>
-              {project.expand?.client && (
-                <span className="text-xs text-muted-foreground truncate block mt-0.5">
-                  {project.expand.client.company || project.expand.client.name}
-                </span>
-              )}
-            </div>
-            {renderActions(project)}
-          </div>
-
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
-              {statusLabel(project.status)}
-            </span>
-            {project.site_address && formatSiteAddress(project.site_address) && (
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
-                <MapPin size={11} className="text-amber-500 shrink-0" />
-                <span className="truncate">{formatSiteAddress(project.site_address)}</span>
-              </div>
-            )}
-
-            {renderBudgetBar(project)}
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div className="rounded-xl border border-border bg-card/30 overflow-hidden">
-      {projects.map((project, idx) => (
-        <div
-          key={project.id}
-          onClick={() => router.push(`/projects/${project.id}`)}
-          className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-accent/50 transition-colors ${
-            idx < projects.length - 1 ? 'border-b border-border' : ''
-          }`}
-        >
-          <span className="text-[10px] font-mono text-muted-foreground bg-background px-2 py-0.5 rounded shrink-0">
-            {project.key}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-foreground truncate">{project.name}</h3>
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status)}`}>
-                {statusLabel(project.status)}
-              </span>
-            </div>
-            {project.expand?.client && (
-              <span className="text-xs text-muted-foreground truncate block mt-0.5">
-                {project.expand.client.company || project.expand.client.name}
-              </span>
-            )}
-            {project.site_address && formatSiteAddress(project.site_address) && (
-              <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                <MapPin size={10} className="text-amber-500 shrink-0" />
-                {formatSiteAddress(project.site_address)}
-              </span>
-            )}
-          </div>
-          <div className="w-32 shrink-0">
-            {renderBudgetBar(project)}
-          </div>
-          {renderActions(project)}
-        </div>
-      ))}
-    </div>
-  );
-
   if (projects.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/20 p-12 flex flex-col items-center justify-center text-center">
@@ -310,31 +240,6 @@ export function ProjectList({
         <h3 className="text-xl font-semibold text-foreground">Keine Projekte gefunden</h3>
         <p className="text-muted-foreground text-sm mt-2 max-w-md">
           Du hast noch keine Projekte erstellt. Klicke oben rechts auf "Neues Projekt", um deinen ersten Arbeitsbereich anzulegen.
-        </p>
-      </div>
-    );
-  }
-
-  if (filteredProjects.length === 0) {
-    if (typeFilter === 'craft') {
-      return (
-        <div className="rounded-2xl border border-dashed border-border bg-card/20 p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-3.5">
-            <Hammer size={24} />
-          </div>
-          <h3 className="text-xl font-semibold text-foreground">Keine Baustellen gefunden</h3>
-          <p className="text-muted-foreground text-sm mt-2 max-w-md">
-            Für diesen Filter wurden keine Handwerks-Baustellen gefunden. Lege oben rechts über "Baustelle anlegen" deine nächste Baustelle an.
-          </p>
-        </div>
-      );
-    }
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/20 p-12 flex flex-col items-center justify-center text-center">
-        <FolderGit2 size={48} className="text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold text-foreground">Keine Projekte mit Filter</h3>
-        <p className="text-muted-foreground text-sm mt-2 max-w-md">
-          Für den ausgewählten Filter wurden keine Projekte gefunden.
         </p>
       </div>
     );
@@ -352,7 +257,7 @@ export function ProjectList({
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="min-w-0 flex-1">
-                  <span className="text-[11px] font-mono text-muted-foreground">{project.key}</span>
+                  <span className="text-[11px] font-mono text-muted-foreground">{project.key ?? ''}</span>
                   <h3 className="text-base font-semibold text-foreground truncate mt-0.5">{project.name}</h3>
                   {project.expand?.client && (
                     <span className="text-xs text-muted-foreground truncate block mt-0.5">
@@ -364,8 +269,8 @@ export function ProjectList({
               </div>
 
               <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status)}`}>
-                  {statusLabel(project.status)}
+                <span className={`inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase ${getStatusColor(project.status ?? '')}`}>
+                  {statusLabel(project.status ?? '')}
                 </span>
                 {project.site_address && formatSiteAddress(project.site_address) && (
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3 truncate">
@@ -390,13 +295,13 @@ export function ProjectList({
               }`}
             >
               <span className="text-[10px] font-mono text-muted-foreground bg-background px-2 py-0.5 rounded shrink-0">
-                {project.key}
+                {project.key ?? ''}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-sm font-semibold text-foreground truncate">{project.name}</h3>
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status)}`}>
-                    {statusLabel(project.status)}
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase shrink-0 ${getStatusColor(project.status ?? '')}`}>
+                    {statusLabel(project.status ?? '')}
                   </span>
                 </div>
                 {project.expand?.client && (

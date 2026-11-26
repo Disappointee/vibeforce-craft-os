@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { pb } from '@/lib/pocketbase';
-import type { UserRecord } from '@/lib/pocketbase-types';
+import type { UserRecord, ProjectRecord, TaskRecord, ClientRecord } from '@/lib/pocketbase-types';
 import {
   CheckSquare,
   Users,
@@ -256,7 +256,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const results: SearchResult[] = [];
 
       if (projectResult.status === 'fulfilled') {
-        const isolatedProjects = filterProjectsByMode(projectResult.value.items);
+        const isolatedProjects = filterProjectsByMode(projectResult.value.items as ProjectRecord[]);
         results.push(...isolatedProjects.map((p: any) => ({
           type: 'project' as const,
           id: p.id,
@@ -269,7 +269,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (taskResult.status === 'fulfilled') {
-        const isolatedTasks = filterTasksByMode(taskResult.value.items);
+        const isolatedTasks = filterTasksByMode(taskResult.value.items as TaskRecord[]);
         results.push(...isolatedTasks.map((t: any) => ({
           type: 'task' as const,
           id: t.id,
@@ -282,7 +282,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (clientResult.status === 'fulfilled') {
-        const isolatedClients = filterClientsByMode(clientResult.value.items);
+        const isolatedClients = filterClientsByMode(clientResult.value.items as ClientRecord[]);
         results.push(...isolatedClients.map((c: any) => ({
           type: 'client' as const,
           id: c.id,

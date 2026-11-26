@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { pb } from '@/lib/pocketbase';
 import type { TaskRecord, ProjectRecord, UserRecord, ClientRecord } from '@/lib/pocketbase-types';
 import { formatGanttDate as formatDate, statusToProgress, buildCustomClass, type GanttTask, type GanttProjectGroup } from '@/lib/gantt-utils';
+import { filterProjectsByMode, filterClientsByMode } from '@/lib/data-isolation';
 
 export type { GanttTask, GanttProjectGroup };
 

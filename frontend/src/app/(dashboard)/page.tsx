@@ -288,7 +288,7 @@ export default function DashboardPage() {
         const timeEntries = await pb.collection('time_entries').getList(1, 200, {
           expand: 'task,task.project',
         });
-        const agencyTimeEntries = filterTimeEntriesByMode(timeEntries.items);
+        const agencyTimeEntries = filterTimeEntriesByMode(timeEntries.items as TimeEntryRecord[]);
         const totalMinutes = agencyTimeEntries.reduce(
           (sum, entry) => sum + ((entry as any).duration_minutes || 0),
           0,
@@ -358,7 +358,7 @@ export default function DashboardPage() {
         ),
         expand: 'task,task.project',
       });
-      const agencyTimeEntries = filterTimeEntriesByMode(result.items);
+      const agencyTimeEntries = filterTimeEntriesByMode(result.items as TimeEntryRecord[]);
       const total = agencyTimeEntries.reduce(
         (sum, entry) => sum + ((entry as any).duration_minutes || 0),
         0,
