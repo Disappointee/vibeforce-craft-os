@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Ungültiger Demo-Slot.' }, { status: 400 });
     }
 
+    const validatedSlot: 'slot_a' | 'slot_b' | undefined = slotParam === 'slot_a' || slotParam === 'slot_b' ? slotParam : undefined;
+
     const sessions = await withAdminPB(async (pb) => {
-      const filter = slotParam ? pb.filter('assigned_slot = {:slot}', { slot: toPbSlot(slotParam) }) : undefined;
+      const filter = validatedSlot ? pb.filter('assigned_slot = {:slot}', { slot: toPbSlot(validatedSlot) }) : undefined;
       const list = await pb.collection('demo_sessions').getFullList({
         filter,
         sort: '-last_heartbeat',
